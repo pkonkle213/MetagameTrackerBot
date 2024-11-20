@@ -157,6 +157,12 @@ async def on_message(message):
             'Congratulations! You\'ve been approved to track your metagame!',
             approved_store[3])
 
+      if command == '$ADDGAMEMAP':
+        msg = message.content.split('~')
+        used_name = msg[1]
+        actual_name = msg[2]
+        output = myCommands.AddGameMap(used_name, actual_name)
+
   if output == '' or output is None:
     await ErrorMessage(f'This request produced no output: {message.content}')
     output = 'Something went wrong and there was no output. This has been reported'

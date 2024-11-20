@@ -272,3 +272,17 @@ def GetPlayersInEvent(discord_id,
     rows = cur.fetchall()
 
     return rows
+
+def AddGameMap(used_name, actual_name):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    try:
+      command = 'INSERT INTO GameNameMaps (used_name, actual_name) VALUES (%s, %s) '
+      command += 'returning *'
+      cur.execute(command, (used_name, actual_name))
+      conn.commit()
+      row = cur.fetchone()
+      return row
+    except psycopg2.errors.UniqueViolation:
+      print('Error: UniqueViolation')
+      return None
