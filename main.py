@@ -55,8 +55,7 @@ async def on_message(message):
   if store is not None:
     storeCanTrack = store.ApprovalStatus
     isStoreOwner = message.author.id in newDatabase.GetStoreOwners()
-    isSubmitter = isStoreOwner or message.author.id in newDatabase.GetSubmitters(
-        message.guild.id)
+    isSubmitter = isStoreOwner or message.author.id in newDatabase.GetSubmitters(message.guild.id)
 
   print(
       f'User {str(message.author)} messaged {message.content} from {str(message.guild)} in {str(message.channel.category)} - {str(message.channel)}'
@@ -100,8 +99,7 @@ async def on_message(message):
   if (storeCanTrack and isSubmitter) or (isPhil and isMyGuild):
     if command == '$ADDRESULTS':
       results = message.content.split('\n')[1:]
-      await message.channel.send(f'Attempting to add {len(results)} results...'
-                                 )
+      await message.channel.send(f'Attempting to add {len(results)} results...')
       output = myCommands.AddResults(message.guild.id, GUILDID, results,
                                    message.author.id)
 
