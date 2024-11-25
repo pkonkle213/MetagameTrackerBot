@@ -7,9 +7,8 @@ def GetQuarterDate():
   start_date = datetime(today.year, start, 1).date()
   return start_date
 
-def GetStartDate():
-  today = datetime.now(pytz.timezone('US/Eastern')).date()
-  start = today - timedelta(days=today.weekday()) - timedelta(weeks=8)
+def GetStartDate(end_date):
+  start = end_date - timedelta(days=end_date.weekday()) - timedelta(weeks=8)
   return start
 
 def GetEndDate():

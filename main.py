@@ -1,171 +1,13 @@
-import os
-
 import discord
+from discord.ext import commands
+from discord.ext.commands import has_permissions
+from discord import app_commands
+import os
 from dotenv.main import load_dotenv
-
 import myCommands
-import datefuncs
 import newDatabase
 import outputBuilder
-
-intents = discord.Intents.default()
-intents.message_content = True
-client = discord.Client(intents=intents)
-
-
-async def MessageUser(msg, userId):
-  user = await client.fetch_user(userId)
-  await user.send(f'{msg}')
-
-
-async def MessageChannel(msg, guildId, channelId):
-  server = client.get_guild(int(guildId))
-  channel = server.get_channel(int(channelId))
-  await channel.send(f'{msg}')
-
-
-async def ErrorMessage(msg):
-  await MessageChannel(msg, GUILDID, ERRORID)
-
-
-async def ApprovalMessage(msg):
-  await MessageChannel(msg, GUILDID, APPROVALID)
-
-
-@client.event
-async def on_ready():
-  print(f'We have logged in as {client.user}')
-
-
-@client.event
-async def on_message(message):
-  if message.author == client.user or not message.content.startswith('$'):
-    return
-
-  command = message.content.split()[0].upper()
-  output = 'Unrecognized command'
-  isPhil = message.author.id == PHILID
-  isMyGuild = message.guild.id == GUILDID
-  isCBUSMTG = message.guild.id == CBUSID
-
-  store = myCommands.GetStore(message.guild.id)
-  storeCanTrack = False
-  isSubmitter = False
-  isStoreOwner = False
-  if store is not None:
-    storeCanTrack = store.ApprovalStatus
-    isStoreOwner = message.author.id in newDatabase.GetStoreOwners()
-    isSubmitter = isStoreOwner or message.author.id in newDatabase.GetSubmitters(message.guild.id)
-
-  print(
-      f'User {str(message.author)} messaged {message.content} from {str(message.guild)} in {str(message.channel.category)} - {str(message.channel)}'
-  )
-
-  if command == '$COMMANDS' or command == '$HELP':
-    output = outputBuilder.PrintCommands(storeCanTrack, isSubmitter, isPhil,
-                                         isMyGuild, isStoreOwner, isCBUSMTG)
-
-  if isMyGuild:
-    if command == '$GETBOT':
-      output = MYBOTURL
-
-    if command == '$GETSHEETS':
-      output = SHEETSURL
-
-  if command == '$REGISTER':
-    result = myCommands.RegisterStore(message)
-    if result[0] == 'Success':
-      await MessageChannel(result[2], GUILDID, APPROVALID)
-      await MessageUser(result[2], PHILID)
-    output = result[1]
-
-  #if command == '$FORMATS':
-  #  output = myCommands.GetFormats(message)
-
-  if command == '$METAGAME':
-    discord_id = message.guild.id
-    game = str(message.channel.category.name)
-    format = str(message.channel.name)
-    msg = message.content.split(' ')
-    start_date = ''
-    end_date = ''
-    if len(msg) > 1:
-      start_date = msg[1]
-    if len(msg) > 2:
-      end_date = msg[2]
-    output = myCommands.GetMetagame(discord_id, game, format, start_date,
-                                  end_date)
-
-  if (storeCanTrack and isSubmitter) or (isPhil and isMyGuild):
-    if command == '$ADDRESULTS':
-      results = message.content.split('\n')[1:]
-      await message.channel.send(f'Attempting to add {len(results)} results...')
-      output = myCommands.AddResults(message.guild.id, GUILDID, results,
-                                   message.author.id)
-
-  if isMyGuild and isStoreOwner:
-    if command == '$EVENTS':
-      output = myCommands.FindEvents(message.author.id)
-
-    if command == '$EVENT':
-      msg = message.content.split('~')
-      date = datefuncs.convert_to_date(msg[1])
-      game = msg[2]
-      format = msg[3].upper()
-      output = myCommands.GetPlayersInEvent(message.author.id, game, date,
-                                          format)
-
-    if command == '$UPDATEROW':
-      msg = message.content.split('\n')
-      output = myCommands.UpdateDataRow(msg[1], msg[2], message.author.id)
-
-    if command == '$TOPPLAYERS':
-      msg = message.content.split(' ')
-      format = ''
-      dateStart = ''
-      dateEnd = ''
-      if len(msg) > 1:
-        format = msg[1]
-      if len(msg) > 2:
-        dateStart = msg[2]
-      if len(msg) > 3:
-        dateEnd = msg[3]
-      output = myCommands.GetTopPlayers(message.author.id,
-                                      'Magic: the gathering',
-                                      format=format,
-                                      start_date=dateStart,
-                                      end_date=dateEnd)
-
-  if isPhil:
-    if command == '$TEST':
-      info = outputBuilder.DiscordInfo(message)
-      await MessageUser(info, PHILID)
-      output = 'Information relayed'
-
-    if isMyGuild:
-      if command == '$GETALLSTORES':
-        output = myCommands.GetStores()
-
-      if command == '$APPROVESTORE':
-        store_discord_id = int(message.content.split()[1])
-        output = myCommands.ApproveStore(store_discord_id)
-        approved_store = newDatabase.GetStores(discord_id=store_discord_id)[0]
-        print(approved_store)
-        await MessageUser(
-            'Congratulations! You\'ve been approved to track your metagame!',
-            approved_store[3])
-
-      if command == '$ADDGAMEMAP':
-        msg = message.content.split('~')
-        used_name = msg[1]
-        actual_name = msg[2]
-        output = myCommands.AddGameMap(used_name, actual_name)
-
-  if output == '' or output is None:
-    await ErrorMessage(f'This request produced no output: {message.content}')
-    output = 'Something went wrong and there was no output. This has been reported'
-  await message.channel.send(output)
-
+import tupleConversions
 
 load_dotenv()
 SHEETSURL = os.getenv('SHEETSURL')
@@ -173,6 +15,242 @@ MYBOTURL = os.getenv('MYBOTURL')
 PHILID = int(os.getenv('PHILID'))
 CBUSID = int(os.getenv('COLUMBUSGUILDID'))
 GUILDID = int(os.getenv('BOTGUILDID'))
+GUILD = discord.Object(id=GUILDID)
+SOPURL = os.getenv('SOPURL')
 ERRORID = int(os.getenv('BOTERRORCHANNELID'))
 APPROVALID = int(os.getenv('BOTAPPROVALCHANNELID'))
+
+class Client(commands.Bot):
+  async def on_ready(self):
+    print(f'Logged on as {format(self.user)}!')
+
+    try:
+      other = await self.tree.sync()
+      print(f'Synced {len(other)} commands globally, allegedly')
+      synced = await self.tree.sync(guild=GUILD)
+      print(f'Synced {len(synced)} command(s) to guild Bot Guild -> {GUILD.id}')
+    except Exception as e:
+      print(f'Error syncing commands: {e}')
+
+  async def on_message(self, message):
+    if message.author == self.user:
+      return
+
+    #TODO: This should change. Assume game/format by category/channel, then delete sent message
+    command = message.content.split()[0].upper()
+    if command == '$ADDRESULTS' and ((storeCanTrack and isSubmitter) or (isPhil and isMyGuild)):
+      results = message.content.split('\n')[1:]
+      await message.channel.send(f'Attempting to add {len(results)} results...')
+
+      output = myCommands.AddResults(message.guild.id,
+                                     GUILDID,
+                                     results,
+                                     message.author.id)
+      await message.channel.send(output)
+
+intents = discord.Intents.default()
+intents.message_content = True
+client = Client(command_prefix='?', intents=intents)
+
+def isOwner(interaction: discord.Interaction):
+  return interaction.user.id == interaction.guild.owner_id
+
+def isMyGuild(interaction: discord.Interaction):
+  return interaction.guild.id == GUILDID
+
+def isPhil(interaction: discord.Interaction):
+  return interaction.user.id == PHILID
+
+def isCBUSMTG(interaction: discord.Interaction):
+  return interaction.guild.id == CBUSID
+
+def isSubmitter(interaction: discord.Interaction):
+  discord_id = interaction.guild.id
+  submitters = newDatabase.GetSubmitters(discord_id)
+  print("Submitters: ", submitters)
+  print(submitters)
+  return interaction.user.id in submitters
+
+def storeCanTrack(interaction: discord.Interaction):
+  store = myCommands.GetStore(interaction.guild.id)
+  if store is None:
+    return False
+  return store.ApprovalStatus
+
+async def MessageUser(msg, userId):
+  user = await client.fetch_user(userId)
+  await user.send(f'{msg}')
+
+async def MessageChannel(msg, guildId, channelId):
+  server = client.get_guild(int(guildId))
+  channel = server.get_channel(int(channelId))
+  await channel.send(f'{msg}')
+
+async def ErrorMessage(msg):
+  await MessageChannel(msg, GUILDID, ERRORID)
+
+async def ApprovalMessage(msg):
+  await MessageChannel(msg, GUILDID, APPROVALID)
+
+@client.tree.command(name="getbot", description="Display the url to get the bot", guild=GUILD)
+async def GetBot(interaction: discord.Interaction):
+  await interaction.response.send_message(MYBOTURL, ephemeral=True)
+
+@client.tree.command(name="getsheets", description="Display the url to get the sheets companion")
+@app_commands.check(isOwner)
+async def GetSheets(interaction: discord.Interaction):
+  await interaction.response.send_message(SHEETSURL, ephemeral=True)
+
+@client.tree.command(name="getsop", description="Display the url to get the SOP")
+@app_commands.check(isOwner)
+async def GetSOP(interaction: discord.Interaction):
+  await interaction.response.send_message(SOPURL, ephemeral=True)
+
+@client.tree.command(name="register", description="Register your store")
+@app_commands.check(isOwner)
+async def Register(interaction: discord.Interaction, store_name: str):
+  if store_name == '':
+    await interaction.response.send_message('Please provide a store name', ephemeral=True)
+  else:
+    store_name = store_name.upper()
+    discord_id = interaction.guild_id
+    discord_name = str(interaction.guild).upper()
+    owner = interaction.user.id
+    print(f'Registering {discord_name} with {discord_id}')
+    print('Store Name:', store_name)
+    print('Owner:', owner)
+    store = tupleConversions.Store(store_name, discord_id, discord_name, owner, False)
+    newDatabase.AddStore(store)
+    await MessageUser(f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',PHILID)
+    await MessageChannel(f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}', GUILDID, APPROVALID)
+    await interaction.response.send_message(f'Registered {store_name.title()} with discord {discord_name.title()} with owner {interaction.user}')
+
+@Register.error
+async def register_error(interaction: discord.Interaction, error):
+  await interaction.response.send_message(f'You don\'t have permission to register this store. Error: {error}', ephemeral=True)
+
+@client.tree.command(name="metagame", description="Get the metagame")
+async def Metagame(interaction: discord.Interaction, start_date: str = '', end_date: str = ''):
+  discord_id = interaction.guild_id
+  game = interaction.channel.category.name.upper()
+  format = interaction.channel.name.upper()  
+  output = myCommands.GetMetagame(discord_id, game, format, start_date, end_date)
+  await interaction.response.send_message(output)
+
+@Metagame.error
+async def metagame_error(interaction: discord.Interaction, error):
+  await ErrorMessage(error)
+  await interaction.response.send_message('There was an error processing your request')
+
+#TODO: This could be expanded on if there is no format
+@client.tree.command(name="recentevents", description="Get the recent events for this format")
+async def RecentEvents(interaction: discord.Interaction):
+  discord_id = interaction.guild.id
+  output = myCommands.FindEvents(discord_id)
+  await interaction.response.send_message(output)
+  
+@RecentEvents.error
+async def recentevents_error(interaction: discord.Interaction, error):
+  await ErrorMessage(error)
+  await interaction.response.send_message('Unable to view the recent events')
+
+@client.tree.command(name="participants", description="Get the participants of an event")
+@app_commands.check(isOwner)
+async def Participants(interaction: discord.Interaction, date: str):
+  game = interaction.channel.category.name.upper()
+  format = interaction.channel.name.upper()
+  owner = interaction.guild.owner_id
+  output = myCommands.GetPlayersInEvent(owner, game, date, format)
+  await interaction.response.send_message(output, ephemeral=True)
+
+@Participants.error
+async def participants_error(interaction: discord.Interaction, error):
+  await ErrorMessage(error)
+  await interaction.response.send_message('You don\'t have permission to view the participants of an event')
+
+#This should not take dates, but instead a year and a quarter number
+@client.tree.command(name="topplayers", description="Get the top players of the format")
+@app_commands.check(isOwner)
+async def TopPlayers(interaction: discord.Interaction, start_date: str = '', end_date: str = ''):
+  game = interaction.channel.category.name
+  format = interaction.channel.name
+  discord_id = interaction.guild.id
+  output = myCommands.GetTopPlayers(discord_id, game, format, start_date, end_date)
+  await interaction.response.send_message(output, ephemeral=True)
+
+@TopPlayers.error
+async def topplayers_error(interaction: discord.Interaction, error):
+  await ErrorMessage(error)
+  await interaction.response.send_message('Unable to load the top players')
+
+@client.tree.command(name="test", description="Relays all information about channel to Phil")
+@app_commands.check(isOwner)
+async def Test(interaction: discord.Interaction):
+  output = outputBuilder.DiscordInfo(interaction)
+  await MessageUser(output, PHILID)
+  await interaction.response.send_message('Information has been sent to Phil')
+
+@Test.error
+async def test_error(interaction: discord.Interaction, error):
+  await ErrorMessage(error)
+  await interaction.response.send_message('Ran into an error. Reported.', ephemeral=True)
+
+@client.tree.command(name='updaterow', description='Update a row in the database')
+@app_commands.check(isOwner)
+async def UpdateRow(interaction: discord.Interaction, old_row: str, new_row: str):
+  print('Old row', old_row)
+  print('New row', new_row)
+  await interaction.response.send_message(f'Updating row {old_row} with {new_row}')
+
+@UpdateRow.error
+async def updaterow_error(interaction: discord.Interaction, error):
+  await ErrorMessage(error)
+  await interaction.response.send_message(f'Error: {error}', ephemeral=True)
+
+#This should assume the game by my group. This will help me show what games are available for tracking
+@client.tree.command(name='addgamemap', description='Add a game map to the database', guild=GUILD)
+@app_commands.check(isPhil) #This could also check to make sure it's in the right channel
+async def AddGameMap(interaction: discord.Interaction, used_name: str, actual_name: str):
+  used_name = used_name.upper()
+  actual_name = actual_name.upper()
+  await interaction.response.send_message(f'Mapping {used_name} to {actual_name} in the database')
+
+@AddGameMap.error
+async def addgamemap_error(interaction: discord.Interaction, error):
+  await ErrorMessage(error)
+  await interaction.response.send_message(f'Error: {error}', ephemeral=True)
+
+@client.tree.command(name='approvestore', description='Approve a store to track', guild=GUILD)
+@app_commands.check(isPhil) #This could also check to make sure it's in the right channel
+async def ApproveStore(interaction: discord.Interaction, discord_id: str):
+  discord_id_int = int(discord_id)
+  store = myCommands.ApproveStore(discord_id_int)
+  await interaction.response.send_message(f'{store.Name.title()} is now approved to track their data')
+
+@ApproveStore.error
+async def ApproveStore_error(interaction: discord.Interaction, error):
+  await ErrorMessage(f'Error approving store: {error}')
+  await interaction.response.send_message('You\'re not Phil...')
+
+@client.tree.command(name='disapprovestore', description='Disapprove a store to track', guild=GUILD)
+@app_commands.check(isPhil) #This could also check to make sure it's in the right channel
+async def DisapproveStore(interaction: discord.Interaction, discord_id: int):
+  store = myCommands.DisapproveStore(discord_id)
+  await interaction.response.send_message(f'Store {store.Name} {store.DiscordId} no longer approved to track')
+
+@DisapproveStore.error
+async def DisapproveStore_error(interaction: discord.Interaction, error):
+  await ErrorMessage(f'Error disapproving store: {error}')
+  await interaction.response.send_message('You\'re not Phil...')
+
+@client.tree.command(name='getallstores', description='View All Stores information', guild=GUILD)
+@app_commands.check(isPhil)
+async def GetAllStores(interaction: discord.Interaction):
+  await interaction.response.send_message('Displaying all stores information', ephemeral=True)
+
+@GetAllStores.error
+async def GetAllStores_error(interaction: discord.Interaction, error):
+  await ErrorMessage(f'Error getting all stores: {error}')
+  await interaction.response.send_message('Unable to complete this request')
+
 client.run(os.getenv('DISCORDTOKEN'))

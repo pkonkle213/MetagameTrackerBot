@@ -64,9 +64,7 @@ def ApproveStoreTrackingStatus(store_discord_id):
     cur.execute(command, ('t', store_discord_id))
     conn.commit()
     store = cur.fetchone()
-    if store is None:
-      return ('Error','Error: Store not found')
-    return ('Success',store[4])
+    return store
 
 def RemoveStoreTrackingStatus(store_discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -124,6 +122,8 @@ def GetGameName(game):
     command = 'SELECT actual_name FROM gamenamemaps WHERE used_name = %s'
     cur.execute(command, (game,))
     rows = cur.fetchall()
+    if len(rows) == 0:
+      return None
     return rows[0][0]
 
 def GetDataRowsForMetagame(game,
@@ -137,7 +137,7 @@ def GetDataRowsForMetagame(game,
     command += 'FROM DataRows '
     command += 'WHERE game = %s AND event_format = %s AND discord_id = %s AND event_date >= %s AND event_date <= %s '
     command += 'GROUP BY archetype_played '
-    command += 'ORDER BY Combined DESC'
+    command += 'ORDER BY Combined DESC, archetype_played'
     cur.execute(command, (game, event_format, discord_id, start_date, end_date))
     rows = cur.fetchall()
     return rows
@@ -244,6 +244,8 @@ def GetTopPlayers(discord_id,
 
     return rows
 
+#TODO: If no format is provided, it should return all formats
+#TODO: If no game is provided, it should consider all games
 def GetEvents(discord_id,
               start_date='',
               end_date=''):
@@ -253,7 +255,7 @@ def GetEvents(discord_id,
   if end_date == '':
     end_date = datefuncs.GetEndDate()
 
-  command = 'SELECT game, event_date, event_format, count(*) FROM DataRows WHERE discord_id = %s AND event_date >= %s AND event_date <= %s GROUP BY (game, event_date, event_format) ORDER BY event_date DESC '
+  command = 'SELECT event_date, count(*) FROM DataRows WHERE discord_id = %s AND event_date >= %s AND event_date <= %s GROUP BY (game, event_date, event_format) ORDER BY event_date DESC '
 
   with conn, conn.cursor() as cur:
     cur.execute(command, (discord_id, start_date, end_date))
