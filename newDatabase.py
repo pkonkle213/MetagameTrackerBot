@@ -128,17 +128,21 @@ def GetGameName(game):
 
 def GetDataRowsForMetagame(game,
                            event_format,
-                           discord_id,
                            start_date,
-                           end_date):
+                           end_date,
+                           discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
+    criteria = [game, event_format, start_date, end_date]
     command = 'SELECT archetype_played, COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as MetaPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) as WinPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) * COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as Combined '
     command += 'FROM DataRows '
-    command += 'WHERE game = %s AND event_format = %s AND discord_id = %s AND event_date >= %s AND event_date <= %s '
+    command += 'WHERE game = %s AND event_format = %s AND event_date >= %s AND event_date <= %s '
+    if discord_id == 0:
+      command += 'AND discord_id = %s '
+      criteria.append(discord_id)
     command += 'GROUP BY archetype_played '
     command += 'ORDER BY Combined DESC, archetype_played'
-    cur.execute(command, (game, event_format, discord_id, start_date, end_date))
+    cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows
 
@@ -176,10 +180,12 @@ def GetSubmitters(discord_id):
     return user_ids
 
 def GetStoreNamesByGameFormat(game, format):
+  end_date = datefuncs.GetEndDate()
+  start_date = datefuncs.GetStartDate(end_date)
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  command = 'SELECT * FROM Stores WHERE discord_id IN (SELECT discord_id FROM DataRows WHERE game = %s AND event_format = %s GROUP BY discord_id) '
+  command = 'SELECT d.event_date, s.Name, count(*) as Attendance FROM datarows d INNER JOIN Stores s on s.discord_id = d.discord_id WHERE d.game = %s AND d.event_format = %s and d.event_date >= %s and d.event_date <= %s GROUP BY d.event_date, s.name ORDER BY d.event_date DESC, s.name '
   with conn, conn.cursor() as cur:
-    cur.execute(command, (game, format))
+    cur.execute(command, (game, format, start_date, end_date))
     rows = cur.fetchall()
     return rows
 

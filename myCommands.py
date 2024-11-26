@@ -187,30 +187,6 @@ def GetFormats(discord_id, game):
                                             results)
   return output
 
-def GetStoreMetagame(store_name, format):
-  output = ''
-  store_name = store_name.title()
-  store_obj = newDatabase.GetStores(name = store_name)
-  if len(store_obj) == 0:
-    return 'This store isn\'t tracking their data yet'
-  store = tupleConversions.ConvertToStore(store_obj[0])
-  start_date = datefuncs.GetStartDate()
-  end_date = datefuncs.GetEndDate()
-
-  metagame_data = newDatabase.GetDataRowsForMetagame('Magic: the gathering'.upper(),
-                                                     format.upper(),
-                                                     store.DiscordId,
-                                                     start_date,
-                                                     end_date)
-  if len(metagame_data) == 0:
-    output = 'No data for this format and store found'
-  else:
-    title = f'{format.title()} metagame at {store_name} from {start_date} to {end_date}'
-    metagame = tupleConversions.ChangeDataToMetagame(metagame_data)
-    headers = ['Deck Archetype', 'Meta % ', 'Win %  ', 'Combined %']
-    output = outputBuilder.BuildTableOutput(title, headers, metagame)
-  return output  
-
 def GetMetagame(discord_id, game, format, start_date, end_date):
   output = ''
   end_date = datefuncs.convert_to_date(end_date) if end_date != '' else datefuncs.GetEndDate()
@@ -219,9 +195,9 @@ def GetMetagame(discord_id, game, format, start_date, end_date):
   format = format.upper()
   metagame_data = newDatabase.GetDataRowsForMetagame(game,
                                                      format,
-                                                     discord_id,
                                                      start_date,
-                                                     end_date)
+                                                     end_date,
+                                                     discord_id)
   if len(metagame_data) == 0:
     output = 'No data found'
   else:
@@ -233,7 +209,7 @@ def GetMetagame(discord_id, game, format, start_date, end_date):
 
 def GetStoresByGameFormat(game, format):
   stores = newDatabase.GetStoreNamesByGameFormat(game, format)
-  headers = ['Store Name']
+  headers = ['Event Date','Store Name','Attendance']
   title = 'Stores with this format'
   output = outputBuilder.BuildTableOutput(title,
                                           headers,

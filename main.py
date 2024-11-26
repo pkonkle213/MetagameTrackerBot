@@ -12,9 +12,10 @@ load_dotenv()
 SHEETSURL = os.getenv('SHEETSURL')
 MYBOTURL = os.getenv('MYBOTURL')
 PHILID = int(os.getenv('PHILID'))
-CBUSID = int(os.getenv('COLUMBUSGUILDID'))
+CBUSGUILDID = int(os.getenv('COLUMBUSGUILDID'))
 GUILDID = int(os.getenv('BOTGUILDID'))
 BOTGUILD = discord.Object(id=GUILDID)
+CBUSGUILD = discord.Object(id=CBUSGUILDID)
 TESTSTOREGUILD = discord.Object(id=1303825471267409950)
 SOPURL = os.getenv('SOPURL')
 ERRORID = int(os.getenv('BOTERRORCHANNELID'))
@@ -62,7 +63,7 @@ def isPhil(interaction: discord.Interaction):
   return interaction.user.id == PHILID
 
 def isCBUSMTG(interaction: discord.Interaction):
-  return interaction.guild.id == CBUSID
+  return interaction.guild.id == CBUSGUILDID
 
 def isSubmitter(interaction: discord.Interaction):
   discord_id = interaction.guild.id
@@ -136,7 +137,10 @@ async def register_error(interaction: discord.Interaction, error):
 async def Metagame(interaction: discord.Interaction, start_date: str = '', end_date: str = ''):
   discord_id = interaction.guild_id
   game = interaction.channel.category.name.upper()
-  format = interaction.channel.name.upper()  
+  if discord_id == CBUSGUILDID:
+    game = 'MAGIC'
+    discord_id = 0
+  format = interaction.channel.name.upper()
   output = myCommands.GetMetagame(discord_id, game, format, start_date, end_date)
   await interaction.response.send_message(output)
 
@@ -265,5 +269,11 @@ async def GetAllStores(interaction: discord.Interaction):
 async def GetAllStores_error(interaction: discord.Interaction, error):
   await ErrorMessage(f'Error getting all stores: {error}')
   await interaction.response.send_message('Unable to complete this request')
+
+@client.tree.command(name='events',description='Get attendance for stores holding events', guild=CBUSGUILD)
+async def GetStoreEvents(interaction: discord.Interaction):
+  format = interaction.channel.name.upper()
+  output = myCommands.GetStoresByGameFormat('MAGIC', format)
+  await interaction.response.send_message(output)
 
 client.run(os.getenv('DISCORDTOKEN'))
