@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from discord.ext.commands import has_permissions
 from discord import app_commands
 import os
 from dotenv.main import load_dotenv
@@ -15,7 +14,8 @@ MYBOTURL = os.getenv('MYBOTURL')
 PHILID = int(os.getenv('PHILID'))
 CBUSID = int(os.getenv('COLUMBUSGUILDID'))
 GUILDID = int(os.getenv('BOTGUILDID'))
-GUILD = discord.Object(id=GUILDID)
+BOTGUILD = discord.Object(id=GUILDID)
+TESTSTOREGUILD = discord.Object(id=1303825471267409950)
 SOPURL = os.getenv('SOPURL')
 ERRORID = int(os.getenv('BOTERRORCHANNELID'))
 APPROVALID = int(os.getenv('BOTAPPROVALCHANNELID'))
@@ -27,8 +27,8 @@ class Client(commands.Bot):
     try:
       other = await self.tree.sync()
       print(f'Synced {len(other)} commands globally, allegedly')
-      synced = await self.tree.sync(guild=GUILD)
-      print(f'Synced {len(synced)} command(s) to guild Bot Guild -> {GUILD.id}')
+      synced = await self.tree.sync(guild=BOTGUILD)
+      print(f'Synced {len(synced)} command(s) to guild Bot Guild -> {BOTGUILD.id}')
     except Exception as e:
       print(f'Error syncing commands: {e}')
 
@@ -92,16 +92,19 @@ async def ErrorMessage(msg):
 async def ApprovalMessage(msg):
   await MessageChannel(msg, GUILDID, APPROVALID)
 
-@client.tree.command(name="getbot", description="Display the url to get the bot", guild=GUILD)
+@client.tree.command(name="getbot", description="Display the url to get the bot", guild=BOTGUILD)
+@app_commands.check(isOwner)
 async def GetBot(interaction: discord.Interaction):
   await interaction.response.send_message(MYBOTURL, ephemeral=True)
 
 @client.tree.command(name="getsheets", description="Display the url to get the sheets companion")
+@app_commands.checks.has_role("Store Owners")
 @app_commands.check(isOwner)
 async def GetSheets(interaction: discord.Interaction):
   await interaction.response.send_message(SHEETSURL, ephemeral=True)
 
 @client.tree.command(name="getsop", description="Display the url to get the SOP")
+@app_commands.checks.has_role("Store Owners")
 @app_commands.check(isOwner)
 async def GetSOP(interaction: discord.Interaction):
   await interaction.response.send_message(SOPURL, ephemeral=True)
@@ -155,7 +158,7 @@ async def recentevents_error(interaction: discord.Interaction, error):
   await interaction.response.send_message('Unable to view the recent events')
 
 @client.tree.command(name="participants", description="Get the participants of an event")
-@app_commands.check(isOwner)
+@app_commands.checks.has_role("Store Owners")
 async def Participants(interaction: discord.Interaction, date: str):
   game = interaction.channel.category.name.upper()
   format = interaction.channel.name.upper()
@@ -170,13 +173,16 @@ async def participants_error(interaction: discord.Interaction, error):
 
 #This should not take dates, but instead a year and a quarter number
 @client.tree.command(name="topplayers", description="Get the top players of the format")
-@app_commands.check(isOwner)
-async def TopPlayers(interaction: discord.Interaction, start_date: str = '', end_date: str = ''):
-  game = interaction.channel.category.name
-  format = interaction.channel.name
-  discord_id = interaction.guild.id
-  output = myCommands.GetTopPlayers(discord_id, game, format, start_date, end_date)
-  await interaction.response.send_message(output, ephemeral=True)
+@app_commands.checks.has_role("Store Owners")
+async def TopPlayers(interaction: discord.Interaction, year: app_commands.Range[int, 2000], quarter: app_commands.Range[int,1,4]):
+  if quarter!=0 and year==0:
+    await interaction.response.send_message('Please provide a year')
+  else:
+    game = interaction.channel.category.name
+    format = interaction.channel.name
+    discord_id = interaction.guild.id
+    output = myCommands.GetTopPlayers(discord_id, game, format, year, quarter)
+    await interaction.response.send_message(output, ephemeral=True)
 
 @TopPlayers.error
 async def topplayers_error(interaction: discord.Interaction, error):
@@ -184,6 +190,7 @@ async def topplayers_error(interaction: discord.Interaction, error):
   await interaction.response.send_message('Unable to load the top players')
 
 @client.tree.command(name="test", description="Relays all information about channel to Phil")
+@app_commands.checks.has_role("Store Owners")
 @app_commands.check(isOwner)
 async def Test(interaction: discord.Interaction):
   output = outputBuilder.DiscordInfo(interaction)
@@ -196,6 +203,7 @@ async def test_error(interaction: discord.Interaction, error):
   await interaction.response.send_message('Ran into an error. Reported.', ephemeral=True)
 
 @client.tree.command(name='updaterow', description='Update a row in the database')
+@app_commands.checks.has_role("Store Owners")
 @app_commands.check(isOwner)
 async def UpdateRow(interaction: discord.Interaction, old_row: str, new_row: str):
   print('Old row', old_row)
@@ -208,7 +216,8 @@ async def updaterow_error(interaction: discord.Interaction, error):
   await interaction.response.send_message(f'Error: {error}', ephemeral=True)
 
 #This should assume the game by my group. This will help me show what games are available for tracking
-@client.tree.command(name='addgamemap', description='Add a game map to the database', guild=GUILD)
+@client.tree.command(name='addgamemap', description='Add a game map to the database', guild=BOTGUILD)
+@app_commands.checks.has_role("Owner")
 @app_commands.check(isPhil) #This could also check to make sure it's in the right channel
 async def AddGameMap(interaction: discord.Interaction, used_name: str, actual_name: str):
   used_name = used_name.upper()
@@ -220,30 +229,34 @@ async def addgamemap_error(interaction: discord.Interaction, error):
   await ErrorMessage(error)
   await interaction.response.send_message(f'Error: {error}', ephemeral=True)
 
-@client.tree.command(name='approvestore', description='Approve a store to track', guild=GUILD)
+@client.tree.command(name='approvestore', description='Approve a store to track', guild=BOTGUILD)
 @app_commands.check(isPhil) #This could also check to make sure it's in the right channel
+@app_commands.checks.has_role("Owner")
 async def ApproveStore(interaction: discord.Interaction, discord_id: str):
   discord_id_int = int(discord_id)
   store = myCommands.ApproveStore(discord_id_int)
+  await MessageUser(f'{store.Name.title()} has been approved to track metagame data!', store.Owner)
   await interaction.response.send_message(f'{store.Name.title()} is now approved to track their data')
 
 @ApproveStore.error
 async def ApproveStore_error(interaction: discord.Interaction, error):
   await ErrorMessage(f'Error approving store: {error}')
-  await interaction.response.send_message('You\'re not Phil...')
+  await interaction.response.send_message('Unable to approve store')
 
-@client.tree.command(name='disapprovestore', description='Disapprove a store to track', guild=GUILD)
+@client.tree.command(name='disapprovestore', description='Disapprove a store to track', guild=BOTGUILD)
+@app_commands.checks.has_role("Owner")
 @app_commands.check(isPhil) #This could also check to make sure it's in the right channel
-async def DisapproveStore(interaction: discord.Interaction, discord_id: int):
-  store = myCommands.DisapproveStore(discord_id)
-  await interaction.response.send_message(f'Store {store.Name} {store.DiscordId} no longer approved to track')
+async def DisapproveStore(interaction: discord.Interaction, discord_id: str):
+  discord_id_int = int(discord_id)
+  store = myCommands.DisapproveStore(discord_id_int)
+  await interaction.response.send_message(f'Store {store.Name} ({store.DiscordId}) no longer approved to track')
 
 @DisapproveStore.error
 async def DisapproveStore_error(interaction: discord.Interaction, error):
   await ErrorMessage(f'Error disapproving store: {error}')
-  await interaction.response.send_message('You\'re not Phil...')
+  await interaction.response.send_message('Unable to disapprove store')
 
-@client.tree.command(name='getallstores', description='View All Stores information', guild=GUILD)
+@client.tree.command(name='getallstores', description='View All Stores information', guild=BOTGUILD)
 @app_commands.check(isPhil)
 async def GetAllStores(interaction: discord.Interaction):
   await interaction.response.send_message('Displaying all stores information', ephemeral=True)

@@ -93,6 +93,7 @@ def BuildTableOutput(title,
     for i in range(len(column_widths)):
       column_format = '{:' + align + str(column_widths[i]) + 's}'
       output += column_format.format(str(item[i]).title())
+      output = output.strip() #TODO: Double check this is good
     output += '\n'
 
   if len(output) > 1994:

@@ -15,6 +15,9 @@ def GetEndDate():
   today = datetime.now(pytz.timezone('US/Eastern')).date()
   return today
 
+def LastDayPreviousMonth(date):
+  return date - timedelta(days=1)
+
 def convert_to_date(date):
   if date.count('/') == 1:
     date += '/2024'

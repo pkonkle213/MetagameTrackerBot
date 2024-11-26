@@ -56,9 +56,18 @@ def FindEvents(discord_id):
     output = outputBuilder.BuildTableOutput(title, headers, rows)
     return output
 
-def GetTopPlayers(discord_id, game, format, start_date, end_date):
-  start_date = datefuncs.GetQuarterDate() if start_date == '' else datefuncs.convert_to_date(start_date)
-  end_date = datefuncs.GetEndDate() if end_date == '' else datefuncs.convert_to_date(end_date)
+def GetTopPlayers(discord_id, game, format, year, quarter):
+  start_date = datefuncs.GetQuarterDate()
+  end_date = datefuncs.GetEndDate()
+  
+  if year != 0 and quarter == 0:
+    start_date = datefuncs.convert_to_date(f'01/01/{year}')
+    end_date = datefuncs.convert_to_date(f'12/31/{year}')
+  elif year !=0 and quarter != 0:
+    start_date = datefuncs.convert_to_date(f'01/01/{year}')
+    month_past = datefuncs.convert_to_date(f'{3 + 3 * (quarter - 1)}/31/{year}')
+    end_date = datefuncs.LastDayPreviousMonth(month_past)
+    
   format = format.upper()
   game = newDatabase.GetGameName(game.upper())
 
@@ -93,8 +102,6 @@ def ApproveStore(discord_id):
 
 def DisapproveStore(discord_id):
   store_obj = newDatabase.RemoveStoreTrackingStatus(discord_id)
-  if store_obj is None:
-    raise Exception(f'No store found with discord id {discord_id}')
   store = tupleConversions.ConvertToStore(store_obj)
   return store
 

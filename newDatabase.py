@@ -69,11 +69,11 @@ def ApproveStoreTrackingStatus(store_discord_id):
 def RemoveStoreTrackingStatus(store_discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command = 'UPDATE Stores SET approval_status = %s WHERE discord_id = %s'
+    command = 'UPDATE Stores SET approval_status = %s WHERE discord_id = %s returning * '
     cur.execute(command, ('f', store_discord_id))
     conn.commit()
-
-    return 'Success'
+    store = cur.fetchone()
+    return store
 
 def DeleteStore(discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
