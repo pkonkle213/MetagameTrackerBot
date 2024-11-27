@@ -5,6 +5,7 @@ import os
 from dotenv.main import load_dotenv
 import myCommands
 import newDatabase
+from io import BytesIO
 import outputBuilder
 import tupleConversions
 
@@ -87,6 +88,10 @@ async def MessageUser(msg, userId):
   user = await client.fetch_user(userId)
   await user.send(f'{msg}')
 
+async def MessageUserFile(msg, userId, file):
+  user = await client.fetch_user(userId)
+  await user.send(f'{msg}', file=file)
+
 async def MessageChannel(msg, guildId, channelId):
   server = client.get_guild(int(guildId))
   channel = server.get_channel(int(channelId))
@@ -116,6 +121,7 @@ async def GetSOP(interaction: discord.Interaction):
   await interaction.response.send_message(SOPURL, ephemeral=True)
 
 @client.tree.command(name="register", description="Register your store")
+@app_commands.checks.has_role("Owner")
 @app_commands.check(isOwner)
 async def Register(interaction: discord.Interaction, store_name: str):
   if store_name == '':
@@ -278,5 +284,36 @@ async def GetStoreEvents(interaction: discord.Interaction):
   format = interaction.channel.name.upper()
   output = myCommands.GetStoresByGameFormat('MAGIC', format)
   await interaction.response.send_message(output)
+
+@client.tree.command(name='download', description='Downloads the Database', guild=BOTGUILD)
+@app_commands.check(isPhil)
+async def DownloadDatabase(interaction: discord.Interaction):
+  tables = ['datarows','gamenamemaps','stores']
+  for table in tables:
+    data = newDatabase.GetData(table)
+    data_list = []
+    for row in data:
+      max = len(row)
+      row_string = ''
+      for i in range(max):
+        row_string += f'{row[i]}'
+        if i != max-1:
+          row_string += ','
+        else:
+          row_string += '\n'
+        
+      data_list.append(row_string)
+    
+    as_bytes = map(str.encode, data_list)
+    content = b'\n'.join(as_bytes)
+    file = discord.File(BytesIO(content), filename=f'{table}.csv')
+    await MessageUserFile('Message', PHILID, file)
+
+  await interaction.response.send_message('Database has been downloaded and messaged')
+
+@DownloadDatabase.error
+async def DownloadDatabase_error(interaction: discord.Interaction, error):
+  await ErrorMessage(f'Error downloading database: {error}')
+  await interaction.response.send_message('Unable to download database')
 
 client.run(os.getenv('DISCORDTOKEN'))

@@ -143,6 +143,14 @@ def GetDataRowsForMetagame(game,
     rows = cur.fetchall()
     return rows
 
+def GetData(databasename):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'SELECT * FROM {databasename}'
+    cur.execute(command, [databasename])
+    rows = cur.fetchall()
+    return rows
+
 def AddSubmitter(discord_id,
                  user_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -210,7 +218,7 @@ def GetStores(name='',
     criteria += 'owner = %s AND '
     criteria_list.append(owner)
   if approval_status != '':
-    criteria += 'approval_status = %s AND'
+    criteria += 'approval_status = %s AND '
     criteria_list.append(approval_status)
 
   criteria = criteria[:-4] if len(criteria) != 6 else ''
