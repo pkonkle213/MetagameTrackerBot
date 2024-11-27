@@ -13,12 +13,12 @@ def UpdateDataRow(oldDataRow, newDataRow, submitter_id):
               newDataRow.Wins,
               newDataRow.Losses,
               newDataRow.Draws,
+              newDataRow.SubmitterId,
               oldDataRow.GamePlayed,
               oldDataRow.LocationDiscordId,
               oldDataRow.DateOfEvent,
               oldDataRow.Format,
-              oldDataRow.PlayerName,
-              submitter_id)
+              oldDataRow.PlayerName)
 
   with conn, conn.cursor() as cur:
     try:
@@ -26,9 +26,6 @@ def UpdateDataRow(oldDataRow, newDataRow, submitter_id):
       conn.commit()
       return 'Successful'
     except psycopg2.errors.UniqueViolation:
-      print('Error: UniqueViolation')
-      print('Old Row:', oldDataRow)
-      print('New Row:', newDataRow)
       return 'Unable to update row'
 
 def GetStoreOwners():
@@ -256,10 +253,10 @@ def GetEvents(discord_id,
               start_date='',
               end_date=''):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  if start_date == '':
-    start_date = datefuncs.GetStartDate()
   if end_date == '':
     end_date = datefuncs.GetEndDate()
+  if start_date == '':
+    start_date = datefuncs.GetStartDate(end_date)
 
   command = 'SELECT event_date, count(*) FROM DataRows WHERE discord_id = %s AND event_date >= %s AND event_date <= %s GROUP BY (game, event_date, event_format) ORDER BY event_date DESC '
 

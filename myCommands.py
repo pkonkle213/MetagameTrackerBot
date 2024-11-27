@@ -16,10 +16,19 @@ def UpdateDataRow(oldDataStr,newDataStr,authorId):
   discordId = tupleConversions.ConvertToStore(store_obj[0]).DiscordId
   oldData = oldDataStr.split('~')
   oldData.insert(1, discordId)
+  oldData[2] = newDatabase.GetGameName(oldData[2].upper())
+  oldData[6] = 0
+  oldData[7] = 0
+  oldData[8] = 0
+  oldData.append(authorId)
   newData = newDataStr.split('~')
   newData.insert(1, discordId)
+  newData[2] = newDatabase.GetGameName(newData[2].upper())
+  newData.append(authorId)
   oldDataRow = tupleConversions.ConvertToDataRow(oldData)
   newDataRow = tupleConversions.ConvertToDataRow(newData)
+  print('Old data:', oldDataRow)
+  print('New data:', newDataRow)
 
   return newDatabase.UpdateDataRow(oldDataRow, newDataRow, authorId)
 

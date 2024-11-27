@@ -30,6 +30,8 @@ class Client(commands.Bot):
       print(f'Synced {len(other)} commands globally, allegedly')
       synced = await self.tree.sync(guild=BOTGUILD)
       print(f'Synced {len(synced)} command(s) to guild Bot Guild -> {BOTGUILD.id}')
+      synced = await self.tree.sync(guild=CBUSGUILD)
+      print(f'Synced {len(synced)} command(s) to guild Bot Guild -> {CBUSGUILD.id}')
     except Exception as e:
       print(f'Error syncing commands: {e}')
 
@@ -48,32 +50,35 @@ class Client(commands.Bot):
                                      results,
                                      message.author.id)
       await message.channel.send(output)
+      # await message.delete() TODO: Does this work?
 
 intents = discord.Intents.default()
 intents.message_content = True
 client = Client(command_prefix='?', intents=intents)
 
 def isOwner(interaction: discord.Interaction):
-  return interaction.user.id == interaction.guild.owner_id
+  return interaction.user.id == interaction.guild.owner.id
 
 def isMyGuild(interaction: discord.Interaction):
-  return interaction.guild.id == GUILDID
+  return interaction.guild_id == GUILDID
 
 def isPhil(interaction: discord.Interaction):
   return interaction.user.id == PHILID
 
 def isCBUSMTG(interaction: discord.Interaction):
-  return interaction.guild.id == CBUSGUILDID
+  return interaction.guild_id == CBUSGUILDID
 
 def isSubmitter(interaction: discord.Interaction):
-  discord_id = interaction.guild.id
+  if interaction.user.id == PHILID or isOwner(interaction):
+    return True
+  discord_id = interaction.guild_id
   submitters = newDatabase.GetSubmitters(discord_id)
   print("Submitters: ", submitters)
   print(submitters)
   return interaction.user.id in submitters
 
 def storeCanTrack(interaction: discord.Interaction):
-  store = myCommands.GetStore(interaction.guild.id)
+  store = myCommands.GetStore(interaction.guild_id)
   if store is None:
     return False
   return store.ApprovalStatus
@@ -99,13 +104,13 @@ async def GetBot(interaction: discord.Interaction):
   await interaction.response.send_message(MYBOTURL, ephemeral=True)
 
 @client.tree.command(name="getsheets", description="Display the url to get the sheets companion")
-@app_commands.checks.has_role("Store Owners")
+@app_commands.checks.has_role("Owner")
 @app_commands.check(isOwner)
 async def GetSheets(interaction: discord.Interaction):
   await interaction.response.send_message(SHEETSURL, ephemeral=True)
 
 @client.tree.command(name="getsop", description="Display the url to get the SOP")
-@app_commands.checks.has_role("Store Owners")
+@app_commands.checks.has_role("Owner")
 @app_commands.check(isOwner)
 async def GetSOP(interaction: discord.Interaction):
   await interaction.response.send_message(SOPURL, ephemeral=True)
@@ -120,9 +125,6 @@ async def Register(interaction: discord.Interaction, store_name: str):
     discord_id = interaction.guild_id
     discord_name = str(interaction.guild).upper()
     owner = interaction.user.id
-    print(f'Registering {discord_name} with {discord_id}')
-    print('Store Name:', store_name)
-    print('Owner:', owner)
     store = tupleConversions.Store(store_name, discord_id, discord_name, owner, False)
     newDatabase.AddStore(store)
     await MessageUser(f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',PHILID)
@@ -162,7 +164,7 @@ async def recentevents_error(interaction: discord.Interaction, error):
   await interaction.response.send_message('Unable to view the recent events')
 
 @client.tree.command(name="participants", description="Get the participants of an event")
-@app_commands.checks.has_role("Store Owners")
+@app_commands.checks.has_role("Owner")
 async def Participants(interaction: discord.Interaction, date: str):
   game = interaction.channel.category.name.upper()
   format = interaction.channel.name.upper()
@@ -177,7 +179,7 @@ async def participants_error(interaction: discord.Interaction, error):
 
 #This should not take dates, but instead a year and a quarter number
 @client.tree.command(name="topplayers", description="Get the top players of the format")
-@app_commands.checks.has_role("Store Owners")
+@app_commands.checks.has_role("Owner")
 async def TopPlayers(interaction: discord.Interaction, year: app_commands.Range[int, 2000], quarter: app_commands.Range[int,1,4]):
   if quarter!=0 and year==0:
     await interaction.response.send_message('Please provide a year')
@@ -194,7 +196,7 @@ async def topplayers_error(interaction: discord.Interaction, error):
   await interaction.response.send_message('Unable to load the top players')
 
 @client.tree.command(name="test", description="Relays all information about channel to Phil")
-@app_commands.checks.has_role("Store Owners")
+@app_commands.checks.has_role("Owner")
 @app_commands.check(isOwner)
 async def Test(interaction: discord.Interaction):
   output = outputBuilder.DiscordInfo(interaction)
@@ -207,12 +209,13 @@ async def test_error(interaction: discord.Interaction, error):
   await interaction.response.send_message('Ran into an error. Reported.', ephemeral=True)
 
 @client.tree.command(name='updaterow', description='Update a row in the database')
-@app_commands.checks.has_role("Store Owners")
+@app_commands.checks.has_role("Owner")
 @app_commands.check(isOwner)
 async def UpdateRow(interaction: discord.Interaction, old_row: str, new_row: str):
   print('Old row', old_row)
   print('New row', new_row)
   await interaction.response.send_message(f'Updating row {old_row} with {new_row}')
+  output = myCommands.UpdateDataRow(old_row, new_row, interaction.user.id)
 
 @UpdateRow.error
 async def updaterow_error(interaction: discord.Interaction, error):
