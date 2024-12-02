@@ -120,7 +120,7 @@ def GetGameName(game):
     cur.execute(command, (game,))
     rows = cur.fetchall()
     if len(rows) == 0:
-      return None
+      return ''
     return rows[0][0]
 
 def GetDataRowsForMetagame(game,
@@ -258,15 +258,10 @@ def GetTopPlayers(discord_id,
 #TODO: If no format is provided, it should return all formats
 #TODO: If no game is provided, it should consider all games
 def GetEvents(discord_id,
-              start_date='',
-              end_date=''):
+              start_date,
+              end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  if end_date == '':
-    end_date = datefuncs.GetEndDate()
-  if start_date == '':
-    start_date = datefuncs.GetStartDate(end_date)
-
-  command = 'SELECT event_date, count(*) FROM DataRows WHERE discord_id = %s AND event_date >= %s AND event_date <= %s GROUP BY (game, event_date, event_format) ORDER BY event_date DESC '
+  command = 'SELECT event_date, game, event_format, count(*) FROM DataRows WHERE discord_id = %s AND event_date >= %s AND event_date <= %s GROUP BY (game, event_date, event_format) ORDER BY event_date DESC, event_format '
 
   with conn, conn.cursor() as cur:
     cur.execute(command, (discord_id, start_date, end_date))

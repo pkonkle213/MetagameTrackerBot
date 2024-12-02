@@ -55,33 +55,29 @@ def GetPlayersInEvent(author_id,
 def FindEvents(discord_id):
   store_obj = newDatabase.GetStores(discord_id = discord_id)[0]
   store = tupleConversions.ConvertToStore(store_obj)
-  rows = newDatabase.GetEvents(discord_id = store.DiscordId)
+  end_date = datefuncs.GetEndDate()
+  start_date = datefuncs.GetStartDate(end_date)
+  rows = newDatabase.GetEvents(store.DiscordId, start_date, end_date)
   if len(rows) == 0:
     return 'No events found'
   else:
-    title = f'{store.Name.title()}\'s events'
-    headers = ['Date', 'Attended']
+    title = f'{store.Name.title()}\'s events between {start_date} and {end_date}'
+    headers = ['Date', 'Game', 'Format', 'Attended']
 
     output = outputBuilder.BuildTableOutput(title, headers, rows)
     return output
 
 def GetTopPlayers(discord_id, game, format, year, quarter):
-  start_date = datefuncs.GetQuarterDate()
-  end_date = datefuncs.GetEndDate()
-  
-  if year != 0 and quarter == 0:
-    start_date = datefuncs.convert_to_date(f'01/01/{year}')
-    end_date = datefuncs.convert_to_date(f'12/31/{year}')
-  elif year !=0 and quarter != 0:
-    start_date = datefuncs.convert_to_date(f'01/01/{year}')
-    month_past = datefuncs.convert_to_date(f'{3 + 3 * (quarter - 1)}/31/{year}')
-    end_date = datefuncs.LastDayPreviousMonth(month_past)
+  date_range = datefuncs.GetQuarterRange(year, quarter)
+  start_date = date_range[0]
+  end_date = date_range[1]
     
   format = format.upper()
   game = newDatabase.GetGameName(game.upper())
 
   if start_date is None or end_date is None or start_date > end_date:
     return 'Error: Invalid date range '
+    #probabl not needed
 
   store_obj = newDatabase.GetStores(discord_id=discord_id)
   store = tupleConversions.ConvertToStore(store_obj[0])
