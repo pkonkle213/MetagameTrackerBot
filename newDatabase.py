@@ -255,6 +255,14 @@ def GetTopPlayers(discord_id,
 
     return rows
 
+def GetAllGames():
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = 'SELECT actual_name FROM gamenamemaps GROUP BY actual_name ORDER BY actual_name '
+    cur.execute(command)
+    rows = cur.fetchall()
+    return rows
+
 #TODO: If no format is provided, it should return all formats
 #TODO: If no game is provided, it should consider all games
 def GetEvents(discord_id,
@@ -292,5 +300,4 @@ def AddGameMap(used_name, actual_name):
       row = cur.fetchone()
       return row
     except psycopg2.errors.UniqueViolation:
-      print('Error: UniqueViolation')
-      return None
+      return (used_name, actual_name)

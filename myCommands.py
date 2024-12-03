@@ -7,7 +7,7 @@ def AddGameMap(used_name, actual_name):
   used_name = used_name.upper()
   actual_name = actual_name.upper()
   rows = newDatabase.AddGameMap(used_name, actual_name)
-  return 'Success' if rows is not None else 'Error'
+  return f'Success! {used_name.title()} is now mapped to {actual_name.title()}' if rows is not None else 'Error'
 
 def UpdateDataRow(oldDataStr,newDataStr,authorId):
   store_obj = newDatabase.GetStores(owner = authorId)
