@@ -53,13 +53,14 @@ class Client(commands.Bot):
     if command == '$ADDRESULTS' and ((storeCanTrack and isSubmitter) or
                                      (isPhil and isMyGuild)):
       results = message.content.split('\n')[1:]
-      await message.channel.send(f'Attempting to add {len(results)} results...'
-                                 )
+      await message.channel.send(f'Attempting to add {len(results)} results...')
 
-      output = myCommands.AddResults(message.guild.id, GUILDID, results,
+      output = myCommands.AddResults(message.guild.id,
+                                     GUILDID,
+                                     results,
                                      message.author.id)
       await message.channel.send(output)
-      # await message.delete() TODO: Does this work?
+      await message.delete()
 
 
 intents = discord.Intents.default()
@@ -127,6 +128,7 @@ async def ApprovalMessage(msg):
 @client.tree.command(name="getbot",
                      description="Display the url to get the bot",
                      guild=BOTGUILD)
+@app_commands.checks.has_role("Owner")
 @app_commands.check(isOwner)
 async def GetBot(interaction: discord.Interaction):
   await interaction.response.send_message(MYBOTURL, ephemeral=True)
@@ -183,6 +185,7 @@ async def register_error(interaction: discord.Interaction, error):
 
 @client.tree.command(name="metagame", description="Get the metagame")
 async def Metagame(interaction: discord.Interaction,
+                   format: str = '',
                    start_date: str = '',
                    end_date: str = ''):
   discord_id = interaction.guild_id
@@ -190,7 +193,10 @@ async def Metagame(interaction: discord.Interaction,
   if discord_id == CBUSGUILDID:
     game = 'MAGIC'
     discord_id = 0
-  format = interaction.channel.name.upper()
+  if format == '':
+    format = interaction.channel.name.upper()
+  else:
+    format = format.upper()
   output = myCommands.GetMetagame(discord_id, game, format, start_date,
                                   end_date)
   await interaction.response.send_message(output)

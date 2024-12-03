@@ -173,10 +173,9 @@ def AddResults(sending_guild_id, myGuildId, eventResults, submitterId):
         AddError('Row already exists', errors)
 
   num_errors = sum(errors.values())
-  errorpunct = ':' if num_errors > 1 else '.'
   successes = len(eventResults) - num_errors
 
-  output = f'{successes} entries were added. {num_errors} were skipped{errorpunct}'
+  output = f'{successes} entries were added. {num_errors} were skipped.'
   if len(errors) > 0:
     output += '\nErrors: ' + ', '.join(errors.keys())
 
