@@ -75,10 +75,6 @@ def GetTopPlayers(discord_id, game, format, year, quarter):
   format = format.upper()
   game = newDatabase.GetGameName(game.upper())
 
-  if start_date is None or end_date is None or start_date > end_date:
-    return 'Error: Invalid date range '
-    #probabl not needed
-
   store_obj = newDatabase.GetStores(discord_id=discord_id)
   store = tupleConversions.ConvertToStore(store_obj[0])
   results = newDatabase.GetTopPlayers(store.DiscordId, game, format, start_date, end_date)

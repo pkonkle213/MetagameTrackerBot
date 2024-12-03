@@ -48,16 +48,14 @@ class Client(commands.Bot):
     if message.author == self.user:
       return
 
-    #TODO: This should change. Assume game/format by category/channel, then delete sent message
     command = message.content.split()[0].upper()
     if command == '$ADDRESULTS' and ((storeCanTrack and isSubmitter) or
                                      (isPhil and isMyGuild)):
       results = message.content.split('\n')[1:]
-      await message.channel.send(f'Attempting to add {len(results)} results...')
+      await message.channel.send(f'Attempting to add {len(results)} results...'
+                                 )
 
-      output = myCommands.AddResults(message.guild.id,
-                                     GUILDID,
-                                     results,
+      output = myCommands.AddResults(message.guild.id, GUILDID, results,
                                      message.author.id)
       await message.channel.send(output)
       await message.delete()
@@ -251,7 +249,6 @@ async def participants_error(interaction: discord.Interaction, error):
       'You don\'t have permission to view the participants of an event')
 
 
-#This should not take dates, but instead a year and a quarter number
 @client.tree.command(name="topplayers",
                      description="Get the top players of the format")
 @app_commands.checks.has_role("Owner")
@@ -308,17 +305,11 @@ async def updaterow_error(interaction: discord.Interaction, error):
   await interaction.response.send_message(f'Error: {error}', ephemeral=True)
 
 
-#This should assume the game by my group. This will help me show what games are available for tracking
 @client.tree.command(name='addgamemap',
                      description='Add a game map to the database')
 @app_commands.checks.has_role("Owner")
 async def AddGameMap(interaction: discord.Interaction):
-  #TODO: Goal should be assuming the channel name as the used_name and a dropdown menu to select the actual name
-  #used_name = used_name.upper()
-  #actual_name = actual_name.upper()
-  #await interaction.response.send_message(f'Mapping {used_name} to {actual_name} in the database')
   games_list = newDatabase.GetAllGames()
-  print('Games list', games_list)
   game_options = []
   for game in games_list:
     game_options.append(
