@@ -34,13 +34,12 @@ class Client(commands.Bot):
       other = await self.tree.sync()
       print(f'Synced {len(other)} commands globally, allegedly')
       synced = await self.tree.sync(guild=BOTGUILD)
-      print(
-          f'Synced {len(synced)} command(s) to guild Bot Guild -> {BOTGUILD.id}'
-      )
-      synced = await self.tree.sync(guild=CBUSGUILD)
-      print(
-          f'Synced {len(synced)} command(s) to guild Bot Guild -> {CBUSGUILD.id}'
-      )
+      print(f'Synced {len(synced)} command(s) to guild Bot Guild -> {BOTGUILD.id}')
+      #For when/if we can link with the Columbus MTG discord
+      #synced = await self.tree.sync(guild=CBUSGUILD)
+      #print(f'Synced {len(synced)} command(s) to guild Bot Guild -> {CBUSGUILD.id}')
+      synced = await self.tree.sync(guild=TESTSTOREGUILD)
+      print(f'Synced {len(synced)} command(s) to guild Bot Guild -> {TESTSTOREGUILD.id}')
     except Exception as e:
       print(f'Error syncing commands: {e}')
 
@@ -52,8 +51,7 @@ class Client(commands.Bot):
     if command == '$ADDRESULTS' and ((storeCanTrack and isSubmitter) or
                                      (isPhil and isMyGuild)):
       results = message.content.split('\n')[1:]
-      await message.channel.send(f'Attempting to add {len(results)} results...'
-                                 )
+      await message.channel.send(f'Attempting to add {len(results)} results...')
 
       output = myCommands.AddResults(message.guild.id, GUILDID, results,
                                      message.author.id)
@@ -115,6 +113,13 @@ async def MessageChannel(msg, guildId, channelId):
   await channel.send(f'{msg}')
 
 
+async def Error(interaction, error):
+  await ErrorMessage(f'Error: {error}')
+  await interaction.response.send_message(
+      'Something went wrong, it has been reported. Please try again later.',
+      ephemeral=True)
+
+
 async def ErrorMessage(msg):
   await MessageChannel(msg, GUILDID, ERRORID)
 
@@ -132,6 +137,11 @@ async def GetBot(interaction: discord.Interaction):
   await interaction.response.send_message(MYBOTURL, ephemeral=True)
 
 
+@GetBot.error
+async def GetBot_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
+
+
 @client.tree.command(name="getsheets",
                      description="Display the url to get the sheets companion")
 @app_commands.checks.has_role("Owner")
@@ -140,12 +150,22 @@ async def GetSheets(interaction: discord.Interaction):
   await interaction.response.send_message(SHEETSURL, ephemeral=True)
 
 
+@GetSheets.error
+async def GetSheets_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
+
+
 @client.tree.command(name="getsop",
                      description="Display the url to get the SOP")
 @app_commands.checks.has_role("Owner")
 @app_commands.check(isOwner)
 async def GetSOP(interaction: discord.Interaction):
   await interaction.response.send_message(SOPURL, ephemeral=True)
+
+
+@GetSOP.error
+async def GetSOP_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
 
 
 @client.tree.command(name="register", description="Register your store")
@@ -176,9 +196,7 @@ async def Register(interaction: discord.Interaction, store_name: str):
 
 @Register.error
 async def register_error(interaction: discord.Interaction, error):
-  await interaction.response.send_message(
-      f'You don\'t have permission to register this store. Error: {error}',
-      ephemeral=True)
+  await Error(interaction, error)
 
 
 @client.tree.command(name="metagame", description="Get the metagame")
@@ -202,9 +220,7 @@ async def Metagame(interaction: discord.Interaction,
 
 @Metagame.error
 async def metagame_error(interaction: discord.Interaction, error):
-  await ErrorMessage(error)
-  await interaction.response.send_message(
-      'There was an error processing your request')
+  await Error(interaction, error)
 
 
 #TODO: Should this assume game and format?
@@ -225,8 +241,7 @@ async def RecentEvents(interaction: discord.Interaction):
 
 @RecentEvents.error
 async def recentevents_error(interaction: discord.Interaction, error):
-  await ErrorMessage(error)
-  await interaction.response.send_message('Unable to view the recent events')
+  await Error(interaction, error)
 
 
 #Output when no results should be indicitave that there wasn't an appropriate event that day
@@ -244,9 +259,7 @@ async def Participants(interaction: discord.Interaction, date: str):
 
 @Participants.error
 async def participants_error(interaction: discord.Interaction, error):
-  await ErrorMessage(error)
-  await interaction.response.send_message(
-      'You don\'t have permission to view the participants of an event')
+  await Error(interaction, error)
 
 
 @client.tree.command(name="topplayers",
@@ -265,9 +278,13 @@ async def TopPlayers(interaction: discord.Interaction,
 
 @TopPlayers.error
 async def topplayers_error(interaction: discord.Interaction, error):
-  await ErrorMessage(error)
-  await interaction.response.send_message('Unable to load the top players')
+  await Error(interaction, error)
 
+@client.tree.command(name="getcolumns", description="Get the columns for a table",guild=TESTSTOREGUILD)
+async def GetColumns(interaction: discord.Interaction, table: str):
+  output = newDatabase.GetColumnNames(table)
+  print(output)
+  await interaction.response.send_message('This seems cool', ephemeral=True)
 
 @client.tree.command(
     name="test", description="Relays all information about channel to Phil")
@@ -281,9 +298,7 @@ async def Test(interaction: discord.Interaction):
 
 @Test.error
 async def test_error(interaction: discord.Interaction, error):
-  await ErrorMessage(error)
-  await interaction.response.send_message('Ran into an error. Reported.',
-                                          ephemeral=True)
+  await Error(interaction, error)
 
 
 @client.tree.command(name='updaterow',
@@ -301,8 +316,7 @@ async def UpdateRow(interaction: discord.Interaction, old_row: str,
 
 @UpdateRow.error
 async def updaterow_error(interaction: discord.Interaction, error):
-  await ErrorMessage(error)
-  await interaction.response.send_message(f'Error: {error}', ephemeral=True)
+  await Error(interaction, error)
 
 
 @client.tree.command(name='addgamemap',
@@ -331,9 +345,7 @@ async def AddGameMap(interaction: discord.Interaction):
 
 @AddGameMap.error
 async def addgamemap_error(interaction: discord.Interaction, error):
-  await ErrorMessage(error)
-  await interaction.response.send_message(
-      'There was an error and it has been reported', ephemeral=True)
+  await Error(interaction, error)
 
 
 @client.tree.command(name='approvestore',
@@ -353,8 +365,7 @@ async def ApproveStore(interaction: discord.Interaction, discord_id: str):
 
 @ApproveStore.error
 async def ApproveStore_error(interaction: discord.Interaction, error):
-  await ErrorMessage(f'Error approving store: {error}')
-  await interaction.response.send_message('Unable to approve store')
+  await Error(interaction, error)
 
 
 @client.tree.command(name='disapprovestore',
@@ -371,8 +382,7 @@ async def DisapproveStore(interaction: discord.Interaction, discord_id: str):
 
 @DisapproveStore.error
 async def DisapproveStore_error(interaction: discord.Interaction, error):
-  await ErrorMessage(f'Error disapproving store: {error}')
-  await interaction.response.send_message('Unable to disapprove store')
+  await Error(interaction, error)
 
 
 @client.tree.command(name='getallstores',
@@ -387,8 +397,7 @@ async def GetAllStores(interaction: discord.Interaction):
 
 @GetAllStores.error
 async def GetAllStores_error(interaction: discord.Interaction, error):
-  await ErrorMessage(f'Error getting all stores: {error}')
-  await interaction.response.send_message('Unable to complete this request')
+  await Error(interaction, error)
 
 
 @client.tree.command(name='events',
@@ -398,6 +407,11 @@ async def GetStoreEvents(interaction: discord.Interaction):
   format = interaction.channel.name.upper()
   output = myCommands.GetStoresByGameFormat('MAGIC', format)
   await interaction.response.send_message(output)
+
+
+@GetStoreEvents.error
+async def GetStoreEvents_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
 
 
 @client.tree.command(name='download',
@@ -432,8 +446,7 @@ async def DownloadDatabase(interaction: discord.Interaction):
 
 @DownloadDatabase.error
 async def DownloadDatabase_error(interaction: discord.Interaction, error):
-  await ErrorMessage(f'Error downloading database: {error}')
-  await interaction.response.send_message('Unable to download database')
+  await Error(interaction, error)
 
 
 client.run(os.getenv('DISCORDTOKEN'))

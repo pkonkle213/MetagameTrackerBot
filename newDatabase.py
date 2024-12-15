@@ -133,7 +133,7 @@ def GetDataRowsForMetagame(game,
     criteria = [game, event_format, start_date, end_date]
     command = 'SELECT archetype_played, COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as MetaPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) as WinPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) * COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as Combined '
     command += 'FROM DataRows '
-    command += 'WHERE game = %s AND event_format = %s AND event_date >= %s AND event_date <= %s '
+    command += 'WHERE game = %s AND archetype_played != \'UNKNOWN\' AND event_format = %s AND event_date >= %s AND event_date <= %s '
     if discord_id == 0:
       command += 'AND discord_id = %s '
       criteria.append(discord_id)
@@ -286,8 +286,16 @@ def GetPlayersInEvent(discord_id,
   with conn, conn.cursor() as cur:
     cur.execute(command, (game, discord_id, event_date, event_format))
     rows = cur.fetchall()
-
     return rows
+
+# Putting this here in case it's usable later
+def GetColumnNames(table):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'SELECT column_name FROM information_schema.columns where table_name = \'{table}\''
+    cur.execute(command)
+    rows = cur.fetchall()
+    return rows   
 
 def AddGameMap(used_name, actual_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
