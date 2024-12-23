@@ -34,7 +34,7 @@ def UpdateDataRow(oldDataStr,newDataStr,authorId):
 
 def Claim(store_discord, player_name, archetype_played, date, format, game, updater_id, updater_name):
   output = newDatabase.Claim(store_discord, player_name, archetype_played, date, format, game, updater_id)
-  newDatabase.TrackInput(store_discord, updater_name.upper(), updater_id, archetype_played, datefuncs.GetToday())
+  newDatabase.TrackInput(store_discord, updater_name.upper(), updater_id, archetype_played, datefuncs.GetToday(), player_name.upper())
   return output == 'Success'
 
 def GetStoreOwnerIds():

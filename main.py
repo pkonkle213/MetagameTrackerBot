@@ -411,7 +411,8 @@ async def GetStoreEvents(interaction: discord.Interaction):
 
 
 @GetStoreEvents.error
-async def GetStoreEvents_error(interaction: discord.Interaction, error):
+async def GetStoreEvents_error(interaction: discordclaim
+                               .Interaction, error):
   await Error(interaction, error)
 
 

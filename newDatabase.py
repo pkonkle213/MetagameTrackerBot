@@ -4,11 +4,11 @@ import psycopg2
 
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
-def TrackInput(store_discord, updater_name, updater_id, archetype_played, todays_date):
+def TrackInput(store_discord, updater_name, updater_id, archetype_played, todays_date, player_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  command = 'INSERT INTO InputTracker (user_name, user_id, archetype_played, date_submitted) VALUES (%s, %s, %s, %s) RETURNING *'
+  command = 'INSERT INTO InputTracker (user_name, user_id, archetype_played, date_submitted, player_name) VALUES (%s, %s, %s, %s, %s) RETURNING *'
   with conn, conn.cursor() as cur:   
-    cur.execute(command, (updater_name,updater_id,archetype_played,todays_date))
+    cur.execute(command, (updater_name,updater_id,archetype_played,todays_date, player_name))
     conn.commit()
 
 def Claim(store_discord, name, archetype, date, format, game, updater):
