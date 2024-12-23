@@ -418,8 +418,7 @@ async def GetStoreEvents_error(interaction: discordclaim
 
 #The goal is for a user to submit their name and archtype to the event and have it update, taking the weight off of the store
 @client.tree.command(name='claim',
-                    description='Enter your archetype',
-                    guild=TESTSTOREGUILD)
+                    description='Enter your archetype')
 async def Claim(interaction: discord.Interaction, name:str, archetype: str, date:str = ''):
   datedate = datefuncs.convert_to_date(date)
   if datedate is None:
@@ -462,7 +461,7 @@ async def Claim_error(interaction: discord.Interaction, error):
                      guild=BOTGUILD)
 @app_commands.check(isPhil)
 async def DownloadDatabase(interaction: discord.Interaction):
-  tables = ['datarows', 'gamenamemaps', 'stores']
+  tables = ['datarows', 'gamenamemaps', 'stores', 'inputtracker']
   for table in tables:
     data = newDatabase.GetData(table)
     data_list = []
