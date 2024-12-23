@@ -16,7 +16,7 @@ def GetStartDate(end_date):
   start = end_date - timedelta(days=end_date.weekday()) - timedelta(weeks=8)
   return start
 
-def GetEndDate():
+def GetToday():
   today = datetime.now(pytz.timezone('US/Eastern')).date()
   return today
 

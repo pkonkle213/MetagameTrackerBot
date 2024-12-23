@@ -4,6 +4,25 @@ import psycopg2
 
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
+def TrackInput(store_discord, updater_name, updater_id, archetype_played, todays_date):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  command = 'INSERT INTO InputTracker (user_name, user_id, archetype_played, date_submitted) VALUES (%s, %s, %s, %s) RETURNING *'
+  with conn, conn.cursor() as cur:   
+    cur.execute(command, (updater_name,updater_id,archetype_played,todays_date))
+    conn.commit()
+
+def Claim(store_discord, name, archetype, date, format, game, updater):
+  try:
+    conn = psycopg2.connect(os.environ['DATABASE_URL'])
+    command = 'UPDATE DataRows SET archetype_played = %s, submitter = %s WHERE discord_id = %s AND player_name = %s AND event_format = %s AND event_date = %s AND game = %s '
+    criteria = (archetype, updater, store_discord, name, format, date, game)
+    with conn, conn.cursor() as cur:  
+      cur.execute(command, criteria)
+      conn.commit()
+    return 'Success'
+  except Exception as excep:
+    return f'Failure: {excep}'
+
 def UpdateDataRow(oldDataRow, newDataRow, submitter_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   command = 'UPDATE DataRows SET player_name = %s, archetype_played = %s, wins = %s, losses = %s, draws = %s, submitter = %s '
@@ -185,7 +204,7 @@ def GetSubmitters(discord_id):
     return user_ids
 
 def GetStoreNamesByGameFormat(game, format):
-  end_date = datefuncs.GetEndDate()
+  end_date = datefuncs.GetToday()
   start_date = datefuncs.GetStartDate(end_date)
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   command = 'SELECT d.event_date, s.Name, count(*) as Attendance FROM datarows d INNER JOIN Stores s on s.discord_id = d.discord_id WHERE d.game = %s AND d.event_format = %s and d.event_date >= %s and d.event_date <= %s GROUP BY d.event_date, s.name ORDER BY d.event_date DESC, s.name '

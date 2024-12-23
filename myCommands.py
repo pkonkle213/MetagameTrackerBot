@@ -32,6 +32,11 @@ def UpdateDataRow(oldDataStr,newDataStr,authorId):
 
   return newDatabase.UpdateDataRow(oldDataRow, newDataRow, authorId)
 
+def Claim(store_discord, player_name, archetype_played, date, format, game, updater_id, updater_name):
+  output = newDatabase.Claim(store_discord, player_name, archetype_played, date, format, game, updater_id)
+  newDatabase.TrackInput(store_discord, updater_name.upper(), updater_id, archetype_played, datefuncs.GetToday())
+  return output == 'Success'
+
 def GetStoreOwnerIds():
   return newDatabase.GetStoreOwners()
 
@@ -55,7 +60,7 @@ def GetPlayersInEvent(author_id,
 def FindEvents(discord_id):
   store_obj = newDatabase.GetStores(discord_id = discord_id)[0]
   store = tupleConversions.ConvertToStore(store_obj)
-  end_date = datefuncs.GetEndDate()
+  end_date = datefuncs.GetToday()
   start_date = datefuncs.GetStartDate(end_date)
   rows = newDatabase.GetEvents(store.DiscordId, start_date, end_date)
   if len(rows) == 0:
@@ -189,7 +194,7 @@ def GetFormats(discord_id, game):
 
 def GetMetagame(discord_id, game, format, start_date, end_date):
   output = ''
-  end_date = datefuncs.convert_to_date(end_date) if end_date != '' else datefuncs.GetEndDate()
+  end_date = datefuncs.convert_to_date(end_date) if end_date != '' else datefuncs.GetToday()
   start_date = datefuncs.convert_to_date(start_date) if start_date != '' else datefuncs.GetStartDate(end_date)
   game = newDatabase.GetGameName(game.upper())
   format = format.upper()

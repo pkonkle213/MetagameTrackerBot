@@ -1,3 +1,4 @@
+import datefuncs
 import discord
 from discord.ext import commands
 from discord.ui import Select, View
@@ -34,12 +35,12 @@ class Client(commands.Bot):
       other = await self.tree.sync()
       print(f'Synced {len(other)} commands globally, allegedly')
       synced = await self.tree.sync(guild=BOTGUILD)
-      print(f'Synced {len(synced)} command(s) to guild Bot Guild -> {BOTGUILD.id}')
+      print(f'Synced {len(synced)} command(s) to guild My Bot  -> {BOTGUILD.id}')
       #For when/if we can link with the Columbus MTG discord
       #synced = await self.tree.sync(guild=CBUSGUILD)
-      #print(f'Synced {len(synced)} command(s) to guild Bot Guild -> {CBUSGUILD.id}')
+      #print(f'Synced {len(synced)} command(s) to guild Columbus MTG -> {CBUSGUILD.id}')
       synced = await self.tree.sync(guild=TESTSTOREGUILD)
-      print(f'Synced {len(synced)} command(s) to guild Bot Guild -> {TESTSTOREGUILD.id}')
+      print(f'Synced {len(synced)} command(s) to guild Test Guild -> {TESTSTOREGUILD.id}')
     except Exception as e:
       print(f'Error syncing commands: {e}')
 
@@ -413,6 +414,47 @@ async def GetStoreEvents(interaction: discord.Interaction):
 async def GetStoreEvents_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+
+#The goal is for a user to submit their name and archtype to the event and have it update, taking the weight off of the store
+@client.tree.command(name='claim',
+                    description='Enter your archetype',
+                    guild=TESTSTOREGUILD)
+async def Claim(interaction: discord.Interaction, name:str, archetype: str, date:str = ''):
+  datedate = datefuncs.convert_to_date(date)
+  if datedate is None:
+    datedate = datefuncs.GetToday()
+
+  format = interaction.channel.name.upper()
+  game = interaction.channel.category.name.upper()
+  mapped_game = newDatabase.GetGameName(game)
+  store_discord = interaction.guild.id
+  updater_id = interaction.user.id
+  updater_name = interaction.user.display_name
+  archetype = archetype.upper()
+
+  success_check = myCommands.Claim(store_discord, name, archetype, datedate, format, mapped_game, updater_id, updater_name)
+  output = ''
+  if success_check:
+    output = 'Thank you for submitting your archetype!'
+  else:
+    output = 'Error: Something went wrong. It\'s been reported'
+    message_parts = []
+    message_parts.append('Error claiming archetype:')
+    message_parts.append(f'Name: {name}')
+    message_parts.append(f'Archetype: {archetype}')
+    message_parts.append(f'Date: {datedate}')
+    message_parts.append(f'Format: {format}')
+    message_parts.append(f'Mapped Game: {mapped_game}')
+    message_parts.append(f'Store Discord: {store_discord}')
+    message_parts.append(f'Updater Discord: {updater_id}')
+    
+    await ErrorMessage('\n'.join(message_parts))
+  
+  await interaction.response.send_message(output)
+
+@Claim.error
+async def Claim_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
 
 @client.tree.command(name='download',
                      description='Downloads the Database',
