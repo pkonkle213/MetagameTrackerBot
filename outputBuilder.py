@@ -1,5 +1,4 @@
-import datetime
-import pytz
+import datefuncs
 
 def MaxLength(headers, collection):
   buffer = 2
@@ -16,7 +15,7 @@ def MaxLength(headers, collection):
 
 def DiscordInfo(interaction):
   response = []
-  currentDateTime = str(datetime.datetime.now(pytz.timezone('US/Eastern')).date())
+  currentDateTime = str(datefuncs.GetToday())
   response.append(f'Current Date: {currentDateTime}')
   response.append(f'Message Author Name: {str(interaction.user)}')
   response.append(f'Message Author ID: {str(interaction.user.id)}')
