@@ -132,8 +132,6 @@ async def ApprovalMessage(msg):
 @client.tree.command(name="getbot",
                      description="Display the url to get the bot",
                      guild=BOTGUILD)
-@app_commands.checks.has_role("Owner")
-@app_commands.check(isOwner)
 async def GetBot(interaction: discord.Interaction):
   await interaction.response.send_message(MYBOTURL, ephemeral=True)
 
@@ -144,9 +142,8 @@ async def GetBot_error(interaction: discord.Interaction, error):
 
 
 @client.tree.command(name="getsheets",
-                     description="Display the url to get the sheets companion")
-@app_commands.checks.has_role("Owner")
-@app_commands.check(isOwner)
+                     description="Display the url to get the sheets companion",
+                     guild=BOTGUILD)
 async def GetSheets(interaction: discord.Interaction):
   await interaction.response.send_message(SHEETSURL, ephemeral=True)
 
@@ -157,7 +154,8 @@ async def GetSheets_error(interaction: discord.Interaction, error):
 
 
 @client.tree.command(name="getsop",
-                     description="Display the url to get the SOP")
+                     description="Display the url to get the SOP",
+                     guild=TESTSTOREGUILD)
 @app_commands.checks.has_role("Owner")
 @app_commands.check(isOwner)
 async def GetSOP(interaction: discord.Interaction):
@@ -207,14 +205,16 @@ async def Metagame(interaction: discord.Interaction,
                    end_date: str = ''):
   discord_id = interaction.guild_id
   game = interaction.channel.category.name.upper()
+  mappedgame = newDatabase.GetGameName(game)
   if discord_id == CBUSGUILDID:
-    game = 'MAGIC'
+    mappedgame = 'MAGIC'
     discord_id = 0
   if format == '':
     format = interaction.channel.name.upper()
   else:
     format = format.upper()
-  output = myCommands.GetMetagame(discord_id, game, format, start_date,
+
+  output = myCommands.GetMetagame(discord_id, mappedgame, format, start_date,
                                   end_date)
   await interaction.response.send_message(output)
 
@@ -225,9 +225,8 @@ async def metagame_error(interaction: discord.Interaction, error):
 
 
 #TODO: Should this assume game and format?
-@client.tree.command(
-    name="recentevents",
-    description="Get the recent events and their attendance for this store")
+@client.tree.command(name="recentevents",
+                     description="Get the recent events and their attendance for this store")
 async def RecentEvents(interaction: discord.Interaction):
   game = interaction.channel.category.name.upper()
   mappedgame = newDatabase.GetGameName(game)
@@ -271,9 +270,10 @@ async def TopPlayers(interaction: discord.Interaction,
                      quarter: app_commands.Range[int, 1, 4],
                      top: app_commands.Range[int, 1, 10] = 0):
   game = interaction.channel.category.name
+  mappedgame = newDatabase.GetGameName(game)
   format = interaction.channel.name
   discord_id = interaction.guild.id
-  output = myCommands.GetTopPlayers(discord_id, game, format, year, quarter)
+  output = myCommands.GetTopPlayers(discord_id, mappedgame, format, year, quarter)
   await interaction.response.send_message(output, ephemeral=True)
 
 
@@ -281,14 +281,16 @@ async def TopPlayers(interaction: discord.Interaction,
 async def topplayers_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-@client.tree.command(name="getcolumns", description="Get the columns for a table",guild=TESTSTOREGUILD)
+@client.tree.command(name="getcolumns",
+                     description="Get the columns for a table",
+                     guild=TESTSTOREGUILD)
 async def GetColumns(interaction: discord.Interaction, table: str):
   output = newDatabase.GetColumnNames(table)
   print(output)
   await interaction.response.send_message('This seems cool', ephemeral=True)
 
-@client.tree.command(
-    name="test", description="Relays all information about channel to Phil")
+@client.tree.command(name="test",
+                     description="Relays all information about channel to Phil")
 @app_commands.checks.has_role("Owner")
 @app_commands.check(isOwner)
 async def Test(interaction: discord.Interaction):
@@ -313,7 +315,7 @@ async def UpdateRow(interaction: discord.Interaction, old_row: str,
   await interaction.response.send_message(
       f'Updating row {old_row} with {new_row}')
   output = myCommands.UpdateDataRow(old_row, new_row, interaction.user.id)
-
+  await interaction.response.send_message(output)
 
 @UpdateRow.error
 async def updaterow_error(interaction: discord.Interaction, error):
@@ -411,14 +413,11 @@ async def GetStoreEvents(interaction: discord.Interaction):
 
 
 @GetStoreEvents.error
-async def GetStoreEvents_error(interaction: discordclaim
-                               .Interaction, error):
+async def GetStoreEvents_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-
-#The goal is for a user to submit their name and archtype to the event and have it update, taking the weight off of the store
 @client.tree.command(name='claim',
-                    description='Enter your archetype')
+                     description='Enter your deck archetype')
 async def Claim(interaction: discord.Interaction, name:str, archetype: str, date:str = ''):
   datedate = datefuncs.convert_to_date(date)
   if datedate is None:
@@ -450,7 +449,7 @@ async def Claim(interaction: discord.Interaction, name:str, archetype: str, date
     
     await ErrorMessage('\n'.join(message_parts))
   
-  await interaction.response.send_message(output)
+  await interaction.response.send_message(output, ephemeral=True)
 
 @Claim.error
 async def Claim_error(interaction: discord.Interaction, error):
