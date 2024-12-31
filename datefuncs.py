@@ -1,7 +1,16 @@
 from datetime import datetime, timedelta
 import pytz
 
+def GetCurrentQuarter():
+  now = datetime.now(pytz.timezone('America/New_York'))
+  return (now.year, (now.month + 2) // 3)
+
 def GetQuarterRange(year, quarter):
+  if year == 0 or quarter == 0:
+    range = GetCurrentQuarter()
+    year = range[0]
+    quarter = range[1]    
+  
   start_month = 1 + 3 * (quarter - 1)
   start_date = datetime(year, start_month, 1).date()
   next_start_month = start_month + 3

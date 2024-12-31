@@ -224,7 +224,8 @@ async def metagame_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 
-#TODO: Should this assume game and format?
+#TODO: This needs to take into account the game and format
+#There might be a way to bend this for a "general" channel as well
 @client.tree.command(name="recentevents",
                      description="Get the recent events and their attendance for this store")
 async def RecentEvents(interaction: discord.Interaction):
@@ -261,17 +262,17 @@ async def Participants(interaction: discord.Interaction, date: str):
 async def participants_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-
+#TODO: This should assume the current year/quarter
 @client.tree.command(name="topplayers",
                      description="Get the top players of the format")
 @app_commands.checks.has_role("Owner")
 async def TopPlayers(interaction: discord.Interaction,
-                     year: app_commands.Range[int, 2000],
-                     quarter: app_commands.Range[int, 1, 4],
+                     year: app_commands.Range[int, 2000] = 0,
+                     quarter: app_commands.Range[int, 1, 4] = 0,
                      top: app_commands.Range[int, 1, 10] = 0):
-  game = interaction.channel.category.name
+  game = interaction.channel.category.name.upper()
   mappedgame = newDatabase.GetGameName(game)
-  format = interaction.channel.name
+  format = interaction.channel.name.upper()
   discord_id = interaction.guild.id
   output = myCommands.GetTopPlayers(discord_id, mappedgame, format, year, quarter)
   await interaction.response.send_message(output, ephemeral=True)
@@ -423,13 +424,16 @@ async def Claim(interaction: discord.Interaction, name:str, archetype: str, date
   if datedate is None:
     datedate = datefuncs.GetToday()
 
+  name = name.upper()
   format = interaction.channel.name.upper()
   game = interaction.channel.category.name.upper()
   mapped_game = newDatabase.GetGameName(game)
   store_discord = interaction.guild.id
   updater_id = interaction.user.id
-  updater_name = interaction.user.display_name
+  updater_name = interaction.user.display_name.upper()
   archetype = archetype.upper()
+
+  print('Criteria:',(store_discord, name, archetype, datedate, format, mapped_game, updater_id, updater_name))
 
   success_check = myCommands.Claim(store_discord, name, archetype, datedate, format, mapped_game, updater_id, updater_name)
   output = ''

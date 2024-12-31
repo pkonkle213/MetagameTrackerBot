@@ -76,9 +76,6 @@ def GetTopPlayers(discord_id, game, format, year, quarter):
   date_range = datefuncs.GetQuarterRange(year, quarter)
   start_date = date_range[0]
   end_date = date_range[1]
-    
-  format = format.upper()
-  game = newDatabase.GetGameName(game.upper())
 
   store_obj = newDatabase.GetStores(discord_id=discord_id)
   store = tupleConversions.ConvertToStore(store_obj[0])
