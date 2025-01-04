@@ -256,7 +256,7 @@ def GetTopPlayers(discord_id,
   criteria = [discord_id, game, start_date, end_date]
 
   with conn, conn.cursor() as cur:
-    command = f'SELECT player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) as WinPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) * count(*) / sum(count(*)) Over () as Combined LIMIT {top_number} '
+    command = f'SELECT player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) as WinPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) * count(*) / sum(count(*)) Over () as Combined '
     command += 'FROM DataRows '
     command += 'WHERE discord_id = %s '
     command += 'AND game = %s '
@@ -269,6 +269,7 @@ def GetTopPlayers(discord_id,
 
     command += 'GROUP BY player_name '
     command += 'ORDER BY Combined DESC '
+    command += f'LIMIT {top_number} '
 
     cur.execute(command, criteria)
     rows = cur.fetchall()  
