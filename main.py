@@ -54,10 +54,12 @@ class Client(commands.Bot):
       results = message.content.split('\n')[1:]
       await message.channel.send(f'Attempting to add {len(results)} results...')
 
-      output = myCommands.AddResults(message.guild.id, GUILDID, results,
+      output = myCommands.AddResults(message.guild.id,
+                                     GUILDID,
+                                     results,
                                      message.author.id)
-      await message.channel.send(output)
       await message.delete()
+      await message.channel.send(output)
 
 
 intents = discord.Intents.default()
@@ -223,7 +225,6 @@ async def Metagame(interaction: discord.Interaction,
 async def metagame_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-
 #TODO: This needs to take into account the game and format
 #There might be a way to bend this for a "general" channel as well
 @client.tree.command(name="recentevents",
@@ -262,19 +263,18 @@ async def Participants(interaction: discord.Interaction, date: str):
 async def participants_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-#TODO: This should assume the current year/quarter
 @client.tree.command(name="topplayers",
                      description="Get the top players of the format")
 @app_commands.checks.has_role("Owner")
 async def TopPlayers(interaction: discord.Interaction,
                      year: app_commands.Range[int, 2000] = 0,
                      quarter: app_commands.Range[int, 1, 4] = 0,
-                     top: app_commands.Range[int, 1, 10] = 0):
+                     top: app_commands.Range[int, 1, 10] = 10):
   game = interaction.channel.category.name.upper()
   mappedgame = newDatabase.GetGameName(game)
   format = interaction.channel.name.upper()
   discord_id = interaction.guild.id
-  output = myCommands.GetTopPlayers(discord_id, mappedgame, format, year, quarter)
+  output = myCommands.GetTopPlayers(discord_id, mappedgame, format, year, quarter, top)
   await interaction.response.send_message(output, ephemeral=True)
 
 

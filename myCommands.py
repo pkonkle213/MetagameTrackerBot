@@ -72,7 +72,7 @@ def FindEvents(discord_id):
     output = outputBuilder.BuildTableOutput(title, headers, rows)
     return output
 
-def GetTopPlayers(discord_id, game, format, year, quarter):
+def GetTopPlayers(discord_id, game, format, year, quarter, top_number):
   date_range = datefuncs.GetQuarterRange(year, quarter)
   start_date = date_range[0]
   end_date = date_range[1]
@@ -162,7 +162,7 @@ def AddResults(sending_guild_id, myGuildId, eventResults, submitterId):
          int(row[8]),
          submitterId))
     else:
-      return 'We have no idea what you sent'
+      return 'Incorrect format for data received'
 
     if not ErrorCheck(dataRow.LocationDiscordId, errors):
       print('Adding datarow')
@@ -173,11 +173,7 @@ def AddResults(sending_guild_id, myGuildId, eventResults, submitterId):
   num_errors = sum(errors.values())
   successes = len(eventResults) - num_errors
 
-  output = f'{successes} entries were added. {num_errors} were skipped.'
-  if len(errors) > 0:
-    output += '\nErrors: ' + ', '.join(errors.keys())
-
-  return output
+  return f'{successes} entries were added. Feel free to use /claim and update the archetypes!'
 
 def GetFormats(discord_id, game):
   results = newDatabase.GetFormats(discord_id, game)
