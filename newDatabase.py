@@ -250,12 +250,13 @@ def GetTopPlayers(discord_id,
                   game,
                   format,
                   start_date,
-                  end_date):
+                  end_date,
+                  top_number):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   criteria = [discord_id, game, start_date, end_date]
 
   with conn, conn.cursor() as cur:
-    command = 'SELECT player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) as WinPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) * count(*) / sum(count(*)) Over () as Combined '
+    command = f'SELECT TOP {top_number} player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) as WinPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) * count(*) / sum(count(*)) Over () as Combined '
     command += 'FROM DataRows '
     command += 'WHERE discord_id = %s '
     command += 'AND game = %s '

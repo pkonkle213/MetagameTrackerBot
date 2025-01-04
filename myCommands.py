@@ -79,9 +79,9 @@ def GetTopPlayers(discord_id, game, format, year, quarter, top_number):
 
   store_obj = newDatabase.GetStores(discord_id=discord_id)
   store = tupleConversions.ConvertToStore(store_obj[0])
-  results = newDatabase.GetTopPlayers(store.DiscordId, game, format, start_date, end_date)
+  results = newDatabase.GetTopPlayers(store.DiscordId, game, format, start_date, end_date, top_number)
   top_players = tupleConversions.ChangeDataRowsToLeaderBoard(results)
-  title = f'Top Players for {store.Name.title()} '
+  title = f'Top {top_number} Players for {store.Name.title()} '
   if format != '':
     title += f'in {format.title()} '
   title += f'from {start_date} to {end_date}'
