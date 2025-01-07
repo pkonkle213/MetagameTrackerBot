@@ -183,12 +183,10 @@ async def Register(interaction: discord.Interaction, store_name: str):
     store = tupleConversions.Store(store_name, discord_id, discord_name, owner,
                                    False)
     newDatabase.AddStore(store)
-    await MessageUser(
-        f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',
-        PHILID)
-    await MessageChannel(
-        f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',
-        GUILDID, APPROVALID)
+    await MessageUser(f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',
+                      PHILID)
+    await MessageChannel(f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',
+                         GUILDID, APPROVALID)
     await interaction.response.send_message(f'Registered {store_name.title()} with discord {discord_name.title()} with owner {interaction.user}')
 
 
@@ -222,10 +220,12 @@ async def Metagame(interaction: discord.Interaction,
 async def metagame_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+
 #TODO: This needs to take into account the game and format
 #There might be a way to bend this for a "general" channel as well
-@client.tree.command(name="recentevents",
-                     description="Get the recent events and their attendance for this store")
+@client.tree.command(
+    name="recentevents",
+    description="Get the recent events and their attendance for this store")
 async def RecentEvents(interaction: discord.Interaction):
   game = interaction.channel.category.name.upper()
   mappedgame = newDatabase.GetGameName(game)
@@ -243,7 +243,7 @@ async def recentevents_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 
-#Output when no results should be indicitave that there wasn't an appropriate event that day
+#TODO: Output when no results should be indicitave that there wasn't an appropriate event that day
 @client.tree.command(
     name="participants",
     description="Get the participants of an event based on channel name")
@@ -260,6 +260,7 @@ async def Participants(interaction: discord.Interaction, date: str):
 async def participants_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+
 @client.tree.command(name="topplayers",
                      description="Get the top players of the format")
 @app_commands.checks.has_role("Owner")
@@ -271,13 +272,15 @@ async def TopPlayers(interaction: discord.Interaction,
   mappedgame = newDatabase.GetGameName(game)
   format = interaction.channel.name.upper()
   discord_id = interaction.guild.id
-  output = myCommands.GetTopPlayers(discord_id, mappedgame, format, year, quarter, top)
+  output = myCommands.GetTopPlayers(discord_id, mappedgame, format, year,
+                                    quarter, top)
   await interaction.response.send_message(output, ephemeral=True)
 
 
 @TopPlayers.error
 async def topplayers_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
+
 
 @client.tree.command(name="getcolumns",
                      description="Get the columns for a table",
@@ -287,8 +290,9 @@ async def GetColumns(interaction: discord.Interaction, table: str):
   print(output)
   await interaction.response.send_message('This seems cool', ephemeral=True)
 
-@client.tree.command(name="test",
-                     description="Relays all information about channel to Phil")
+
+@client.tree.command(
+    name="test", description="Relays all information about channel to Phil")
 @app_commands.checks.has_role("Owner")
 @app_commands.check(isOwner)
 async def Test(interaction: discord.Interaction):
@@ -314,6 +318,7 @@ async def UpdateRow(interaction: discord.Interaction, old_row: str,
       f'Updating row {old_row} with {new_row}')
   output = myCommands.UpdateDataRow(old_row, new_row, interaction.user.id)
   await interaction.response.send_message(output)
+
 
 @UpdateRow.error
 async def updaterow_error(interaction: discord.Interaction, error):
@@ -414,9 +419,12 @@ async def GetStoreEvents(interaction: discord.Interaction):
 async def GetStoreEvents_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-@client.tree.command(name='claim',
-                     description='Enter your deck archetype')
-async def Claim(interaction: discord.Interaction, name:str, archetype: str, date:str = ''):
+
+@client.tree.command(name='claim', description='Enter your deck archetype')
+async def Claim(interaction: discord.Interaction,
+                name: str,
+                archetype: str,
+                date: str = ''):
   datedate = datefuncs.convert_to_date(date)
   if datedate is None:
     datedate = datefuncs.GetToday()
@@ -430,9 +438,9 @@ async def Claim(interaction: discord.Interaction, name:str, archetype: str, date
   updater_name = interaction.user.display_name.upper()
   archetype = archetype.upper()
 
-  print('Criteria:',(store_discord, name, archetype, datedate, format, mapped_game, updater_id, updater_name))
-
-  success_check = myCommands.Claim(store_discord, name, archetype, datedate, format, mapped_game, updater_id, updater_name)
+  success_check = myCommands.Claim(store_discord, name, archetype, datedate,
+                                   format, mapped_game, updater_id,
+                                   updater_name)
   output = ''
   if success_check:
     output = 'Thank you for submitting your archetype!'
@@ -447,14 +455,16 @@ async def Claim(interaction: discord.Interaction, name:str, archetype: str, date
     message_parts.append(f'Mapped Game: {mapped_game}')
     message_parts.append(f'Store Discord: {store_discord}')
     message_parts.append(f'Updater Discord: {updater_id}')
-    
+
     await ErrorMessage('\n'.join(message_parts))
-  
+
   await interaction.response.send_message(output, ephemeral=True)
+
 
 @Claim.error
 async def Claim_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
+
 
 @client.tree.command(name='download',
                      description='Downloads the Database',
