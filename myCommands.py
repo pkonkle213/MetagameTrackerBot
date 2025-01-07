@@ -40,9 +40,6 @@ def Claim(store_discord, player_name, archetype_played, date, format, game, upda
 def GetStoreOwnerIds():
   return newDatabase.GetStoreOwners()
 
-def GetSubmittersForStore(discord_id):
-  return newDatabase.GetSubmitters(discord_id)
-
 def GetPlayersInEvent(author_id,
                       game,
                       event_date,

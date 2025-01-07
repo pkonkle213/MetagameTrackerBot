@@ -170,39 +170,6 @@ def GetData(databasename):
     rows = cur.fetchall()
     return rows
 
-def AddSubmitter(discord_id,
-                 user_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    try:
-      command = 'INSERT INTO Submitters (discord_id, user_id) VALUES (%s, %s) '
-      command += 'returning *'
-      cur.execute(command, (discord_id, user_id))
-      conn.commit()
-      row = cur.fetchone()
-      return row
-    except psycopg2.errors.UniqueViolation:
-      print('Error: UniqueViolation')
-      return None
-
-def DeleteSubmitter(discord_id,
-                    user_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = 'DELETE FROM Submitters WHERE discord_id = %s AND user_id = %s'
-    cur.execute(command, (discord_id, user_id))
-    conn.commit()
-    return 'Success'
-
-def GetSubmitters(discord_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = 'SELECT user_id FROM Submitters WHERE discord_id = %s'
-    cur.execute(command, [discord_id])
-    user_ids = cur.fetchall()
-
-    return user_ids
-
 def GetStoreNamesByGameFormat(game, format):
   end_date = datefuncs.GetToday()
   start_date = datefuncs.GetStartDate(end_date)

@@ -90,11 +90,6 @@ def isCBUSMTG(interaction: discord.Interaction):
 def isSubmitter(interaction: discord.Interaction):
   if interaction.user.id == PHILID or isOwner(interaction):
     return True
-  discord_id = interaction.guild_id
-  submitters = newDatabase.GetSubmitters(discord_id)
-  print("Submitters: ", submitters)
-  print(submitters)
-  return interaction.user.id in submitters
 
 
 def storeCanTrack(interaction: discord.Interaction):
