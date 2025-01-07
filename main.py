@@ -39,6 +39,9 @@ class Client(commands.Bot):
       #For when/if we can link with the Columbus MTG discord
       #synced = await self.tree.sync(guild=CBUSGUILD)
       #print(f'Synced {len(synced)} command(s) to guild Columbus MTG -> {CBUSGUILD.id}')
+      #For when/if there will be discussion around using the bot for the Ohio River Valley Pauper
+      #synced = await self.tree.sync(guild=)
+      #print(f'Synced {len(synced)} command(s) to guild Ohio River Valley Pauper -> {TESTSTOREGUILD.id}')
       synced = await self.tree.sync(guild=TESTSTOREGUILD)
       print(f'Synced {len(synced)} command(s) to guild Test Guild -> {TESTSTOREGUILD.id}')
     except Exception as e:
@@ -49,6 +52,7 @@ class Client(commands.Bot):
       return
 
     command = message.content.split()[0].upper()
+    #This should be split into two if statements, as processing them should be different
     if command == '$ADDRESULTS' and ((storeCanTrack and isSubmitter) or
                                      (isPhil and isMyGuild)):
       results = message.content.split('\n')[1:]
@@ -190,9 +194,7 @@ async def Register(interaction: discord.Interaction, store_name: str):
     await MessageChannel(
         f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',
         GUILDID, APPROVALID)
-    await interaction.response.send_message(
-        f'Registered {store_name.title()} with discord {discord_name.title()} with owner {interaction.user}'
-    )
+    await interaction.response.send_message(f'Registered {store_name.title()} with discord {discord_name.title()} with owner {interaction.user}')
 
 
 @Register.error
