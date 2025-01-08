@@ -171,22 +171,25 @@ async def GetSOP_error(interaction: discord.Interaction, error):
 @app_commands.checks.has_role("Owner")
 @app_commands.check(isOwner)
 async def Register(interaction: discord.Interaction, store_name: str):
-  if store_name == '':
-    await interaction.response.send_message('Please provide a store name',
-                                            ephemeral=True)
-  else:
-    store_name = store_name.upper()
-    discord_id = interaction.guild_id
-    discord_name = str(interaction.guild).upper()
-    owner = interaction.user.id
-    store = tupleConversions.Store(store_name, discord_id, discord_name, owner,
-                                   False)
-    newDatabase.AddStore(store)
-    await MessageUser(f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',
-                      PHILID)
-    await MessageChannel(f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',
-                         GUILDID, APPROVALID)
-    await interaction.response.send_message(f'Registered {store_name.title()} with discord {discord_name.title()} with owner {interaction.user}')
+  """
+  Parameters
+  ----------
+  store_name: string
+    The name of the store
+  """
+
+  store_name = store_name.upper()
+  discord_id = interaction.guild_id
+  discord_name = str(interaction.guild).upper()
+  owner = interaction.user.id
+  store = tupleConversions.Store(store_name, discord_id, discord_name, owner,
+                                 False)
+  newDatabase.AddStore(store)
+  await MessageUser(f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',
+                    PHILID)
+  await MessageChannel(f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',
+                       GUILDID, APPROVALID)
+  await interaction.response.send_message(f'Registered {store_name.title()} with discord {discord_name.title()} with owner {interaction.user}')
 
 
 @Register.error
@@ -199,6 +202,16 @@ async def Metagame(interaction: discord.Interaction,
                    format: str = '',
                    start_date: str = '',
                    end_date: str = ''):
+  """
+  Parameters
+  ----------
+  format: string
+    The format to view
+  start_date: string
+    The start date of the metagame (MM/DD/YYYY)
+  end_date: string
+    The end date of the metagame (MM/DD/YYYY)
+  """
   discord_id = interaction.guild_id
   game = interaction.channel.category.name.upper()
   mappedgame = newDatabase.GetGameName(game)
@@ -246,6 +259,12 @@ async def recentevents_error(interaction: discord.Interaction, error):
                      description="Get the participants of an event based on channel name")
 @app_commands.checks.has_role("Owner")
 async def Participants(interaction: discord.Interaction, date: str):
+  """
+  Parameters
+  ----------
+  date: string
+    Date of the event (MM/DD/YYYY)
+  """
   game = interaction.channel.category.name.upper()
   format = interaction.channel.name.upper()
   owner = interaction.guild.owner_id
@@ -265,6 +284,16 @@ async def TopPlayers(interaction: discord.Interaction,
                      year: app_commands.Range[int, 2000] = 0,
                      quarter: app_commands.Range[int, 1, 4] = 0,
                      top: app_commands.Range[int, 1, 10] = 10):
+  """
+  Parameters
+  ----------
+  year: int
+    The year to get the top players for
+  quarter: int
+    The quarter to get the top players for
+  top: int
+    The number of top players to get
+  """
   game = interaction.channel.category.name.upper()
   mappedgame = newDatabase.GetGameName(game)
   format = interaction.channel.name.upper()
@@ -288,8 +317,8 @@ async def GetColumns(interaction: discord.Interaction, table: str):
   await interaction.response.send_message('This seems cool', ephemeral=True)
 
 
-@client.tree.command(
-    name="test", description="Relays all information about channel to Phil")
+@client.tree.command(name="test",
+                     description="Relays all information about channel to Phil")
 @app_commands.checks.has_role("Owner")
 @app_commands.check(isOwner)
 async def Test(interaction: discord.Interaction):
@@ -305,12 +334,10 @@ async def test_error(interaction: discord.Interaction, error):
 
 @client.tree.command(name='updaterow',
                      description='Update a row in the database',
-                    guild=TESTSTOREGUILD)
+                     guild=TESTSTOREGUILD)
 @app_commands.check(isOwner)
 async def UpdateRow(interaction: discord.Interaction, old_row: str,
                     new_row: str):
-  print('Old row', old_row)
-  print('New row', new_row)
   await interaction.response.send_message(
       f'Updating row {old_row} with {new_row}')
   output = myCommands.UpdateDataRow(old_row, new_row, interaction.user.id)
