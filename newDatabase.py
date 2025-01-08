@@ -153,7 +153,7 @@ def GetDataRowsForMetagame(game,
     command = 'SELECT archetype_played, COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as MetaPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) as WinPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) * COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as Combined '
     command += 'FROM DataRows '
     command += 'WHERE game = %s AND archetype_played != \'UNKNOWN\' AND event_format = %s AND event_date >= %s AND event_date <= %s '
-    if discord_id == 0:
+    if discord_id != 0:
       command += 'AND discord_id = %s '
       criteria.append(discord_id)
     command += 'GROUP BY archetype_played '
@@ -223,7 +223,7 @@ def GetTopPlayers(discord_id,
   criteria = [discord_id, game, start_date, end_date]
 
   with conn, conn.cursor() as cur:
-    command = f'SELECT player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) as WinPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) * count(*) / sum(count(*)) Over () as Combined '
+    command = 'SELECT player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) as WinPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) * count(*) / sum(count(*)) Over () as Combined '
     command += 'FROM DataRows '
     command += 'WHERE discord_id = %s '
     command += 'AND game = %s '

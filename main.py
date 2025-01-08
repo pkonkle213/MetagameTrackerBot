@@ -53,8 +53,7 @@ class Client(commands.Bot):
 
     command = message.content.split()[0].upper()
     #This should be split into two if statements, as processing them should be different
-    if command == '$ADDRESULTS' and ((storeCanTrack and isSubmitter) or
-                                     (isPhil and isMyGuild)):
+    if command == '$ADDRESULTS': # and ((storeCanTrack and isSubmitter) or (isPhil and isMyGuild)):
       results = message.content.split('\n')[1:]
       await message.channel.send(f'Attempting to add {len(results)} results...')
 
@@ -116,7 +115,7 @@ async def MessageChannel(msg, guildId, channelId):
 
 
 async def Error(interaction, error):
-  await ErrorMessage(f'Error: {error}')
+  await ErrorMessage(f'{interaction.user.display_name} got an error: {error}')
   await interaction.response.send_message(
       'Something went wrong, it has been reported. Please try again later.',
       ephemeral=True)
@@ -223,9 +222,8 @@ async def metagame_error(interaction: discord.Interaction, error):
 
 #TODO: This needs to take into account the game and format
 #There might be a way to bend this for a "general" channel as well
-@client.tree.command(
-    name="recentevents",
-    description="Get the recent events and their attendance for this store")
+@client.tree.command(name="recentevents",
+                     description="Get the recent events and their attendance for this store")
 async def RecentEvents(interaction: discord.Interaction):
   game = interaction.channel.category.name.upper()
   mappedgame = newDatabase.GetGameName(game)
@@ -244,9 +242,8 @@ async def recentevents_error(interaction: discord.Interaction, error):
 
 
 #TODO: Output when no results should be indicitave that there wasn't an appropriate event that day
-@client.tree.command(
-    name="participants",
-    description="Get the participants of an event based on channel name")
+@client.tree.command(name="participants",
+                     description="Get the participants of an event based on channel name")
 @app_commands.checks.has_role("Owner")
 async def Participants(interaction: discord.Interaction, date: str):
   game = interaction.channel.category.name.upper()
@@ -307,8 +304,8 @@ async def test_error(interaction: discord.Interaction, error):
 
 
 @client.tree.command(name='updaterow',
-                     description='Update a row in the database')
-@app_commands.checks.has_role("Owner")
+                     description='Update a row in the database',
+                    guild=TESTSTOREGUILD)
 @app_commands.check(isOwner)
 async def UpdateRow(interaction: discord.Interaction, old_row: str,
                     new_row: str):
@@ -425,6 +422,16 @@ async def Claim(interaction: discord.Interaction,
                 name: str,
                 archetype: str,
                 date: str = ''):
+  """
+  Parameters
+  ----------
+  name: string
+    Your name in Companion
+  archetype: string
+    The deck archetype you played
+  date: string
+    Date of event (MM/DD/YYYY)
+  """
   datedate = datefuncs.convert_to_date(date)
   if datedate is None:
     datedate = datefuncs.GetToday()
