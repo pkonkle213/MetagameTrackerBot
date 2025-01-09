@@ -52,8 +52,7 @@ class Client(commands.Bot):
       return
 
     command = message.content.split()[0].upper()
-    #This should be split into two if statements, as processing them should be different
-    if command == '$ADDRESULTS': # and ((storeCanTrack and isSubmitter) or (isPhil and isMyGuild)):
+    if command == '$ADDRESULTS' and (storeCanTrack or (isPhil and isMyGuild)):
       results = message.content.split('\n')[1:]
       await message.channel.send(f'Attempting to add {len(results)} results...')
 
@@ -61,6 +60,28 @@ class Client(commands.Bot):
                                      GUILDID,
                                      results,
                                      message.author.id)
+      await message.delete()
+      await message.channel.send(output)
+
+    elif command == '$COMPANION':
+      #TODO: This may cause this to be multifunctional, as it collects the data and formats it before sending it to a function for database interaction. Stinky code?
+      current_date = datefuncs.GetToday()
+      location = message.guild.id
+      game = newDatabase.GetGameName(message.channel.category.name)
+      format = message.channel.name
+      submitter_id = message.author.id
+      player_data = message.content.split('\n')[1:]
+      data_list = []
+      for player in player_data:
+        elements = player.split('    ')
+        player_name = elements[1]
+        record = elements[3].split('/')
+        wins = record[0]
+        losses = record[1]
+        draws = record[2]
+        data_list.append((current_date, location, game, format, player_name, "Unknown", wins, losses, draws, submitter_id))
+
+      output = myCommands.AddResults(data_list)
       await message.delete()
       await message.channel.send(output)
 
@@ -98,14 +119,12 @@ def storeCanTrack(interaction: discord.Interaction):
   return store.ApprovalStatus
 
 
-async def MessageUser(msg, userId):
+async def MessageUser(msg, userId, file = None):
   user = await client.fetch_user(userId)
-  await user.send(f'{msg}')
-
-
-async def MessageUserFile(msg, userId, file):
-  user = await client.fetch_user(userId)
-  await user.send(f'{msg}', file=file)
+  if file is None:
+    await user.send(f'{msg}')
+  else:
+    await user.send(f'{msg}', file = file)
 
 
 async def MessageChannel(msg, guildId, channelId):
@@ -116,9 +135,7 @@ async def MessageChannel(msg, guildId, channelId):
 
 async def Error(interaction, error):
   await ErrorMessage(f'{interaction.user.display_name} got an error: {error}')
-  await interaction.response.send_message(
-      'Something went wrong, it has been reported. Please try again later.',
-      ephemeral=True)
+  await interaction.response.send_message('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
 
 
 async def ErrorMessage(msg):
@@ -524,7 +541,7 @@ async def DownloadDatabase(interaction: discord.Interaction):
     as_bytes = map(str.encode, data_list)
     content = b'\n'.join(as_bytes)
     file = discord.File(BytesIO(content), filename=f'{table}.csv')
-    await MessageUserFile('Message', PHILID, file)
+    await MessageUser('Message', PHILID, file)
 
   await interaction.response.send_message(
       'Database has been downloaded and messaged')
