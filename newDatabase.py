@@ -162,14 +162,6 @@ def GetDataRowsForMetagame(game,
     rows = cur.fetchall()
     return rows
 
-def GetData(databasename):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'SELECT * FROM {databasename}'
-    cur.execute(command, [databasename])
-    rows = cur.fetchall()
-    return rows
-
 def GetStoreNamesByGameFormat(game, format):
   end_date = datefuncs.GetToday()
   start_date = datefuncs.GetStartDate(end_date)
@@ -276,7 +268,15 @@ def GetPlayersInEvent(discord_id,
     rows = cur.fetchall()
     return rows
 
-# Putting this here in case it's usable later
+def GetData(databasename):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'SELECT * FROM {databasename}'
+    cur.execute(command, [databasename])
+    rows = cur.fetchall()
+    return rows
+
+# Putting this here in case it's usable later, it should probably go with GetData
 def GetColumnNames(table):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:

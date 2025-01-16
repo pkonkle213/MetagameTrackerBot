@@ -15,13 +15,10 @@ load_dotenv()
 SHEETSURL = os.getenv('SHEETSURL')
 MYBOTURL = os.getenv('MYBOTURL')
 PHILID = int(os.getenv('PHILID'))
-CBUSGUILDID = int(os.getenv('COLUMBUSGUILDID'))
 TESTGUILDID = int(os.getenv('TESTGUILDID'))
 GUILDID = int(os.getenv('BOTGUILDID'))
 BOTGUILD = discord.Object(id=GUILDID)
-CBUSGUILD = discord.Object(id=CBUSGUILDID)
 TESTSTOREGUILD = discord.Object(id=TESTGUILDID)
-SOPURL = os.getenv('SOPURL')
 ERRORID = int(os.getenv('BOTERRORCHANNELID'))
 APPROVALID = int(os.getenv('BOTAPPROVALCHANNELID'))
 
@@ -36,12 +33,6 @@ class Client(commands.Bot):
       print(f'Synced {len(other)} commands globally, allegedly')
       synced = await self.tree.sync(guild=BOTGUILD)
       print(f'Synced {len(synced)} command(s) to guild My Bot  -> {BOTGUILD.id}')
-      #For when/if we can link with the Columbus MTG discord
-      #synced = await self.tree.sync(guild=CBUSGUILD)
-      #print(f'Synced {len(synced)} command(s) to guild Columbus MTG -> {CBUSGUILD.id}')
-      #For when/if there will be discussion around using the bot for the Ohio River Valley Pauper
-      #synced = await self.tree.sync(guild=)
-      #print(f'Synced {len(synced)} command(s) to guild Ohio River Valley Pauper -> {TESTSTOREGUILD.id}')
       synced = await self.tree.sync(guild=TESTSTOREGUILD)
       print(f'Synced {len(synced)} command(s) to guild Test Guild -> {TESTSTOREGUILD.id}')
     except Exception as e:
@@ -52,7 +43,7 @@ class Client(commands.Bot):
       return
 
     command = message.content.split()[0].upper()
-    if command == '$ADDRESULTS' and (storeCanTrack or (isPhil and isMyGuild)):
+    if command == '$ADDRESULTS' and ((storeCanTrack and isSubmitter) or (isPhil and isMyGuild)):
       results = message.content.split('\n')[1:]
       await message.channel.send(f'Attempting to add {len(results)} results...')
 
@@ -63,36 +54,14 @@ class Client(commands.Bot):
       await message.delete()
       await message.channel.send(output)
 
-    elif command == '$COMPANION':
-      #TODO: This may cause this to be multifunctional, as it collects the data and formats it before sending it to a function for database interaction. Stinky code?
-      current_date = datefuncs.GetToday()
-      location = message.guild.id
-      game = newDatabase.GetGameName(message.channel.category.name)
-      format = message.channel.name
-      submitter_id = message.author.id
-      player_data = message.content.split('\n')[1:]
-      data_list = []
-      for player in player_data:
-        elements = player.split('    ')
-        player_name = elements[1]
-        record = elements[3].split('/')
-        wins = record[0]
-        losses = record[1]
-        draws = record[2]
-        data_list.append((current_date, location, game, format, player_name, "Unknown", wins, losses, draws, submitter_id))
-
-      output = myCommands.AddResults(data_list)
-      await message.delete()
-      await message.channel.send(output)
-
-
 intents = discord.Intents.default()
 intents.message_content = True
+intents.members = True
 client = Client(command_prefix='?', intents=intents)
 
 
 def isOwner(interaction: discord.Interaction):
-  return interaction.user.id == interaction.guild.owner_id
+  return interaction.user.id == interaction.guild.owner.id
 
 
 def isMyGuild(interaction: discord.Interaction):
@@ -101,10 +70,6 @@ def isMyGuild(interaction: discord.Interaction):
 
 def isPhil(interaction: discord.Interaction):
   return interaction.user.id == PHILID
-
-
-def isCBUSMTG(interaction: discord.Interaction):
-  return interaction.guild_id == CBUSGUILDID
 
 
 def isSubmitter(interaction: discord.Interaction):
@@ -134,7 +99,14 @@ async def MessageChannel(msg, guildId, channelId):
 
 
 async def Error(interaction, error):
-  await ErrorMessage(f'{interaction.user.display_name} got an error: {error}')
+  command = interaction.command
+  message = interaction.message
+  message_join = []
+  message_join.append(f'{interaction.user.display_name} got an error: {error}')
+  message_join.append(f'Command: {command}')
+  message_join.append(f'Message: {message}')
+  error_message = '\n'.join(message_join)
+  await ErrorMessage(error_message)
   await interaction.response.send_message('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
 
 
@@ -170,18 +142,21 @@ async def GetSheets_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 
-@client.tree.command(name="getsop",
-                     description="Display the url to get the SOP",
-                     guild=TESTSTOREGUILD)
+@client.tree.command(name="testnewfunc",description="Testing a new function",guild=TESTSTOREGUILD)
 @app_commands.checks.has_role("Owner")
-@app_commands.check(isOwner)
-async def GetSOP(interaction: discord.Interaction):
-  await interaction.response.send_message(SOPURL, ephemeral=True)
+async def NewFunc(interaction: discord.Interaction):
+  owner = interaction.guild.owner
+  role = await interaction.guild.create_role(name="Test Role", permissions=discord.Permissions.all())
+  await owner.add_roles(role)
+  
+  permissions = discord.PermissionOverwrite(send_messages=False)
+  everyone_role = interaction.guild.default_role
+  await interaction.channel.set_permissions(everyone_role, overwrite=permissions)
+  await interaction.response.send_message('Done?')
 
-
-@GetSOP.error
-async def GetSOP_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
+@NewFunc.error
+async def NewGame_error(interaction: discord.Interaction, error):
+  await interaction.response.send_message(f'Error: {error}')
 
 
 @client.tree.command(name="register", description="Register your store")
@@ -199,13 +174,17 @@ async def Register(interaction: discord.Interaction, store_name: str):
   discord_id = interaction.guild_id
   discord_name = str(interaction.guild).upper()
   owner = interaction.user.id
-  store = tupleConversions.Store(store_name, discord_id, discord_name, owner,
+  store = tupleConversions.Store(store_name,
+                                 discord_id,
+                                 discord_name,
+                                 owner,
                                  False)
   newDatabase.AddStore(store)
   await MessageUser(f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',
                     PHILID)
   await MessageChannel(f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',
-                       GUILDID, APPROVALID)
+                       GUILDID,
+                       APPROVALID)
   await interaction.response.send_message(f'Registered {store_name.title()} with discord {discord_name.title()} with owner {interaction.user}')
 
 
@@ -325,15 +304,6 @@ async def topplayers_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 
-@client.tree.command(name="getcolumns",
-                     description="Get the columns for a table",
-                     guild=TESTSTOREGUILD)
-async def GetColumns(interaction: discord.Interaction, table: str):
-  output = newDatabase.GetColumnNames(table)
-  print(output)
-  await interaction.response.send_message('This seems cool', ephemeral=True)
-
-
 @client.tree.command(name="test",
                      description="Relays all information about channel to Phil")
 @app_commands.checks.has_role("Owner")
@@ -382,7 +352,6 @@ async def AddGameMap(interaction: discord.Interaction):
     used_name = interaction.channel.category.name.upper()
     output = myCommands.AddGameMap(used_name, actual_name)
     await interaction.response.send_message(output, ephemeral=True)
-    return select.values[0]
 
   select.callback = my_callback
   view = View()
@@ -444,20 +413,6 @@ async def GetAllStores(interaction: discord.Interaction):
 
 @GetAllStores.error
 async def GetAllStores_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
-
-
-@client.tree.command(name='events',
-                     description='Get attendance for stores holding events',
-                     guild=CBUSGUILD)
-async def GetStoreEvents(interaction: discord.Interaction):
-  format = interaction.channel.name.upper()
-  output = myCommands.GetStoresByGameFormat('MAGIC', format)
-  await interaction.response.send_message(output)
-
-
-@GetStoreEvents.error
-async def GetStoreEvents_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 
