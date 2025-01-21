@@ -131,11 +131,11 @@ def Claim(event_id,
     print('My exception:', excep)
     return f'Failure: {excep}'
 
-def GetFormatId(game_id,
+def GetFormat(game_id,
                 format_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT id FROM Formats '
+    command =  'SELECT id, name FROM Formats '
     command += 'WHERE game_id =  %s AND name = %s '
     criteria = (game_id, format_name)
     
@@ -143,7 +143,7 @@ def GetFormatId(game_id,
     rows = cur.fetchall()
     if len(rows) == 0:
       return None
-  return rows[0][0]
+  return rows[0]
 
 def GetEventId(discord_id,
                date,
@@ -166,11 +166,11 @@ def GetEventId(discord_id,
     return rows[0][0]
   
 
-def GetGameId(discord_id,
-              used_name):
+def GetGame(discord_id,
+            used_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT id FROM cardgames cg '
+    command =  'SELECT cg.id, cg.name FROM cardgames cg '
     command += 'INNER JOIN gamenamemaps gnm ON cg.id = gnm.game_id '
     command += 'WHERE gnm.used_name = %s AND gnm.discord_id = %s '
     criteria = (used_name, discord_id)
@@ -179,26 +179,29 @@ def GetGameId(discord_id,
     rows = cur.fetchall()
     if len(rows) == 0:
       return None
-    return rows[0][0]
+    return rows[0]
     
 #TODO: This needs fixed for the new database
-def GetDataRowsForMetagame(game,
-                           event_format,
+def GetDataRowsForMetagame(game_id,
+                           format_id,
                            start_date,
                            end_date,
                            discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    criteria = [game, event_format, start_date, end_date]
+    criteria = [game_id, format_id, start_date, end_date]
     command = 'SELECT p.archetype_played, COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as MetaPercentage, (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) as WinPercentage, (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) * COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as Combined '
-    command += 'FROM Participants p'
+    command += 'FROM Participants p '
     command += 'INNER JOIN Events e ON p.event_id = e.id '
-    command += 'WHERE e.game = %s AND p.archetype_played != \'UNKNOWN\' AND event_format = %s AND event_date >= %s AND event_date <= %s '
+    command += 'WHERE e.game_id = %s '
+    command += 'AND p.archetype_played != \'UNKNOWN\' '
+    command += 'AND e.format_id = %s '
+    command += 'AND e.event_date >= %s AND event_date <= %s '
     if discord_id != 0:
-      command += 'AND discord_id = %s '
+      command += 'AND e.discord_id = %s '
       criteria.append(discord_id)
-    command += 'GROUP BY archetype_played '
-    command += 'ORDER BY Combined DESC, archetype_played'
+    command += 'GROUP BY p.archetype_played '
+    command += 'ORDER BY Combined DESC, p.archetype_played'
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows

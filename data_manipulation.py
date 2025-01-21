@@ -176,21 +176,19 @@ def GetFormats(discord_id, game):
                                             results)
   return output
 
-def GetMetagame(discord_id, game_id, format_id, start_date, end_date):
+def GetMetagame(discord_id, game, format, start_date, end_date):
   output = ''
   end_date = date_functions.convert_to_date(end_date) if end_date != '' else date_functions.GetToday()
   start_date = date_functions.convert_to_date(start_date) if start_date != '' else date_functions.GetStartDate(end_date)
-  #game = database_connection.GetGameId(discord_id, game.upper())
-  #format = format.upper()
-  metagame_data = database_connection.GetDataRowsForMetagame(game_id,
-                                                             format_id,
+  metagame_data = database_connection.GetDataRowsForMetagame(game[0],
+                                                             format[0],
                                                              start_date,
                                                              end_date,
                                                              discord_id)
   if len(metagame_data) == 0:
     output = 'No data found'
   else:
-    title = f'{format_id.title()} metagame from {start_date} to {end_date}'
+    title = f'{format[1].title()} metagame from {start_date} to {end_date}'
     metagame = tuple_conversions.ChangeDataToMetagame(metagame_data)
     headers = ['Deck Archetype', 'Meta % ', 'Win %  ', 'Combined %']
     output = output_builder.BuildTableOutput(title, headers, metagame)

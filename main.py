@@ -34,7 +34,7 @@ class Client(commands.Bot):
     if storeCanTrack(message.guild) and isSubmitter(message.guild, message.author) and data is not None:
       await message.channel.send(f'Attempting to add {len(data)} participants to the event')
       #TODO: This should call data_manipulation and not skip right to the database
-      game_id = database_connection.GetGameId(message.guild.id, message.channel.category.name.upper())
+      game_id = database_connection.GetGame(message.guild.id, message.channel.category.name.upper())[0]
       if game_id is None:
         #TODO: If none then ask
         await message.channel.send('Error: Game not found. Please map a game to this category')
@@ -42,7 +42,7 @@ class Client(commands.Bot):
       
       #TODO: Ask for format based on game, allow 'other' option for manual input
       format = message.channel.name.replace('-',' ').upper()
-      format_id = database_connection.GetFormatId(game_id, format)
+      format_id = database_connection.GetFormat(game_id, format)[0]
       #TODO: If none then create
       
       #TODO: Confirm date
@@ -212,19 +212,21 @@ async def Metagame(interaction: discord.Interaction,
   end_date: string
     The end date of the metagame (MM/DD/YYYY)
   """
+  await interaction.response.defer()
   discord_id = interaction.guild_id
-  game_id = database_connection.GetGameId(discord_id, interaction.channel.category.name.upper())
-  format_id = database_connection.GetFormatId(game_id, interaction.channel.name.replace('-',' ').upper())
-  if format_id is None:
-    await interaction.response.send_message('Error: Format not found.')
+  game = database_connection.GetGame(discord_id, interaction.channel.category.name.upper())
+  #TODO: What if game not found
+  format = database_connection.GetFormat(game[0], interaction.channel.name.replace('-',' ').upper())
+  if format is None:
+    await interaction.followup.send('Error: Format not found.')
 
   output = data_manipulation.GetMetagame(discord_id,
-                                         game_id,
-                                         format_id,
+                                         game,
+                                         format,
                                          start_date,
                                          end_date)
   
-  await interaction.response.send_message(output)
+  await interaction.followup.send(output)
 
 
 @Metagame.error
@@ -424,9 +426,9 @@ async def Claim(interaction: discord.Interaction,
 
   player_name = player_name.upper()
   game = interaction.channel.category.name.upper()
-  game_id = database_connection.GetGameId(interaction.guild.id, game)
+  game_id = database_connection.GetGame(interaction.guild.id, game)[0]
   format = interaction.channel.name.upper()
-  format_id = database_connection.GetFormatId(game_id, format)
+  format_id = database_connection.GetFormat(game_id, format)[0]
   store_discord = interaction.guild.id
   event_id = database_connection.GetEventId(store_discord, actual_date, game_id, format_id)
   updater_id = interaction.user.id
