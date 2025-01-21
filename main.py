@@ -1,27 +1,15 @@
-import datefuncs
+import date_functions
 import discord
 from discord.ext import commands
 from discord.ui import Select, View
 from discord import app_commands
 import os
-from dotenv.main import load_dotenv
-import myCommands
-import newDatabase
+import data_manipulation
+import database_connection
+import settings
 from io import BytesIO
-import outputBuilder
-import tupleConversions
-
-load_dotenv()
-SHEETSURL = os.getenv('SHEETSURL')
-MYBOTURL = os.getenv('MYBOTURL')
-PHILID = int(os.getenv('PHILID'))
-TESTGUILDID = int(os.getenv('TESTGUILDID'))
-GUILDID = int(os.getenv('BOTGUILDID'))
-BOTGUILD = discord.Object(id=GUILDID)
-TESTSTOREGUILD = discord.Object(id=TESTGUILDID)
-ERRORID = int(os.getenv('BOTERRORCHANNELID'))
-APPROVALID = int(os.getenv('BOTAPPROVALCHANNELID'))
-
+import output_builder
+import tuple_conversions
 
 class Client(commands.Bot):
 
@@ -29,28 +17,47 @@ class Client(commands.Bot):
     print(f'Logged on as {format(self.user)}!')
 
     try:
-      other = await self.tree.sync()
-      print(f'Synced {len(other)} commands globally, allegedly')
-      synced = await self.tree.sync(guild=BOTGUILD)
-      print(f'Synced {len(synced)} command(s) to guild My Bot  -> {BOTGUILD.id}')
-      synced = await self.tree.sync(guild=TESTSTOREGUILD)
-      print(f'Synced {len(synced)} command(s) to guild Test Guild -> {TESTSTOREGUILD.id}')
-    except Exception as e:
-      print(f'Error syncing commands: {e}')
+      sync_global = await self.tree.sync()
+      print(f'Synced {len(sync_global)} commands globally, allegedly')
+      sync_my_bot = await self.tree.sync(guild=settings.BOTGUILD)
+      print(f'Synced {len(sync_my_bot)} command(s) to guild My Bot  -> {settings.BOTGUILD.id}')
+      sync_test_guild = await self.tree.sync(guild=settings.TESTSTOREGUILD)
+      print(f'Synced {len(sync_test_guild)} command(s) to guild Test Guild -> {settings.TESTSTOREGUILD.id}')
+    except Exception as error:
+      print(f'Error syncing commands: {error}')
 
   async def on_message(self, message):
     if message.author == self.user:
       return
 
-    command = message.content.split()[0].upper()
-    if command == '$ADDRESULTS' and ((storeCanTrack and isSubmitter) or (isPhil and isMyGuild)):
-      results = message.content.split('\n')[1:]
-      await message.channel.send(f'Attempting to add {len(results)} results...')
+    data = data_manipulation.ConvertMessageToParticipants(message.content.split('\n'))
+    if storeCanTrack(message.guild) and isSubmitter(message.guild, message.author) and data is not None:
+      await message.channel.send(f'Attempting to add {len(data)} participants to the event')
+      #TODO: This should call data_manipulation and not skip right to the database
+      game_id = database_connection.GetGameId(message.guild.id, message.channel.category.name.upper())
+      if game_id is None:
+        #TODO: If none then ask
+        await message.channel.send('Error: Game not found. Please map a game to this category')
+        return
+      
+      #TODO: Ask for format based on game, allow 'other' option for manual input
+      format = message.channel.name.replace('-',' ').upper()
+      format_id = database_connection.GetFormatId(game_id, format)
+      #TODO: If none then create
+      
+      #TODO: Confirm date
+      date_of_event = date_functions.GetToday()
+      
+      event_id = 0
+      try:
+        event_id = data_manipulation.CreateEvent(date_of_event, message.guild.id, game_id, format_id)
+      #TODO: This needs to be a more specific error catch
+      except Exception as error:
+        await message.channel.send('There was an error creating the event. It has been reported')
+        await ErrorMessage(error)
+        return
 
-      output = myCommands.AddResults(message.guild.id,
-                                     GUILDID,
-                                     results,
-                                     message.author.id)
+      output = data_manipulation.AddResults(event_id, data, message.author.id)
       await message.delete()
       await message.channel.send(output)
 
@@ -60,28 +67,35 @@ intents.members = True
 client = Client(command_prefix='?', intents=intents)
 
 
+def checkIsOwner(interaction: discord.Interaction):
+  userid = interaction.user.id
+  ownerid = interaction.guild.owner_id
+  return userid == ownerid
+
 def isOwner(interaction: discord.Interaction):
-  return interaction.user.id == interaction.guild.owner.id
+  userid = interaction.user.id
+  ownerid = interaction.guild.owner_id
+  return userid == ownerid
 
 
-def isMyGuild(interaction: discord.Interaction):
-  return interaction.guild_id == GUILDID
+def isMyGuild(guild):
+  return guild.id == settings.BOTGUILD.id
+
+def checkIsPhil(interaction: discord.Interaction):
+  return interaction.user.id == settings.PHILID
+
+def isPhil(author):
+  return author.id == settings.PHILID
 
 
-def isPhil(interaction: discord.Interaction):
-  return interaction.user.id == PHILID
+def isSubmitter(guild, author):
+  role = discord.utils.find(lambda r: r.name == 'MTSubmitter', guild.roles)
+  return role in author.roles
 
 
-def isSubmitter(interaction: discord.Interaction):
-  if interaction.user.id == PHILID or isOwner(interaction):
-    return True
-
-
-def storeCanTrack(interaction: discord.Interaction):
-  store = myCommands.GetStore(interaction.guild_id)
-  if store is None:
-    return False
-  return store.ApprovalStatus
+def storeCanTrack(guild):
+  store = data_manipulation.GetStore(guild.id)
+  return store is not None and store.ApprovalStatus
 
 
 async def MessageUser(msg, userId, file = None):
@@ -101,28 +115,25 @@ async def MessageChannel(msg, guildId, channelId):
 async def Error(interaction, error):
   command = interaction.command
   message = interaction.message
-  message_join = []
-  message_join.append(f'{interaction.user.display_name} got an error: {error}')
-  message_join.append(f'Command: {command}')
-  message_join.append(f'Message: {message}')
-  error_message = '\n'.join(message_join)
+  error_message =  f'{interaction.user.display_name} got an error: {error}\n'
+  error_message += f'Command: {command}\n'
+  error_message += f'Message: {message}\n'
   await ErrorMessage(error_message)
   await interaction.response.send_message('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
 
 
 async def ErrorMessage(msg):
-  await MessageChannel(msg, GUILDID, ERRORID)
+  await MessageChannel(msg, settings.BOTGUILD.id, settings.ERRORCHANNELID)
 
 
 async def ApprovalMessage(msg):
-  await MessageChannel(msg, GUILDID, APPROVALID)
-
+  await MessageChannel(msg, settings.BOTGUILD.id, settings.APPROVALCHANNELID)
 
 @client.tree.command(name="getbot",
                      description="Display the url to get the bot",
-                     guild=BOTGUILD)
+                     guild=settings.BOTGUILD)
 async def GetBot(interaction: discord.Interaction):
-  await interaction.response.send_message(MYBOTURL, ephemeral=True)
+  await interaction.response.send_message(settings.MYBOTURL, ephemeral=True)
 
 
 @GetBot.error
@@ -130,37 +141,7 @@ async def GetBot_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 
-@client.tree.command(name="getsheets",
-                     description="Display the url to get the sheets companion",
-                     guild=BOTGUILD)
-async def GetSheets(interaction: discord.Interaction):
-  await interaction.response.send_message(SHEETSURL, ephemeral=True)
-
-
-@GetSheets.error
-async def GetSheets_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
-
-
-@client.tree.command(name="testnewfunc",description="Testing a new function",guild=TESTSTOREGUILD)
-@app_commands.checks.has_role("Owner")
-async def NewFunc(interaction: discord.Interaction):
-  owner = interaction.guild.owner
-  role = await interaction.guild.create_role(name="Test Role", permissions=discord.Permissions.all())
-  await owner.add_roles(role)
-  
-  permissions = discord.PermissionOverwrite(send_messages=False)
-  everyone_role = interaction.guild.default_role
-  await interaction.channel.set_permissions(everyone_role, overwrite=permissions)
-  await interaction.response.send_message('Done?')
-
-@NewFunc.error
-async def NewGame_error(interaction: discord.Interaction, error):
-  await interaction.response.send_message(f'Error: {error}')
-
-
 @client.tree.command(name="register", description="Register your store")
-@app_commands.checks.has_role("Owner")
 @app_commands.check(isOwner)
 async def Register(interaction: discord.Interaction, store_name: str):
   """
@@ -171,56 +152,78 @@ async def Register(interaction: discord.Interaction, store_name: str):
   """
 
   store_name = store_name.upper()
-  discord_id = interaction.guild_id
-  discord_name = str(interaction.guild).upper()
-  owner = interaction.user.id
-  store = tupleConversions.Store(store_name,
-                                 discord_id,
-                                 discord_name,
-                                 owner,
-                                 False)
-  newDatabase.AddStore(store)
-  await MessageUser(f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',
-                    PHILID)
-  await MessageChannel(f'{store.Name.title()} has registered to track their data. DiscordId: {store.DiscordId}',
-                       GUILDID,
-                       APPROVALID)
-  await interaction.response.send_message(f'Registered {store_name.title()} with discord {discord_name.title()} with owner {interaction.user}')
+  discord_id = interaction.guild.id
+  discord_name = interaction.guild.name.upper()
+  owner_id = interaction.guild.owner.id
+  owner_name = interaction.guild.owner.display_name.upper()
+  store = tuple_conversions.Store(discord_id,
+                                  discord_name,
+                                  store_name,
+                                  owner_id,
+                                  owner_name,
+                                  False)
+  #TODO: This needs to call data_manipulation and not skip straight to the database
+  #TODO: data_manipulation can catch the error
+  database_connection.AddStore(store)
+  if store is not None:
+    await SetPermissions(interaction)
+    await MessageUser(f'{store.StoreName.title()} has registered to track their data. DiscordId: {store.DiscordId}',
+                      settings.PHILID)
+    await MessageChannel(f'{store.StoreName.title()} has registered to track their data. DiscordId: {store.DiscordId}',
+                         settings.BOTGUILD.id,
+                         settings.APPROVALCHANNELID)
+    await interaction.response.send_message(f'Registered {store_name.title()} with discord {discord_name.title()} with owner {interaction.user}')
+  else:
+    await interaction.response.send_message('Unable to register the store. This has been reported')
+    await Error(interaction, 'Store unable to be registered')
 
 
 @Register.error
 async def register_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+async def SetPermissions(interaction):
+  owner = interaction.guild.owner
+  mtsubmitter_role = discord.utils.find(lambda r: r.name == 'MTSubmitter', interaction.guild.roles)
+  owner_role = discord.utils.find(lambda r: r.name == 'Owner', interaction.guild.roles)
+
+  if owner_role is None:
+    owner_role = await interaction.guild.create_role(name="Owner", permissions=discord.Permissions.all())
+  await owner.add_roles(owner_role)
+
+  if mtsubmitter_role is None:
+    mtsubmitter_role = await interaction.guild.create_role(name="MTSubmitter", permissions=discord.Permissions.all())
+  await owner.add_roles(mtsubmitter_role)
+
+  permissions = discord.PermissionOverwrite(send_messages=False)
+  everyone_role = interaction.guild.default_role
+  await interaction.channel.set_permissions(everyone_role, overwrite=permissions)
+  await interaction.response.send_message('Done?')
 
 @client.tree.command(name="metagame", description="Get the metagame")
 async def Metagame(interaction: discord.Interaction,
-                   format: str = '',
                    start_date: str = '',
                    end_date: str = ''):
   """
   Parameters
   ----------
-  format: string
-    The format to view
   start_date: string
     The start date of the metagame (MM/DD/YYYY)
   end_date: string
     The end date of the metagame (MM/DD/YYYY)
   """
   discord_id = interaction.guild_id
-  game = interaction.channel.category.name.upper()
-  mappedgame = newDatabase.GetGameName(game)
-  if discord_id == CBUSGUILDID:
-    mappedgame = 'MAGIC'
-    discord_id = 0
-  if format == '':
-    format = interaction.channel.name.upper()
-  else:
-    format = format.upper()
+  game_id = database_connection.GetGameId(discord_id, interaction.channel.category.name.upper())
+  format_id = database_connection.GetFormatId(game_id, interaction.channel.name.replace('-',' ').upper())
+  if format_id is None:
+    await interaction.response.send_message('Error: Format not found.')
 
-  output = myCommands.GetMetagame(discord_id, mappedgame, format, start_date,
-                                  end_date)
+  output = data_manipulation.GetMetagame(discord_id,
+                                         game_id,
+                                         format_id,
+                                         start_date,
+                                         end_date)
+  
   await interaction.response.send_message(output)
 
 
@@ -235,13 +238,13 @@ async def metagame_error(interaction: discord.Interaction, error):
                      description="Get the recent events and their attendance for this store")
 async def RecentEvents(interaction: discord.Interaction):
   game = interaction.channel.category.name.upper()
-  mappedgame = newDatabase.GetGameName(game)
+  mappedgame = database_connection.GetGameName(game)
   if mappedgame is None:
     await ErrorMessage(f'Game {game} not mapped in {interaction.guild.name}')
     raise Exception(f'Game {game} not found or mapped')
   format = interaction.channel.name.upper()
   discord_id = interaction.guild.id
-  output = myCommands.FindEvents(discord_id)
+  output = data_manipulation.FindEvents(discord_id)
   await interaction.response.send_message(output)
 
 
@@ -264,7 +267,7 @@ async def Participants(interaction: discord.Interaction, date: str):
   game = interaction.channel.category.name.upper()
   format = interaction.channel.name.upper()
   owner = interaction.guild.owner_id
-  output = myCommands.GetPlayersInEvent(owner, game, date, format)
+  output = data_manipulation.GetPlayersInEvent(owner, game, date, format)
   await interaction.response.send_message(output, ephemeral=True)
 
 
@@ -291,10 +294,10 @@ async def TopPlayers(interaction: discord.Interaction,
     The number of top players to get
   """
   game = interaction.channel.category.name.upper()
-  mappedgame = newDatabase.GetGameName(game)
+  mappedgame = database_connection.GetGameId(discord_id, game)
   format = interaction.channel.name.upper()
   discord_id = interaction.guild.id
-  output = myCommands.GetTopPlayers(discord_id, mappedgame, format, year,
+  output = data_manipulation.GetTopPlayers(discord_id, mappedgame, format, year,
                                     quarter, top)
   await interaction.response.send_message(output, ephemeral=True)
 
@@ -307,10 +310,9 @@ async def topplayers_error(interaction: discord.Interaction, error):
 @client.tree.command(name="test",
                      description="Relays all information about channel to Phil")
 @app_commands.checks.has_role("Owner")
-@app_commands.check(isOwner)
 async def Test(interaction: discord.Interaction):
-  output = outputBuilder.DiscordInfo(interaction)
-  await MessageUser(output, PHILID)
+  output = output_builder.DiscordInfo(interaction)
+  await MessageUser(output, settings.PHILID)
   await interaction.response.send_message('Information has been sent to Phil')
 
 
@@ -319,39 +321,27 @@ async def test_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 
-@client.tree.command(name='updaterow',
-                     description='Update a row in the database',
-                     guild=TESTSTOREGUILD)
-@app_commands.check(isOwner)
-async def UpdateRow(interaction: discord.Interaction, old_row: str,
-                    new_row: str):
-  await interaction.response.send_message(
-      f'Updating row {old_row} with {new_row}')
-  output = myCommands.UpdateDataRow(old_row, new_row, interaction.user.id)
-  await interaction.response.send_message(output)
-
-
-@UpdateRow.error
-async def updaterow_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
-
-
 @client.tree.command(name='addgamemap',
                      description='Add a game map to the database')
 @app_commands.checks.has_role("Owner")
 async def AddGameMap(interaction: discord.Interaction):
-  games_list = newDatabase.GetAllGames()
+  discord_id = interaction.guild.id
+  games_list = database_connection.GetAllGames()
+  print(games_list)
   game_options = []
   for game in games_list:
-    game_options.append(
-        discord.SelectOption(label=game[0].title(), value=game[0]))
+    game_options.append(discord.SelectOption(label=game[1].title(), value=game[0]))
   select = Select(placeholder='Choose a game', options=game_options)
 
   async def my_callback(interaction):
-    actual_name = select.values[0]
+    game_id = select.values[0]
     used_name = interaction.channel.category.name.upper()
-    output = myCommands.AddGameMap(used_name, actual_name)
-    await interaction.response.send_message(output, ephemeral=True)
+    output = data_manipulation.AddGameMap(discord_id, game_id, used_name)
+    if output is None:
+      await ErrorMessage(f'Unable to map {used_name} in discord {discord_id}')
+      await interaction.response.send_message('Unable to map this game. It has been reported')
+    else:
+      await interaction.response.send_message(output, ephemeral=True)
 
   select.callback = my_callback
   view = View()
@@ -366,17 +356,15 @@ async def addgamemap_error(interaction: discord.Interaction, error):
 
 @client.tree.command(name='approvestore',
                      description='Approve a store to track',
-                     guild=BOTGUILD)
-@app_commands.checks.has_role("Owner")
-@app_commands.check(isPhil)
+                     guild=settings.BOTGUILD)
+@app_commands.check(checkIsPhil)
 async def ApproveStore(interaction: discord.Interaction, discord_id: str):
   discord_id_int = int(discord_id)
-  store = myCommands.ApproveStore(discord_id_int)
-  await MessageUser(
-      f'{store.Name.title()} has been approved to track metagame data!',
-      store.Owner)
+  store = data_manipulation.ApproveStore(discord_id_int)
+  await MessageUser(f'{store.StoreName.title()} has been approved to track metagame data!',
+      store.OwnerId)
   await interaction.response.send_message(
-      f'{store.Name.title()} is now approved to track their data')
+      f'{store.StoreName.title()} is now approved to track their data')
 
 
 @ApproveStore.error
@@ -386,14 +374,13 @@ async def ApproveStore_error(interaction: discord.Interaction, error):
 
 @client.tree.command(name='disapprovestore',
                      description='Disapprove a store to track',
-                     guild=BOTGUILD)
-@app_commands.checks.has_role("Owner")
-@app_commands.check(isPhil)
+                     guild=settings.BOTGUILD)
+@app_commands.check(checkIsPhil)
 async def DisapproveStore(interaction: discord.Interaction, discord_id: str):
   discord_id_int = int(discord_id)
-  store = myCommands.DisapproveStore(discord_id_int)
+  store = data_manipulation.DisapproveStore(discord_id_int)
   await interaction.response.send_message(
-      f'Store {store.Name} ({store.DiscordId}) no longer approved to track')
+      f'Store {store.StoreName.title()} ({store.DiscordId}) no longer approved to track')
 
 
 @DisapproveStore.error
@@ -403,9 +390,8 @@ async def DisapproveStore_error(interaction: discord.Interaction, error):
 
 @client.tree.command(name='getallstores',
                      description='View All Stores information',
-                     guild=BOTGUILD)
-@app_commands.checks.has_role("Owner")
-@app_commands.check(isPhil)
+                     guild=settings.BOTGUILD)
+@app_commands.check(checkIsPhil)
 async def GetAllStores(interaction: discord.Interaction):
   await interaction.response.send_message('Displaying all stores information',
                                           ephemeral=True)
@@ -418,7 +404,7 @@ async def GetAllStores_error(interaction: discord.Interaction, error):
 
 @client.tree.command(name='claim', description='Enter your deck archetype')
 async def Claim(interaction: discord.Interaction,
-                name: str,
+                player_name: str,
                 archetype: str,
                 date: str = ''):
   """
@@ -431,34 +417,39 @@ async def Claim(interaction: discord.Interaction,
   date: string
     Date of event (MM/DD/YYYY)
   """
-  datedate = datefuncs.convert_to_date(date)
-  if datedate is None:
-    datedate = datefuncs.GetToday()
+  actual_date = date_functions.convert_to_date(date)
+  if actual_date is None:
+    actual_date = date_functions.GetToday()
 
-  name = name.upper()
-  format = interaction.channel.name.upper()
+  player_name = player_name.upper()
   game = interaction.channel.category.name.upper()
-  mapped_game = newDatabase.GetGameName(game)
+  game_id = database_connection.GetGameId(interaction.guild.id, game)
+  format = interaction.channel.name.upper()
+  format_id = database_connection.GetFormatId(game_id, format)
   store_discord = interaction.guild.id
+  event_id = database_connection.GetEventId(store_discord, actual_date, game_id, format_id)
   updater_id = interaction.user.id
   updater_name = interaction.user.display_name.upper()
   archetype = archetype.upper()
 
-  success_check = myCommands.Claim(store_discord, name, archetype, datedate,
-                                   format, mapped_game, updater_id,
-                                   updater_name)
+  success_check = data_manipulation.Claim(event_id,
+                                          player_name,
+                                          archetype,
+                                          updater_id,
+                                          updater_name,
+                                          store_discord)
   output = ''
+  print('Success?', success_check)
   if success_check:
     output = 'Thank you for submitting your archetype!'
   else:
     output = 'Error: Something went wrong. It\'s been reported'
     message_parts = []
     message_parts.append('Error claiming archetype:')
-    message_parts.append(f'Name: {name}')
+    message_parts.append(f'Name: {player_name}')
     message_parts.append(f'Archetype: {archetype}')
-    message_parts.append(f'Date: {datedate}')
+    message_parts.append(f'Date: {actual_date}')
     message_parts.append(f'Format: {format}')
-    message_parts.append(f'Mapped Game: {mapped_game}')
     message_parts.append(f'Store Discord: {store_discord}')
     message_parts.append(f'Updater Discord: {updater_id}')
 
@@ -471,15 +462,15 @@ async def Claim(interaction: discord.Interaction,
 async def Claim_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-
+#TODO: There seems to be a blank line between every row of data
 @client.tree.command(name='download',
                      description='Downloads the Database',
-                     guild=BOTGUILD)
-@app_commands.check(isPhil)
+                     guild=settings.BOTGUILD)
+@app_commands.check(checkIsPhil)
 async def DownloadDatabase(interaction: discord.Interaction):
   tables = ['datarows', 'gamenamemaps', 'stores', 'inputtracker']
   for table in tables:
-    data = newDatabase.GetData(table)
+    data = database_connection.GetData(table)
     data_list = []
     for row in data:
       max = len(row)
@@ -494,12 +485,11 @@ async def DownloadDatabase(interaction: discord.Interaction):
       data_list.append(row_string)
 
     as_bytes = map(str.encode, data_list)
-    content = b'\n'.join(as_bytes)
+    content = b''.join(as_bytes)
     file = discord.File(BytesIO(content), filename=f'{table}.csv')
-    await MessageUser('Message', PHILID, file)
+    await MessageUser('Message', settings.PHILID, file)
 
-  await interaction.response.send_message(
-      'Database has been downloaded and messaged')
+  await interaction.response.send_message('Database has been downloaded and messaged')
 
 
 @DownloadDatabase.error

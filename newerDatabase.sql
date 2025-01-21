@@ -1,69 +1,67 @@
-DROP TABLE IF EXISTS NewStores;
-CREATE TABLE NewStores (
-  discord_id INTEGER PRIMARY KEY,
+DROP TABLE IF EXISTS Stores;
+CREATE TABLE Stores (
+  discord_id BIGINT PRIMARY KEY,
   discord_name TEXT,
   store_name TEXT,
-  owner_id INTEGER,
+  owner_id BIGINT,
   owner_name TEXT,
   isApproved BOOLEAN
 );
 
-DROP TABLE IF EXISTS NewCardGames;
-CREATE TABLE NewCardGames (
+DROP TABLE IF EXISTS CardGames;
+CREATE TABLE CardGames (
   id SERIAL PRIMARY KEY,
-  name TEXT
+  name TEXT UNIQUE
 );
 
-DROP TABLE IF EXISTS NewFormats;
-CREATE TABLE NewFormats (
+DROP TABLE IF EXISTS Formats;
+CREATE TABLE Formats (
   id SERIAL PRIMARY KEY,
-  game_id INTEGER REFERENCES NewCardGames (id),
-  name TEXT
+  game_id INTEGER REFERENCES CardGames (id),
+  name TEXT,
+  UNIQUE (game_id, name)
 );
 
-DROP TABLE IF EXISTS NewGameNameMaps;
-CREATE TABLE NewGameNameMaps (
-  game_id INTEGER REFERENCES NewCardGames (id),
-  discord_id INTEGER REFERENCES NewStores (discord_id),
+DROP TABLE IF EXISTS GameNameMaps;
+CREATE TABLE GameNameMaps (
+  discord_id BIGINT REFERENCES Stores (discord_id),
+  game_id INTEGER REFERENCES CardGames (id),
   used_name TEXT,
   PRIMARY KEY (game_id, discord_id)
 );
 
-DROP TABLE IF EXISTS NewEvents;
-Create table NewEvents (
+DROP TABLE IF EXISTS Events;
+Create table Events (
   id SERIAL PRIMARY KEY,
-  discord_id INTEGER,
-  store_name TEXT,
-  user_id INTEGER,
+  discord_id BIGINT,
   event_date date NOT NULL,
-  game_id INTEGER,
-  format_id INTEGER,
-  event_type_id INTEGER,
-  deck_played TEXT
+  game_id INTEGER REFERENCES CardGames (id),
+  format_id INTEGER REFERENCES Formats (id),
+  UNIQUE (discord_id, event_date, game_id, format_id)
 );
 
-DROP TABLE IF EXISTS NewParticipants;
-CREATE TABLE NewParticipants (
+DROP TABLE IF EXISTS Participants;
+CREATE TABLE Participants (
   id SERIAL PRIMARY KEY,
-  event_id INTEGER REFERENCES NewEvents (id),
+  event_id INTEGER REFERENCES Events (id),
   player_name TEXT,
   archetype_played TEXT,
   wins INTEGER,
   losses INTEGER,
-  ties INTEGER,
-  submitter_id INTEGER,
+  draws INTEGER,
+  submitter_id BIGINT,
   UNIQUE(event_id, player_name)
 );
 
-DROP TABLE IF EXISTS NewInputTracker;
-CREATE TABLE NewInputTracker (
+DROP TABLE IF EXISTS InputTracker;
+CREATE TABLE InputTracker (
   id SERIAL PRIMARY KEY,
   user_name TEXT,
-  user_id INTEGER,
+  user_id BIGINT,
   archetype_played TEXT,
   date_submitted DATE,
   player_name TEXT,
-  discord_id INTEGER REFERENCES NewStores (discord_id),
+  discord_id BIGINT REFERENCES Stores (discord_id)
 );
 
 

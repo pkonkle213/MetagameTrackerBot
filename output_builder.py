@@ -1,4 +1,4 @@
-import datefuncs
+import date_functions
 
 def MaxLength(headers, collection):
   buffer = 2
@@ -8,14 +8,15 @@ def MaxLength(headers, collection):
 
   for item in collection:
     for i in range(len(headers)):
-      if len(str(item[i])) + buffer > maxLengths[i]:
-        maxLengths[i] = len(str(item[i])) + buffer
+      length = len(str(item[i])) + buffer
+      if length > maxLengths[i]:
+        maxLengths[i] = length
 
   return maxLengths
 
 def DiscordInfo(interaction):
   response = []
-  currentDateTime = str(datefuncs.GetToday())
+  currentDateTime = str(date_functions.GetToday())
   response.append(f'Current Date: {currentDateTime}')
   response.append(f'Message Author Name: {str(interaction.user)}')
   response.append(f'Message Author ID: {str(interaction.user.id)}')
