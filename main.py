@@ -417,6 +417,7 @@ async def Claim(interaction: discord.Interaction,
   date: string
     Date of event (MM/DD/YYYY)
   """
+  await interaction.response.defer()
   actual_date = date_functions.convert_to_date(date)
   if actual_date is None:
     actual_date = date_functions.GetToday()
@@ -455,7 +456,7 @@ async def Claim(interaction: discord.Interaction,
 
     await ErrorMessage('\n'.join(message_parts))
 
-  await interaction.response.send_message(output, ephemeral=True)
+  await interaction.followup.send(output, ephemeral=True)
 
 
 @Claim.error
