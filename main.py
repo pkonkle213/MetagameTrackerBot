@@ -8,7 +8,6 @@ import data_manipulation
 import database_connection
 import settings
 from io import BytesIO
-import output_builder
 import tuple_conversions
 
 class Client(commands.Bot):

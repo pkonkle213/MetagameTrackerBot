@@ -191,7 +191,8 @@ def GetDataRowsForMetagame(game_id,
   with conn, conn.cursor() as cur:
     criteria = [game_id, format_id, start_date, end_date]
     command =  'WITH x AS ( '
-    command += 'SELECT p.archetype_played, COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as MetaPercentage, (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) as WinPercentage, (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) * COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as Combined '
+    command += 'SELECT p.archetype_played, COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as MetaPercentage, '
+    command += '(sum(p.wins) * 1.0) / (sum(p.wins) + sum(p.losses) + sum(p.draws)) as WinPercentage, '
     command += 'FROM Participants p '
     command += 'INNER JOIN Events e ON p.event_id = e.id '
     command += 'WHERE e.game_id = %s '
@@ -203,11 +204,15 @@ def GetDataRowsForMetagame(game_id,
       command += 'AND e.discord_id = %s '
       criteria.append(discord_id)
     command += 'GROUP BY p.archetype_played '
-    command += 'ORDER BY Combined DESC, p.archetype_played'
+    command += 'ORDER BY p.archetype_played '
     command += ') '
-    command += 'SELECT * '
+    command += 'SELECT archetype_played, '
+    command += 'CONCAT(TO_CHAR(ROUND(MetaPercentage * 100, 2), \'999D99\'), \'%\') AS MetaPercentage'
+    command += 'CONCAT(TO_CHAR(ROUND(WinPercentage * 100, 2), \'999D99\'), \'%\') AS WinPercentage, '
+    command += 'CONCAT(TO_CHAR(ROUND(MetaPercentage * WinPercentage * 100, 2), \'999D99\'), \'%\') AS Combined'
     command += 'FROM x '
-    command += 'WHERE x.MetaPercentage >= 0.02'
+    command += 'WHERE MetaPercentage >= 0.02 '
+    command += 'ORDER BY Combined DESC'
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows
