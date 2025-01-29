@@ -22,7 +22,7 @@ def ConvertMessageToParticipants(rows):
   except Exception:
     return None
 
-#
+
 def AddGameMap(discord_id,
                game_id,
                used_name):
@@ -48,13 +48,13 @@ def AddResults(event_id, participants, submitterId):
   #TODO: Upgrade this to tag those who typically play with the names given
   return f'{successes} entries were added. Feel free to use /claim and update the archetypes!'
 
-#
+
 def GetEvent(date_of_event, discord_id, game, format):
   event_obj = database_connection.GetEvent(discord_id, date_of_event, game, format)
   event = tuple_conversions.ConvertToEvent(event_obj)
   return event
 
-#
+
 def Claim(event_id,
           player_name,
           archetype_played,
@@ -73,44 +73,19 @@ def Claim(event_id,
                                  player_name.upper())
   return output == 'Success'
   
-#
-def GetPlayersInEvent(author_id,
-                      game,
-                      event_date,
-                      event_format):
-  store_obj = database_connection.GetStores(owner = author_id)[0]
-  store = tuple_conversions.ConvertToStore(store_obj)
-  game = database_connection.GetGameId(discord_id, game.upper())
-  event_date = date_functions.convert_to_date(event_date)
-  players_obj = database_connection.GetPlayersInEvent(store.DiscordId,game,event_date,event_format)
-  title = f'Players in {game.title()} on {str(event_date)}'
-  headers = ['Player Name', 'Archetype Played', 'Wins', 'Losses', 'Draws']
-  output = output_builder.BuildTableOutput(title, headers, players_obj)
-  return output
-#
-def FindEvents(discord_id):
-  store_obj = database_connection.GetStores(discord_id = discord_id)[0]
-  store = tuple_conversions.ConvertToStore(store_obj)
-  end_date = date_functions.GetToday()
-  start_date = date_functions.GetStartDate(end_date)
-  rows = database_connection.GetEvents(store.DiscordId, start_date, end_date)
-  if len(rows) == 0:
-    return 'No events found'
-  else:
-    title = f'{store.StoreName.title()}\'s events between {start_date} and {end_date}'
-    headers = ['Date', 'Game', 'Format', 'Attended']
 
-    output = output_builder.BuildTableOutput(title, headers, rows)
-    return output
-#
 def GetTopPlayers(discord_id, game, format, year, quarter, top_number):
   date_range = date_functions.GetQuarterRange(year, quarter)
   start_date = date_range[0]
   end_date = date_range[1]
 
+  game_obj = database_connection.GetGame(discord_id, game)
+  format_obj = database_connection.GetFormat(game_obj[0], format)
+
   store_obj = database_connection.GetStores(discord_id=discord_id)
   store = tuple_conversions.ConvertToStore(store_obj[0])
-  results = database_connection.GetTopPlayers(store.DiscordId, game, format, start_date, end_date, top_number)
+  print('Criteria:', (store.DiscordId, game_obj[0], format_obj[0], start_date, end_date, top_number))
+  results = database_connection.GetTopPlayers(store.DiscordId, game_obj[0], format_obj[0], start_date, end_date, top_number)
   top_players = tuple_conversions.ChangeDataRowsToLeaderBoard(results)
   title = f'Top {top_number} Players for {store.StoreName.title()} '
   if format != '':
@@ -120,13 +95,14 @@ def GetTopPlayers(discord_id, game, format, year, quarter, top_number):
   headers = ('Name', 'Metagame %', 'Win %', 'Combined %')
 
   return output_builder.BuildTableOutput(title, headers, top_players)
-#
+
 def GetStore(discord_id):
   results = database_connection.GetStores(discord_id = discord_id)
   if results is None or len(results) == 0:
     return None
   return tuple_conversions.ConvertToStore(results[0])
-  
+
+
 def ApproveStore(discord_id):
   store_obj = database_connection.SetStoreTrackingStatus(True, discord_id)
   if store_obj is None:
@@ -135,83 +111,32 @@ def ApproveStore(discord_id):
   store = tuple_conversions.ConvertToStore(store_obj)
   return store
   
-#
+
 def DisapproveStore(discord_id):
   store_obj = database_connection.SetStoreTrackingStatus(False, discord_id)
   store = tuple_conversions.ConvertToStore(store_obj)
   return store
-#
-def AddError(error, errors):
-  if error in errors:
-    errors[error] += 1
-  else:
-    errors[error] = 1
-#
-def ErrorCheck(discordId, errors):
-  stores_tuples = database_connection.GetStores(discord_id=discordId)
-  stores_stores = []
-  for tup in stores_tuples:
-    store = tuple_conversions.ConvertToStore(tup)
-    stores_stores.append(store)
 
-  if len(stores_stores) == 0:
-    AddError('Store not in database', errors)
-    return True
-
-  if not stores_stores[0].ApprovalStatus:
-    AddError('This store is not yet tracking its data', errors)
-    return True
-
-  return False
-
-
-#
-def GetFormats(discord_id, game):
-  results = database_connection.GetFormats(discord_id, game)
-  if results == []:
-    output = 'No formats found'
-  else:
-    headers = ['Format Name']
-    output = output_builder.BuildTableOutput('Formats for this store', headers,
-                                            results)
-  return output
 
 def GetMetagame(discord_id, game, format, start_date, end_date):
   output = ''
   end_date = date_functions.convert_to_date(end_date) if end_date != '' else date_functions.GetToday()
   start_date = date_functions.convert_to_date(start_date) if start_date != '' else date_functions.GetStartDate(end_date)
-  metagame_data = database_connection.GetDataRowsForMetagame(game[0],
+  metagame = database_connection.GetDataRowsForMetagame(game[0],
                                                              format[0],
                                                              start_date,
                                                              end_date,
                                                              discord_id)
-  if len(metagame_data) == 0:
+  if len(metagame) == 0:
     output = 'No data found'
   else:
     title = f'{format[1].title()} metagame from {start_date} to {end_date}'
-    metagame = tuple_conversions.ChangeDataToMetagame(metagame_data)
+    
     headers = ['Deck Archetype', 'Meta % ', 'Win %  ', 'Combined %']
     output = output_builder.BuildTableOutput(title, headers, metagame)
   return output
 
-#
-def GetStoresByGameFormat(game, format):
-  stores = database_connection.GetStoreNamesByGameFormat(game, format)
-  headers = ['Event Date','Store Name','Attendance']
-  title = 'Stores with this format'
-  output = output_builder.BuildTableOutput(title,
-                                          headers,
-                                          stores)
-  return output
-#
-def GetStores():
-  stores = database_connection.GetStores()
-  headers = ['StoreName', 'DiscordId', 'DiscordName', 'Owner', 'ApprovalStatus']
-  output = output_builder.BuildTableOutput('Data On Stores In Database',
-                                          headers, stores)
-  return output
-  
-#
+
 def RegisterStore(discord_id,
                  discord_name,
                  store_name,

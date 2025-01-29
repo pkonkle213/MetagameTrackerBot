@@ -81,17 +81,6 @@ def ChangeDataRowsToLeaderBoard(dataRows):
 
   return top_players
 
-def ChangeDataToMetagame(rows):
-  filtered_rows = []
-  for i in range(len(rows)):
-    if rows[i][1] > .02:
-      filtered_rows.append(MetagameRow(rows[i][0].title(),
-                                       ConvertDecimalToPercentStr(rows[i][1]),
-                                       ConvertDecimalToPercentStr(rows[i][2]),
-                                       ConvertDecimalToPercentStr(rows[i][3])))
-
-  return filtered_rows
-
 #This isn't done with a built in function due to BuildOutput not knowing types
 def ConvertDecimalToPercentStr(number): 
   percent = round(number * 100, 2)

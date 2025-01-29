@@ -115,8 +115,8 @@ async def MessageChannel(msg, guildId, channelId):
 async def Error(interaction, error):
   command = interaction.command
   message = interaction.message
-  error_message =  f'{interaction.user.display_name} got an error: {error}\n'
-  error_message += f'Command: {command}\n'
+  error_message =  f'{interaction.user.display_name} ({interaction.user.id}) got an error: {error}\n'
+  error_message += f'Command: {str(command)}\n'
   error_message += f'Message: {message}\n'
   await ErrorMessage(error_message)
   await interaction.response.send_message('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
@@ -233,51 +233,7 @@ async def Metagame(interaction: discord.Interaction,
 async def metagame_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-
-#TODO: This needs to take into account the game and format
-#There might be a way to bend this for a "general" channel as well
-@client.tree.command(name="recentevents",
-                     description="Get the recent events and their attendance for this store")
-async def RecentEvents(interaction: discord.Interaction):
-  game = interaction.channel.category.name.upper()
-  mappedgame = database_connection.GetGameName(game)
-  if mappedgame is None:
-    await ErrorMessage(f'Game {game} not mapped in {interaction.guild.name}')
-    raise Exception(f'Game {game} not found or mapped')
-  format = interaction.channel.name.upper()
-  discord_id = interaction.guild.id
-  output = data_manipulation.FindEvents(discord_id)
-  await interaction.response.send_message(output)
-
-
-@RecentEvents.error
-async def recentevents_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
-
-
-#TODO: Output when no results should be indicitave that there wasn't an appropriate event that day
-@client.tree.command(name="participants",
-                     description="Get the participants of an event based on channel name")
-@app_commands.checks.has_role("Owner")
-async def Participants(interaction: discord.Interaction, date: str):
-  """
-  Parameters
-  ----------
-  date: string
-    Date of the event (MM/DD/YYYY)
-  """
-  game = interaction.channel.category.name.upper()
-  format = interaction.channel.name.upper()
-  owner = interaction.guild.owner_id
-  output = data_manipulation.GetPlayersInEvent(owner, game, date, format)
-  await interaction.response.send_message(output, ephemeral=True)
-
-
-@Participants.error
-async def participants_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
-
-
+#TODO: Double check this works
 @client.tree.command(name="topplayers",
                      description="Get the top players of the format")
 @app_commands.checks.has_role("Owner")
@@ -295,31 +251,21 @@ async def TopPlayers(interaction: discord.Interaction,
   top: int
     The number of top players to get
   """
+  await interaction.response.defer(ephemeral=True)
   game = interaction.channel.category.name.upper()
-  mappedgame = database_connection.GetGameId(discord_id, game)
-  format = interaction.channel.name.upper()
   discord_id = interaction.guild.id
-  output = data_manipulation.GetTopPlayers(discord_id, mappedgame, format, year,
-                                    quarter, top)
-  await interaction.response.send_message(output, ephemeral=True)
+  format = interaction.channel.name.upper()
+  output = data_manipulation.GetTopPlayers(discord_id,
+                                           game,
+                                           format,
+                                           year,
+                                           quarter,
+                                           top)
+  await interaction.followup.send(output)
 
 
 @TopPlayers.error
 async def topplayers_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
-
-
-@client.tree.command(name="test",
-                     description="Relays all information about channel to Phil")
-@app_commands.checks.has_role("Owner")
-async def Test(interaction: discord.Interaction):
-  output = output_builder.DiscordInfo(interaction)
-  await MessageUser(output, settings.PHILID)
-  await interaction.response.send_message('Information has been sent to Phil')
-
-
-@Test.error
-async def test_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 
@@ -385,25 +331,6 @@ async def DisapproveStore(interaction: discord.Interaction, discord_id: str):
       f'Store {store.StoreName.title()} ({store.DiscordId}) no longer approved to track')
 
 
-@DisapproveStore.error
-async def DisapproveStore_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
-
-
-@client.tree.command(name='getallstores',
-                     description='View All Stores information',
-                     guild=settings.BOTGUILD)
-@app_commands.check(checkIsPhil)
-async def GetAllStores(interaction: discord.Interaction):
-  await interaction.response.send_message('Displaying all stores information',
-                                          ephemeral=True)
-
-
-@GetAllStores.error
-async def GetAllStores_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
-
-
 @client.tree.command(name='claim', description='Enter your deck archetype')
 async def Claim(interaction: discord.Interaction,
                 player_name: str,
@@ -419,7 +346,7 @@ async def Claim(interaction: discord.Interaction,
   date: string
     Date of event (MM/DD/YYYY)
   """
-  await interaction.response.defer()
+  await interaction.response.defer(ephemeral=True)
   actual_date = date_functions.convert_to_date(date)
   if actual_date is None:
     actual_date = date_functions.GetToday()
@@ -458,14 +385,15 @@ async def Claim(interaction: discord.Interaction,
 
     await ErrorMessage('\n'.join(message_parts))
 
-  await interaction.followup.send(output, ephemeral=True)
+  await interaction.followup.send(output)
 
 
 @Claim.error
 async def Claim_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-#TODO: There seems to be a blank line between every row of data
+#TODO: Adjust the list of tables as they've changed
+#Is there a script that will do this for me?!
 @client.tree.command(name='download',
                      description='Downloads the Database',
                      guild=settings.BOTGUILD)

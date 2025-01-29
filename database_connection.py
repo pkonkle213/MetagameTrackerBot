@@ -125,6 +125,7 @@ def Claim(event_id,
     with conn, conn.cursor() as cur:  
       cur.execute(command, criteria)
       conn.commit()
+      #TODO: This doesn't check to see that something was updated
     return 'Success'
   #TODO: This should be more specific and relay why there was a failure to Phil
   except Exception as excep:
@@ -181,7 +182,6 @@ def GetGame(discord_id,
       return None
     return rows[0]
     
-#TODO: This needs fixed for the new database
 def GetDataRowsForMetagame(game_id,
                            format_id,
                            start_date,
@@ -190,10 +190,12 @@ def GetDataRowsForMetagame(game_id,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     criteria = [game_id, format_id, start_date, end_date]
-    command = 'SELECT p.archetype_played, COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as MetaPercentage, (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) as WinPercentage, (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) * COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as Combined '
+    command =  'WITH x AS ( '
+    command += 'SELECT p.archetype_played, COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as MetaPercentage, (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) as WinPercentage, (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) * COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as Combined '
     command += 'FROM Participants p '
     command += 'INNER JOIN Events e ON p.event_id = e.id '
     command += 'WHERE e.game_id = %s '
+    #TODO: Maybe I should include unknown archetypes to encourage people to enter info?
     command += 'AND p.archetype_played != \'UNKNOWN\' '
     command += 'AND e.format_id = %s '
     command += 'AND e.event_date >= %s AND event_date <= %s '
@@ -202,6 +204,10 @@ def GetDataRowsForMetagame(game_id,
       criteria.append(discord_id)
     command += 'GROUP BY p.archetype_played '
     command += 'ORDER BY Combined DESC, p.archetype_played'
+    command += ') '
+    command += 'SELECT * '
+    command += 'FROM x '
+    command += 'WHERE x.MetaPercentage >= 0.02'
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows
@@ -254,29 +260,31 @@ def GetStores(name = '',
     
 #
 def GetTopPlayers(discord_id,
-                  game,
-                  format,
+                  game_id,
+                  format_id,
                   start_date,
                   end_date,
                   top_number):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  criteria = [discord_id, game, start_date, end_date]
+  criteria = [discord_id, game_id, start_date, end_date]
 
   with conn, conn.cursor() as cur:
-    command = 'SELECT player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) as WinPercentage, (sum(wins)) / (sum(wins) * 1.0 + sum(losses) + sum(draws)) * count(*) / sum(count(*)) Over () as Combined '
-    command += 'FROM Participants '
-    command += 'WHERE discord_id = %s '
-    command += 'AND game = %s '
-    command += 'AND event_date >= %s '
-    command += 'AND event_date <= %s '
+    command = 'SELECT p.player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage, (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) as WinPercentage, (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) * count(*) / sum(count(*)) Over () as Combined '
+    command += 'FROM Participants p '
+    command += 'INNER JOIN Events e ON p.event_id = e.id '
+    command += 'WHERE e.discord_id = %s '
+    command += 'AND e.game_id = %s '
+    command += 'AND e.event_date >= %s '
+    command += 'AND e.event_date <= %s '
 
     if format != '':
-      criteria.append(format)
-      command += 'AND event_format = %s '
+      criteria.append(format_id)
+      command += 'AND e.format_id = %s '
 
-    command += 'GROUP BY player_name '
+    command += 'GROUP BY p.player_name '
     command += 'ORDER BY Combined DESC '
-    command += f'LIMIT {top_number} '
+    command += 'LIMIT %s '
+    criteria.append(top_number)
 
     cur.execute(command, criteria)
     rows = cur.fetchall()  
