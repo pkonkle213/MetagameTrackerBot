@@ -63,7 +63,11 @@ class Client(commands.Bot):
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
-client = Client(command_prefix='?', intents=intents)
+import ssl
+import certifi
+
+ssl_context = ssl.create_default_context(cafile=certifi.where())
+client = Client(command_prefix='?', intents=intents, connector=discord.http.HTTPConnector(ssl=ssl_context))
 
 
 def checkIsOwner(interaction: discord.Interaction):
