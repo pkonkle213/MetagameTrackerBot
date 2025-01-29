@@ -1,8 +1,5 @@
 import date_functions
 import discord
-import certifi
-import ssl
-ssl_context = ssl.create_default_context(cafile=certifi.where())
 from discord.ext import commands
 from discord.ui import Select, View
 from discord import app_commands
