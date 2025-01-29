@@ -60,15 +60,10 @@ class Client(commands.Bot):
       await message.delete()
       await message.channel.send(output)
 
-import ssl
-import certifi
-
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
-
-ssl_context = ssl.create_default_context(cafile=certifi.where())
-client = Client(command_prefix='?', intents=intents, connector=discord.http.HTTPConnector(ssl=ssl_context))
+client = Client(command_prefix='?', intents=intents)
 
 
 def checkIsOwner(interaction: discord.Interaction):
@@ -80,7 +75,6 @@ def isOwner(interaction: discord.Interaction):
   userid = interaction.user.id
   ownerid = interaction.guild.owner_id
   return userid == ownerid
-
 
 def isMyGuild(guild):
   return guild.id == settings.BOTGUILD.id
