@@ -426,4 +426,9 @@ async def DownloadDatabase_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 
-client.run(os.getenv('DISCORDTOKEN'))
+import ssl
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
+
+client.run(os.getenv('DISCORDTOKEN'), ssl=ssl_context)
