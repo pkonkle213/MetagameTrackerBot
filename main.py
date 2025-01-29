@@ -1,5 +1,8 @@
 import date_functions
 import discord
+import certifi
+import ssl
+ssl_context = ssl.create_default_context(cafile=certifi.where())
 from discord.ext import commands
 from discord.ui import Select, View
 from discord import app_commands
@@ -38,15 +41,15 @@ class Client(commands.Bot):
         #TODO: If none then ask
         await message.channel.send('Error: Game not found. Please map a game to this category')
         return
-      
+
       #TODO: Ask for format based on game, allow 'other' option for manual input
       format = message.channel.name.replace('-',' ').upper()
       format_id = database_connection.GetFormat(game_id, format)[0]
       #TODO: If none then create
-      
+
       #TODO: Confirm date
       date_of_event = date_functions.GetToday()
-      
+
       event_id = 0
       try:
         event_id = data_manipulation.CreateEvent(date_of_event, message.guild.id, game_id, format_id)
@@ -223,7 +226,7 @@ async def Metagame(interaction: discord.Interaction,
                                          format,
                                          start_date,
                                          end_date)
-  
+
   await interaction.followup.send(output)
 
 
