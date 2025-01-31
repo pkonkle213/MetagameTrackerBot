@@ -11,21 +11,22 @@ CREATE TABLE Stores (
 DROP TABLE IF EXISTS CardGames;
 CREATE TABLE CardGames (
   id SERIAL PRIMARY KEY,
-  name TEXT UNIQUE
+  name TEXT UNIQUE,
+  hasFormats BOOLEAN
 );
 
 DROP TABLE IF EXISTS Formats;
 CREATE TABLE Formats (
   id SERIAL PRIMARY KEY,
-  game_id INTEGER REFERENCES CardGames (id),
+  game_id INTEGER REFERENCES CardGames (id) ON DELETE CASCADE,
   name TEXT,
   UNIQUE (game_id, name)
 );
 
 DROP TABLE IF EXISTS GameNameMaps;
 CREATE TABLE GameNameMaps (
-  discord_id BIGINT REFERENCES Stores (discord_id),
-  game_id INTEGER REFERENCES CardGames (id),
+  discord_id BIGINT REFERENCES Stores (discord_id) ON DELETE CASCADE,
+  game_id INTEGER REFERENCES CardGames (id) ON DELETE CASCADE,
   used_name TEXT,
   PRIMARY KEY (game_id, discord_id)
 );
@@ -35,15 +36,15 @@ Create table Events (
   id SERIAL PRIMARY KEY,
   discord_id BIGINT,
   event_date date NOT NULL,
-  game_id INTEGER REFERENCES CardGames (id),
-  format_id INTEGER REFERENCES Formats (id),
+  game_id INTEGER REFERENCES CardGames (id) ON DELETE CASCADE,
+  format_id INTEGER REFERENCES Formats (id) ON DELETE CASCADE,
   UNIQUE (discord_id, event_date, game_id, format_id)
 );
 
 DROP TABLE IF EXISTS Participants;
 CREATE TABLE Participants (
   id SERIAL PRIMARY KEY,
-  event_id INTEGER REFERENCES Events (id),
+  event_id INTEGER REFERENCES Events (id) ON DELETE CASCADE,
   player_name TEXT,
   archetype_played TEXT,
   wins INTEGER,
@@ -61,7 +62,7 @@ CREATE TABLE InputTracker (
   archetype_played TEXT,
   date_submitted DATE,
   player_name TEXT,
-  discord_id BIGINT REFERENCES Stores (discord_id)
+  discord_id BIGINT REFERENCES Stores (discord_id) ON DELETE CASCADE
 );
 
 

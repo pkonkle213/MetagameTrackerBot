@@ -39,8 +39,7 @@ def GetToday():
 
 def convert_to_date(date):
   if date.count('/') == 1:
-    date += '/2024'
-
+    date += '/' + str(GetToday().year)
   try:
     newDate = datetime.strptime(date, '%m/%d/%Y').date()
     return newDate

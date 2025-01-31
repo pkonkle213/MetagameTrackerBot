@@ -96,7 +96,6 @@ def storeCanTrack(guild):
   store = data_manipulation.GetStore(guild.id)
   return store is not None and store.ApprovalStatus
 
-
 async def MessageUser(msg, userId, file = None):
   user = await client.fetch_user(userId)
   if file is None:
@@ -109,7 +108,6 @@ async def MessageChannel(msg, guildId, channelId):
   server = client.get_guild(int(guildId))
   channel = server.get_channel(int(channelId))
   await channel.send(f'{msg}')
-
 
 async def Error(interaction, error):
   command = interaction.command.name
@@ -140,6 +138,16 @@ async def GetBot_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 
+
+@client.tree.command(name="atest",description="The new thing I want to test",guild=settings.TESTSTOREGUILD)
+async def ATest(interaction: discord.Interaction):
+  game = data_manipulation.GetGame(interaction.guild.id, interaction.channel.category.name)
+  format = data_manipulation.GetFormat(interaction.guild.id, game, interaction.channel.name)
+  event = data_manipulation.GetEvent(100, '2020-01-01', game, format)
+  
+  print('Stuff:', (game, format, event))
+  await interaction.response.send_message('Test Complete', ephemeral=True)
+
 @client.tree.command(name="register", description="Register your store")
 @app_commands.check(isOwner)
 async def Register(interaction: discord.Interaction, store_name: str):
@@ -154,16 +162,8 @@ async def Register(interaction: discord.Interaction, store_name: str):
   discord_name = interaction.guild.name.upper()
   owner_id = interaction.guild.owner.id
   owner_name = interaction.guild.owner.display_name.upper()
-  store = tuple_conversions.Store(discord_id,
-                                  discord_name,
-                                  store_name,
-                                  owner_id,
-                                  owner_name,
-                                  False)
-  #TODO: This needs to call data_manipulation and not skip straight to the database
-  #TODO: data_manipulation can catch the error
-  database_connection.AddStore(store)
-  if store is not None:
+  try:
+    store = data_manipulation.RegisterStore(discord_id, discord_name, store_name, owner_id, owner_name)
     await SetPermissions(interaction)
     await MessageUser(f'{store.StoreName.title()} has registered to track their data. DiscordId: {store.DiscordId}',
                       settings.PHILID)
@@ -171,9 +171,9 @@ async def Register(interaction: discord.Interaction, store_name: str):
                          settings.BOTGUILD.id,
                          settings.APPROVALCHANNELID)
     await interaction.response.send_message(f'Registered {store_name.title()} with discord {discord_name.title()} with owner {interaction.user}')
-  else:
+  except Exception as e:
     await interaction.response.send_message('Unable to register the store. This has been reported')
-    await Error(interaction, 'Store unable to be registered')
+    await Error(interaction, e)
 
 
 @Register.error
@@ -212,15 +212,12 @@ async def Metagame(interaction: discord.Interaction,
   """
   await interaction.response.defer()
   discord_id = interaction.guild_id
-  game = database_connection.GetGame(discord_id, interaction.channel.category.name.upper())
-  #TODO: What if game not found
-  format = database_connection.GetFormat(game[0], interaction.channel.name.replace('-',' ').upper())
-  if format is None:
-    await interaction.followup.send('Error: Format not found.')
+  game_name = interaction.channel.category.name
+  format_name = interaction.channel.name
 
   output = data_manipulation.GetMetagame(discord_id,
-                                         game,
-                                         format,
+                                         game_name,
+                                         format_name,
                                          start_date,
                                          end_date)
   
@@ -234,12 +231,10 @@ async def metagame_error(interaction: discord.Interaction, error):
 @client.tree.command(name="attendance", description="Get the attendance for the last 8 weeks")
 async def Attendance(interaction: discord.Interaction):
   await interaction.response.defer()
-  game = interaction.channel.category.name.upper()
-  format = interaction.channel.name.replace('-',' ').upper()
+  game_name = interaction.channel.category.name
+  format_name = interaction.channel.name
   discord_id = interaction.guild_id
-  if discord_id == 1303825471267409950:
-    discord_id = 1210746744602890310
-  output = data_manipulation.GetAttendance(discord_id, game, format)
+  output = data_manipulation.GetAttendance(discord_id, game_name, format_name)
   await interaction.followup.send(output)
 
 #TODO: Double check this works
@@ -261,12 +256,12 @@ async def TopPlayers(interaction: discord.Interaction,
     The number of top players to get
   """
   await interaction.response.defer(ephemeral=True)
-  game = interaction.channel.category.name.upper()
+  game_name = interaction.channel.category.name
   discord_id = interaction.guild.id
-  format = interaction.channel.name.upper()
+  format_name = interaction.channel.name
   output = data_manipulation.GetTopPlayers(discord_id,
-                                           game,
-                                           format,
+                                           game_name,
+                                           format_name,
                                            year,
                                            quarter,
                                            top)
@@ -361,24 +356,22 @@ async def Claim(interaction: discord.Interaction,
     actual_date = date_functions.GetToday()
 
   player_name = player_name.upper()
-  game = interaction.channel.category.name.upper()
-  game_id = database_connection.GetGame(interaction.guild.id, game)[0]
-  format = interaction.channel.name.upper()
-  format_id = database_connection.GetFormat(game_id, format)[0]
   store_discord = interaction.guild.id
-  event_id = database_connection.GetEventId(store_discord, actual_date, game_id, format_id)
+  game_name = interaction.channel.category.name
+  format_name = interaction.channel.name
   updater_id = interaction.user.id
   updater_name = interaction.user.display_name.upper()
   archetype = archetype.upper()
   #TODO: This verbiage needs changed to make it clearer if entering information actually updated the row
-  success_check = data_manipulation.Claim(event_id,
+  success_check = data_manipulation.Claim(actual_date,
+                                          game_name,
+                                          format_name,
                                           player_name,
                                           archetype,
                                           updater_id,
                                           updater_name,
                                           store_discord)
   output = ''
-  print('Success?', success_check)
   if success_check:
     output = 'Thank you for submitting your archetype!'
   else:
@@ -388,7 +381,7 @@ async def Claim(interaction: discord.Interaction,
     message_parts.append(f'Name: {player_name}')
     message_parts.append(f'Archetype: {archetype}')
     message_parts.append(f'Date: {actual_date}')
-    message_parts.append(f'Format: {format}')
+    message_parts.append(f'Format: {format_name}')
     message_parts.append(f'Store Discord: {store_discord}')
     message_parts.append(f'Updater Discord: {updater_id}')
 

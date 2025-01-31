@@ -25,18 +25,22 @@ def CreateEvent(event_date,
     return event[0] if event else None
 
 
-def AddStore(store):
+def RegisterStore(discord_id,
+                  discord_name,
+                  store_name,
+                  owner_id,
+                  owner_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command =  'INSERT INTO Stores (store_name, discord_id, discord_name, owner_id, owner_name, isApproved) '
     command += 'VALUES (%s, %s, %s, %s, %s, %s) '
     command += 'returning *'
 
-    cur.execute(command, (store.StoreName,
-                          store.DiscordId,
-                          store.DiscordName,
-                          store.OwnerId,
-                          store.OwnerName,
+    cur.execute(command, (store_name,
+                          discord_id,
+                          discord_name,
+                          owner_id,
+                          owner_name,
                           False))
 
     conn.commit()
@@ -102,14 +106,18 @@ def Claim(event_id,
           updater_id):
   try:
     conn = psycopg2.connect(os.environ['DATABASE_URL'])
-    command =  'UPDATE Participants SET archetype_played = %s, submitter_id = %s '
-    command += 'WHERE event_id = %s AND player_name = %s'
+    command =  'UPDATE Participants '
+    command += 'SET archetype_played = %s, submitter_id = %s '
+    command += 'WHERE event_id = %s '
+    command += 'AND player_name = %s '
+    command += 'RETURNING *'
     criteria = (archetype, updater_id, event_id, name)
     with conn, conn.cursor() as cur:  
       cur.execute(command, criteria)
       conn.commit()
-      #TODO: This doesn't check to see that something was updated
-    return 'Success'
+
+      row = cur.fetchone()
+      return row
   #TODO: This should be more specific and relay why there was a failure to Phil
   except Exception as excep:
     print('My exception:', excep)
@@ -129,32 +137,69 @@ def GetFormat(game_id,
       return None
   return rows[0]
 
-def GetEventId(discord_id,
-               date,
-               game_id,
-               format_id):
+def GetEvent(discord_id,
+             date,
+             game,
+             format):
+  criteria = [discord_id,
+              date,
+              game.ID]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT id FROM events '
-    command += 'WHERE discord_id = %s AND event_date = %s AND game_id = %s AND format_id = %s '
-    criteria = (discord_id,
-                 date,
-                 game_id,
-                 format_id)
-              
-  
+    command =  'SELECT id, discord_id, event_date, game_id, format_id '
+    command += 'FROM events '
+    command += 'WHERE discord_id = %s '
+    command += 'AND event_date = %s '
+    command += 'AND game_id = %s '
+    if format != '':
+      command += 'AND format_id = %s '
+      criteria.append(format.ID)
+
     cur.execute(command, criteria)
     rows = cur.fetchall()
     if len(rows) == 0:
       return None
-    return rows[0][0]
+    return rows[0]
+
+def GetStores(name = '',
+              discord_id = 0,
+              discord_name = '',
+              owner = 0,
+              approval_status = ''):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  command =  'SELECT discord_id, discord_name, store_name, owner_id, owner_name, isApproved '
+  command += 'FROM Stores '
   
+  criteria = 'WHERE '
+  criteria_list = []
+  
+  if name != '':
+    criteria += 'name = %s AND '
+    criteria_list.append(name)
+  if discord_id != 0:
+    criteria += 'discord_id = %s AND '
+    criteria_list.append(discord_id)
+  if discord_name != '':
+    criteria += 'discord_name = %s AND '
+    criteria_list.append(discord_name)
+  if owner != 0:
+    criteria += 'owner = %s AND '
+    criteria_list.append(owner)
+  if approval_status != '':
+    criteria += 'approval_status = %s AND '
+    criteria_list.append(approval_status)
+  
+  criteria = criteria[:-4] if len(criteria) != 6 else ''
+  with conn, conn.cursor() as cur:
+    cur.execute(command + criteria, criteria_list)
+    rows = cur.fetchall()
+    return rows
 
 def GetGame(discord_id,
             used_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT cg.id, cg.name FROM cardgames cg '
+    command =  'SELECT cg.id, cg.name, cg.hasFormats FROM cardgames cg '
     command += 'INNER JOIN gamenamemaps gnm ON cg.id = gnm.game_id '
     command += 'WHERE gnm.used_name = %s AND gnm.discord_id = %s '
     criteria = (used_name, discord_id)
@@ -165,14 +210,14 @@ def GetGame(discord_id,
       return None
     return rows[0]
     
-def GetDataRowsForMetagame(game_id,
-                           format_id,
+def GetDataRowsForMetagame(game,
+                           format,
                            start_date,
                            end_date,
                            discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    criteria = [game_id, format_id, start_date, end_date]
+    criteria = [game.ID, start_date, end_date]
     command = ''
     command += 'WITH x AS ( '
     command += 'SELECT p.archetype_played, COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as MetaPercentage, '
@@ -183,8 +228,10 @@ def GetDataRowsForMetagame(game_id,
     #TODO: Maybe I should include unknown archetypes to encourage people to enter info?
     #TODO: Can I ensure that Unknown is at the bottom of this list?
     command += 'AND p.archetype_played != \'UNKNOWN\' '
-    command += 'AND e.format_id = %s '
     command += 'AND e.event_date >= %s AND event_date <= %s '
+    if format != '':
+      command += 'AND e.format_id = %s '
+      criteria.append(format.ID)
     if discord_id != 0:
       command += 'AND e.discord_id = %s '
       criteria.append(discord_id)
@@ -204,7 +251,8 @@ def GetDataRowsForMetagame(game_id,
     return rows
 
 #TODO: Make this ready for if/when CBUSMTG guild is ready
-def GetStoresByGameFormat(game, format):
+def GetStoresByGameFormat(game,
+                          format):
   end_date = date_functions.GetToday()
   start_date = date_functions.GetStartDate(end_date)
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -218,7 +266,7 @@ def GetStoresByGameFormat(game, format):
 #TODO: Definitely needs rewritten like metagame
 def GetTopPlayers(discord_id,
                   game_id,
-                  format_id,
+                  format,
                   start_date,
                   end_date,
                   top_number):
@@ -226,7 +274,10 @@ def GetTopPlayers(discord_id,
   criteria = [discord_id, game_id, start_date, end_date]
 
   with conn, conn.cursor() as cur:
-    command = 'SELECT p.player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage, (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) as WinPercentage, (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) * count(*) / sum(count(*)) Over () as Combined '
+    command =  ''
+    command += 'WITH x AS ( '
+    command += 'SELECT p.player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage, '
+    command += '(sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) as WinPercentage '
     command += 'FROM Participants p '
     command += 'INNER JOIN Events e ON p.event_id = e.id '
     command += 'WHERE e.discord_id = %s '
@@ -235,10 +286,16 @@ def GetTopPlayers(discord_id,
     command += 'AND e.event_date <= %s '
 
     if format != '':
-      criteria.append(format_id)
+      criteria.append(format.ID)
       command += 'AND e.format_id = %s '
 
     command += 'GROUP BY p.player_name '
+    command += ') '
+    command += 'SELECT player_name, '
+    command += 'ROUND(MetaPercentage * 100, 2) AS MetaPercentage, '
+    command += 'ROUND(WinPercentage * 100, 2) AS WinPercentage, '
+    command += 'ROUND(MetaPercentage * WinPercentage * 100, 2) AS Combined '
+    command += 'FROM x '
     command += 'ORDER BY Combined DESC '
     command += 'LIMIT %s '
     criteria.append(top_number)
@@ -273,23 +330,25 @@ def GetEvents(discord_id,
     return rows
     
 def GetAttendance(discord_id,
-                 game_id,
-                 format_id,
+                 game,
+                 format,
                  start_date,
                  end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  criteria = [discord_id, game.ID, start_date, end_date]
   with conn, conn.cursor() as cur:
     command =  'SELECT e.event_date, COUNT(*) '
     command += 'FROM events e '
     command += 'INNER JOIN participants p on e.id = p.event_id '
     command += 'WHERE e.discord_id = %s '
     command += 'AND e.game_id = %s '
-    command += 'AND e.format_id = %s '
     command += 'AND e.event_date >= %s '
     command += 'AND e.event_date <= %s '
+    if format != '':
+      command += 'AND e.format_id = %s '
+      criteria.append(format.ID)
     command += 'GROUP BY e.id '
     command += 'ORDER BY e.event_date DESC '
-    criteria = (discord_id, game_id, format_id, start_date, end_date)
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows
