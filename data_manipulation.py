@@ -84,7 +84,6 @@ def GetTopPlayers(discord_id, game, format, year, quarter, top_number):
 
   store_obj = database_connection.GetStores(discord_id=discord_id)
   store = tuple_conversions.ConvertToStore(store_obj[0])
-  print('Criteria:', (store.DiscordId, game_obj[0], format_obj[0], start_date, end_date, top_number))
   results = database_connection.GetTopPlayers(store.DiscordId, game_obj[0], format_obj[0], start_date, end_date, top_number)
   top_players = tuple_conversions.ChangeDataRowsToLeaderBoard(results)
   title = f'Top {top_number} Players for {store.StoreName.title()} '
@@ -123,10 +122,10 @@ def GetMetagame(discord_id, game, format, start_date, end_date):
   end_date = date_functions.convert_to_date(end_date) if end_date != '' else date_functions.GetToday()
   start_date = date_functions.convert_to_date(start_date) if start_date != '' else date_functions.GetStartDate(end_date)
   metagame = database_connection.GetDataRowsForMetagame(game[0],
-                                                             format[0],
-                                                             start_date,
-                                                             end_date,
-                                                             discord_id)
+                                                        format[0],
+                                                        start_date,
+                                                        end_date,
+                                                        discord_id)
   if len(metagame) == 0:
     output = 'No data found'
   else:

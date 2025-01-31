@@ -38,15 +38,15 @@ class Client(commands.Bot):
         #TODO: If none then ask
         await message.channel.send('Error: Game not found. Please map a game to this category')
         return
-
+      
       #TODO: Ask for format based on game, allow 'other' option for manual input
       format = message.channel.name.replace('-',' ').upper()
       format_id = database_connection.GetFormat(game_id, format)[0]
       #TODO: If none then create
-
+      
       #TODO: Confirm date
       date_of_event = date_functions.GetToday()
-
+      
       event_id = 0
       try:
         event_id = data_manipulation.CreateEvent(date_of_event, message.guild.id, game_id, format_id)
@@ -75,6 +75,7 @@ def isOwner(interaction: discord.Interaction):
   userid = interaction.user.id
   ownerid = interaction.guild.owner_id
   return userid == ownerid
+
 
 def isMyGuild(guild):
   return guild.id == settings.BOTGUILD.id
@@ -111,11 +112,11 @@ async def MessageChannel(msg, guildId, channelId):
 
 
 async def Error(interaction, error):
-  command = interaction.command
-  message = interaction.message
+  command = interaction.command.name
+  #message = interaction.message.parameters
   error_message =  f'{interaction.user.display_name} ({interaction.user.id}) got an error: {error}\n'
-  error_message += f'Command: {str(command)}\n'
-  error_message += f'Message: {message}\n'
+  error_message += f'Command: {command}\n'
+  #error_message += f'Message: {message}\n'
   await ErrorMessage(error_message)
   await interaction.response.send_message('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
 
@@ -148,7 +149,6 @@ async def Register(interaction: discord.Interaction, store_name: str):
   store_name: string
     The name of the store
   """
-
   store_name = store_name.upper()
   discord_id = interaction.guild.id
   discord_name = interaction.guild.name.upper()
@@ -223,7 +223,7 @@ async def Metagame(interaction: discord.Interaction,
                                          format,
                                          start_date,
                                          end_date)
-
+  
   await interaction.followup.send(output)
 
 
@@ -345,7 +345,7 @@ async def Claim(interaction: discord.Interaction,
     Date of event (MM/DD/YYYY)
   """
   await interaction.response.defer(ephemeral=True)
-  actual_date = date_functions.convert_to_date(date)
+  actual_date = date_functions.convert_to_date(date) #Does this not work for M/DD?
   if actual_date is None:
     actual_date = date_functions.GetToday()
 
@@ -359,7 +359,7 @@ async def Claim(interaction: discord.Interaction,
   updater_id = interaction.user.id
   updater_name = interaction.user.display_name.upper()
   archetype = archetype.upper()
-
+  #TODO: This verbiage needs changed to make it clearer if entering information actually updated the row
   success_check = data_manipulation.Claim(event_id,
                                           player_name,
                                           archetype,
@@ -426,9 +426,4 @@ async def DownloadDatabase_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 
-import ssl
-ssl_context = ssl.create_default_context()
-ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE
-
-client.run(os.getenv('DISCORDTOKEN'), ssl=ssl_context)
+client.run(os.getenv('DISCORDTOKEN'))
