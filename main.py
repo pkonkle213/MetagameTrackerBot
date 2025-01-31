@@ -231,6 +231,17 @@ async def Metagame(interaction: discord.Interaction,
 async def metagame_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+@client.tree.command(name="attendance", description="Get the attendance for the last 8 weeks")
+async def Attendance(interaction: discord.Interaction):
+  await interaction.response.defer()
+  game = interaction.channel.category.name.upper()
+  format = interaction.channel.name.replace('-',' ').upper()
+  discord_id = interaction.guild_id
+  if discord_id == 1303825471267409950:
+    discord_id = 1210746744602890310
+  output = data_manipulation.GetAttendance(discord_id, game, format)
+  await interaction.followup.send(output)
+
 #TODO: Double check this works
 @client.tree.command(name="topplayers",
                      description="Get the top players of the format")

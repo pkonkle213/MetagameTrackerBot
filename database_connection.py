@@ -274,7 +274,9 @@ def GetEvents(discord_id,
     
 def GetAttendance(discord_id,
                  game_id,
-                 format_id):
+                 format_id,
+                 start_date,
+                 end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command =  'SELECT e.event_date, COUNT(*) '
@@ -283,9 +285,11 @@ def GetAttendance(discord_id,
     command += 'WHERE e.discord_id = %s '
     command += 'AND e.game_id = %s '
     command += 'AND e.format_id = %s '
+    command += 'AND e.event_date >= %s '
+    command += 'AND e.event_date <= %s '
     command += 'GROUP BY e.id '
     command += 'ORDER BY e.event_date DESC '
-    criteria = (discord_id, game_id, format_id)
+    criteria = (discord_id, game_id, format_id, start_date, end_date)
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows

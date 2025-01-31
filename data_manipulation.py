@@ -3,6 +3,22 @@ import database_connection
 import output_builder
 import tuple_conversions
 
+def GetAttendance(discord_id,
+                     game,
+                     format):
+  end_date = date_functions.GetToday()
+  start_date = date_functions.GetStartDate(end_date)
+  game_id = database_connection.GetGame(discord_id, game)[0]
+  format_id = database_connection.GetFormat(game_id, format)[0]
+  participation = database_connection.GetAttendance(discord_id,
+                                                    game_id,
+                                                    format_id,
+                                                    start_date,
+                                                    end_date)
+  headers = ['Date','Number of Players']
+  output = output_builder.BuildTableOutput(f'Most Recent Events for {format.title()}', headers, participation)
+  return output
+
 def ConvertMessageToParticipants(rows):
   data = []
   try:
