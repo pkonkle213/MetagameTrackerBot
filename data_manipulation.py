@@ -31,15 +31,15 @@ def GetAttendance(discord_id,
   end_date = date_functions.GetToday()
   start_date = date_functions.GetStartDate(end_date)
   game = GetGame(discord_id, game)
-  format = GetFormat(discord_id, game.ID, format)
+  format = GetFormat(discord_id, game, format)
   participation = database_connection.GetAttendance(discord_id,
                                                     game,
                                                     format,
                                                     start_date,
                                                     end_date)
-  title = f'Attendance for {game.Name}'
+  title = f'Attendance for {game.Name.title()} '
   if format != '':
-    title += f'({format.FormatName})'
+    title += f'({format.FormatName.title()})'
   headers = ['Date','Number of Players']
   output = output_builder.BuildTableOutput(title, headers, participation)
   return output
@@ -105,13 +105,14 @@ def Claim(date,
                                      player_name,
                                      archetype_played,
                                      updater_id)
+  if output is None:
+    raise Exception(f'{player_name} was not found in that event. The name should match what was put into Companion')
   database_connection.TrackInput(store_discord,
                                  updater_name.upper(),
                                  updater_id,
                                  archetype_played,
                                  date_functions.GetToday(),
                                  player_name.upper())
-  return output is not None
   
 
 def GetTopPlayers(discord_id, game_name, format_name, year, quarter, top_number):

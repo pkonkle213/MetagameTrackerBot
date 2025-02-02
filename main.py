@@ -8,7 +8,6 @@ import data_manipulation
 import database_connection
 import settings
 from io import BytesIO
-import tuple_conversions
 
 class Client(commands.Bot):
 
@@ -30,7 +29,7 @@ class Client(commands.Bot):
       return
 
     data = data_manipulation.ConvertMessageToParticipants(message.content.split('\n'))
-    if storeCanTrack(message.guild) and isSubmitter(message.guild, message.author) and data is not None:
+    if isSubmitter(message.guild, message.author) and data is not None and storeCanTrack(message.guild):
       await message.channel.send(f'Attempting to add {len(data)} participants to the event')
       #TODO: This should call data_manipulation and not skip right to the database
       game_id = database_connection.GetGame(message.guild.id, message.channel.category.name.upper())[0]
@@ -237,6 +236,10 @@ async def Attendance(interaction: discord.Interaction):
   output = data_manipulation.GetAttendance(discord_id, game_name, format_name)
   await interaction.followup.send(output)
 
+@Attendance.error
+async def attendance_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
+
 #TODO: Double check this works
 @client.tree.command(name="topplayers",
                      description="Get the top players of the format")
@@ -279,7 +282,6 @@ async def topplayers_error(interaction: discord.Interaction, error):
 async def AddGameMap(interaction: discord.Interaction):
   discord_id = interaction.guild.id
   games_list = database_connection.GetAllGames()
-  print(games_list)
   game_options = []
   for game in games_list:
     game_options.append(discord.SelectOption(label=game[1].title(), value=game[0]))
@@ -363,7 +365,8 @@ async def Claim(interaction: discord.Interaction,
   updater_name = interaction.user.display_name.upper()
   archetype = archetype.upper()
   #TODO: This verbiage needs changed to make it clearer if entering information actually updated the row
-  success_check = data_manipulation.Claim(actual_date,
+  try:
+    data_manipulation.Claim(actual_date,
                                           game_name,
                                           format_name,
                                           player_name,
@@ -371,14 +374,14 @@ async def Claim(interaction: discord.Interaction,
                                           updater_id,
                                           updater_name,
                                           store_discord)
-  output = ''
-  if success_check:
-    output = 'Thank you for submitting your archetype!'
-  else:
-    output = 'Error: Something went wrong. It\'s been reported'
+    await interaction.followup.send('Thank you for submitting your archetype!')
+    #TODO: This should be a customer error so that I can figure out what broke
+  except Exception as ex:
+    await interaction.followup.send(f'{player_name} was not found in that event. The name should match what was put into Companion')
     message_parts = []
     message_parts.append('Error claiming archetype:')
     message_parts.append(f'Name: {player_name}')
+    message_parts.append(f'Discord Name: {updater_name}')
     message_parts.append(f'Archetype: {archetype}')
     message_parts.append(f'Date: {actual_date}')
     message_parts.append(f'Format: {format_name}')
@@ -386,9 +389,6 @@ async def Claim(interaction: discord.Interaction,
     message_parts.append(f'Updater Discord: {updater_id}')
 
     await ErrorMessage('\n'.join(message_parts))
-
-  await interaction.followup.send(output)
-
 
 @Claim.error
 async def Claim_error(interaction: discord.Interaction, error):

@@ -1,19 +1,5 @@
 import date_functions
 
-def MaxLength(headers, collection):
-  buffer = 2
-  maxLengths = []
-  for header in headers:
-    maxLengths.append(len(header) + buffer)
-
-  for item in collection:
-    for i in range(len(headers)):
-      length = len(str(item[i])) + buffer
-      if length > maxLengths[i]:
-        maxLengths[i] = length
-
-  return maxLengths
-
 def DiscordInfo(interaction):
   response = []
   currentDateTime = str(date_functions.GetToday())
@@ -28,6 +14,20 @@ def DiscordInfo(interaction):
   response.append(f'Discord Guild Channel ID: {str(interaction.channel.id)}')
 
   return '\n'.join(response)
+
+def MaxLength(headers, collection):
+  buffer = 2
+  maxLengths = []
+  for header in headers:
+    maxLengths.append(len(header) + buffer)
+
+  for item in collection:
+    for i in range(len(headers)):
+      length = len(str(item[i])) + buffer
+      if length > maxLengths[i]:
+        maxLengths[i] = length
+
+  return maxLengths
 
 def BuildTableOutput(title,
                      headers,

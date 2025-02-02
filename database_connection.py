@@ -244,7 +244,7 @@ def GetDataRowsForMetagame(game,
     command += 'ROUND(MetaPercentage * WinPercentage * 100, 2) AS Combined '
     command += 'FROM x '
     command += 'WHERE MetaPercentage >= 0.02 '
-    command += 'ORDER BY Combined DESC; '
+    command += 'ORDER BY Combined DESC, archetype_played'
 
     cur.execute(command, criteria)
     rows = cur.fetchall()
@@ -296,7 +296,7 @@ def GetTopPlayers(discord_id,
     command += 'ROUND(WinPercentage * 100, 2) AS WinPercentage, '
     command += 'ROUND(MetaPercentage * WinPercentage * 100, 2) AS Combined '
     command += 'FROM x '
-    command += 'ORDER BY Combined DESC '
+    command += 'ORDER BY Combined DESC, player_name '
     command += 'LIMIT %s '
     criteria.append(top_number)
 
