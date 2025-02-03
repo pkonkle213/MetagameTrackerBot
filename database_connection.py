@@ -195,6 +195,16 @@ def GetStores(name = '',
     rows = cur.fetchall()
     return rows
 
+def GetAllFormats(game_id):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command =  'SELECT id, name FROM Formats '
+    command += 'WHERE game_id = %s '
+    criteria = (game_id,)
+    cur.execute(command, criteria)
+    rows = cur.fetchall()
+    return rows
+
 def GetGame(discord_id,
             used_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])

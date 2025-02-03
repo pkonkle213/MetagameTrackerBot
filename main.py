@@ -136,16 +136,34 @@ async def GetBot(interaction: discord.Interaction):
 async def GetBot_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+class FormatDropdown(discord.ui.View):
+  answer = None
+  
+  @discord.ui.select(
+    placeholder="Choose a format",
+    min_values=1,
+    max_values=1,
+    options=[
+      discord.SelectOption(label="1v1", value="1v1"),
+      discord.SelectOption(label="2v2", value="2v2"),
+      discord.SelectOption(label="3v3", value="3v3")
+    ]
+  )
+  async def select_format(self, interaction: discord.Interaction, select: discord.ui.Select):
+    self.answer = select.values
+    self.stop()
 
-
+#This is close, but the options aren't flexible.
+#I'd like to present options accurate to the game that is being played
 @client.tree.command(name="atest",description="The new thing I want to test",guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
-  game = data_manipulation.GetGame(interaction.guild.id, interaction.channel.category.name)
-  format = data_manipulation.GetFormat(interaction.guild.id, game, interaction.channel.name)
-  event = data_manipulation.GetEvent(100, '2020-01-01', game, format)
+  view = FormatDropdown()
   
-  print('Stuff:', (game, format, event))
-  await interaction.response.send_message('Test Complete', ephemeral=True)
+  await interaction.response.send_message(view=view)
+  await view.wait()
+
+  print('Answer:', view.answer)
+  await interaction.followup.send(f'You chose {view.answer[0]}')  
 
 @client.tree.command(name="register", description="Register your store")
 @app_commands.check(isOwner)
@@ -301,7 +319,7 @@ async def AddGameMap(interaction: discord.Interaction):
   view = View()
   view.add_item(select)
   await interaction.response.send_message('Please select a game', view=view)
-
+  print(select.callback)
 
 @AddGameMap.error
 async def addgamemap_error(interaction: discord.Interaction, error):
