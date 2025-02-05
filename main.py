@@ -32,26 +32,29 @@ class Client(commands.Bot):
     if isSubmitter(message.guild, message.author) and data is not None and storeCanTrack(message.guild):
       await message.channel.send(f'Attempting to add {len(data)} participants to the event')
       #TODO: This should call data_manipulation and not skip right to the database
-      game = data_manipulation.GetGame(message.guild.id, message.channel.category.name.upper())
+      discord_id = message.guild.id
+      game_name = message.channel.category.name.upper()
+      game = data_manipulation.GetGame(discord_id, game_name)
       if game is None:
-        return
-      game_id = game.ID
-      if game_id is None:
-        #TODO: If none then ask
         await message.channel.send('Error: Game not found. Please map a game to this category')
         return
-      
+            
       #TODO: Ask for format based on game, allow 'other' option for manual input
-      format = message.channel.name.replace('-',' ').upper()
-      format_id = database_connection.GetFormat(game_id, format)[0]
-      #TODO: If none then create
+      format = ''
+      if game.HasFormats:
+        format = data_manipulation.GetFormat(discord_id, game, message.channel.name.replace('-',' ').upper())
+
+      #TODO: If none then create?
+      if format is None:
+        await message.channel.send('Error: Format not found. Please map a format to this channel')
+        return
       
       #TODO: Confirm date
       date_of_event = date_functions.GetToday()
       
       event_id = 0
       try:
-        event_id = data_manipulation.CreateEvent(date_of_event, message.guild.id, game_id, format_id)
+        event_id = data_manipulation.CreateEvent(date_of_event, message.guild.id, game, format)
       #TODO: This needs to be a more specific error catch
       except Exception as error:
         await message.channel.send('There was an error creating the event. It has been reported')
