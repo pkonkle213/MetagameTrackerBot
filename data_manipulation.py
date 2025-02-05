@@ -50,6 +50,7 @@ def ConvertMessageToParticipants(rows):
     for row in rows:
       row_list = row.split('    ')
       int(row_list[0])
+      print('row_list', row_list[-5])
       int(row_list[-5])
       record = row_list[-4].split('/')
       participant = tuple_conversions.Participant(' '.join(row_list[1:-5]),

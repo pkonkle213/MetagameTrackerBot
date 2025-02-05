@@ -32,7 +32,10 @@ class Client(commands.Bot):
     if isSubmitter(message.guild, message.author) and data is not None and storeCanTrack(message.guild):
       await message.channel.send(f'Attempting to add {len(data)} participants to the event')
       #TODO: This should call data_manipulation and not skip right to the database
-      game_id = database_connection.GetGame(message.guild.id, message.channel.category.name.upper())[0]
+      game = data_manipulation.GetGame(message.guild.id, message.channel.category.name.upper())
+      if game is None:
+        return
+      game_id = game.ID
       if game_id is None:
         #TODO: If none then ask
         await message.channel.send('Error: Game not found. Please map a game to this category')
@@ -371,7 +374,7 @@ async def Claim(interaction: discord.Interaction,
     Date of event (MM/DD/YYYY)
   """
   await interaction.response.defer(ephemeral=True)
-  actual_date = date_functions.convert_to_date(date) #Does this not work for M/DD?
+  actual_date = date_functions.convert_to_date(date)
   if actual_date is None:
     actual_date = date_functions.GetToday()
 
@@ -382,7 +385,6 @@ async def Claim(interaction: discord.Interaction,
   updater_id = interaction.user.id
   updater_name = interaction.user.display_name.upper()
   archetype = archetype.upper()
-  #TODO: This verbiage needs changed to make it clearer if entering information actually updated the row
   try:
     data_manipulation.Claim(actual_date,
                                           game_name,
@@ -393,7 +395,7 @@ async def Claim(interaction: discord.Interaction,
                                           updater_name,
                                           store_discord)
     await interaction.followup.send('Thank you for submitting your archetype!')
-    #TODO: This should be a customer error so that I can figure out what broke
+    #TODO: This should be a custom error so that I can figure out what broke
   except Exception as ex:
     await interaction.followup.send(f'{player_name} was not found in that event. The name should match what was put into Companion')
     message_parts = []
@@ -405,6 +407,7 @@ async def Claim(interaction: discord.Interaction,
     message_parts.append(f'Format: {format_name}')
     message_parts.append(f'Store Discord: {store_discord}')
     message_parts.append(f'Updater Discord: {updater_id}')
+    message_parts.append(f'Error Message: {ex}')
 
     await ErrorMessage('\n'.join(message_parts))
 

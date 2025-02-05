@@ -1,11 +1,5 @@
 from collections import namedtuple
 
-Event = namedtuple('Event', ['ID',
-                             'EventDate',
-                             'LocationDiscordID',
-                             'GameID',
-                             'FormatID'])
-
 Format = namedtuple('Format', ['ID',
                                'FormatName'])
 
@@ -19,6 +13,11 @@ Store = namedtuple('Store', ['DiscordId',
                              'OwnerId',
                              'OwnerName',
                              'ApprovalStatus'])
+
+Participant = namedtuple('Participant',['PlayerName',
+                                       'Wins',
+                                       'Losses',
+                                       'Draws'])
 
 Event = namedtuple('Event', ['ID',
                              'StoreDiscordID',
