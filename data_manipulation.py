@@ -3,6 +3,14 @@ import database_connection
 import output_builder
 import tuple_conversions
 
+def GetAllGames():
+  games_list = database_connection.GetAllGames()
+  games = []
+  for game in games_list:
+    games.append(tuple_conversions.ConvertToGame(game))
+
+  return games
+
 def GetGame(guild_id, game_name):
   game_name = game_name.upper()
   game_obj = database_connection.GetGame(guild_id, game_name)
@@ -50,7 +58,6 @@ def ConvertMessageToParticipants(rows):
     for row in rows:
       row_list = row.split('    ')
       int(row_list[0])
-      print('row_list', row_list[-5])
       int(row_list[-5])
       record = row_list[-4].split('/')
       participant = tuple_conversions.Participant(' '.join(row_list[1:-5]),
@@ -157,13 +164,40 @@ def DisapproveStore(discord_id):
   store = tuple_conversions.ConvertToStore(store_obj)
   return store
 
+def Demo():
+  database_connection.DeleteDemo()
+  ids = [
+    (29, 10),
+    (30, 9),
+    (31, 8),
+    (32, 7),
+    (33, 6),
+    (34, 5),
+    (35, 4),
+    (36, 4),
+    (37, 3),
+    (38, 2),
+    (39, 1),
+    (40, 1),
+  ]
+  for id in ids:
+    date = date_functions.GetEventDate(id[1])
+    database_connection.UpdateDemo(id[0], date)
 
 def GetMetagame(discord_id, game_name, format_name, start_date, end_date):
   output = ''
   end_date = date_functions.convert_to_date(end_date) if end_date != '' else date_functions.GetToday()
   start_date = date_functions.convert_to_date(start_date) if start_date != '' else date_functions.GetStartDate(end_date)
   game = GetGame(discord_id, game_name)
-  format = GetFormat(discord_id, game, format_name)
+  if game is None:
+    raise Exception(f'Game {game_name} not found')
+  format = None
+  if game.HasFormats:
+    format = GetFormat(discord_id, game, format_name)
+    if format is None:
+      raise Exception(f'Format {format_name} not found')
+  
+  title_name = format.FormatName.title() if format else game.Name.title()
   metagame = database_connection.GetDataRowsForMetagame(game,
                                                         format,
                                                         start_date,
@@ -172,7 +206,7 @@ def GetMetagame(discord_id, game_name, format_name, start_date, end_date):
   if len(metagame) == 0:
     output = 'No data found'
   else:
-    title = f'{format[1].title()} metagame from {start_date} to {end_date}'
+    title = f'{title_name} metagame from {start_date} to {end_date}'
     
     headers = ['Deck Archetype', 'Meta % ', 'Win %  ', 'Combined %']
     output = output_builder.BuildTableOutput(title, headers, metagame)

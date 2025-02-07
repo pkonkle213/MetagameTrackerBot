@@ -6,8 +6,6 @@ def GetCurrentQuarter():
   return (now.year, (now.month + 2) // 3)
 
 def GetQuarterRange(year, quarter):
-  #if year is 0 and quarter is 0, assume current year / quarter
- 
   if year != 0 and quarter == 0:
     year = datetime.now(pytz.timezone('America/New_York')).year
     start_date = datetime(year, 1, 1).date()
@@ -32,6 +30,9 @@ def GetQuarterRange(year, quarter):
 def GetStartDate(end_date):
   start = end_date - timedelta(days=end_date.weekday()) - timedelta(weeks=8)
   return start
+
+def GetEventDate(weeks):
+  return GetToday() - timedelta(weeks=weeks)
 
 def GetToday():
   today = datetime.now(pytz.timezone('US/Eastern')).date()

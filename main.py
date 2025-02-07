@@ -30,8 +30,7 @@ class Client(commands.Bot):
 
     data = data_manipulation.ConvertMessageToParticipants(message.content.split('\n'))
     if isSubmitter(message.guild, message.author) and data is not None and storeCanTrack(message.guild):
-      await message.channel.send(f'Attempting to add {len(data)} participants to the event')
-      #TODO: This should call data_manipulation and not skip right to the database
+      await message.channel.send(f'Attempting to add {len(data)} participants a new event')
       discord_id = message.guild.id
       game_name = message.channel.category.name.upper()
       game = data_manipulation.GetGame(discord_id, game_name)
@@ -135,7 +134,7 @@ async def ApprovalMessage(msg):
                      description="Display the url to get the bot",
                      guild=settings.BOTGUILD)
 async def GetBot(interaction: discord.Interaction):
-  await interaction.response.send_message(settings.MYBOTURL, ephemeral=True)
+  await interaction.response.send_message(f'Here is the link to my bot: {settings.MYBOTURL}')
 
 
 @GetBot.error
@@ -149,11 +148,7 @@ class FormatDropdown(discord.ui.View):
     placeholder="Choose a format",
     min_values=1,
     max_values=1,
-    options=[
-      discord.SelectOption(label="1v1", value="1v1"),
-      discord.SelectOption(label="2v2", value="2v2"),
-      discord.SelectOption(label="3v3", value="3v3")
-    ]
+    options=[discord.SelectOption(label=game.Name,value=game.ID) for game in data_manipulation.GetAllGames()]
   )
   async def select_format(self, interaction: discord.Interaction, select: discord.ui.Select):
     self.answer = select.values
@@ -164,6 +159,7 @@ class FormatDropdown(discord.ui.View):
 @client.tree.command(name="atest",description="The new thing I want to test",guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
   view = FormatDropdown()
+  #FormatDropdown.theseoptions = 
   
   await interaction.response.send_message(view=view)
   await view.wait()
@@ -249,6 +245,16 @@ async def Metagame(interaction: discord.Interaction,
 
 @Metagame.error
 async def metagame_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
+
+@client.tree.command(name="demo", description="Set up the database for a demonstration",guild=settings.BOTGUILD)
+async def Demo(interaction: discord.Interaction):
+  await interaction.response.defer()
+  data_manipulation.Demo()
+  await interaction.followup.send('All set up!')
+
+@Demo.error
+async def demo_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @client.tree.command(name="attendance", description="Get the attendance for the last 8 weeks")

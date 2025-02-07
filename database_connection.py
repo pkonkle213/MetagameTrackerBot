@@ -6,18 +6,23 @@ conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
 def CreateEvent(event_date,
                 discord_id,
-                game_id,
-                format_id):
+                game,
+                format):
+  criteria = [event_date, discord_id, game.ID]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'INSERT INTO Events (event_date, discord_id, game_id, format_id) '
-    command += 'VALUES (%s, %s, %s, %s) '
+    command =  'INSERT INTO Events (event_date, discord_id, game_id'
+    if game.HasFormats:
+      command += ', format_id'
+      criteria.append(format.ID)
+    command += ') '
+    command += 'VALUES (%s, %s, %s'
+    if game.HasFormats:
+      command += ', %s'
+    command += ') '
     command += 'RETURNING ID'
-    criteria = (event_date,
-                discord_id,
-                game_id,
-                format_id)
-    
+
+    print('Stuff:',(command,criteria))
     cur.execute(command, criteria)
     conn.commit()
     event = cur.fetchone()
@@ -205,6 +210,24 @@ def GetAllFormats(game_id):
     rows = cur.fetchall()
     return rows
 
+def DeleteDemo():
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = 'DELETE FROM Events WHERE discord_id = 1303825471267409950 and id > 40'
+    cur.execute(command)
+    conn.commit()
+  
+def UpdateDemo(event_id, event_date):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command =  'UPDATE events '
+    command += 'SET event_date = %s '
+    command += 'WHERE id = %s '
+    criteria = (event_date, event_id)
+    cur.execute(command, criteria)
+    conn.commit()
+  
+
 def GetGame(discord_id,
             used_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -239,7 +262,7 @@ def GetDataRowsForMetagame(game,
     #TODO: Can I ensure that Unknown is at the bottom of this list?
     command += 'AND p.archetype_played != \'UNKNOWN\' '
     command += 'AND e.event_date >= %s AND event_date <= %s '
-    if format != '':
+    if game.HasFormats:
       command += 'AND e.format_id = %s '
       criteria.append(format.ID)
     if discord_id != 0:
@@ -318,7 +341,7 @@ def GetTopPlayers(discord_id,
 def GetAllGames():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT id, name '
+    command =  'SELECT id, name, hasFormats '
     command += 'FROM CardGames '
     command += 'ORDER BY name '
     cur.execute(command)
