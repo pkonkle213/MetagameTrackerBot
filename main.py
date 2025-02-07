@@ -31,6 +31,7 @@ class Client(commands.Bot):
     data = data_manipulation.ConvertMessageToParticipants(message.content.split('\n'))
     if isSubmitter(message.guild, message.author) and data is not None and storeCanTrack(message.guild):
       await message.channel.send(f'Attempting to add {len(data)} participants a new event')
+      await message.delete()
       discord_id = message.guild.id
       game_name = message.channel.category.name.upper()
       game = data_manipulation.GetGame(discord_id, game_name)
@@ -61,7 +62,6 @@ class Client(commands.Bot):
         return
 
       output = data_manipulation.AddResults(event_id, data, message.author.id)
-      await message.delete()
       await message.channel.send(output)
 
 intents = discord.Intents.default()
@@ -176,6 +176,7 @@ async def Register(interaction: discord.Interaction, store_name: str):
   store_name: string
     The name of the store
   """
+  await interaction.response.defer()
   store_name = store_name.upper()
   discord_id = interaction.guild.id
   discord_name = interaction.guild.name.upper()
@@ -189,11 +190,10 @@ async def Register(interaction: discord.Interaction, store_name: str):
     await MessageChannel(f'{store.StoreName.title()} has registered to track their data. DiscordId: {store.DiscordId}',
                          settings.BOTGUILD.id,
                          settings.APPROVALCHANNELID)
-    await interaction.response.send_message(f'Registered {store_name.title()} with discord {discord_name.title()} with owner {interaction.user}')
+    await interaction.followup.send(f'Registered {store_name.title()} with discord {discord_name.title()} with owner {interaction.user}')
   except Exception as e:
-    await interaction.response.send_message('Unable to register the store. This has been reported')
+    await interaction.followup.send('Unable to register the store. This has been reported')
     await Error(interaction, e)
-
 
 @Register.error
 async def register_error(interaction: discord.Interaction, error):
@@ -204,6 +204,7 @@ async def SetPermissions(interaction):
   mtsubmitter_role = discord.utils.find(lambda r: r.name == 'MTSubmitter', interaction.guild.roles)
   owner_role = discord.utils.find(lambda r: r.name == 'Owner', interaction.guild.roles)
 
+  #TODO: This is giving me a "Missing Permissions" error even when manage_roles is true
   if owner_role is None:
     owner_role = await interaction.guild.create_role(name="Owner", permissions=discord.Permissions.all())
   await owner.add_roles(owner_role)
@@ -215,7 +216,6 @@ async def SetPermissions(interaction):
   permissions = discord.PermissionOverwrite(send_messages=False)
   everyone_role = interaction.guild.default_role
   await interaction.channel.set_permissions(everyone_role, overwrite=permissions)
-  await interaction.response.send_message('Done?')
 
 @client.tree.command(name="metagame", description="Get the metagame")
 async def Metagame(interaction: discord.Interaction,
@@ -319,8 +319,8 @@ async def AddGameMap(interaction: discord.Interaction):
 
   async def my_callback(interaction):
     game_id = select.values[0]
-    used_name = interaction.channel.category.name.upper()
-    output = data_manipulation.AddGameMap(discord_id, game_id, used_name)
+    used_name = interaction.channel.category.name
+    output = data_manipulation.AddGameMap(discord_id, game_id, used_name.upper())
     if output is None:
       await ErrorMessage(f'Unable to map {used_name} in discord {discord_id}')
       await interaction.response.send_message('Unable to map this game. It has been reported')
@@ -331,7 +331,6 @@ async def AddGameMap(interaction: discord.Interaction):
   view = View()
   view.add_item(select)
   await interaction.response.send_message('Please select a game', view=view)
-  print(select.callback)
 
 @AddGameMap.error
 async def addgamemap_error(interaction: discord.Interaction, error):
@@ -343,12 +342,12 @@ async def addgamemap_error(interaction: discord.Interaction, error):
                      guild=settings.BOTGUILD)
 @app_commands.check(checkIsPhil)
 async def ApproveStore(interaction: discord.Interaction, discord_id: str):
+  await interaction.response.defer()
   discord_id_int = int(discord_id)
   store = data_manipulation.ApproveStore(discord_id_int)
   await MessageUser(f'{store.StoreName.title()} has been approved to track metagame data!',
       store.OwnerId)
-  await interaction.response.send_message(
-      f'{store.StoreName.title()} is now approved to track their data')
+  await interaction.followup.send(f'{store.StoreName.title()} is now approved to track their data')
 
 
 @ApproveStore.error

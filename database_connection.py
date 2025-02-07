@@ -213,7 +213,8 @@ def GetAllFormats(game_id):
 def DeleteDemo():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command = 'DELETE FROM Events WHERE discord_id = 1303825471267409950 and id > 40'
+    command =  'DELETE FROM Events WHERE discord_id = 1303825471267409950 and id > 40; '
+    command += 'DELETE FROM Stores WHERE discord_id = 1303825471267409950; '
     cur.execute(command)
     conn.commit()
   

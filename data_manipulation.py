@@ -75,9 +75,11 @@ def ConvertMessageToParticipants(rows):
 def AddGameMap(discord_id,
                game_id,
                used_name):
-  used_name = used_name.upper()
-  rows = database_connection.AddGameMap(discord_id, game_id, used_name)
-  return f'Success! {used_name.title()} is now mapped to {rows[2].title()}' if rows is not None else None
+  rows = database_connection.AddGameMap(discord_id, game_id, used_name.upper())
+  if rows is None:
+    return None
+  game = GetGame(discord_id, used_name)
+  return f'Success! {used_name} is now mapped to {game.Name.title()}'
 
 def CreateEvent(date_of_event,
                 discord_id,
@@ -154,7 +156,6 @@ def ApproveStore(discord_id):
   store_obj = database_connection.SetStoreTrackingStatus(True, discord_id)
   if store_obj is None:
     raise Exception(f'No store found with discord id {discord_id}')
-  print('Received store:', store_obj)
   store = tuple_conversions.ConvertToStore(store_obj)
   return store
   
@@ -165,7 +166,9 @@ def DisapproveStore(discord_id):
   return store
 
 def Demo():
+  #Deletes my test store and its events in the database so I can offer a live update
   database_connection.DeleteDemo()
+  #Event IDs and the weeks before today that they happened
   ids = [
     (29, 10),
     (30, 9),
@@ -190,12 +193,12 @@ def GetMetagame(discord_id, game_name, format_name, start_date, end_date):
   start_date = date_functions.convert_to_date(start_date) if start_date != '' else date_functions.GetStartDate(end_date)
   game = GetGame(discord_id, game_name)
   if game is None:
-    raise Exception(f'Game {game_name} not found')
+    return f'Game {game_name} not found. Please map a game first'
   format = None
   if game.HasFormats:
     format = GetFormat(discord_id, game, format_name)
     if format is None:
-      raise Exception(f'Format {format_name} not found')
+      return f'Format {format_name} not found'
   
   title_name = format.FormatName.title() if format else game.Name.title()
   metagame = database_connection.GetDataRowsForMetagame(game,
