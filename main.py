@@ -142,6 +142,9 @@ async def GetBot_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 class FormatDropdown(discord.ui.View):
+  def __init__(self, options):
+    self.options = options
+  
   answer = None
   
   @discord.ui.select(
@@ -158,8 +161,8 @@ class FormatDropdown(discord.ui.View):
 #I'd like to present options accurate to the game that is being played
 @client.tree.command(name="atest",description="The new thing I want to test",guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
-  view = FormatDropdown()
-  #FormatDropdown.theseoptions = 
+  options = [discord.SelectOption(label=game.Name,value=game.ID) for game in data_manipulation.GetAllGames()]
+  view = FormatDropdown(options)
   
   await interaction.response.send_message(view=view)
   await view.wait()
