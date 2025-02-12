@@ -1,6 +1,7 @@
 import date_functions
 import database_connection
 import output_builder
+import settings
 import tuple_conversions
 
 def GetAllGames():
@@ -48,7 +49,12 @@ def GetAttendance(discord_id,
   title = f'Attendance for {game.Name.title()} '
   if format != '':
     title += f'({format.FormatName.title()})'
-  headers = ['Date','Number of Players']
+  headers = ['Date', 'Number of Players']
+  if discord_id == settings.DATAGUILDID:
+    headers.insert(1, 'Store')
+  print('title:',title)
+  print('headers:',headers)
+  print('participation:', participation)
   output = output_builder.BuildTableOutput(title, headers, participation)
   return output
 

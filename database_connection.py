@@ -1,6 +1,7 @@
 import os
 import psycopg2
 import date_functions
+import settings
 
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
@@ -272,6 +273,7 @@ def GetDataRowsForMetagame(game,
     command += '(sum(p.wins) * 1.0) / (sum(p.wins) + sum(p.losses) + sum(p.draws)) as WinPercentage '
     command += 'FROM Participants p '
     command += 'INNER JOIN Events e ON p.event_id = e.id '
+    command += 'INNER JOIN Stores s on e.discord_id = s.discord_id '
     command += 'WHERE e.game_id = %s '
     #TODO: Maybe I should include unknown archetypes to encourage people to enter info?
     #TODO: Can I ensure that Unknown is at the bottom of this list?
@@ -280,9 +282,11 @@ def GetDataRowsForMetagame(game,
     if game.HasFormats:
       command += 'AND e.format_id = %s '
       criteria.append(format.ID)
-    if discord_id != 0:
+    if discord_id != settings.DATAGUILDID:
       command += 'AND e.discord_id = %s '
       criteria.append(discord_id)
+    else:
+      command += 'and s.used_for_data = true '
     command += 'GROUP BY p.archetype_played '
     command += 'ORDER BY p.archetype_played '
     command += ') '
@@ -298,20 +302,6 @@ def GetDataRowsForMetagame(game,
     rows = cur.fetchall()
     return rows
 
-#TODO: Make this ready for if/when CBUSMTG guild is ready
-def GetStoresByGameFormat(game,
-                          format):
-  end_date = date_functions.GetToday()
-  start_date = date_functions.GetStartDate(end_date)
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  command = 'SELECT d.event_date, s.Name, count(*) as Attendance FROM Participants d INNER JOIN Stores s on s.discord_id = d.discord_id WHERE d.game = %s AND d.event_format = %s and d.event_date >= %s and d.event_date <= %s GROUP BY d.event_date, s.name ORDER BY d.event_date DESC, s.name '
-  with conn, conn.cursor() as cur:
-    cur.execute(command, (game, format, start_date, end_date))
-    rows = cur.fetchall()
-    return rows
-   
-#TODO: This needs tested, probably
-#TODO: Definitely needs rewritten like metagame
 def GetTopPlayers(discord_id,
                   game_id,
                   format,
@@ -383,20 +373,30 @@ def GetAttendance(discord_id,
                  start_date,
                  end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  criteria = [discord_id, game.ID, start_date, end_date]
+  criteria = [game.ID, start_date, end_date]
   with conn, conn.cursor() as cur:
-    command =  'SELECT e.event_date, COUNT(*) '
+    command =  'SELECT e.event_date, '
+    if discord_id == settings.DATAGUILDID:
+      command += 's.store_name, '
+    command += 'COUNT(*) '
     command += 'FROM events e '
     command += 'INNER JOIN participants p on e.id = p.event_id '
-    command += 'WHERE e.discord_id = %s '
-    command += 'AND e.game_id = %s '
+    command += 'INNER JOIN Stores s on s.discord_id = e.discord_id '
+    command += 'WHERE e.game_id = %s '
     command += 'AND e.event_date >= %s '
     command += 'AND e.event_date <= %s '
+    if discord_id != settings.DATAGUILDID:
+      command += 'AND e.discord_id = %s '
+      criteria.append(discord_id)
+    else:
+      command += 'AND s.used_for_data = true '
     if format != '':
       command += 'AND e.format_id = %s '
       criteria.append(format.ID)
-    command += 'GROUP BY e.id '
+    command += 'GROUP BY e.id, s.store_name '
     command += 'ORDER BY e.event_date DESC '
+    print('Command:', command)
+    print('Criteria:', criteria)
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows
