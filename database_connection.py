@@ -4,6 +4,19 @@ import date_functions
 
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
+def ViewEvent(event_id):
+  criteria = [event_id]
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command =  'SELECT archetype_played, wins, losses, draws '
+    command += 'FROM participants p '
+    command += 'WHERE event_id = %s '
+    command += 'ORDER BY wins DESC, draws DESC '
+
+    cur.execute(command, criteria)
+    rows = cur.fetchall()
+    return rows
+
 def CreateEvent(event_date,
                 discord_id,
                 game,
@@ -46,7 +59,8 @@ def RegisterStore(discord_id,
                           discord_name,
                           owner_id,
                           owner_name,
-                          False))
+                          False)
+               )
 
     conn.commit()
     rowid = cur.fetchone()
@@ -172,7 +186,7 @@ def GetStores(name = '',
               owner = 0,
               approval_status = ''):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  command =  'SELECT discord_id, discord_name, store_name, owner_id, owner_name, isApproved '
+  command =  'SELECT discord_id, discord_name, store_name, owner_id, owner_name, isApproved, used_for_data '
   command += 'FROM Stores '
   
   criteria = 'WHERE '

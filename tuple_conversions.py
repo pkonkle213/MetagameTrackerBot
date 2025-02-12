@@ -12,7 +12,8 @@ Store = namedtuple('Store', ['DiscordId',
                              'StoreName',
                              'OwnerId',
                              'OwnerName',
-                             'ApprovalStatus'])
+                             'ApprovalStatus',
+                             'UsedForData'])
 
 Participant = namedtuple('Participant',['PlayerName',
                                        'Wins',
@@ -31,7 +32,7 @@ def ConvertToEvent(event_obj):
                  int(event_obj[1]),
                  event_obj[2],
                  int(event_obj[3]),
-                 0)
+                 None)
   return Event(int(event_obj[0]),
                int(event_obj[1]),
                event_obj[2],
@@ -44,7 +45,8 @@ def ConvertToStore(store):
                store[2],
                int(store[3]),
                store[4],
-               store[5])
+               store[5],
+               store[6])
 
 def ConvertToGame(game_obj):
   return Game(int(game_obj[0]),

@@ -28,8 +28,15 @@ class Client(commands.Bot):
     if message.author == self.user:
       return
 
-    data = data_manipulation.ConvertMessageToParticipants(message.content.split('\n'))
-    if isSubmitter(message.guild, message.author) and data is not None and storeCanTrack(message.guild):
+    data = data_manipulation.ConvertMessageToParticipants(message.content)
+    if data is not None:
+      if not isSubmitter(message.guild, message.author):
+        await ErrorMessage(f'{str(message.author)} ({message.author.id}) lacks the permission to submit data')
+        return
+      if not storeCanTrack(message.guild):
+        await ErrorMessage(f'{str(message.guild)} ({message.guild.id}) is not approved to track data')
+        return
+      
       await message.channel.send(f'Attempting to add {len(data)} participants a new event')
       await message.delete()
       discord_id = message.guild.id
@@ -69,17 +76,15 @@ intents.message_content = True
 intents.members = True
 client = Client(command_prefix='?', intents=intents)
 
-
 def checkIsOwner(interaction: discord.Interaction):
   userid = interaction.user.id
-  ownerid = interaction.guild.owner_id
+  ownerid = interaction.guild.owner_id if interaction.guild else None
   return userid == ownerid
 
 def isOwner(interaction: discord.Interaction):
   userid = interaction.user.id
-  ownerid = interaction.guild.owner_id
+  ownerid = interaction.guild.owner_id if interaction.guild else None
   return userid == ownerid
-
 
 def isMyGuild(guild):
   return guild.id == settings.BOTGUILD.id
@@ -90,11 +95,9 @@ def checkIsPhil(interaction: discord.Interaction):
 def isPhil(author):
   return author.id == settings.PHILID
 
-
 def isSubmitter(guild, author):
   role = discord.utils.find(lambda r: r.name == 'MTSubmitter', guild.roles)
   return role in author.roles
-
 
 def storeCanTrack(guild):
   store = data_manipulation.GetStore(guild.id)
@@ -107,12 +110,12 @@ async def MessageUser(msg, userId, file = None):
   else:
     await user.send(f'{msg}', file = file)
 
-
 async def MessageChannel(msg, guildId, channelId):
   server = client.get_guild(int(guildId))
   channel = server.get_channel(int(channelId))
   await channel.send(f'{msg}')
 
+#TODO: This is a mess, needs to be refactored
 async def Error(interaction, error):
   command = interaction.command.name
   #message = interaction.message.parameters
@@ -131,14 +134,25 @@ async def ApprovalMessage(msg):
   await MessageChannel(msg, settings.BOTGUILD.id, settings.APPROVALCHANNELID)
 
 @client.tree.command(name="getbot",
-                     description="Display the url to get the bot",
-                     guild=settings.BOTGUILD)
+   description="Display the url to get the bot",
+   guild=settings.BOTGUILD)
 async def GetBot(interaction: discord.Interaction):
   await interaction.response.send_message(f'Here is the link to my bot: {settings.MYBOTURL}')
 
 
 @GetBot.error
 async def GetBot_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
+
+@client.tree.command(name="getsop",
+   description="Display the url to get the bot",
+   guild=settings.BOTGUILD)
+async def GetSOP(interaction: discord.Interaction):
+  await interaction.response.send_message(f'Here is the link to my bot: {settings.SOPURL}')
+
+
+@GetBot.error
+async def GetSOP_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 class FormatDropdown(discord.ui.View):
@@ -169,6 +183,21 @@ async def ATest(interaction: discord.Interaction):
 
   print('Answer:', view.answer)
   await interaction.followup.send(f'You chose {view.answer[0]}')  
+
+@client.tree.command(name="submitcheck", description="To test if you can submit data")
+async def SubmitCheck(interaction: discord.Interaction):
+  if not isSubmitter(interaction.guild, interaction.user):
+    await interaction.response.send_message('You don\'t have the MTSubmitter role. Please contact your discord\'s owner')
+  elif not storeCanTrack(interaction.guild):
+    await interaction.response.send_message('This store isn\'t approved to submit data')
+  elif data_manipulation.ConvertMessageToParticipants(interaction.message) is None:
+    await interaction.response.send_message('The data format is not recognized')
+  else:
+    await interaction.response.send_message('Everything looks good. Please reach out to Phil to test your data')
+
+@SubmitCheck.error
+async def SubmitCheck_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
 
 @client.tree.command(name="register", description="Register your store")
 @app_commands.check(isOwner)
@@ -220,6 +249,7 @@ async def SetPermissions(interaction):
   everyone_role = interaction.guild.default_role
   await interaction.channel.set_permissions(everyone_role, overwrite=permissions)
 
+#TODO: Update to be used in MetagameTrackerData guild 
 @client.tree.command(name="metagame", description="Get the metagame")
 async def Metagame(interaction: discord.Interaction,
                    start_date: str = '',

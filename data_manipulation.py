@@ -52,8 +52,25 @@ def GetAttendance(discord_id,
   output = output_builder.BuildTableOutput(title, headers, participation)
   return output
 
-def ConvertMessageToParticipants(rows):
+def ConvertMessageToParticipants(message):
+  try:
+    return MagicParticipants(message)
+  except Exception:
+    ...
+
+  try:
+    return LorcanaParticipants(message)
+  except Exception:
+    ...
+
+  return None
+
+def LorcanaParticipants(message):
+  ...
+
+def MagicParticipants(message):
   data = []
+  rows = message.split('\n')
   try:
     for row in rows:
       row_list = row.split('    ')
@@ -79,7 +96,7 @@ def AddGameMap(discord_id,
   if rows is None:
     return None
   game = GetGame(discord_id, used_name)
-  return f'Success! {used_name} is now mapped to {game.Name.title()}'
+  return f'Success! {used_name.title()} is now mapped to {game.Name.title()}'
 
 def CreateEvent(date_of_event,
                 discord_id,
@@ -168,6 +185,7 @@ def DisapproveStore(discord_id):
 def Demo():
   #Deletes my test store and its events in the database so I can offer a live update
   database_connection.DeleteDemo()
+
   #Event IDs and the weeks before today that they happened
   ids = [
     (29, 10),
