@@ -36,7 +36,6 @@ def CreateEvent(event_date,
     command += ') '
     command += 'RETURNING ID'
 
-    print('Stuff:',(command,criteria))
     cur.execute(command, criteria)
     conn.commit()
     event = cur.fetchone()
@@ -51,8 +50,8 @@ def RegisterStore(discord_id,
                   owner_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'INSERT INTO Stores (store_name, discord_id, discord_name, owner_id, owner_name, isApproved) '
-    command += 'VALUES (%s, %s, %s, %s, %s, %s) '
+    command =  'INSERT INTO Stores (store_name, discord_id, discord_name, owner_id, owner_name, isApproved, used_for_data) '
+    command += 'VALUES (%s, %s, %s, %s, %s, %s, %s) '
     command += 'returning *'
 
     cur.execute(command, (store_name,
@@ -60,7 +59,8 @@ def RegisterStore(discord_id,
                           discord_name,
                           owner_id,
                           owner_name,
-                          False)
+                          False,
+                          True)
                )
 
     conn.commit()
@@ -395,8 +395,6 @@ def GetAttendance(discord_id,
       criteria.append(format.ID)
     command += 'GROUP BY e.id, s.store_name '
     command += 'ORDER BY e.event_date DESC '
-    print('Command:', command)
-    print('Criteria:', criteria)
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows

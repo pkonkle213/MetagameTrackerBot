@@ -52,29 +52,38 @@ def GetAttendance(discord_id,
   headers = ['Date', 'Number of Players']
   if discord_id == settings.DATAGUILDID:
     headers.insert(1, 'Store')
-  print('title:',title)
-  print('headers:',headers)
-  print('participation:', participation)
   output = output_builder.BuildTableOutput(title, headers, participation)
   return output
 
 def ConvertMessageToParticipants(message):
+  print('Made it to data_manipulation')
+  data = CompanionParticipants(message)
+  if data is None:
+    data = MeleeParticipants(message)
+  return data
+
+def MeleeParticipants(message):
+  print('Made it to Melee?')
+  data = []
+  rows = message.split('\n')
   try:
-    return MagicParticipants(message)
+    for i in range(0,len(rows),3):
+      name = ' '.join(rows[i+1].split(' ')[0:-1])
+      record = rows[i+2].split('    ')[0].split('-')
+      wins = record[0]
+      losses = record[1]
+      draws = record[2]
+      participant = tuple_conversions.Participant(name,
+                                                  int(wins),
+                                                  int(losses),
+                                                  int(draws)
+                                                 )
+      data.append(participant)
+    return data
   except Exception:
-    ...
+    return None
 
-  try:
-    return LorcanaParticipants(message)
-  except Exception:
-    ...
-
-  return None
-
-def LorcanaParticipants(message):
-  ...
-
-def MagicParticipants(message):
+def CompanionParticipants(message):
   data = []
   rows = message.split('\n')
   try:
