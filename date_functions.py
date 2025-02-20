@@ -46,3 +46,13 @@ def convert_to_date(date):
     return newDate
   except ValueError:
     return None
+
+def FindMonday():
+  def to_last_monday(date):
+    day_of_week = date.weekday()
+    days_to_subtract = day_of_week if day_of_week != 0 else 7
+    return date - datetime.timedelta(days=days_to_subtract)
+  
+  today = datetime.date.today()
+  last_monday = to_last_monday(today)
+  print(last_monday)

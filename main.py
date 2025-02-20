@@ -2,7 +2,7 @@ import date_functions
 import discord
 from discord.ext import commands
 from discord.ui import Select, View
-from discord import app_commands
+from discord import NotificationLevel, app_commands
 import os
 import data_manipulation
 import database_connection
@@ -177,12 +177,12 @@ class FormatDropdown(discord.ui.View):
 async def ATest(interaction: discord.Interaction):
   options = [discord.SelectOption(label=game.Name,value=game.ID) for game in data_manipulation.GetAllGames()]
   view = FormatDropdown(options)
-  
+
   await interaction.response.send_message(view=view)
   await view.wait()
 
   print('Answer:', view.answer)
-  await interaction.followup.send(f'You chose {view.answer[0]}')  
+  await interaction.response.send_message(f'You chose {view.answer[0]}')  
 
 @client.tree.command(name="submitcheck", description="To test if you can submit data")
 async def SubmitCheck(interaction: discord.Interaction):
@@ -190,8 +190,6 @@ async def SubmitCheck(interaction: discord.Interaction):
     await interaction.response.send_message('You don\'t have the MTSubmitter role. Please contact your discord\'s owner')
   elif not storeCanTrack(interaction.guild):
     await interaction.response.send_message('This store isn\'t approved to submit data')
-  elif data_manipulation.ConvertMessageToParticipants(interaction.message) is None:
-    await interaction.response.send_message('The data format is not recognized')
   else:
     await interaction.response.send_message('Everything looks good. Please reach out to Phil to test your data')
 
@@ -416,9 +414,7 @@ async def Claim(interaction: discord.Interaction,
   """
   await interaction.response.defer(ephemeral=True)
   actual_date = date_functions.convert_to_date(date)
-  if actual_date is None:
-    actual_date = date_functions.GetToday()
-
+  
   player_name = player_name.upper()
   store_discord = interaction.guild.id
   game_name = interaction.channel.category.name

@@ -8,6 +8,7 @@ dependencies = [
     "certifi>=2024.12.14",
     "discord-py>=2.4.0",
     "psycopg2-binary>=2.9.10",
+    "pypdf2==3.0.1",
     "python-dotenv>=1.0.1",
     "pytz>=2024.2",
 ]

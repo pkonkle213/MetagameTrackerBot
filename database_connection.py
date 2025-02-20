@@ -162,18 +162,21 @@ def GetEvent(discord_id,
              game,
              format):
   criteria = [discord_id,
-              date,
               game.ID]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command =  'SELECT id, discord_id, event_date, game_id, format_id '
     command += 'FROM events '
     command += 'WHERE discord_id = %s '
-    command += 'AND event_date = %s '
     command += 'AND game_id = %s '
+    if date is not None:
+      command += 'AND event_date = %s '
+      criteria.append(date)
     if format != '':
       command += 'AND format_id = %s '
       criteria.append(format.ID)
+    command += 'ORDER BY event_date DESC '
+    command += 'LIMIT 1'
 
     cur.execute(command, criteria)
     rows = cur.fetchall()

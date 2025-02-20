@@ -27,7 +27,7 @@ def GetFormat(guild_id, game, format_name):
   if format_obj is None:
     raise Exception(f'Format {format_name} not found')
   return tuple_conversions.ConvertToFormat(format_obj)
-  
+
 def GetEvent(guild_id, event_date, game, format):
   event_obj = database_connection.GetEvent(guild_id, event_date, game, format)
   if event_obj is None:
@@ -46,9 +46,11 @@ def GetAttendance(discord_id,
                                                     format,
                                                     start_date,
                                                     end_date)
-  title = f'Attendance for {game.Name.title()} '
-  if format != '':
-    title += f'({format.FormatName.title()})'
+  title = 'Attendance for '
+  if game.HasFormats:
+    title += f'{format.FormatName.title()}'
+  else:
+    title += f'{game.Name.title()}'
   headers = ['Date', 'Number of Players']
   if discord_id == settings.DATAGUILDID:
     headers.insert(1, 'Store')
@@ -56,20 +58,18 @@ def GetAttendance(discord_id,
   return output
 
 def ConvertMessageToParticipants(message):
-  print('Made it to data_manipulation')
   data = CompanionParticipants(message)
   if data is None:
     data = MeleeParticipants(message)
   return data
 
 def MeleeParticipants(message):
-  print('Made it to Melee?')
   data = []
   rows = message.split('\n')
   try:
     for i in range(0,len(rows),3):
-      name = ' '.join(rows[i+1].split(' ')[0:-1])
-      record = rows[i+2].split('    ')[0].split('-')
+      name = ' '.join(rows[i + 1].split(' ')[0:-1])
+      record = rows[i + 2].split('    ')[0].split('-')
       wins = record[0]
       losses = record[1]
       draws = record[2]
@@ -78,10 +78,15 @@ def MeleeParticipants(message):
                                                   int(losses),
                                                   int(draws)
                                                  )
+      print('Participant: ', participant)
       data.append(participant)
     return data
-  except Exception:
+  except Exception as exception:
+    print('Rows:', rows)
+    print('Melee Exception:', exception)
     return None
+
+#WHY CAN'T FIVE6 SUBMIT DATA
 
 def CompanionParticipants(message):
   data = []
@@ -89,10 +94,11 @@ def CompanionParticipants(message):
   try:
     for row in rows:
       row_list = row.split('    ')
+      print('Row List:', row_list)
       int(row_list[0])
-      int(row_list[-5])
-      record = row_list[-4].split('/')
-      participant = tuple_conversions.Participant(' '.join(row_list[1:-5]),
+      int(row_list[2])
+      record = row_list[3].split('/')
+      participant = tuple_conversions.Participant(row_list[1],
                                                   int(record[0]),
                                                   int(record[1]),
                                                   int(record[2])
@@ -100,7 +106,9 @@ def CompanionParticipants(message):
       data.append(participant)
 
     return data  
-  except Exception:
+  except Exception as exception:
+    print('Rows:', rows)
+    print('Companion Exception:', exception)
     return None
 
 
@@ -128,7 +136,6 @@ def AddResults(event_id, participants, submitterId):
     if output == 'Success':
       successes += 1
 
-  #TODO: Upgrade this to tag those who typically play with the names given
   return f'{successes} entries were added. Feel free to use /claim and update the archetypes!'
 
 

@@ -332,6 +332,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pypdf2"
+version = "3.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/bb/18dc3062d37db6c491392007dfd1a7f524bb95886eb956569ac38a23a784/PyPDF2-3.0.1.tar.gz", hash = "sha256:a74408f69ba6271f71b9352ef4ed03dc53a31aa404d29b5d31f53bfecfee1440", size = 227419 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8e/5e/c86a5643653825d3c913719e788e41386bee415c2b87b4f955432f2de6b2/pypdf2-3.0.1-py3-none-any.whl", hash = "sha256:d16e4205cfee272fbdc0568b68d82be796540b1537508cef59388f839c191928", size = 232572 },
+]
+
+[[package]]
 name = "python-dotenv"
 version = "1.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -348,6 +357,7 @@ dependencies = [
     { name = "certifi" },
     { name = "discord-py" },
     { name = "psycopg2-binary" },
+    { name = "pypdf2" },
     { name = "python-dotenv" },
     { name = "pytz" },
 ]
@@ -357,6 +367,7 @@ requires-dist = [
     { name = "certifi", specifier = ">=2024.12.14" },
     { name = "discord-py", specifier = ">=2.4.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
+    { name = "pypdf2", specifier = "==3.0.1" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "pytz", specifier = ">=2024.2" },
 ]
