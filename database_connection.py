@@ -1,10 +1,33 @@
 import os
 import psycopg2
-import date_functions
 import settings
 
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
+def GetStoreData(discord_id, start_date, end_date):
+  criteria = [discord_id, start_date, end_date]
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command =  'SELECT c.name AS GameName, '
+    command += 'f.name AS FormatName, '
+    command += 'e.event_date AS EventDate, '
+    command += 'p.player_name AS PlayerName, '
+    command += 'p.archetype_played AS ArchetypePlayed, '
+    command += 'p.wins AS Wins, '
+    command += 'p.losses AS Losses, '
+    command += 'p.draws AS Draws '
+    command += 'FROM participants p '
+    command += 'INNER JOIN events e on e.id = p.event_id '
+    command += 'INNER JOIN cardgames c on c.id = e.game_id '
+    command += 'INNER JOIN formats f on f.id = e.format_id '
+    command += 'WHERE e.discord_id = %s '
+    command += 'AND e.event_date >= %s '
+    command += 'AND e.event_date <= %s '
+
+    cur.execute(command, criteria)
+    rows = cur.fetchall()
+    return rows
+  
 def ViewEvent(event_id):
   criteria = [event_id]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -34,7 +57,7 @@ def CreateEvent(event_date,
     if game.HasFormats:
       command += ', %s'
     command += ') '
-    command += 'RETURNING ID'
+    command += 'RETURNING *'
 
     cur.execute(command, criteria)
     conn.commit()

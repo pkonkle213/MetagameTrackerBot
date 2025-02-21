@@ -35,8 +35,7 @@ def GetEventDate(weeks):
   return GetToday() - timedelta(weeks=weeks)
 
 def GetToday():
-  today = datetime.now(pytz.timezone('US/Eastern')).date()
-  return today
+  return datetime.now(pytz.timezone('US/Eastern')).date()
 
 def convert_to_date(date):
   if date.count('/') == 1:

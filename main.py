@@ -45,13 +45,11 @@ class Client(commands.Bot):
       if game is None:
         await message.channel.send('Error: Game not found. Please map a game to this category')
         return
-            
-      #TODO: Ask for format based on game, allow 'other' option for manual input
+
       format = ''
       if game.HasFormats:
         format = data_manipulation.GetFormat(discord_id, game, message.channel.name.replace('-',' ').upper())
 
-      #TODO: If none then create?
       if format is None:
         await message.channel.send('Error: Format not found. Please map a format to this channel')
         return
@@ -59,16 +57,17 @@ class Client(commands.Bot):
       #TODO: Confirm date
       date_of_event = date_functions.GetToday()
       
-      event_id = 0
       try:
-        event_id = data_manipulation.CreateEvent(date_of_event, message.guild.id, game, format)
+        event = data_manipulation.GetEvent(date_of_event, discord_id, game, format)
+        if event is None:
+          event = data_manipulation.CreateEvent(date_of_event, message.guild.id, game, format)
       #TODO: This needs to be a more specific error catch
       except Exception as error:
         await message.channel.send('There was an error creating the event. It has been reported')
         await ErrorMessage(error)
         return
 
-      output = data_manipulation.AddResults(event_id, data, message.author.id)
+      output = data_manipulation.AddResults(event.ID, data, message.author.id)
       await message.channel.send(output)
 
 intents = discord.Intents.default()
@@ -118,10 +117,8 @@ async def MessageChannel(msg, guildId, channelId):
 #TODO: This is a mess, needs to be refactored
 async def Error(interaction, error):
   command = interaction.command.name
-  #message = interaction.message.parameters
   error_message =  f'{interaction.user.display_name} ({interaction.user.id}) got an error: {error}\n'
   error_message += f'Command: {command}\n'
-  #error_message += f'Message: {message}\n'
   await ErrorMessage(error_message)
   await interaction.response.send_message('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
 
@@ -424,13 +421,13 @@ async def Claim(interaction: discord.Interaction,
   archetype = archetype.upper()
   try:
     data_manipulation.Claim(actual_date,
-                                          game_name,
-                                          format_name,
-                                          player_name,
-                                          archetype,
-                                          updater_id,
-                                          updater_name,
-                                          store_discord)
+                            game_name,
+                            format_name,
+                            player_name,
+                            archetype,
+                            updater_id,
+                            updater_name,
+                            store_discord)
     await interaction.followup.send('Thank you for submitting your archetype!')
     #TODO: This should be a custom error so that I can figure out what broke
   except Exception as ex:
@@ -452,32 +449,56 @@ async def Claim(interaction: discord.Interaction,
 async def Claim_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-#TODO: Adjust the list of tables as they've changed
-#Is there a script that will do this for me?!
+@client.tree.command(name='downloaddata',
+                     description='Download the data for a store for a date range')
+@app_commands.check(isOwner)
+async def DownloadData(interaction: discord.Interaction,
+                       start_date: str = '',
+                       end_date: str = ''):
+  """
+  Parameters
+  ----------
+  start_date: string
+    Beginning of Date Range (MM/DD/YYYY)
+  end_date: string
+    End of Date Range (MM/DD/YYYY)
+  """
+  await interaction.response.defer(ephemeral=True)
+  discord_id = interaction.guild.id
+  data = data_manipulation.GetDataReport(discord_id, start_date, end_date)
+  if data is None:
+    await interaction.followup.send('No data found for this store')
+  file = ConvertRowsToFile(data, 'MyStoreData')
+  await MessageUser(f'Here is the data for {interaction.guild.name}', interaction.user.id, file)
+  await interaction.followup.send('The data for the store will arrive by message')
+
+def ConvertRowsToFile(data, filename):
+  data_list = []
+  for row in data:
+    max = len(row) 
+    row_string = ''
+    for i in range(max):
+      row_string += f'{row[i]}'
+      if i != max - 1:
+        row_string += ','
+      else:
+        row_string += '\n'
+
+    data_list.append(row_string)
+
+  as_bytes = map(str.encode, data_list)
+  content = b''.join(as_bytes)
+  return discord.File(BytesIO(content), filename=f'{filename}.csv')
+
 @client.tree.command(name='download',
                      description='Downloads the Database',
                      guild=settings.BOTGUILD)
 @app_commands.check(checkIsPhil)
 async def DownloadDatabase(interaction: discord.Interaction):
-  tables = ['datarows', 'gamenamemaps', 'stores', 'inputtracker']
+  tables = ['cardgames', 'gamenamemaps', 'stores', 'inputtracker', 'events', 'formats', 'participants']
   for table in tables:
     data = database_connection.GetData(table)
-    data_list = []
-    for row in data:
-      max = len(row)
-      row_string = ''
-      for i in range(max):
-        row_string += f'{row[i]}'
-        if i != max - 1:
-          row_string += ','
-        else:
-          row_string += '\n'
-
-      data_list.append(row_string)
-
-    as_bytes = map(str.encode, data_list)
-    content = b''.join(as_bytes)
-    file = discord.File(BytesIO(content), filename=f'{table}.csv')
+    file = ConvertRowsToFile(data, table)
     await MessageUser('Message', settings.PHILID, file)
 
   await interaction.response.send_message('Database has been downloaded and messaged')

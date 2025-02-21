@@ -4,6 +4,13 @@ import output_builder
 import settings
 import tuple_conversions
 
+def GetDataReport(discord_id, start_date, end_date):
+  start = start_date if start_date != '' else '1/1/2024'
+  date_start = date_functions.convert_to_date(start)
+  date_end = date_functions.convert_to_date(end_date) if end_date != '' else date_functions.GetToday()
+  print('Dates:',(date_start, date_end))
+  return database_connection.GetStoreData(discord_id, date_start, date_end)
+
 def GetAllGames():
   games_list = database_connection.GetAllGames()
   games = []
@@ -125,8 +132,9 @@ def CreateEvent(date_of_event,
                 discord_id,
                 game,
                 format):
-  event_id = database_connection.CreateEvent(date_of_event, discord_id, game, format)
-  return event_id
+  event_obj = database_connection.CreateEvent(date_of_event, discord_id, game, format)
+  event = tuple_conversions.ConvertToEvent(event_obj)
+  return event
 
 def AddResults(event_id, participants, submitterId):
   successes = 0
