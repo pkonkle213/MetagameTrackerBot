@@ -28,8 +28,10 @@ class Client(commands.Bot):
     if message.author == self.user:
       return
 
+    print('Content received:', message.content)
     data = data_manipulation.ConvertMessageToParticipants(message.content)
     if data is not None:
+      print('Data received:', data)
       if not isSubmitter(message.guild, message.author):
         await ErrorMessage(f'{str(message.author)} ({message.author.id}) lacks the permission to submit data')
         return
@@ -58,7 +60,7 @@ class Client(commands.Bot):
       date_of_event = date_functions.GetToday()
       
       try:
-        event = data_manipulation.GetEvent(date_of_event, discord_id, game, format)
+        event = data_manipulation.GetEvent(discord_id, date_of_event, game, format)
         if event is None:
           event = data_manipulation.CreateEvent(date_of_event, message.guild.id, game, format)
       #TODO: This needs to be a more specific error catch
@@ -181,7 +183,7 @@ async def ATest(interaction: discord.Interaction):
   print('Answer:', view.answer)
   await interaction.response.send_message(f'You chose {view.answer[0]}')  
 
-@client.tree.command(name="submitcheck", description="To test if you can submit data")
+@client.tree.command(name="submitcheck", description="To test if yAou can submit data",guild=settings.TESTSTOREGUILD)
 async def SubmitCheck(interaction: discord.Interaction):
   if not isSubmitter(interaction.guild, interaction.user):
     await interaction.response.send_message('You don\'t have the MTSubmitter role. Please contact your discord\'s owner')
@@ -402,7 +404,7 @@ async def Claim(interaction: discord.Interaction,
   """
   Parameters
   ----------
-  name: string
+  player_name: string
     Your name in Companion
   archetype: string
     The deck archetype you played

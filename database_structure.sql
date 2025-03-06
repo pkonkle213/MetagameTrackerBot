@@ -65,6 +65,18 @@ CREATE TABLE InputTracker (
   discord_id BIGINT REFERENCES Stores (discord_id) ON DELETE CASCADE
 );
 
+DROP TABLE IF EXISTS RoundDetails;
+CREATE TABLE RoundDetails (
+  id SERIAL PRIMARY KEY,
+  event_id INTEGER REFERENCES Events (id) ON DELETE CASCADE,
+  round_number INTEGER,
+  player1_name TEXT,
+  player1_wins INTEGER,
+  player2_name TEXT,
+  player2_wins INTEGER,
+  UNQIUE (event_id, round_number, player1_name, player2_name)
+);
+
 
 --Idea for tagging those who have submitted their deck
 --SELECT user_id

@@ -26,6 +26,17 @@ Event = namedtuple('Event', ['ID',
                              'GameID',
                              'FormatID'])
 
+Round = namedtuple('Round',['P1Name',
+                            'P1Wins',
+                            'P2Name',
+                            'P2Wins'])
+
+def ConvertToRound(round_obj):
+  return Round(round_obj[0],
+               int(round_obj[1]),
+               round_obj[2],
+               int(round_obj[3]))
+
 def ConvertToEvent(event_obj):
   if event_obj[4] is None:
     return Event(int(event_obj[0]),

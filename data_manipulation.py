@@ -3,12 +3,17 @@ import database_connection
 import output_builder
 import settings
 import tuple_conversions
+from enum import Enum, auto
+
+class Winner(Enum):
+  TIE = auto()
+  PLAYER1 = auto()
+  PLAYER2 = auto()
 
 def GetDataReport(discord_id, start_date, end_date):
   start = start_date if start_date != '' else '1/1/2024'
   date_start = date_functions.convert_to_date(start)
   date_end = date_functions.convert_to_date(end_date) if end_date != '' else date_functions.GetToday()
-  print('Dates:',(date_start, date_end))
   return database_connection.GetStoreData(discord_id, date_start, date_end)
 
 def GetAllGames():
@@ -38,7 +43,7 @@ def GetFormat(guild_id, game, format_name):
 def GetEvent(guild_id, event_date, game, format):
   event_obj = database_connection.GetEvent(guild_id, event_date, game, format)
   if event_obj is None:
-    raise Exception('Event not found')
+    return None
   return tuple_conversions.ConvertToEvent(event_obj)
   
 def GetAttendance(discord_id,
@@ -54,7 +59,7 @@ def GetAttendance(discord_id,
                                                     start_date,
                                                     end_date)
   title = 'Attendance for '
-  if game.HasFormats:
+  if game.HasFormats and format is not None:
     title += f'{format.FormatName.title()}'
   else:
     title += f'{game.Name.title()}'
@@ -68,6 +73,8 @@ def ConvertMessageToParticipants(message):
   data = CompanionParticipants(message)
   if data is None:
     data = MeleeParticipants(message)
+  #if data is None:
+    #data = CompanionRoundByRound(message)
   return data
 
 def MeleeParticipants(message):
@@ -85,15 +92,35 @@ def MeleeParticipants(message):
                                                   int(losses),
                                                   int(draws)
                                                  )
-      print('Participant: ', participant)
+      #print('Participant: ', participant)
       data.append(participant)
     return data
   except Exception as exception:
-    print('Rows:', rows)
-    print('Melee Exception:', exception)
+    #print('Rows:', rows)
+    #print('Melee Exception:', exception)
     return None
 
-#WHY CAN'T FIVE6 SUBMIT DATA
+#TODO: Obtain a direct message from a user with the correct source of data to test this structure
+def CompanionRoundByRound(message):
+  data = []
+  rows = message.split('\n')
+  try:
+    for i in range(0, len(rows), 4):
+      row = " ".join(rows[i:i + 4])
+      row = row.replace("\"","")
+      row = row.split('  ')
+      p1name = ' '.join(row[4].split(' ')[0:-1])
+      p1gw = row[6].split(' ')[0]
+      p2gw = row[6].split(' ')[1]
+      p2name = ' '.join(row[8].split(' ')[0:-1])
+      result = tuple_conversions.Round(p1name, int(p1gw), p2name, int(p2gw))
+      print('Result:', result)
+      data.append(result)
+    return data
+  except Exception as exception:
+    print('Rows:', rows)
+    print('Companion Round Exception:', exception)
+    return None
 
 def CompanionParticipants(message):
   data = []
@@ -101,7 +128,8 @@ def CompanionParticipants(message):
   try:
     for row in rows:
       row_list = row.split('    ')
-      print('Row List:', row_list)
+      
+      #print('Row List:', row_list)
       int(row_list[0])
       int(row_list[2])
       record = row_list[3].split('/')
@@ -114,8 +142,8 @@ def CompanionParticipants(message):
 
     return data  
   except Exception as exception:
-    print('Rows:', rows)
-    print('Companion Exception:', exception)
+    #print('Rows:', rows)
+    #print('Companion Exception:', exception)
     return None
 
 
@@ -136,16 +164,56 @@ def CreateEvent(date_of_event,
   event = tuple_conversions.ConvertToEvent(event_obj)
   return event
 
-def AddResults(event_id, participants, submitterId):
+def AddResults(event_id, data, submitterId):
   successes = 0
 
-  for person in participants:
-    output = database_connection.AddResult(event_id, person, submitterId)
-    if output == 'Success':
-      successes += 1
+  #TODO: This should use polymorphism to make the code more readable
+  if isinstance(data[0], tuple_conversions.Participant):
+    for person in data:
+      output = database_connection.AddResult(event_id, person, submitterId)
+      if output:
+        successes += 1
+  
+    return f'{successes} entries were added. Feel free to use /claim and update the archetypes!'
+  elif isinstance(data[0], tuple_conversions.Round):
+    print('Data is for rounds')
+    round_number = (database_connection.GetRoundNumber(event_id) or 0) + 1
+    print('Round number:', round_number)
+    for round in data:
+      result = None
+      if round.P1Wins > round.P2Wins:
+        result = Winner.PLAYER1
+      elif round.P2Wins > round.P1Wins:
+        result = Winner.PLAYER2
+      else:
+        result = Winner.TIE
 
-  return f'{successes} entries were added. Feel free to use /claim and update the archetypes!'
+      player1id = database_connection.GetParticipantId(event_id, round.P1Name.upper())
+      player2id = database_connection.GetParticipantId(event_id, round.P2Name.upper())
 
+      if player1id is None:
+        person = tuple_conversions.Participant(round.P1Name.upper(), 0, 0, 0)
+        player1id = database_connection.AddResult(event_id, person, submitterId)
+        
+      if player2id is None:
+        person = tuple_conversions.Participant(round.P2Name.upper(), 0, 0, 0)
+        player2id = database_connection.AddResult(event_id, person, submitterId)
+
+      #increase each player's wins, losses, and draws by 1 where appropriate
+      if result == Winner.PLAYER1:
+        database_connection.Increase(player1id, 1, 0, 0)
+        database_connection.Increase(player2id, 0, 1, 0)
+        database_connection.AddRoundResult(event_id, round_number, player1id, player2id, player1id)
+      elif result == Winner.PLAYER2:
+        database_connection.Increase(player2id, 1, 0, 0)
+        database_connection.Increase(player1id, 0, 1, 0)
+        database_connection.AddRoundResult(event_id, round_number, player1id, player2id, player2id)
+      elif result == Winner.TIE:
+        database_connection.Increase(player1id, 0, 0, 1)
+        database_connection.Increase(player2id, 0, 0, 1)
+        database_connection.AddRoundResult(event_id, round_number, player1id, player2id, None)
+
+    return f'{len(data)} entries were added. Feel free to use /claim and update the archetypes!'
 
 def Claim(date,
           game_name,

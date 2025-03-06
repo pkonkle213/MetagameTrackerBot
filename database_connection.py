@@ -63,7 +63,7 @@ def CreateEvent(event_date,
     conn.commit()
     event = cur.fetchone()
 
-    return event[0] if event else None
+    return event if event else None
 
 
 def RegisterStore(discord_id,
@@ -102,14 +102,42 @@ def SetStoreTrackingStatus(approval_status,
     conn.commit()
     store = cur.fetchone()
     return store
-    
-def AddResult(event_id, player,
+
+def GetParticipantId(event_id, player_name):
+  criteria = [event_id, player_name]
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command =  'SELECT id '
+    command += 'FROM participants '
+    command += 'WHERE event_id = %s '
+    command += 'AND player_name = %s '
+    command += 'LIMIT 1'
+    cur.execute(command, criteria)
+    rowid = cur.fetchone()
+    return rowid[0] if rowid else None
+
+def Increase(playerid, wins, losses, draws):
+  criteria = [wins, losses, draws, playerid]
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command =  'UPDATE participants '
+    command += 'SET wins = wins + %s, '
+    command += 'losses = losses + %s, '
+    command += 'draws = draws + %s '
+    command += 'WHERE id = %s '
+
+    cur.execute(command, criteria)
+    conn.commit()
+
+def AddResult(event_id,
+              player,
               submitter_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     try:
       command = 'INSERT INTO Participants (event_id, player_name, archetype_played, wins, losses, draws, submitter_id) '
       command += 'VALUES (%s, %s, %s, %s, %s, %s, %s) '
+      command += 'RETURNING *     '
       cur.execute(command, (event_id,
                             player.PlayerName.upper(),
                             'UNKNOWN',
@@ -119,9 +147,46 @@ def AddResult(event_id, player,
                             submitter_id))
 
       conn.commit()
-      return 'Success'
+      row = cur.fetchone()
+      return row[0] if row else None
     except psycopg2.errors.UniqueViolation:
-      return 'Error'
+      return None
+
+def GetRoundNumber(event_id):
+  criteria = [event_id]
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command =  'SELECT MAX(round_number) '
+    command += 'FROM rounddetails '
+    command += 'WHERE event_id = %s '
+    command += 'GROUP BY event_id '
+
+    cur.execute(command, criteria)
+    row = cur.fetchone()
+    return row[0] if row else None
+
+def AddRoundResult(event_id,
+                   round_number,
+                   player1id,
+                   player2id,
+                   winner_id):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    try:
+      command = 'INSERT INTO rounddetails (event_id, round_number, player1_id, player2_id, winner_id) '
+      command += 'VALUES (%s, %s, %s, %s, %s) '
+      command += 'RETURNING *     '
+      cur.execute(command, (event_id,
+                            round_number,
+                            player1id,
+                            player2id,
+                            winner_id))
+
+      conn.commit()
+      row = cur.fetchone()
+      return row[0] if row else None
+    except psycopg2.errors.UniqueViolation:
+      return None
 
 def TrackInput(store_discord,
                updater_name,
@@ -154,6 +219,7 @@ def Claim(event_id,
     command += 'WHERE event_id = %s '
     command += 'AND player_name = %s '
     command += 'RETURNING *'
+
     criteria = (archetype, updater_id, event_id, name)
     with conn, conn.cursor() as cur:  
       cur.execute(command, criteria)
@@ -296,12 +362,11 @@ def GetDataRowsForMetagame(game,
     command = ''
     command += 'WITH x AS ( '
     command += 'SELECT p.archetype_played, COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as MetaPercentage, '
-    command += '(sum(p.wins) * 1.0) / (sum(p.wins) + sum(p.losses) + sum(p.draws)) as WinPercentage '
+    command += '(sum(p.wins) * 1.0) / (sum(p.wins) + sum(p.losses)) as WinPercentage '
     command += 'FROM Participants p '
     command += 'INNER JOIN Events e ON p.event_id = e.id '
     command += 'INNER JOIN Stores s on e.discord_id = s.discord_id '
     command += 'WHERE e.game_id = %s '
-    #TODO: Maybe I should include unknown archetypes to encourage people to enter info?
     #TODO: Can I ensure that Unknown is at the bottom of this list?
     command += 'AND p.archetype_played != \'UNKNOWN\' '
     command += 'AND e.event_date >= %s AND event_date <= %s '
@@ -341,7 +406,7 @@ def GetTopPlayers(discord_id,
     command =  ''
     command += 'WITH x AS ( '
     command += 'SELECT p.player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage, '
-    command += '(sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) as WinPercentage '
+    command += '(sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses)) as WinPercentage '
     command += 'FROM Participants p '
     command += 'INNER JOIN Events e ON p.event_id = e.id '
     command += 'WHERE e.discord_id = %s '
