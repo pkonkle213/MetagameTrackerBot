@@ -70,6 +70,7 @@ def GetAttendance(discord_id,
   return output
 
 def ConvertMessageToParticipants(message):
+  #TODO: Use polymorphism to make this more generic
   data = CompanionParticipants(message)
   if data is None:
     data = MeleeParticipants(message)

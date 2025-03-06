@@ -170,6 +170,10 @@ class FormatDropdown(discord.ui.View):
     self.answer = select.values
     self.stop()
 
+@client.tree.command(name="feedback",description="Provide feedback on the bot")
+async def Feedback(interaction: discord.Interaction):
+  await interaction.response.send_message(f'Follow this link: {settings.FEEDBACKURL}', ephemeral=True)
+
 #This is close, but the options aren't flexible.
 #I'd like to present options accurate to the game that is being played
 @client.tree.command(name="atest",description="The new thing I want to test",guild=settings.TESTSTOREGUILD)
