@@ -5,7 +5,7 @@ import settings
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
 def GetStoreData(discord_id, start_date, end_date):
-  criteria = [discord_id, start_date, end_date]
+  criteria = [start_date, end_date]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command =  'SELECT c.name AS GameName, '
@@ -20,9 +20,14 @@ def GetStoreData(discord_id, start_date, end_date):
     command += 'INNER JOIN events e on e.id = p.event_id '
     command += 'INNER JOIN cardgames c on c.id = e.game_id '
     command += 'INNER JOIN formats f on f.id = e.format_id '
-    command += 'WHERE e.discord_id = %s '
-    command += 'AND e.event_date >= %s '
+    command += 'INNER JOIN stores s on s.discord_id = e.discord_id '
+    command += 'WHERE e.event_date >= %s '
     command += 'AND e.event_date <= %s '
+    if discord_id != settings.DATAGUILDID:
+      criteria.append(discord_id)
+      command += 'AND e.discord_id = %s '
+    else:
+      command += 'AND s.used_for_data = true '
 
     cur.execute(command, criteria)
     rows = cur.fetchall()
@@ -320,8 +325,8 @@ def GetAllFormats(game_id):
 def DeleteDemo():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'DELETE FROM Events WHERE discord_id = 1303825471267409950 and id > 40; '
-    command += 'DELETE FROM Stores WHERE discord_id = 1303825471267409950; '
+    command =  'DELETE FROM Events WHERE discord_id = 1339313300394999931 and id > 40; '
+    command += 'DELETE FROM Stores WHERE discord_id = 1339313300394999931; '
     cur.execute(command)
     conn.commit()
   
@@ -400,19 +405,24 @@ def GetTopPlayers(discord_id,
                   end_date,
                   top_number):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  criteria = [discord_id, game_id, start_date, end_date]
+  criteria = [game_id, start_date, end_date]
 
   with conn, conn.cursor() as cur:
     command =  ''
     command += 'WITH x AS ( '
     command += 'SELECT p.player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage, '
-    command += '(sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses)) as WinPercentage '
+    command += '(sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) as WinPercentage '
     command += 'FROM Participants p '
     command += 'INNER JOIN Events e ON p.event_id = e.id '
-    command += 'WHERE e.discord_id = %s '
+    command += 'INNER JOIN Stores s on e.discord_id = s.discord_id '
+    command += 'WHERE s.used_for_data = True '
     command += 'AND e.game_id = %s '
     command += 'AND e.event_date >= %s '
     command += 'AND e.event_date <= %s '
+
+    if discord_id != settings.DATAGUILDID:
+      command += 'AND e.discord_id = %s '
+      criteria.append(discord_id)
 
     if format != '':
       criteria.append(format.ID)
@@ -505,6 +515,7 @@ def GetColumnNames(table):
     command = f'SELECT column_name FROM information_schema.columns where table_name = \'{table}\''
     cur.execute(command)
     rows = cur.fetchall()
+    print('Column Names:', rows)
     return rows 
     
 def AddGameMap(discord_id, game_id, used_name):

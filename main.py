@@ -472,14 +472,17 @@ async def DownloadData(interaction: discord.Interaction,
   await interaction.response.defer(ephemeral=True)
   discord_id = interaction.guild.id
   data = data_manipulation.GetDataReport(discord_id, start_date, end_date)
-  if data is None:
+  if len(data) == 0:
     await interaction.followup.send('No data found for this store')
-  file = ConvertRowsToFile(data, 'MyStoreData')
-  await MessageUser(f'Here is the data for {interaction.guild.name}', interaction.user.id, file)
-  await interaction.followup.send('The data for the store will arrive by message')
+  else:
+    header = 'GAME,FORMAT,DATE,PLAYER_NAME,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS'
+    file = ConvertRowsToFile(data, 'MyStoreData', header)
+    await MessageUser(f'Here is the data for {interaction.guild.name}', interaction.user.id, file)
+    await interaction.followup.send('The data for the store will arrive by message')
 
-def ConvertRowsToFile(data, filename):
+def ConvertRowsToFile(data, filename, header):
   data_list = []
+  data_list.append(header + '\n')
   for row in data:
     max = len(row) 
     row_string = ''
@@ -501,13 +504,28 @@ def ConvertRowsToFile(data, filename):
                      guild=settings.BOTGUILD)
 @app_commands.check(checkIsPhil)
 async def DownloadDatabase(interaction: discord.Interaction):
-  tables = ['cardgames', 'gamenamemaps', 'stores', 'inputtracker', 'events', 'formats', 'participants']
+  await interaction.response.defer()
+  tables = [
+    'cardgames',
+    'events',
+    'formats',
+    'gamenamemaps',
+    'inputtracker',
+    'participants',
+    'stores',
+           ]
   for table in tables:
+    headers = database_connection.GetColumnNames(table)
+    header = ''
+    for header_name in headers:
+      header += f'{header_name[0].upper()},'
+    header = header[:-1]
     data = database_connection.GetData(table)
-    file = ConvertRowsToFile(data, table)
+    
+    file = ConvertRowsToFile(data, table, header)
     await MessageUser('Message', settings.PHILID, file)
 
-  await interaction.response.send_message('Database has been downloaded and messaged')
+  await interaction.followup.send('Database has been downloaded and messaged')
 
 
 @DownloadDatabase.error
