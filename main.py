@@ -174,9 +174,29 @@ class FormatDropdown(discord.ui.View):
 async def Feedback(interaction: discord.Interaction):
   await interaction.response.send_message(f'Follow this link: {settings.FEEDBACKURL}', ephemeral=True)
 
+@client.tree.command(name="analysis",
+                     description="Provides A Look At the Metagame Shift", 
+                     guild=settings.TESTSTOREGUILD)
+async def Analysis(interaction: discord.Interaction,
+                   weeks: int = 8):
+  """
+  Parameters
+  ----------
+  weeks: int
+    Number of weeks in each range
+  """
+  await interaction.response.defer()
+  discord_id = interaction.guild_id
+  game_name = interaction.channel.category.name
+  format_name = interaction.channel.name
+  output = data_manipulation.GetAnalysis(discord_id, game_name, format_name, weeks)
+  await interaction.followup.send(output)
+
 #This is close, but the options aren't flexible.
 #I'd like to present options accurate to the game that is being played
-@client.tree.command(name="atest",description="The new thing I want to test",guild=settings.TESTSTOREGUILD)
+@client.tree.command(name="atest",
+                     description="The new thing I want to test",
+                     guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
   options = [discord.SelectOption(label=game.Name,value=game.ID) for game in data_manipulation.GetAllGames()]
   view = FormatDropdown(options)

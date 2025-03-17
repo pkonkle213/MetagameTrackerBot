@@ -10,6 +10,27 @@ class Winner(Enum):
   PLAYER1 = auto()
   PLAYER2 = auto()
 
+#Need to update this for games that don't have formats yet
+def GetAnalysis(discord_id, game_name, format_name, weeks):
+  game = GetGame(discord_id, game_name)
+  format = GetFormat(discord_id, game, format_name)
+
+  if game is None or (game.HasFormats and format is None):
+    return 'Insufficient information provided'
+
+  #Uncomment to fake data
+  #discord_id = 1210746744602890310
+  #game = tuple_conversions.ConvertToGame((1,"Magic",True))
+  #format = tuple_conversions.ConvertToFormat((1,"Pauper"))
+  
+  data = database_connection.GetMetaAnalysis(discord_id, game.ID, format.ID, weeks)
+  title = 'Percentage Shifts in Meta'
+  headers = ['Archetype', 'Beginning Meta %', 'End Meta %', 'Meta % Shift']
+  output = output_builder.BuildTableOutput(title,
+   headers,
+   data)
+  return output
+
 def GetDataReport(discord_id, start_date, end_date):
   start = start_date if start_date != '' else '1/1/2024'
   date_start = date_functions.convert_to_date(start)
@@ -74,8 +95,10 @@ def ConvertMessageToParticipants(message):
   data = CompanionParticipants(message)
   if data is None:
     data = MeleeParticipants(message)
-  #if data is None:
-    #data = CompanionRoundByRound(message)
+  '''
+    if data is None:
+    data = CompanionRoundByRound(message)
+  '''
   return data
 
 def MeleeParticipants(message):
@@ -301,7 +324,8 @@ def Demo():
     (40, 1),
   ]
   for id in ids:
-    date = date_functions.GetEventDate(id[1])
+    today = date_functions.GetToday()
+    date = date_functions.GetWeeksAgo(today, id[1])
     database_connection.UpdateDemo(id[0], date)
 
 def GetMetagame(discord_id, game_name, format_name, start_date, end_date):
