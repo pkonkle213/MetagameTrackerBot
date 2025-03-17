@@ -1,4 +1,3 @@
-from collections import namedtuple
 import os
 import psycopg2
 import settings
