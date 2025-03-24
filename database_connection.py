@@ -12,18 +12,19 @@ def GetAnalysisDates(weeks):
   BRStart = date_functions.GetWeeksAgo(BREnd, weeks)
   return (EREnd, ERStart, BREnd, BRStart)
 
-def GetMetaAnalysis(discord_id, game_id, format_id, weeks):
+def GetAnalysis(discord_id, game_id, format_id, weeks, isMeta):
   (EREnd, ERStart, BREnd, BRStart) = GetAnalysisDates(weeks)
+  formula = 'COUNT(*) * 1.0 / SUM(COUNT(*)) OVER()' if isMeta else '(sum(p.wins) * 1.0) / (sum(p.wins) + sum(p.losses))'
   cur = conn.cursor()
   command = f"""
     SELECT archetype_played,
-      ROUND(BeginningRangeMeta * 100, 2) AS BeginningRangeMeta,
-      ROUND(EndingRangeMeta * 100, 2) AS EndingRangeMeta,
-      ROUND((EndingRangeMeta - BeginningRangeMeta) * 100, 2) AS MetaShift
+      ROUND(BeginningRange * 100, 2) AS BeginningRange,
+      ROUND(EndingRange * 100, 2) AS EndingRange,
+      ROUND((EndingRange - BeginningRange) * 100, 2) AS Shift
     FROM (
       SELECT Decks.archetype_played,
-        SUM(COALESCE(BeginningRange.MetaPercentBR, 0)) AS BeginningRangeMeta,
-        SUM(COALESCE(EndingRange.MetaPercentER, 0)) AS EndingRangeMeta    
+        SUM(COALESCE(BeginningRange.StatBR, 0)) AS BeginningRange,
+        SUM(COALESCE(EndingRange.StatER, 0)) AS EndingRange
       FROM (
         SELECT DISTINCT archetype_played
         FROM participants
@@ -39,7 +40,7 @@ def GetMetaAnalysis(discord_id, game_id, format_id, weeks):
       ) AS Decks
       LEFT OUTER JOIN (
         SELECT p.archetype_played,
-          COUNT(*) * 1.0 / SUM(COUNT(*)) OVER() AS MetaPercentBR
+          {formula} AS StatBR
         FROM participants p
         INNER JOIN events e ON p.event_id = e.id
         WHERE e.event_date >= '{BRStart}'
@@ -51,7 +52,7 @@ def GetMetaAnalysis(discord_id, game_id, format_id, weeks):
       ) AS BeginningRange ON Decks.archetype_played = BeginningRange.archetype_played
       LEFT OUTER JOIN (
         SELECT p.archetype_played,
-          COUNT(*) * 1.0 / SUM(COUNT(*)) OVER() AS MetaPercentER
+          {formula} AS StatER
         FROM participants p
         INNER JOIN events e ON p.event_id = e.id
         WHERE e.event_date >= '{ERStart}'
@@ -63,66 +64,10 @@ def GetMetaAnalysis(discord_id, game_id, format_id, weeks):
       ) AS EndingRange ON Decks.archetype_played = EndingRange.archetype_played
       GROUP BY Decks.archetype_played
     )
-    ORDER BY MetaShift DESC, archetype_played
+    --WHERE EndingRange >=.02 OR BeginningRange >= .02
+    ORDER BY Shift DESC, archetype_played
     """
-  cur.execute(command)
-  rows = cur.fetchall()
-  cur.close()
-  return rows
-
-def GetWinRateAnalysis(discord_id, game_id, format_id, weeks):
-  (EREnd, ERStart, BREnd, BRStart) = GetAnalysisDates(weeks)
-  cur = conn.cursor()
-  command = f"""
-    SELECT archetype_played,
-      ROUND(BeginningRangeWinRate * 100, 2) AS BeginningRangeWinRate,
-      ROUND(EndingRangeWinRate * 100, 2) AS EndingRangeWinRate,
-      ROUND((EndingRangeWinRate - BeginningRangeWinRate) * 100, 2) AS WinRateShift
-    FROM (
-      SELECT Decks.archetype_played,
-        SUM(COALESCE(BeginningRange.WinRatePercentBR, 0)) AS BeginningRangeWinRate,
-        SUM(COALESCE(EndingRange.WinRatePercentER, 0)) AS EndingRangeWinRate
-      FROM (
-        SELECT DISTINCT archetype_played
-        FROM participants
-        WHERE event_id IN (
-          SELECT id
-          FROM events
-          WHERE game_id = {game_id}
-          AND format_id = {format_id}
-          AND discord_id = {discord_id}
-          AND event_date >= '{BRStart}'
-          AND event_date <= '{EREnd}'
-        )
-      ) AS Decks
-      LEFT OUTER JOIN (
-        SELECT p.archetype_played,
-          (sum(p.wins) * 1.0) / (sum(p.wins) + sum(p.losses)) as WinRatePercentBR
-        FROM participants p
-        INNER JOIN events e ON p.event_id = e.id
-        WHERE e.event_date >= '{BRStart}'
-        AND e.event_date <= '{BREnd}'
-        AND e.game_id = {game_id}
-        AND e.format_id = {format_id}
-        AND e.discord_id = {discord_id}
-        GROUP BY p.archetype_played
-      ) AS BeginningRange ON Decks.archetype_played = BeginningRange.archetype_played
-      LEFT OUTER JOIN (
-        SELECT p.archetype_played,
-          (sum(p.wins) * 1.0) / (sum(p.wins) + sum(p.losses)) as WinRatePercentER
-        FROM participants p
-        INNER JOIN events e ON p.event_id = e.id
-        WHERE e.event_date >= '{ERStart}'
-        AND e.event_date <= '{EREnd}'
-        AND e.game_id = {game_id}
-        AND e.format_id = {format_id}
-        AND e.discord_id = {discord_id}
-        GROUP BY p.archetype_played
-      ) AS EndingRange ON Decks.archetype_played = EndingRange.archetype_played
-      GROUP BY Decks.archetype_played
-    )
-    ORDER BY MetaShift DESC
-    """
+  print('Command:', command)
   cur.execute(command)
   rows = cur.fetchall()
   cur.close()
@@ -152,7 +97,7 @@ def GetStoreData(discord_id, start_date, end_date):
       command += 'AND e.discord_id = %s '
     else:
       command += 'AND s.used_for_data = true '
-    command += 'ORDER BY e.id, p.wins DESC '
+    command += 'ORDER BY e.event_date, p.wins DESC '
 
     cur.execute(command, criteria)
     rows = cur.fetchall()
@@ -177,15 +122,15 @@ def CreateEvent(event_date,
                 discord_id,
                 game,
                 format):
-  criteria = [event_date, discord_id, game.ID]
+  criteria = [event_date, discord_id, game.ID, 0]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'INSERT INTO Events (event_date, discord_id, game_id'
+    command =  'INSERT INTO Events (event_date, discord_id, game_id, last_update'
     if game.HasFormats:
       command += ', format_id'
       criteria.append(format.ID)
     command += ') '
-    command += 'VALUES (%s, %s, %s'
+    command += 'VALUES (%s, %s, %s, %s'
     if game.HasFormats:
       command += ', %s'
     command += ') '
@@ -222,6 +167,22 @@ def RegisterStore(discord_id,
     rowid = cur.fetchone()
 
     return rowid
+
+def GetEventMeta(event_id):
+  criteria = [event_id]
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f"""
+    SELECT archetype_played, count(*)
+    FROM participants
+    WHERE event_id = {event_id}
+    GROUP BY archetype_played
+    ORDER BY archetype_played
+    """
+    print('SQL Command', command)
+    cur.execute(command, criteria)
+    rows = cur.fetchall()
+    return rows
 
 def SetStoreTrackingStatus(approval_status,
                            store_discord_id):
@@ -386,7 +347,7 @@ def GetEvent(discord_id,
               game.ID]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT id, discord_id, event_date, game_id, format_id '
+    command =  'SELECT id, discord_id, event_date, game_id, format_id, last_update '
     command += 'FROM events '
     command += 'WHERE discord_id = %s '
     command += 'AND game_id = %s '
@@ -467,7 +428,6 @@ def UpdateDemo(event_id, event_date):
     cur.execute(command, criteria)
     conn.commit()
   
-
 def GetGame(discord_id,
             used_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -500,7 +460,7 @@ def GetDataRowsForMetagame(game,
     command += 'INNER JOIN Stores s on e.discord_id = s.discord_id '
     command += 'WHERE e.game_id = %s '
     #TODO: Can I ensure that Unknown is at the bottom of this list?
-    command += 'AND p.archetype_played != \'UNKNOWN\' '
+    #command += 'AND p.archetype_played != \'UNKNOWN\' '
     command += 'AND e.event_date >= %s AND event_date <= %s '
     if game.HasFormats:
       command += 'AND e.format_id = %s '
@@ -535,17 +495,18 @@ def GetTopPlayers(discord_id,
   criteria = [game_id, start_date, end_date]
 
   with conn, conn.cursor() as cur:
-    command =  ''
-    command += 'WITH x AS ( '
-    command += 'SELECT p.player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage, '
-    command += '(sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) as WinPercentage '
-    command += 'FROM Participants p '
-    command += 'INNER JOIN Events e ON p.event_id = e.id '
-    command += 'INNER JOIN Stores s on e.discord_id = s.discord_id '
-    command += 'WHERE s.used_for_data = True '
-    command += 'AND e.game_id = %s '
-    command += 'AND e.event_date >= %s '
-    command += 'AND e.event_date <= %s '
+    command =  """
+    WITH x AS (
+    SELECT p.player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage,
+    (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) as WinPercentage
+    FROM Participants p
+    INNER JOIN Events e ON p.event_id = e.id
+    INNER JOIN Stores s on e.discord_id = s.discord_id
+    WHERE s.used_for_data = True
+    AND e.game_id = %s
+    AND e.event_date >= %s
+    AND e.event_date <= %s
+    """
 
     if discord_id != settings.DATAGUILDID:
       command += 'AND e.discord_id = %s '
@@ -555,15 +516,18 @@ def GetTopPlayers(discord_id,
       criteria.append(format.ID)
       command += 'AND e.format_id = %s '
 
-    command += 'GROUP BY p.player_name '
-    command += ') '
-    command += 'SELECT player_name, '
-    command += 'ROUND(MetaPercentage * 100, 2) AS MetaPercentage, '
-    command += 'ROUND(WinPercentage * 100, 2) AS WinPercentage, '
-    command += 'ROUND(MetaPercentage * WinPercentage * 100, 2) AS Combined '
-    command += 'FROM x '
-    command += 'ORDER BY Combined DESC, player_name '
-    command += 'LIMIT %s '
+    command += """
+    GROUP BY p.player_name
+    )
+    SELECT player_name,
+    ROUND(MetaPercentage * 100, 2) AS MetaPercentage,
+    ROUND(WinPercentage * 100, 2) AS WinPercentage,
+    ROUND(MetaPercentage * WinPercentage * 100, 2) AS Combined
+    FROM x
+    ORDER BY Combined DESC, player_name
+    LIMIT %s 
+    """
+    
     criteria.append(top_number)
 
     cur.execute(command, criteria)
@@ -581,20 +545,34 @@ def GetAllGames():
     rows = cur.fetchall()
     return rows
 
-#TODO: If no format is provided, it should return all formats
-#TODO: If no game is provided, it should consider all games
-def GetEvents(discord_id,
-              start_date,
-              end_date):
+def GetPercentage(event_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  command = 'SELECT event_date, game, event_format, count(*) FROM Participants WHERE discord_id = %s AND event_date >= %s AND event_date <= %s GROUP BY (game, event_date, event_format) ORDER BY event_date DESC, event_format '
-
   with conn, conn.cursor() as cur:
-    cur.execute(command, (discord_id, start_date, end_date))
+    command = f"""
+    SELECT 1 - metapercent AS ReportedPercent
+    FROM (
+      SELECT archetype_played, COUNT(*) / SUM(COUNT(*)) OVER () AS MetaPercent
+      FROM Participants
+      WHERE event_id = {event_id}
+      GROUP BY archetype_played
+    )
+    WHERE archetype_played = 'UNKNOWN'
+    """
+    cur.execute(command)
     rows = cur.fetchall()
+    return rows[0][0] if rows else 1
 
-    return rows
-    
+def UpdateEvent(event_id):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f"""
+    UPDATE events
+    SET last_update = last_update + 1
+    WHERE id = {event_id}
+    RETURNING *
+    """
+    cur.execute(command)
+
 def GetAttendance(discord_id,
                  game,
                  format,
@@ -639,7 +617,12 @@ def GetData(databasename):
 def GetColumnNames(table):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command = f'SELECT column_name FROM information_schema.columns where table_name = \'{table}\''
+    command = f'''
+    SELECT column_name
+    FROM information_schema.columns
+    WHERE table_name = \'{table}\'
+    ORDER BY ordinal_position
+    '''
     cur.execute(command)
     rows = cur.fetchall()
     print('Column Names:', rows)

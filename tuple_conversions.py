@@ -24,7 +24,8 @@ Event = namedtuple('Event', ['ID',
                              'StoreDiscordID',
                              'EventDate',
                              'GameID',
-                             'FormatID'])
+                             'FormatID',
+                             'LastUpdate'])
 
 Round = namedtuple('Round',['P1Name',
                             'P1Wins',
@@ -38,17 +39,12 @@ def ConvertToRound(round_obj):
                int(round_obj[3]))
 
 def ConvertToEvent(event_obj):
-  if event_obj[4] is None:
-    return Event(int(event_obj[0]),
-                 int(event_obj[1]),
-                 event_obj[2],
-                 int(event_obj[3]),
-                 None)
   return Event(int(event_obj[0]),
                int(event_obj[1]),
                event_obj[2],
                int(event_obj[3]),
-               int(event_obj[4]))
+               int(event_obj[4]) if event_obj[4] is not None else None,
+               int(event_obj[5]))
 
 def ConvertToStore(store):
   return Store(int(store[0]),

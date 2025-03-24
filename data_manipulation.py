@@ -19,13 +19,15 @@ def GetAnalysis(discord_id, game_name, format_name, weeks):
     return 'Insufficient information provided'
 
   #Uncomment to fake data
-  #discord_id = 1210746744602890310
-  #game = tuple_conversions.ConvertToGame((1,"Magic",True))
-  #format = tuple_conversions.ConvertToFormat((1,"Pauper"))
+  #Comment to use true data
+  discord_id = 1210746744602890310
+  game = tuple_conversions.ConvertToGame((1,"Magic",True))
+  format = tuple_conversions.ConvertToFormat((1,"Pauper"))
   
-  data = database_connection.GetMetaAnalysis(discord_id, game.ID, format.ID, weeks)
+  data = database_connection.GetAnalysis(discord_id, game.ID, format.ID, weeks, True)
+  #If the True/False values flex the sql, it needs to flex the title and headers as well
   title = 'Percentage Shifts in Meta'
-  headers = ['Archetype', 'Beginning Meta %', 'End Meta %', 'Meta % Shift']
+  headers = ['Archetype', 'Begin Meta %', 'End Meta %', 'Meta % Shift']
   output = output_builder.BuildTableOutput(title,
    headers,
    data)
@@ -248,13 +250,19 @@ def Claim(date,
           updater_name,
           store_discord):
   game = GetGame(store_discord, game_name)
+  if game is None:
+    raise Exception('Game not found')
   format = GetFormat(store_discord, game, format_name)
+  if game.HasFormats and format is None:
+    raise Exception('Format not found')
   event = GetEvent(store_discord, date, game, format)
-  output = database_connection.Claim(event.ID,
+  if event is None:
+    raise Exception('Event not found')
+  claimed = database_connection.Claim(event.ID,
                                      player_name,
                                      archetype_played,
                                      updater_id)
-  if output is None:
+  if claimed is None:
     raise Exception(f'{player_name} was not found in that event. The name should match what was put into Companion')
   database_connection.TrackInput(store_discord,
                                  updater_name.upper(),
@@ -262,7 +270,23 @@ def Claim(date,
                                  archetype_played,
                                  date_functions.GetToday(),
                                  player_name.upper())
-  
+  #get the % of archetypes that aren't 'UNKNOWN' and the event's last_update
+  #if % > last_update / 4, update last_update and return message
+  percent_reported = database_connection.GetPercentage(event.ID)
+
+  #TODO: If the submission makes it 100%, this is still true, maybe there should be a work around??
+  if percent_reported >= (event.LastUpdate + 1) / 4:
+    database_connection.UpdateEvent(event.ID)
+    if event.LastUpdate + 1 < 4:
+      return f'Congratulations! The {date_functions.FormatDate(event.EventDate)} event is now {percent_reported:.2%} reported!'
+    else:
+      str_date = date_functions.FormatDate(event.EventDate)
+      output = f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!\n\n'
+      database_connection.UpdateEvent(event.ID)
+      event_meta = database_connection.GetEventMeta(event.ID)
+      output += output_builder.BuildTableOutput(f'{str_date} Meta',['Archetype','Quantity'], event_meta)
+      return output
+  return None
 
 def GetTopPlayers(discord_id, game_name, format_name, year, quarter, top_number):
   date_range = date_functions.GetQuarterRange(year, quarter)
@@ -310,28 +334,35 @@ def Demo():
 
   #Event IDs and the weeks before today that they happened
   ids = [
-    (29, 10),
-    (30, 9),
-    (31, 8),
-    (32, 7),
-    (33, 6),
-    (34, 5),
-    (35, 4),
-    (36, 4),
-    (37, 3),
-    (38, 2),
-    (39, 1),
-    (40, 1),
+    (1, 10),
+    (2, 9),
+    (3, 8),
+    (4, 7),
+    (5, 6),
+    (6, 5),
+    (7, 4),
+    (8, 4),
+    (9, 3),
+    (10, 2),
+    (11, 1),
+    (12, 1),
   ]
   for id in ids:
     today = date_functions.GetToday()
     date = date_functions.GetWeeksAgo(today, id[1])
     database_connection.UpdateDemo(id[0], date)
 
+def DetermineDates(start_date, end_date, format):
+  if format.ID == 15:
+    return date_functions.GetQuarterRange(0,0)
+  else:
+    edate = date_functions.convert_to_date(end_date) if end_date != '' else date_functions.GetToday()
+    sdate = date_functions.convert_to_date(start_date) if start_date != '' else date_functions.GetStartDate(edate)
+    return (sdate, edate)
+
 def GetMetagame(discord_id, game_name, format_name, start_date, end_date):
   output = ''
-  end_date = date_functions.convert_to_date(end_date) if end_date != '' else date_functions.GetToday()
-  start_date = date_functions.convert_to_date(start_date) if start_date != '' else date_functions.GetStartDate(end_date)
+  
   game = GetGame(discord_id, game_name)
   if game is None:
     return f'Game {game_name} not found. Please map a game first'
@@ -340,6 +371,8 @@ def GetMetagame(discord_id, game_name, format_name, start_date, end_date):
     format = GetFormat(discord_id, game, format_name)
     if format is None:
       return f'Format {format_name} not found'
+  
+  (start_date, end_date) = DetermineDates(start_date, end_date, format)
   
   title_name = format.FormatName.title() if format else game.Name.title()
   metagame = database_connection.GetDataRowsForMetagame(game,

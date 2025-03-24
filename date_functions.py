@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta
 import pytz
 
+def FormatDate(date):
+  return date.strftime('%B %d')
+
 def GetCurrentQuarter():
   now = datetime.now(pytz.timezone('America/New_York'))
   return (now.year, (now.month + 2) // 3)

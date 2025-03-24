@@ -2,7 +2,7 @@ import date_functions
 import discord
 from discord.ext import commands
 from discord.ui import Select, View
-from discord import NotificationLevel, app_commands
+from discord import app_commands
 import os
 import data_manipulation
 import database_connection
@@ -28,10 +28,8 @@ class Client(commands.Bot):
     if message.author == self.user:
       return
 
-    print('Content received:', message.content)
     data = data_manipulation.ConvertMessageToParticipants(message.content)
     if data is not None:
-      print('Data received:', data)
       if not isSubmitter(message.guild, message.author):
         await ErrorMessage(f'{str(message.author)} ({message.author.id}) lacks the permission to submit data')
         return
@@ -178,7 +176,7 @@ async def Feedback(interaction: discord.Interaction):
                      description="Provides A Look At the Metagame Shift", 
                      guild=settings.TESTSTOREGUILD)
 async def Analysis(interaction: discord.Interaction,
-                   weeks: int = 8):
+                   weeks: int = 4):
   """
   Parameters
   ----------
@@ -446,7 +444,7 @@ async def Claim(interaction: discord.Interaction,
   updater_name = interaction.user.display_name.upper()
   archetype = archetype.upper()
   try:
-    data_manipulation.Claim(actual_date,
+    output = data_manipulation.Claim(actual_date,
                             game_name,
                             format_name,
                             player_name,
@@ -454,10 +452,14 @@ async def Claim(interaction: discord.Interaction,
                             updater_id,
                             updater_name,
                             store_discord)
-    await interaction.followup.send('Thank you for submitting your archetype!')
-    #TODO: This should be a custom error so that I can figure out what broke
+    await interaction.followup.send('Thank you for submitting the archetype!')
+    if output is not None:
+      print(output)
+      await MessageChannel(output, interaction.guild_id, interaction.channel_id) #TODO: I think this should work?
+
+  #TODO: This should be a custom error so that I can figure out what broke
   except Exception as ex:
-    await interaction.followup.send(f'{player_name} was not found in that event. The name should match what was put into Companion')
+    await interaction.followup.send(f'{player_name.title()} was not found in that event. The name should match what was put into Companion')
     message_parts = []
     message_parts.append('Error claiming archetype:')
     message_parts.append(f'Name: {player_name}')
@@ -532,6 +534,7 @@ async def DownloadDatabase(interaction: discord.Interaction):
     'gamenamemaps',
     'inputtracker',
     'participants',
+    'rounddetails',
     'stores',
            ]
   for table in tables:
@@ -543,7 +546,7 @@ async def DownloadDatabase(interaction: discord.Interaction):
     data = database_connection.GetData(table)
     
     file = ConvertRowsToFile(data, table, header)
-    await MessageUser('Message', settings.PHILID, file)
+    await MessageUser(f'{table.title()} table', settings.PHILID, file)
 
   await interaction.followup.send('Database has been downloaded and messaged')
 

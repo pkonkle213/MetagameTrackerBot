@@ -44,8 +44,11 @@ def BuildTableOutput(title,
 
   for item in items:
     for i in range(len(column_widths)):
+      element = str(item[i])
       column_format = '{:' + align + str(column_widths[i]) + 's}'
-      output += column_format.format(str(item[i]).title())
+      if element[0] == '-':
+        output = output[:-1]
+      output += column_format.format(element.title())
     output += '\n'
 
   if len(output) > 1994:
