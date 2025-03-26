@@ -20,12 +20,15 @@ def MaxLength(headers, collection):
   maxLengths = []
   for header in headers:
     maxLengths.append(len(header) + buffer)
+  maxLengths[len(maxLengths) - 1] -= 2
 
   for item in collection:
     for i in range(len(headers)):
       length = len(str(item[i])) + buffer
       if length > maxLengths[i]:
         maxLengths[i] = length
+        print('Lengths:', maxLengths)
+        print('Item:', item[i])
 
   return maxLengths
 

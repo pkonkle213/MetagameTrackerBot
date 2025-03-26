@@ -148,6 +148,9 @@ def CompanionRoundByRound(message):
     print('Companion Round Exception:', exception)
     return None
 
+def SheetsParticipants(message):
+  ...
+
 def CompanionParticipants(message):
   data = []
   rows = message.split('\n')
@@ -278,7 +281,7 @@ def Claim(date,
   if percent_reported >= (event.LastUpdate + 1) / 4:
     database_connection.UpdateEvent(event.ID)
     if event.LastUpdate + 1 < 4:
-      return f'Congratulations! The {date_functions.FormatDate(event.EventDate)} event is now {percent_reported:.2%} reported!'
+      return f'Congratulations! The {date_functions.FormatDate(event.EventDate)} event is now {percent_reported:.0%} reported!'
     else:
       str_date = date_functions.FormatDate(event.EventDate)
       output = f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!\n\n'
@@ -385,7 +388,7 @@ def GetMetagame(discord_id, game_name, format_name, start_date, end_date):
   else:
     title = f'{title_name} metagame from {start_date} to {end_date}'
     
-    headers = ['Deck Archetype', 'Meta % ', 'Win %  ', 'Combined %']
+    headers = ['Deck Archetype', 'Meta %', 'Win %', 'Combined %']
     output = output_builder.BuildTableOutput(title, headers, metagame)
   return output
 

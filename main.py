@@ -325,7 +325,7 @@ async def attendance_error(interaction: discord.Interaction, error):
 #TODO: Double check this works
 @client.tree.command(name="topplayers",
                      description="Get the top players of the format")
-@app_commands.checks.has_role("Owner")
+@app_commands.checks.has_role("MTSubmitter")
 async def TopPlayers(interaction: discord.Interaction,
                      year: app_commands.Range[int, 2000] = 0,
                      quarter: app_commands.Range[int, 1, 4] = 0,
