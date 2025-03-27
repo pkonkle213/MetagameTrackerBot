@@ -305,7 +305,7 @@ def GetTopPlayers(discord_id, game_name, format_name, year, quarter, top_number)
   title = f'Top {top_number} '
   if format != '':
     title += f'{format.FormatName.title()} '
-  title += f'Players For Your Store from {start_date} to {end_date}'
+  title += f'Players from {start_date} to {end_date}'
 
   headers = ('Name', 'Metagame %', 'Win %', 'Combined %')
 

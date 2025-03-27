@@ -4,7 +4,7 @@ from discord.ext import commands
 from discord.ui import Select, View
 from discord import app_commands
 import os
-import data_manipulation
+import data_translation
 import database_connection
 import settings
 from io import BytesIO
@@ -28,7 +28,7 @@ class Client(commands.Bot):
     if message.author == self.user:
       return
 
-    data = data_manipulation.ConvertMessageToParticipants(message.content)
+    data = data_translation.ConvertMessageToParticipants(message.content)
     if data is not None:
       if not isSubmitter(message.guild, message.author):
         await ErrorMessage(f'{str(message.author)} ({message.author.id}) lacks the permission to submit data')
@@ -41,14 +41,14 @@ class Client(commands.Bot):
       await message.delete()
       discord_id = message.guild.id
       game_name = message.channel.category.name.upper()
-      game = data_manipulation.GetGame(discord_id, game_name)
+      game = data_translation.GetGame(discord_id, game_name)
       if game is None:
         await message.channel.send('Error: Game not found. Please map a game to this category')
         return
 
       format = ''
       if game.HasFormats:
-        format = data_manipulation.GetFormat(discord_id, game, message.channel.name.replace('-',' ').upper())
+        format = data_translation.GetFormat(discord_id, game, message.channel.name.replace('-',' ').upper())
 
       if format is None:
         await message.channel.send('Error: Format not found. Please map a format to this channel')
@@ -58,16 +58,16 @@ class Client(commands.Bot):
       date_of_event = date_functions.GetToday()
       
       try:
-        event = data_manipulation.GetEvent(discord_id, date_of_event, game, format)
+        event = data_translation.GetEvent(discord_id, date_of_event, game, format)
         if event is None:
-          event = data_manipulation.CreateEvent(date_of_event, message.guild.id, game, format)
+          event = data_translation.CreateEvent(date_of_event, message.guild.id, game, format)
       #TODO: This needs to be a more specific error catch
       except Exception as error:
         await message.channel.send('There was an error creating the event. It has been reported')
         await ErrorMessage(error)
         return
 
-      output = data_manipulation.AddResults(event.ID, data, message.author.id)
+      output = data_translation.AddResults(event.ID, data, message.author.id)
       await message.channel.send(output)
 
 intents = discord.Intents.default()
@@ -99,7 +99,7 @@ def isSubmitter(guild, author):
   return role in author.roles
 
 def storeCanTrack(guild):
-  store = data_manipulation.GetStore(guild.id)
+  store = data_translation.GetStore(guild.id)
   return store is not None and store.ApprovalStatus
 
 async def MessageUser(msg, userId, file = None):
@@ -162,7 +162,7 @@ class FormatDropdown(discord.ui.View):
     placeholder="Choose a format",
     min_values=1,
     max_values=1,
-    options=[discord.SelectOption(label=game.Name,value=game.ID) for game in data_manipulation.GetAllGames()]
+    options=[discord.SelectOption(label=game.Name,value=game.ID) for game in data_translation.GetAllGames()]
   )
   async def select_format(self, interaction: discord.Interaction, select: discord.ui.Select):
     self.answer = select.values
@@ -187,7 +187,7 @@ async def Analysis(interaction: discord.Interaction,
   discord_id = interaction.guild_id
   game_name = interaction.channel.category.name
   format_name = interaction.channel.name
-  output = data_manipulation.GetAnalysis(discord_id, game_name, format_name, weeks)
+  output = data_translation.GetAnalysis(discord_id, game_name, format_name, weeks)
   await interaction.followup.send(output)
 
 #This is close, but the options aren't flexible.
@@ -196,7 +196,7 @@ async def Analysis(interaction: discord.Interaction,
                      description="The new thing I want to test",
                      guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
-  options = [discord.SelectOption(label=game.Name,value=game.ID) for game in data_manipulation.GetAllGames()]
+  options = [discord.SelectOption(label=game.Name,value=game.ID) for game in data_translation.GetAllGames()]
   view = FormatDropdown(options)
 
   await interaction.response.send_message(view=view)
@@ -234,7 +234,7 @@ async def Register(interaction: discord.Interaction, store_name: str):
   owner_id = interaction.guild.owner.id
   owner_name = interaction.guild.owner.display_name.upper()
   try:
-    store = data_manipulation.RegisterStore(discord_id, discord_name, store_name, owner_id, owner_name)
+    store = data_translation.RegisterStore(discord_id, discord_name, store_name, owner_id, owner_name)
     await SetPermissions(interaction)
     await MessageUser(f'{store.StoreName.title()} has registered to track their data. DiscordId: {store.DiscordId}',
                       settings.PHILID)
@@ -286,7 +286,7 @@ async def Metagame(interaction: discord.Interaction,
   game_name = interaction.channel.category.name
   format_name = interaction.channel.name
 
-  output = data_manipulation.GetMetagame(discord_id,
+  output = data_translation.GetMetagame(discord_id,
                                          game_name,
                                          format_name,
                                          start_date,
@@ -302,7 +302,7 @@ async def metagame_error(interaction: discord.Interaction, error):
 @client.tree.command(name="demo", description="Set up the database for a demonstration",guild=settings.BOTGUILD)
 async def Demo(interaction: discord.Interaction):
   await interaction.response.defer()
-  data_manipulation.Demo()
+  data_translation.Demo()
   await interaction.followup.send('All set up!')
 
 @Demo.error
@@ -315,7 +315,7 @@ async def Attendance(interaction: discord.Interaction):
   game_name = interaction.channel.category.name
   format_name = interaction.channel.name
   discord_id = interaction.guild_id
-  output = data_manipulation.GetAttendance(discord_id, game_name, format_name)
+  output = data_translation.GetAttendance(discord_id, game_name, format_name)
   await interaction.followup.send(output)
 
 @Attendance.error
@@ -344,7 +344,7 @@ async def TopPlayers(interaction: discord.Interaction,
   game_name = interaction.channel.category.name
   discord_id = interaction.guild.id
   format_name = interaction.channel.name
-  output = data_manipulation.GetTopPlayers(discord_id,
+  output = data_translation.GetTopPlayers(discord_id,
                                            game_name,
                                            format_name,
                                            year,
@@ -372,7 +372,7 @@ async def AddGameMap(interaction: discord.Interaction):
   async def my_callback(interaction):
     game_id = select.values[0]
     used_name = interaction.channel.category.name
-    output = data_manipulation.AddGameMap(discord_id, game_id, used_name.upper())
+    output = data_translation.AddGameMap(discord_id, game_id, used_name.upper())
     if output is None:
       await ErrorMessage(f'Unable to map {used_name} in discord {discord_id}')
       await interaction.response.send_message('Unable to map this game. It has been reported')
@@ -396,7 +396,7 @@ async def addgamemap_error(interaction: discord.Interaction, error):
 async def ApproveStore(interaction: discord.Interaction, discord_id: str):
   await interaction.response.defer()
   discord_id_int = int(discord_id)
-  store = data_manipulation.ApproveStore(discord_id_int)
+  store = data_translation.ApproveStore(discord_id_int)
   await MessageUser(f'{store.StoreName.title()} has been approved to track metagame data!',
       store.OwnerId)
   await interaction.followup.send(f'{store.StoreName.title()} is now approved to track their data')
@@ -413,7 +413,7 @@ async def ApproveStore_error(interaction: discord.Interaction, error):
 @app_commands.check(checkIsPhil)
 async def DisapproveStore(interaction: discord.Interaction, discord_id: str):
   discord_id_int = int(discord_id)
-  store = data_manipulation.DisapproveStore(discord_id_int)
+  store = data_translation.DisapproveStore(discord_id_int)
   await interaction.response.send_message(
       f'Store {store.StoreName.title()} ({store.DiscordId}) no longer approved to track')
 
@@ -444,7 +444,7 @@ async def Claim(interaction: discord.Interaction,
   updater_name = interaction.user.display_name.upper()
   archetype = archetype.upper()
   try:
-    output = data_manipulation.Claim(actual_date,
+    output = data_translation.Claim(actual_date,
                             game_name,
                             format_name,
                             player_name,
@@ -493,7 +493,7 @@ async def DownloadData(interaction: discord.Interaction,
   """
   await interaction.response.defer(ephemeral=True)
   discord_id = interaction.guild.id
-  data = data_manipulation.GetDataReport(discord_id, start_date, end_date)
+  data = data_translation.GetDataReport(discord_id, start_date, end_date)
   if len(data) == 0:
     await interaction.followup.send('No data found for this store')
   else:
@@ -549,7 +549,6 @@ async def DownloadDatabase(interaction: discord.Interaction):
     await MessageUser(f'{table.title()} table', settings.PHILID, file)
 
   await interaction.followup.send('Database has been downloaded and messaged')
-
 
 @DownloadDatabase.error
 async def DownloadDatabase_error(interaction: discord.Interaction, error):
