@@ -394,7 +394,10 @@ def GetStores(name = '',
     criteria += 'approval_status = %s AND '
     criteria_list.append(approval_status)
   
-  criteria = criteria[:-4] if len(criteria) != 6 else ''
+  if len(criteria_list) == 0:
+    raise Exception('No criteria provided')
+    
+  criteria = criteria[:-4]
   with conn, conn.cursor() as cur:
     cur.execute(command + criteria, criteria_list)
     rows = cur.fetchall()
@@ -403,9 +406,12 @@ def GetStores(name = '',
 def GetAllFormats(game_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT id, name FROM Formats '
-    command += 'WHERE game_id = %s '
-    criteria = (game_id,)
+    command = '''
+    SELECT id, name
+    FROM Formats
+    WHERE game_id = %s
+    '''
+    criteria = [game_id]
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows
@@ -413,7 +419,7 @@ def GetAllFormats(game_id):
 def DeleteDemo():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'DELETE FROM Events WHERE discord_id = 1339313300394999931 and id > 40; '
+    command =  'DELETE FROM Events WHERE discord_id = 1339313300394999931 and id > 12; '
     command += 'DELETE FROM Stores WHERE discord_id = 1339313300394999931; '
     cur.execute(command)
     conn.commit()
@@ -459,8 +465,6 @@ def GetDataRowsForMetagame(game,
     command += 'INNER JOIN Events e ON p.event_id = e.id '
     command += 'INNER JOIN Stores s on e.discord_id = s.discord_id '
     command += 'WHERE e.game_id = %s '
-    #TODO: Can I ensure that Unknown is at the bottom of this list?
-    #command += 'AND p.archetype_played != \'UNKNOWN\' '
     command += 'AND e.event_date >= %s AND event_date <= %s '
     if game.HasFormats:
       command += 'AND e.format_id = %s '
