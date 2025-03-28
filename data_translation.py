@@ -268,6 +268,7 @@ def Claim(date,
   if claimed is None:
     raise Exception(f'{player_name} was not found in that event. The name should match what was put into Companion')
   database_connection.TrackInput(store_discord,
+                                 event.ID,
                                  updater_name.upper(),
                                  updater_id,
                                  archetype_played,

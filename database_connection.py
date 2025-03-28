@@ -282,20 +282,21 @@ def AddRoundResult(event_id,
       return None
 
 def TrackInput(store_discord,
+               event_id,
                updater_name,
                updater_id,
                archetype_played,
                todays_date,
                player_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  command =  'INSERT INTO InputTracker (user_name, user_id, archetype_played, date_submitted, player_name, discord_id) '
+  command =  'INSERT INTO InputTracker (user_name, event_id, user_id, archetype_played, date_submitted, player_name) '
   command += 'VALUES (%s, %s, %s, %s, %s, %s)'
   criteria = (updater_name,
+              event_id,
               updater_id,
               archetype_played,
               todays_date,
-              player_name,
-              store_discord)
+              player_name)
   
   with conn, conn.cursor() as cur:   
     cur.execute(command, criteria)
@@ -321,9 +322,8 @@ def Claim(event_id,
       row = cur.fetchone()
       return row
   #TODO: This should be more specific and relay why there was a failure to Phil
-  except Exception as excep:
-    print('My exception:', excep)
-    return f'Failure: {excep}'
+  except Exception as e:
+    return f'Failure: {e}'
 
 def GetFormat(game_id,
               format_name):
