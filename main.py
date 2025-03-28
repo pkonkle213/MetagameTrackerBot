@@ -414,8 +414,7 @@ async def ApproveStore_error(interaction: discord.Interaction, error):
 async def DisapproveStore(interaction: discord.Interaction, discord_id: str):
   discord_id_int = int(discord_id)
   store = data_translation.DisapproveStore(discord_id_int)
-  await interaction.response.send_message(
-      f'Store {store.StoreName.title()} ({store.DiscordId}) no longer approved to track')
+  await interaction.response.send_message(f'Store {store.StoreName.title()} ({store.DiscordId}) no longer approved to track')
 
 
 @client.tree.command(name='claim', description='Enter your deck archetype')
