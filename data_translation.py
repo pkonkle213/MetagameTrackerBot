@@ -86,7 +86,7 @@ def GetAttendance(discord_id,
     title += f'{format.FormatName.title()}'
   else:
     title += f'{game.Name.title()}'
-  headers = ['Date', 'Number of Players']
+  headers = ['Date', 'Players']
   if discord_id == settings.DATAGUILDID:
     headers.insert(1, 'Store')
   output = output_builder.BuildTableOutput(title, headers, participation)
@@ -361,7 +361,17 @@ def DetermineDates(start_date, end_date, format):
     return date_functions.GetQuarterRange(0,0)
   else:
     edate = date_functions.convert_to_date(end_date) if end_date != '' else date_functions.GetToday()
-    sdate = date_functions.convert_to_date(start_date) if start_date != '' else date_functions.GetStartDate(edate)
+    #TODO: This should check the format's last ban update date and use that instead of the 8 week date if it's later
+    if start_date != '':
+      sdate = date_functions.convert_to_date(start_date)
+    else:
+      sdate = date_functions.GetStartDate(edate)
+      if format is not None:
+        btuple = database_connection.GetBanDate(format.ID)
+        if btuple is not None:
+          bdate = btuple[0]
+          if bdate > sdate:
+            sdate = bdate
     return (sdate, edate)
 
 def GetMetagame(discord_id, game_name, format_name, start_date, end_date):

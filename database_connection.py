@@ -173,13 +173,11 @@ def GetEventMeta(event_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f"""
-    SELECT archetype_played, count(*)
+    SELECT archetype_played, wins
     FROM participants
     WHERE event_id = {event_id}
-    GROUP BY archetype_played
-    ORDER BY archetype_played
+    ORDER BY wins DESC
     """
-    print('SQL Command', command)
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows
@@ -438,9 +436,13 @@ def GetGame(discord_id,
             used_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT cg.id, cg.name, cg.hasFormats FROM cardgames cg '
-    command += 'INNER JOIN gamenamemaps gnm ON cg.id = gnm.game_id '
-    command += 'WHERE gnm.used_name = %s AND gnm.discord_id = %s '
+    command =  '''
+    SELECT cg.id, cg.name, cg.hasFormats
+    FROM cardgames cg
+    INNER JOIN gamenamemaps gnm ON cg.id = gnm.game_id
+    WHERE gnm.used_name = %s
+    AND gnm.discord_id = %s
+    '''
     criteria = (used_name, discord_id)
     
     cur.execute(command, criteria)
@@ -489,6 +491,22 @@ def GetDataRowsForMetagame(game,
     rows = cur.fetchall()
     return rows
 
+def GetBanDate(format_id):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  criteria = [format_id]
+
+  with conn, conn.cursor() as cur:
+    command = '''
+    SELECT last_ban_update
+    FROM formats
+    WHERE id = %s
+    '''
+
+    cur.execute(command, criteria)
+    rows = cur.fetchone()
+    print('Ban Update Result:',rows)
+    return rows if rows else None
+
 def GetTopPlayers(discord_id,
                   game_id,
                   format,
@@ -499,7 +517,7 @@ def GetTopPlayers(discord_id,
   criteria = [game_id, start_date, end_date]
 
   with conn, conn.cursor() as cur:
-    command =  """
+    command =  '''
     WITH x AS (
     SELECT p.player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage,
     (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) as WinPercentage
@@ -510,8 +528,8 @@ def GetTopPlayers(discord_id,
     AND e.game_id = %s
     AND e.event_date >= %s
     AND e.event_date <= %s
-    """
-
+    '''
+    
     if discord_id != settings.DATAGUILDID:
       command += 'AND e.discord_id = %s '
       criteria.append(discord_id)
