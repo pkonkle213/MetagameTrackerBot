@@ -1,6 +1,13 @@
 from datetime import datetime, timedelta
 import pytz
 
+def GetAnalysisDates(weeks):
+  EREnd = GetToday()
+  ERStart = GetWeeksAgo(EREnd, weeks)
+  BREnd = GetDaysAgo(ERStart, 1)
+  BRStart = GetWeeksAgo(BREnd, weeks)
+  return (EREnd, ERStart, BREnd, BRStart)
+
 def FormatDate(date):
   return date.strftime('%B %d')
 

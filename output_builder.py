@@ -27,8 +27,6 @@ def MaxLength(headers, collection):
       length = len(str(item[i])) + buffer
       if length > maxLengths[i]:
         maxLengths[i] = length
-        print('Lengths:', maxLengths)
-        print('Item:', item[i])
 
   return maxLengths
 

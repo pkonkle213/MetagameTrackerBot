@@ -20,17 +20,18 @@ def GetAnalysis(discord_id, game_name, format_name, weeks):
 
   #Uncomment to fake data
   #Comment to use true data
-  discord_id = 1210746744602890310
+  discord_id = settings.TESTSTOREGUILD.id
   game = tuple_conversions.ConvertToGame((1,"Magic",True))
   format = tuple_conversions.ConvertToFormat((1,"Pauper"))
-  
-  data = database_connection.GetAnalysis(discord_id, game.ID, format.ID, weeks, True)
+
+  dates = date_functions.GetAnalysisDates(weeks)
+  data = database_connection.GetAnalysis(discord_id, game.ID, format.ID, weeks, True, dates)
   #If the True/False values flex the sql, it needs to flex the title and headers as well
-  title = 'Percentage Shifts in Meta'
-  headers = ['Archetype', 'Begin Meta %', 'End Meta %', 'Meta % Shift']
+  title = f'Percentage Shifts in Meta from {dates[3]} to {dates[0]}'
+  headers = ['Archetype', 'First Half Meta %', 'Second Half Meta %', 'Meta % Shift']
   output = output_builder.BuildTableOutput(title,
-   headers,
-   data)
+                                           headers,
+                                           data)
   return output
 
 def GetDataReport(discord_id, start_date, end_date):

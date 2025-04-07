@@ -122,10 +122,8 @@ async def Error(interaction, error):
   await ErrorMessage(error_message)
   await interaction.response.send_message('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
 
-
 async def ErrorMessage(msg):
   await MessageChannel(msg, settings.BOTGUILD.id, settings.ERRORCHANNELID)
-
 
 async def ApprovalMessage(msg):
   await MessageChannel(msg, settings.BOTGUILD.id, settings.APPROVALCHANNELID)
@@ -136,7 +134,6 @@ async def ApprovalMessage(msg):
 async def GetBot(interaction: discord.Interaction):
   await interaction.response.send_message(f'Here is the link to my bot: {settings.MYBOTURL}')
 
-
 @GetBot.error
 async def GetBot_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
@@ -146,7 +143,6 @@ async def GetBot_error(interaction: discord.Interaction, error):
    guild=settings.BOTGUILD)
 async def GetSOP(interaction: discord.Interaction):
   await interaction.response.send_message(f'Here is the link to my bot: {settings.SOPURL}')
-
 
 @GetBot.error
 async def GetSOP_error(interaction: discord.Interaction, error):
@@ -172,10 +168,10 @@ class FormatDropdown(discord.ui.View):
 async def Feedback(interaction: discord.Interaction):
   await interaction.response.send_message(f'Follow this link: {settings.FEEDBACKURL}', ephemeral=True)
 
-@client.tree.command(name="analysis",
-                     description="Provides A Look At the Metagame Shift", 
+@client.tree.command(name="metashift",
+                     description="Provides a look at the metagame shift", 
                      guild=settings.TESTSTOREGUILD)
-async def Analysis(interaction: discord.Interaction,
+async def MetagameShift(interaction: discord.Interaction,
                    weeks: int = 4):
   """
   Parameters

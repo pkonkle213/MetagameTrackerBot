@@ -5,15 +5,8 @@ import date_functions
 
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
-def GetAnalysisDates(weeks):
-  EREnd = date_functions.GetToday()
-  ERStart = date_functions.GetWeeksAgo(EREnd, weeks)
-  BREnd = date_functions.GetDaysAgo(ERStart, 1)
-  BRStart = date_functions.GetWeeksAgo(BREnd, weeks)
-  return (EREnd, ERStart, BREnd, BRStart)
-
-def GetAnalysis(discord_id, game_id, format_id, weeks, isMeta):
-  (EREnd, ERStart, BREnd, BRStart) = GetAnalysisDates(weeks)
+def GetAnalysis(discord_id, game_id, format_id, weeks, isMeta, dates):
+  (EREnd, ERStart, BREnd, BRStart) = dates
   formula = 'COUNT(*) * 1.0 / SUM(COUNT(*)) OVER()' if isMeta else '(sum(p.wins) * 1.0) / (sum(p.wins) + sum(p.losses))'
   cur = conn.cursor()
   command = f"""
@@ -64,10 +57,9 @@ def GetAnalysis(discord_id, game_id, format_id, weeks, isMeta):
       ) AS EndingRange ON Decks.archetype_played = EndingRange.archetype_played
       GROUP BY Decks.archetype_played
     )
-    --WHERE EndingRange >=.02 OR BeginningRange >= .02
+    WHERE EndingRange >=.02 OR BeginningRange >= .02
     ORDER BY Shift DESC, archetype_played
     """
-  print('Command:', command)
   cur.execute(command)
   rows = cur.fetchall()
   cur.close()
