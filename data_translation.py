@@ -10,13 +10,24 @@ class Winner(Enum):
   PLAYER1 = auto()
   PLAYER2 = auto()
 
+def GetWLDStat(discord_id, game_name, format_name, user_id, start_date, end_date):
+  game = GetGame(discord_id, game_name)
+  format = GetFormat(discord_id, game, format_name)
+  end_date = date_functions.convert_to_date(end_date) if end_date != '' else date_functions.GetToday()
+  start_date = date_functions.convert_to_date(start_date) if start_date != '' else date_functions.GetStartDate(end_date)
+  data = database_connection.GetStats(discord_id, game.ID, format.ID, user_id, start_date, end_date)
+  title = f'Your Play Record from {str(start_date)} to {str(end_date)}'
+  header = ['Player Name', 'Wins', 'Losses', 'Draws', 'Win %']
+  output = output_builder.BuildTableOutput(title, header, data)
+  return output  
+
 #Need to update this for games that don't have formats yet
 def GetAnalysis(discord_id, game_name, format_name, weeks):
   game = GetGame(discord_id, game_name)
   format = GetFormat(discord_id, game, format_name)
 
   if game is None or (game.HasFormats and format is None):
-    return 'Insufficient information provided'
+    raise Exception('Insufficient information provided')
 
   #Uncomment to fake data
   #Comment to use true data
@@ -99,7 +110,7 @@ def ConvertMessageToParticipants(message):
   if data is None:
     data = MeleeParticipants(message)
   '''
-    if data is None:
+  if data is None:
     data = CompanionRoundByRound(message)
   '''
   return data
@@ -132,14 +143,15 @@ def CompanionRoundByRound(message):
   data = []
   rows = message.split('\n')
   try:
-    for i in range(0, len(rows), 4):
-      row = " ".join(rows[i:i + 4])
-      row = row.replace("\"","")
-      row = row.split('  ')
-      p1name = ' '.join(row[4].split(' ')[0:-1])
-      p1gw = row[6].split(' ')[0]
-      p2gw = row[6].split(' ')[1]
-      p2name = ' '.join(row[8].split(' ')[0:-1])
+    for i in range(0, len(rows), 6):
+      row = rows[i:i + 6]
+      print('Raw row:', row)
+      #This issue that if the last row is a bye, this breaks
+      #row[3]=='Bye'
+      p1name = row[1]
+      p1gw = row[3][0]
+      p2gw = row[3][1]
+      p2name = row[4]
       result = tuple_conversions.Round(p1name, int(p1gw), p2name, int(p2gw))
       print('Result:', result)
       data.append(result)

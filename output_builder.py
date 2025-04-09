@@ -20,7 +20,6 @@ def MaxLength(headers, collection):
   maxLengths = []
   for header in headers:
     maxLengths.append(len(header) + buffer)
-  maxLengths[len(maxLengths) - 1] -= 2
 
   for item in collection:
     for i in range(len(headers)):
@@ -28,6 +27,7 @@ def MaxLength(headers, collection):
       if length > maxLengths[i]:
         maxLengths[i] = length
 
+  maxLengths[len(maxLengths) - 1] -= 2
   return maxLengths
 
 def BuildTableOutput(title,

@@ -186,6 +186,29 @@ async def MetagameShift(interaction: discord.Interaction,
   output = data_translation.GetAnalysis(discord_id, game_name, format_name, weeks)
   await interaction.followup.send(output)
 
+@client.tree.command(name="playrecord",
+                    description="Testing looking up play record for a player")
+async def WLDRecord(interaction: discord.Interaction,
+                   start_date: str = '',
+                   end_date: str = ''):
+  await interaction.response.defer(ephemeral=True)
+  discord_id = interaction.guild_id
+  game_name = interaction.channel.category.name
+  format_name = interaction.channel.name
+  user_id = interaction.user.id
+  """
+  Test code
+  game_name = 'MAGIC-THE-GATHERING'
+  format_name = 'pauper'
+  discord_id = 1210746744602890310
+  user_id = 505548744444477441
+  start_date = '1/1/2025'
+  end_date = '12/12/2025'
+  """
+  
+  output = data_translation.GetWLDStat(discord_id, game_name, format_name, user_id, start_date, end_date)
+  await interaction.followup.send(output)
+
 #This is close, but the options aren't flexible.
 #I'd like to present options accurate to the game that is being played
 @client.tree.command(name="atest",
