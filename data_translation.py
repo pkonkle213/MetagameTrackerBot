@@ -15,9 +15,12 @@ def GetWLDStat(discord_id, game_name, format_name, user_id, start_date, end_date
   format = GetFormat(discord_id, game, format_name)
   end_date = date_functions.convert_to_date(end_date) if end_date != '' else date_functions.GetToday()
   start_date = date_functions.convert_to_date(start_date) if start_date != '' else date_functions.GetStartDate(end_date)
-  data = database_connection.GetStats(discord_id, game.ID, format.ID, user_id, start_date, end_date)
+  try:
+    data = database_connection.GetStats(discord_id, game.ID, format.ID, user_id, start_date, end_date)
+  except Exception as exception:
+    return str(exception)
   title = f'Your Play Record from {str(start_date)} to {str(end_date)}'
-  header = ['Player Name', 'Wins', 'Losses', 'Draws', 'Win %']
+  header = ['Archetype Name', 'Wins', 'Losses', 'Draws', 'Win %']
   output = output_builder.BuildTableOutput(title, header, data)
   return output  
 

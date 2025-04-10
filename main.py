@@ -191,6 +191,14 @@ async def MetagameShift(interaction: discord.Interaction,
 async def WLDRecord(interaction: discord.Interaction,
                    start_date: str = '',
                    end_date: str = ''):
+  """
+  Parameters
+  ----------
+  start_date: string
+    Beginning of Date Range (MM/DD/YYYY)
+  end_date: string
+    End of Date Range (MM/DD/YYYY)
+  """
   await interaction.response.defer(ephemeral=True)
   discord_id = interaction.guild_id
   game_name = interaction.channel.category.name
@@ -208,6 +216,10 @@ async def WLDRecord(interaction: discord.Interaction,
   
   output = data_translation.GetWLDStat(discord_id, game_name, format_name, user_id, start_date, end_date)
   await interaction.followup.send(output)
+
+@WLDRecord.error
+async def WLDRecord_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
 
 #This is close, but the options aren't flexible.
 #I'd like to present options accurate to the game that is being played

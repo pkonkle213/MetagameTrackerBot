@@ -6,6 +6,8 @@ import date_functions
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
 def GetStats(discord_id, game_id, format_id, user_id, start_date, end_date):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  
   command = f'''
   SELECT archetype_played,
     wins,
@@ -15,7 +17,7 @@ def GetStats(discord_id, game_id, format_id, user_id, start_date, end_date):
   FROM
   (
     (
-      SELECT 2 as Rank,
+      SELECT 2,
         archetype_played, 
         SUM(wins) AS wins, 
         SUM(losses) as Losses, 
@@ -23,53 +25,67 @@ def GetStats(discord_id, game_id, format_id, user_id, start_date, end_date):
         ROUND((SUM(wins) * 100.0) / (SUM(wins) + SUM(losses) + SUM(draws)), 2) AS WinPercentage
       FROM participants p
       INNER JOIN events e ON e.id = p.event_id
-      WHERE p.player_name IN (
+      WHERE p.player_name = (
         SELECT player_name
-        FROM inputtracker
-        WHERE user_id = {user_id}
-        GROUP BY (user_name, user_id, player_name)
+        FROM (  
+          SELECT DISTINCT ON (e.id, it.user_id, it.player_name) e.id, it.user_id, it.player_name
+          FROM inputtracker it
+            INNER JOIN events e ON e.id = it.event_id
+          WHERE it.user_id = {user_id}
+            AND e.discord_id = {discord_id}
+            AND e.game_id = {game_id}
+            AND e.format_id = {format_id}
+          )
+        GROUP BY (user_id, player_name)
         ORDER BY COUNT(*) DESC
         LIMIT 1
       )
-      AND e.game_id = {game_id}
-      AND e.format_id = {format_id}
-    AND e.discord_id = {discord_id}
-    AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-    GROUP BY archetype_played
+        AND e.game_id = 1
+        AND e.format_id = 1
+        AND e.discord_id = 1210746744602890310
+        AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+      GROUP BY archetype_played
     )
     UNION
     (
-      SELECT 1 as Rank,
-        'Overall', 
-        SUM(wins) AS wins, 
-        SUM(losses) as Losses, 
-        SUM(draws) as draws,
-        ROUND((SUM(wins) * 100.0) / (SUM(wins) + SUM(losses) + SUM(draws)), 2) AS WinPercentage
+      SELECT 1,
+      'Overall', 
+      SUM(wins) AS wins, 
+      SUM(losses) as Losses, 
+      SUM(draws) as draws,
+      ROUND((SUM(wins) * 100.0) / (SUM(wins) + SUM(losses) + SUM(draws)), 2) AS WinPercentage
       FROM participants p
       INNER JOIN events e ON e.id = p.event_id
-      WHERE p.player_name IN (
+      WHERE p.player_name = (
         SELECT player_name
-        FROM inputtracker
-        WHERE user_id = {user_id}
-        GROUP BY (user_name, user_id, player_name)
+        FROM (  
+          SELECT DISTINCT ON (e.id, it.user_id, it.player_name) e.id, it.user_id, it.player_name
+          FROM inputtracker it
+            INNER JOIN events e ON e.id = it.event_id
+          WHERE it.user_id = {user_id}
+            AND e.discord_id = {discord_id}
+            AND e.game_id = {game_id}
+            AND e.format_id = {format_id}
+          )
+        GROUP BY (user_id, player_name)
         ORDER BY COUNT(*) DESC
         LIMIT 1
       )
-      AND e.game_id = {game_id}
-      AND e.format_id = {format_id}
-      AND e.discord_id = {discord_id}
-      AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+        AND e.game_id = {game_id}
+        AND e.format_id = {format_id}
+        AND e.discord_id = {discord_id}
+        AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
       GROUP BY player_name
     )
-  ORDER BY Rank
   )
   '''
+  
   with conn, conn.cursor() as cur:
     cur.execute(command)
     rows = cur.fetchall()
     cur.close()
     if not rows:
-      raise Exception('No Data Found')
+      raise Exception('No data found. Please use the /claim command to submit your data.')
     return rows
 
 def GetAnalysis(discord_id, game_id, format_id, weeks, isMeta, dates):
