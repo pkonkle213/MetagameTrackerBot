@@ -111,7 +111,14 @@ async def MessageUser(msg, userId, file = None):
 
 async def MessageChannel(msg, guildId, channelId):
   server = client.get_guild(int(guildId))
+  if server is None:
+    raise Exception(f'Server {guildId} not found')
   channel = server.get_channel(int(channelId))
+  if channel is None:
+    raise Exception(f'Channel {channelId} not found')
+  if not isinstance(channel, discord.TextChannel):
+    raise Exception(f'Channel {channelId} is not a text channel')
+                    
   await channel.send(f'{msg}')
 
 #TODO: This is a mess, needs to be refactored
@@ -204,15 +211,6 @@ async def WLDRecord(interaction: discord.Interaction,
   game_name = interaction.channel.category.name
   format_name = interaction.channel.name
   user_id = interaction.user.id
-  """
-  Test code
-  game_name = 'MAGIC-THE-GATHERING'
-  format_name = 'pauper'
-  discord_id = 1210746744602890310
-  user_id = 505548744444477441
-  start_date = '1/1/2025'
-  end_date = '12/12/2025'
-  """
   
   output = data_translation.GetWLDStat(discord_id, game_name, format_name, user_id, start_date, end_date)
   await interaction.followup.send(output)
@@ -413,7 +411,7 @@ async def AddGameMap(interaction: discord.Interaction):
   select.callback = my_callback
   view = View()
   view.add_item(select)
-  await interaction.response.send_message('Please select a game', view=view)
+  await interaction.response.send_message('Please select a game', view=view, ephemeral=True)
 
 @AddGameMap.error
 async def addgamemap_error(interaction: discord.Interaction, error):
@@ -437,6 +435,22 @@ async def ApproveStore(interaction: discord.Interaction, discord_id: str):
 async def ApproveStore_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+@client.tree.command(name='spicerack',
+                     description='Inputting results from spicerack',
+                     guild=settings.BOTGUILD)
+async def SpicerackImport(interaction: discord.Interaction,
+                         event_id: int = 0):
+  """
+  Parameters
+  ----------
+  event_id: int
+    Spicerack's ID for the event
+  """
+  ...
+
+@SpicerackImport.error
+async def SpicerackImport_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
 
 @client.tree.command(name='disapprovestore',
                      description='Disapprove a store to track',

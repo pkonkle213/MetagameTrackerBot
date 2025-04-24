@@ -1,7 +1,6 @@
 import os
 import psycopg2
 import settings
-import date_functions
 
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
@@ -40,9 +39,9 @@ def GetStats(discord_id, game_id, format_id, user_id, start_date, end_date):
         ORDER BY COUNT(*) DESC
         LIMIT 1
       )
-        AND e.game_id = 1
-        AND e.format_id = 1
-        AND e.discord_id = 1210746744602890310
+        AND e.game_id = {game_id}
+        AND e.format_id = {format_id}
+        AND e.discord_id = {discord_id}
         AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
       GROUP BY archetype_played
     )
@@ -374,7 +373,19 @@ def TrackInput(store_discord,
   with conn, conn.cursor() as cur:   
     cur.execute(command, criteria)
     conn.commit()
-    
+
+def GetSpiceId(event_id):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  command = f'''
+  SELECT spicerack_id
+  FROM events
+  WHERE spicerack_id = {event_id}
+  '''
+  with conn, conn.cursor() as cur:
+    cur.execute(command)
+    row = cur.fetchone()
+    return row[0] if row else None
+
 def Claim(event_id,
           name,
           archetype,
@@ -420,7 +431,7 @@ def GetEvent(discord_id,
               game.ID]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT id, discord_id, event_date, game_id, format_id, last_update '
+    command =  'SELECT id, discord_id, event_date, game_id, format_id, last_update, spicerack_id '
     command += 'FROM events '
     command += 'WHERE discord_id = %s '
     command += 'AND game_id = %s '
@@ -445,7 +456,7 @@ def GetStores(name = '',
               owner = 0,
               approval_status = ''):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  command =  'SELECT discord_id, discord_name, store_name, owner_id, owner_name, isApproved, used_for_data '
+  command =  'SELECT discord_id, discord_name, store_name, owner_id, owner_name, isApproved, used_for_data, spicerackkey '
   command += 'FROM Stores '
   
   criteria = 'WHERE '
@@ -589,45 +600,47 @@ def GetTopPlayers(discord_id,
                   end_date,
                   top_number):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  criteria = [game_id, start_date, end_date]
-
   with conn, conn.cursor() as cur:
-    command =  '''
-    WITH x AS (
-    SELECT p.player_name, count(*) * 1.0 / sum(count(*)) Over () as MetaPercentage,
-    (sum(p.wins)) / (sum(p.wins) * 1.0 + sum(p.losses) + sum(p.draws)) as WinPercentage
-    FROM Participants p
-    INNER JOIN Events e ON p.event_id = e.id
-    INNER JOIN Stores s on e.discord_id = s.discord_id
-    WHERE s.used_for_data = True
-    AND e.game_id = %s
-    AND e.event_date >= %s
-    AND e.event_date <= %s
+    command = f'''
+    SELECT player_name,
+      round(eventpercent * 100, 2) as eventpercent,
+      round(winpercent * 100, 2) as winpercent,
+      round(eventpercent * winpercent * 100, 2) as Combined
+    FROM (SELECT player_name,
+        count(*) * 1.0 /
+        (SELECT COUNT(*)
+          FROM events
+          WHERE game_id = {game_id} 
     '''
+
+    if discord_id != settings.DATAGUILDID:
+      command += f'AND discord_id = {discord_id} '
+      
+    if format != '':
+      command += f'AND format_id = {format.ID} '
+         
+    command += f'''
+          AND event_date BETWEEN '{start_date}' AND '{end_date}') AS eventpercent,
+        (sum(wins) * 1.0) / (sum(wins) + sum(losses) + sum(draws)) as winpercent
+      FROM events e
+      INNER JOIN participants p ON p.event_id = e.id
+      WHERE game_id = 1
+      '''
     
     if discord_id != settings.DATAGUILDID:
-      command += 'AND e.discord_id = %s '
-      criteria.append(discord_id)
+      command += f'AND discord_id = {discord_id} '
 
     if format != '':
-      criteria.append(format.ID)
-      command += 'AND e.format_id = %s '
-
-    command += """
-    GROUP BY p.player_name
-    )
-    SELECT player_name,
-    ROUND(MetaPercentage * 100, 2) AS MetaPercentage,
-    ROUND(WinPercentage * 100, 2) AS WinPercentage,
-    ROUND(MetaPercentage * WinPercentage * 100, 2) AS Combined
-    FROM x
-    ORDER BY Combined DESC, player_name
-    LIMIT %s 
-    """
+      command += f'AND format_id = {format.ID} '
     
-    criteria.append(top_number)
-
-    cur.execute(command, criteria)
+    command += f'''
+      AND event_date BETWEEN '{start_date}' AND '{end_date}''
+      GROUP BY player_name)
+    ORDER BY combined desc
+    LIMIT {top_number}
+    '''
+  
+    cur.execute(command)
     rows = cur.fetchall()  
 
     return rows

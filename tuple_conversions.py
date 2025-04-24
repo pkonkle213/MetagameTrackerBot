@@ -1,5 +1,11 @@
 from collections import namedtuple
 
+InteractionDetails = namedtuple("InteractionDetails", ['Game',
+                                                       'Format',
+                                                       'DiscordId',
+                                                       'ChannelId',
+                                                       'UserId'])
+
 Format = namedtuple('Format', ['ID',
                                'FormatName'])
 
@@ -13,7 +19,8 @@ Store = namedtuple('Store', ['DiscordId',
                              'OwnerId',
                              'OwnerName',
                              'ApprovalStatus',
-                             'UsedForData'])
+                             'UsedForData',
+                             'SpicerackKey'])
 
 Participant = namedtuple('Participant',['PlayerName',
                                        'Wins',
@@ -25,7 +32,8 @@ Event = namedtuple('Event', ['ID',
                              'EventDate',
                              'GameID',
                              'FormatID',
-                             'LastUpdate'])
+                             'LastUpdate',
+                             'SpicerackID'])
 
 Round = namedtuple('Round',['P1Name',
                             'P1Wins',
@@ -44,7 +52,8 @@ def ConvertToEvent(event_obj):
                event_obj[2],
                int(event_obj[3]),
                int(event_obj[4]) if event_obj[4] is not None else None,
-               int(event_obj[5]))
+               int(event_obj[5]),
+               int(event_obj[6]))
 
 def ConvertToStore(store):
   return Store(int(store[0]),
@@ -53,7 +62,8 @@ def ConvertToStore(store):
                int(store[3]),
                store[4],
                store[5],
-               store[6])
+               store[6],
+               store[7])
 
 def ConvertToGame(game_obj):
   return Game(int(game_obj[0]),

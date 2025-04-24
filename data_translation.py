@@ -3,12 +3,53 @@ import database_connection
 import output_builder
 import settings
 import tuple_conversions
+import spicerack
 from enum import Enum, auto
 
 class Winner(Enum):
   TIE = auto()
   PLAYER1 = auto()
   PLAYER2 = auto()
+
+def GetSpicerackData(discord_id, event_id):
+  store_obj = database_connection.GetStores(discord_id=discord_id)
+  if store_obj is None:
+    raise Exception('Store not found')
+  store = tuple_conversions.ConvertToStore(store_obj[0])
+  #Check that the event_id hasn't been submitted yet
+  spicerack_id = database_connection.GetSpiceId(event_id)
+  if spicerack_id:
+    return 'This event has already been submitted'
+  
+  #Get the event data from spicerack
+  data = spicerack.GetEventData(store.DiscordId, event_id)
+
+  event = GetEvent(discord_id, date_of_event, game, format)
+  if event is None:
+    event = CreateEvent(date_of_event, message.guild.id, game, format)
+  
+  output = AddResults(event_id, data, store.OwnerId, event_id)
+  
+  #import the data into the database
+  #report the results
+  output = 'Success??'
+  return output
+
+def InteractionData(interaction):
+  discord_id = interaction.guild.id
+  game_name = interaction.channel.category.name
+  game = GetGame(discord_id, game_name)
+  if game.HasFormats:
+    format_name = interaction.channel.name
+    format = GetFormat(discord_id, game, format_name)
+  else:
+    format = None
+
+  return tuple_conversions.InteractionDetails(game,
+                                              format,
+                                              interaction.guild.id,
+                                               interaction.channel.id,
+                                               interaction.user.id)
 
 def GetWLDStat(discord_id, game_name, format_name, user_id, start_date, end_date):
   game = GetGame(discord_id, game_name)
@@ -218,8 +259,6 @@ def AddResults(event_id, data, submitterId):
       output = database_connection.AddResult(event_id, person, submitterId)
       if output:
         successes += 1
-  
-    return f'{successes} entries were added. Feel free to use /claim and update the archetypes!'
   elif isinstance(data[0], tuple_conversions.Round):
     print('Data is for rounds')
     round_number = (database_connection.GetRoundNumber(event_id) or 0) + 1
@@ -258,7 +297,7 @@ def AddResults(event_id, data, submitterId):
         database_connection.Increase(player2id, 0, 0, 1)
         database_connection.AddRoundResult(event_id, round_number, player1id, player2id, None)
 
-    return f'{len(data)} entries were added. Feel free to use /claim and update the archetypes!'
+  return f'{len(data)} entries were added. Feel free to use /claim and update the archetypes!'
 
 def Claim(date,
           game_name,
@@ -304,7 +343,7 @@ def Claim(date,
       output = f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!\n\n'
       database_connection.UpdateEvent(event.ID)
       event_meta = database_connection.GetEventMeta(event.ID)
-      output += output_builder.BuildTableOutput(f'{str_date} Meta',['Archetype','Quantity'], event_meta)
+      output += output_builder.BuildTableOutput(f'{str_date} Meta', ['Archetype','Wins'], event_meta)
       return output
   return None
 
