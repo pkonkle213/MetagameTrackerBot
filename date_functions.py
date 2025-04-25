@@ -8,6 +8,9 @@ def GetAnalysisDates(weeks):
   BRStart = GetWeeksAgo(BREnd, weeks)
   return (EREnd, ERStart, BREnd, BRStart)
 
+def DateDifference(date1, date2):
+  return abs((date1 - date2).days)
+
 def FormatDate(date):
   return date.strftime('%B %d')
 

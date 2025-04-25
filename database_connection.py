@@ -456,7 +456,7 @@ def GetStores(name = '',
               owner = 0,
               approval_status = ''):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  command =  'SELECT discord_id, discord_name, store_name, owner_id, owner_name, isApproved, used_for_data, spicerackkey '
+  command =  'SELECT discord_id, discord_name, store_name, owner_id, owner_name, isApproved, used_for_data, SpicerackKey '
   command += 'FROM Stores '
   
   criteria = 'WHERE '
@@ -634,7 +634,7 @@ def GetTopPlayers(discord_id,
       command += f'AND format_id = {format.ID} '
     
     command += f'''
-      AND event_date BETWEEN '{start_date}' AND '{end_date}''
+      AND event_date BETWEEN '{start_date}' AND '{end_date}'
       GROUP BY player_name)
     ORDER BY combined desc
     LIMIT {top_number}
