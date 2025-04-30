@@ -5,6 +5,7 @@ from discord.ui import Select, View
 from discord import app_commands
 import os
 import data_translation
+import interaction_data as id
 import database_connection
 import settings
 from io import BytesIO
@@ -36,25 +37,19 @@ class Client(commands.Bot):
     data = data_translation.ConvertMessageToParticipants(message.content)
     if data is not None:
       if not isSubmitter(message.guild, message.author):
-        await ErrorMessage(
-            f'{str(message.author)} ({message.author.id}) lacks the permission to submit data'
-        )
+        await ErrorMessage(f'{str(message.author)} ({message.author.id}) lacks the permission to submit data')
         return
       if not storeCanTrack(message.guild):
-        await ErrorMessage(
-            f'{str(message.guild)} ({message.guild.id}) is not approved to track data'
-        )
+        await ErrorMessage(f'{str(message.guild)} ({message.guild.id}) is not approved to track data')
         return
 
-      await message.channel.send(
-          f'Attempting to add {len(data)} participants a new event')
+      await message.channel.send(f'Attempting to add {len(data)} participants a new event')
       await message.delete()
       discord_id = message.guild.id
       game_name = message.channel.category.name.upper()
       game = data_translation.GetGame(discord_id, game_name)
       if game is None:
-        await message.channel.send(
-            'Error: Game not found. Please map a game to this category')
+        await message.channel.send('Error: Game not found. Please map a game to this category')
         return
 
       format = ''
@@ -64,24 +59,31 @@ class Client(commands.Bot):
             message.channel.name.replace('-', ' ').upper())
 
       if format is None:
-        await message.channel.send(
-            'Error: Format not found. Please map a format to this channel')
+        await message.channel.send('Error: Format not found. Please map a format to this channel')
         return
 
       #TODO: Confirm date
       date_of_event = date_functions.GetToday()
 
       try:
-        event = data_translation.GetEvent(discord_id, date_of_event, game,
+        event = data_translation.GetEvent(discord_id,
+                                          date_of_event,
+                                          game,
                                           format)
         if event is None:
           event = data_translation.CreateEvent(date_of_event, message.guild.id,
                                                game, format)
       #TODO: This needs to be a more specific error catch
       except Exception as error:
-        await message.channel.send(
-            'There was an error creating the event. It has been reported')
+        await message.channel.send('There was an error creating the event. It has been reported')
         await ErrorMessage(error)
+        details = [str(date_of_event),
+                   int(message.guild.id),
+                   str(game),
+                   str(format)]
+        send_message = message.content + '\n'.join(details)
+        await MessageUser(send_message, settings.PHILID)
+        
         return
 
       output = data_translation.AddResults(event.ID, data, message.author.id)
@@ -193,27 +195,6 @@ async def GetSOP(interaction: discord.Interaction):
 async def GetSOP_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-
-class FormatDropdown(discord.ui.View):
-
-  def __init__(self, options):
-    self.options = options
-
-  answer = None
-
-  @discord.ui.select(placeholder="Choose a format",
-                     min_values=1,
-                     max_values=1,
-                     options=[
-                         discord.SelectOption(label=game.Name, value=game.ID)
-                         for game in data_translation.GetAllGames()
-                     ])
-  async def select_format(self, interaction: discord.Interaction,
-                          select: discord.ui.Select):
-    self.answer = select.values
-    self.stop()
-
-
 @client.tree.command(name="feedback",
                      description="Provide feedback on the bot")
 async def Feedback(interaction: discord.Interaction):
@@ -232,13 +213,8 @@ async def MetagameShift(interaction: discord.Interaction, weeks: int = 4):
     Number of weeks in each range
   """
   await interaction.response.defer()
-  discord_id = interaction.guild_id
-  game_name = interaction.channel.category.name
-  format_name = interaction.channel.name
-  output = data_translation.GetAnalysis(discord_id, game_name, format_name,
-                                        weeks)
+  output = data_translation.GetAnalysis(interaction, weeks)
   await interaction.followup.send(output)
-
 
 @client.tree.command(name="playrecord",
                      description="Testing looking up play record for a player")
@@ -275,21 +251,12 @@ async def WLDRecord_error(interaction: discord.Interaction, error):
                      description="The new thing I want to test",
                      guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
-  options = [
-      discord.SelectOption(label=game.Name, value=game.ID)
-      for game in data_translation.GetAllGames()
-  ]
-  view = FormatDropdown(options)
-
-  await interaction.response.send_message(view=view)
-  await view.wait()
-
-  print('Answer:', view.answer)
-  await interaction.response.send_message(f'You chose {view.answer[0]}')
+  data = id.GetInteractionData(interaction)
+  ...
 
 
 @client.tree.command(name="submitcheck",
-                     description="To test if yAou can submit data",
+                     description="To test if you can submit data",
                      guild=settings.TESTSTOREGUILD)
 async def SubmitCheck(interaction: discord.Interaction):
   if not isSubmitter(interaction.guild, interaction.user):
@@ -568,9 +535,8 @@ async def Claim(interaction: discord.Interaction,
   await interaction.response.defer(ephemeral=True)
   actual_date = date_functions.convert_to_date(date)
   today_date = date_functions.GetToday()
-  if date_functions.DateDifference(today_date, actual_date) > 14:
-    await interaction.followup.send(
-        'You can only claim archetypes for events within the last 14 days')
+  if actual_date is not None and date_functions.DateDifference(today_date, actual_date) > 14:
+    await interaction.followup.send('You can only claim archetypes for events within the last 14 days')
     return
 
   player_name = player_name.upper()
@@ -587,10 +553,8 @@ async def Claim(interaction: discord.Interaction,
     await interaction.followup.send('Thank you for submitting the archetype!')
     if output is not None:
       print(output)
-      await MessageChannel(output, interaction.guild_id, interaction.channel_id
-                           )  #TODO: I think this should work?
+      await MessageChannel(output, interaction.guild_id, interaction.channel_id)
 
-  #TODO: This should be a custom error so that I can figure out what broke
   except Exception as ex:
     await interaction.followup.send(
         f'{player_name.title()} was not found in that event. The name should match what was put into Companion'

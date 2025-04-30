@@ -53,7 +53,7 @@ def ConvertToEvent(event_obj):
                int(event_obj[3]),
                int(event_obj[4]) if event_obj[4] is not None else None,
                int(event_obj[5]),
-               int(event_obj[6]))
+               int(event_obj[6]) if event_obj[6] is not None else None)
 
 def ConvertToStore(store):
   return Store(int(store[0]),

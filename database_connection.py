@@ -87,6 +87,7 @@ def GetStats(discord_id, game_id, format_id, user_id, start_date, end_date):
       raise Exception('No data found. Please use the /claim command to submit your data.')
     return rows
 
+#Is this proper to do? Saves coding, looks wonky
 def GetAnalysis(discord_id, game_id, format_id, weeks, isMeta, dates):
   (EREnd, ERStart, BREnd, BRStart) = dates
   formula = 'COUNT(*) * 1.0 / SUM(COUNT(*)) OVER()' if isMeta else '(sum(p.wins) * 1.0) / (sum(p.wins) + sum(p.losses))'
@@ -147,6 +148,7 @@ def GetAnalysis(discord_id, game_id, format_id, weeks, isMeta, dates):
     cur.close()
     return rows
 
+#TODO: Clean up as a single string
 def GetStoreData(discord_id, start_date, end_date):
   criteria = [start_date, end_date]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -226,7 +228,7 @@ def RegisterStore(discord_id,
   with conn, conn.cursor() as cur:
     command =  'INSERT INTO Stores (store_name, discord_id, discord_name, owner_id, owner_name, isApproved, used_for_data) '
     command += 'VALUES (%s, %s, %s, %s, %s, %s, %s) '
-    command += 'returning *'
+    command += 'RETURNING *'
 
     cur.execute(command, (store_name,
                           discord_id,
@@ -390,24 +392,20 @@ def Claim(event_id,
           name,
           archetype,
           updater_id):
-  try:
-    conn = psycopg2.connect(os.environ['DATABASE_URL'])
-    command =  'UPDATE Participants '
-    command += 'SET archetype_played = %s, submitter_id = %s '
-    command += 'WHERE event_id = %s '
-    command += 'AND player_name = %s '
-    command += 'RETURNING *'
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  command =  'UPDATE Participants '
+  command += 'SET archetype_played = %s, submitter_id = %s '
+  command += 'WHERE event_id = %s '
+  command += 'AND player_name = %s '
+  command += 'RETURNING *'
 
-    criteria = (archetype, updater_id, event_id, name)
-    with conn, conn.cursor() as cur:  
-      cur.execute(command, criteria)
-      conn.commit()
+  criteria = (archetype, updater_id, event_id, name)
+  with conn, conn.cursor() as cur:  
+    cur.execute(command, criteria)
+    conn.commit()
 
-      row = cur.fetchone()
-      return row
-  #TODO: This should be more specific and relay why there was a failure to Phil
-  except Exception as e:
-    return f'Failure: {e}'
+    row = cur.fetchone()
+    return row
 
 def GetFormat(game_id,
               format_name):

@@ -4,6 +4,7 @@ import output_builder
 import settings
 import tuple_conversions
 import spicerack
+import interaction_data
 from enum import Enum, auto
 
 
@@ -14,7 +15,7 @@ class Winner(Enum):
 
 
 def GetSpicerackData(discord_id, event_id):
-  store_obj = database_connection.GetStores(discord_id=discord_id)
+  store_obj = database_connection.GetStores(discord_id = discord_id)
   if store_obj is None:
     raise Exception('Store not found')
   store = tuple_conversions.ConvertToStore(store_obj[0])
@@ -75,13 +76,9 @@ def GetWLDStat(discord_id, game_name, format_name, user_id, start_date,
 
 
 #Need to update this for games that don't have formats yet
-def GetAnalysis(discord_id, game_name, format_name, weeks):
-  game = GetGame(discord_id, game_name)
-  format = GetFormat(discord_id, game, format_name)
-
-  if game is None or (game.HasFormats and format is None):
-    raise Exception('Insufficient information provided')
-
+def GetAnalysis(interaction, weeks):
+  data = interaction_data.GetInteractionData(interaction)
+  
   #Uncomment to fake data
   #Comment to use true data
   discord_id = settings.TESTSTOREGUILD.id
@@ -93,9 +90,10 @@ def GetAnalysis(discord_id, game_name, format_name, weeks):
                                          True, dates)
   #If the True/False values flex the sql, it needs to flex the title and headers as well
   title = f'Percentage Shifts in Meta from {dates[3]} to {dates[0]}'
-  headers = [
-      'Archetype', 'First Half Meta %', 'Second Half Meta %', 'Meta % Shift'
-  ]
+  headers = ['Archetype',
+             'First Half Meta %',
+             'Second Half Meta %',
+             'Meta % Shift']
   output = output_builder.BuildTableOutput(title, headers, data)
   return output
 
@@ -331,11 +329,13 @@ def Claim(date, game_name, format_name, player_name, archetype_played,
   claimed = database_connection.Claim(event.ID, player_name, archetype_played,
                                       updater_id)
   if claimed is None:
-    raise Exception(
-        f'{player_name} was not found in that event. The name should match what was put into Companion'
-    )
-  database_connection.TrackInput(store_discord, event.ID, updater_name.upper(),
-                                 updater_id, archetype_played,
+    raise Exception(f'{player_name} was not found in that event. The name should match what was put into Companion')
+  #This needs to include claimed[0] (the id of the participant)
+  database_connection.TrackInput(store_discord,
+                                 event.ID,
+                                 updater_name.upper(),
+                                 updater_id,
+                                 archetype_played,
                                  date_functions.GetToday(),
                                  player_name.upper())
   #get the % of archetypes that aren't 'UNKNOWN' and the event's last_update
