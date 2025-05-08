@@ -3,58 +3,74 @@ import discord
 import tuple_conversions as tc
 import database_connection as db
 
-def GetInteractionData(interaction:discord.Interaction):
+def GetInteractionData(interaction,
+                      game=False,
+                      format=False,
+                      store=False):
+  Requirements = namedtuple("Requirements",["Game","Format","Store"])
+  requirements = Requirements(game,format,store)
   raw_data = SplitInteractionData(interaction)
-  data = FormatInteractionData(raw_data)
+  data = FormatInteractionData(raw_data, requirements)
   return data
 
-def SplitInteractionData(interaction:discord.Interaction):
+def SplitInteractionData(interaction):
   discord_guild = interaction.guild
   if discord_guild is None:
     raise Exception('No guild found')
   discord_id = discord_guild.id
   
   channel = interaction.channel
-  print('Channel type:',type(channel))
   if channel is None or not isinstance(channel,discord.TextChannel) or isinstance(channel,discord.GroupChannel):
     raise Exception('No channel found')
 
-  format_name = channel.name
-
+  channel_id = channel.id
+  
   category = channel.category
   if category is None:
     raise Exception('No category found')
-  game_name = category.name
+  category_id = category.id
   
-  user_id = interaction.user.id
-  Data = namedtuple("Data",["DiscordId","GameName","FormatName","UserId"])
-  return Data(discord_id,game_name,format_name,user_id)
+  user_id = -1
+  if isinstance(interaction, discord.Interaction):
+    user_id = interaction.user.id
+  if isinstance(interaction, discord.Message):
+    user_id = interaction.author.id
+  Data = namedtuple("Data",["DiscordId", "CategoryId", "ChannelId", "UserId"])
+  return Data(discord_id, category_id, channel_id, user_id)
 
-def GetGame(discord_id, game_name):
-  game_obj = db.GetGame(discord_id, game_name)
+def GetGame(category_id:int, required):
+  game_obj = db.GetGameByMap(category_id)
   if game_obj is None:
-    raise Exception('Game not found')
+    if required:
+      raise Exception('Game not found')
+    else:
+      return None
   return tc.ConvertToGame(game_obj)
 
-def GetFormat(discord_id, game, format_name):
+def GetFormat(game, channel_id:int, required):
   if not game.HasFormats:
     return None
-  format_obj = db.GetFormat(game.ID, format_name)
+  format_obj = db.GetFormatByMap(channel_id)
   if format_obj is None:
-    raise Exception('Format not found')
+    if required:
+      raise Exception('Format not found')
+    else:
+      return None
   return tc.ConvertToFormat(format_obj)
 
-def GetStore(discord_id):
+def GetStore(discord_id, required):
   store_obj = db.GetStores(discord_id=discord_id)
   if store_obj is None:
-    raise Exception('Store not found')
+    if required:
+      raise Exception('Store not found')
+    else:
+      return None
   return tc.ConvertToStore(store_obj[0])
 
-#TODO: For some functions, format and game may be None and that's okay
-def FormatInteractionData(data):
-  game = GetGame(data.DiscordId, data.GameName)
-  format = GetFormat(data.DiscordId, game, data.FormatName)
-  store = GetStore(data.DiscordId)
+def FormatInteractionData(data, requirements):
+  game = GetGame(data.CategoryId, requirements.Game)
+  format = GetFormat(game, data.ChannelId, requirements.Format)
+  store = GetStore(data.DiscordId, requirements.Store)
 
   Data = namedtuple("Data",["Game","Format","Store","UserId"])
   return Data(game,format,store,data.UserId)

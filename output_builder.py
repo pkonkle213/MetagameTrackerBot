@@ -1,6 +1,7 @@
+from discord import Interaction
 import date_functions
 
-def DiscordInfo(interaction):
+def DiscordInfo(interaction:Interaction):
   response = []
   currentDateTime = str(date_functions.GetToday())
   response.append(f'Current Date: {currentDateTime}')

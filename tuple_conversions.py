@@ -7,7 +7,8 @@ InteractionDetails = namedtuple("InteractionDetails", ['Game',
                                                        'UserId'])
 
 Format = namedtuple('Format', ['ID',
-                               'FormatName'])
+                               'FormatName',
+                               'LastBanUpdate'])
 
 Game = namedtuple('Game', ['ID',
                            'Name',
@@ -72,4 +73,5 @@ def ConvertToGame(game_obj):
 
 def ConvertToFormat(format_obj):
   return Format(int(format_obj[0]),
-                format_obj[1])
+                format_obj[1],
+                format_obj[2])

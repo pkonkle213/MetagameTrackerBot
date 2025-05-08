@@ -2,6 +2,30 @@ import tuple_conversions
 import requests
 import database_connection
 
+def GetSpicerackData(discord_id, event_id):
+  store_obj = database_connection.GetStores(discord_id = discord_id)
+  if store_obj is None:
+    raise Exception('Store not found')
+  store = tuple_conversions.ConvertToStore(store_obj[0])
+  #Check that the event_id hasn't been submitted yet
+  spicerack_id = database_connection.GetSpiceId(event_id)
+  if spicerack_id:
+    return 'This event has already been submitted'
+
+  #Get the event data from spicerack
+  data = spicerack.GetEventData(store.DiscordId, event_id)
+
+  event = GetEvent(discord_id, date_of_event, game, format)
+  if event is None:
+    event = CreateEvent(date_of_event, message.guild.id, game, format)
+
+  output = AddResults(event_id, data, store.OwnerId, event_id)
+
+  #import the data into the database
+  #report the results
+  output = 'Success??'
+  return output
+
 def GetEventData(discord_id, event_id):
   store = database_connection.GetStores(discord_id=discord_id)
   if store is None:

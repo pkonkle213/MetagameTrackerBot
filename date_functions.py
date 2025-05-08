@@ -8,6 +8,16 @@ def GetAnalysisDates(weeks):
   BRStart = GetWeeksAgo(BREnd, weeks)
   return (EREnd, ERStart, BREnd, BRStart)
 
+def BuildDateRange(start_date, end_date, format):
+  date_end = GetToday() if end_date == '' else ConvertToDate(end_date)
+  date_start = GetStartDate(date_end)
+  if start_date != '':
+    date_start = ConvertToDate(start_date)
+  elif format is not None and format.LastBanUpdate > date_start:
+    date_start = format.LastBanUpdate
+  print('Building dates:', 'start:', date_start, 'end:', date_end)
+  return date_start, date_end
+
 def DateDifference(date1, date2):
   return abs((date1 - date2).days)
 
@@ -53,21 +63,9 @@ def GetDaysAgo(date, days):
 def GetToday():
   return datetime.now(pytz.timezone('US/Eastern')).date()
 
-def convert_to_date(date):
+def ConvertToDate(date):
   if date.count('/') == 1:
     date += '/' + str(GetToday().year)
-  try:
-    newDate = datetime.strptime(date, '%m/%d/%Y').date()
-    return newDate
-  except ValueError:
-    return None
-
-def FindMonday():
-  def to_last_monday(date):
-    day_of_week = date.weekday()
-    days_to_subtract = day_of_week if day_of_week != 0 else 7
-    return date - datetime.timedelta(days=days_to_subtract)
+  newDate = datetime.strptime(date, '%m/%d/%Y').date()
+  return newDate
   
-  today = datetime.date.today()
-  last_monday = to_last_monday(today)
-  print(last_monday)

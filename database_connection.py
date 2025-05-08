@@ -4,87 +4,90 @@ import settings
 
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
-def GetStats(discord_id, game_id, format_id, user_id, start_date, end_date):
+#TODO: Update for when participants are joined with archetypes played
+def GetUnknown(discord_id, game_id, format_id, start_date, end_date):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  command = f'''
+  SELECT e.event_date, p.player_name
+  FROM participants p
+  INNER JOIN events e ON e.id = p.event_id
+  WHERE e.game_id = {game_id}
+  AND e.format_id = {format_id}
+  AND e.discord_id = {discord_id}
+  AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+  AND p.archetype_played = 'UNKNOWN'
+  ORDER BY event_date desc, player_name
+  '''
+
+  with conn, conn.cursor() as cur:
+    cur.execute(command)
+    rows = cur.fetchall()
+    cur.close() #IS THIS WHAT I'VE BEEN MISSING FROM OTHER METHODS!?
+    return rows
+
+def GetStats(discord_id,
+             game_id,
+             format_id,
+             user_id,
+             start_date,
+             end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   
   command = f'''
-  SELECT archetype_played,
-    wins,
-    losses,
-    draws,
-    winpercentage
-  FROM
-  (
-    (
-      SELECT 2,
-        archetype_played, 
-        SUM(wins) AS wins, 
-        SUM(losses) as Losses, 
-        SUM(draws) as draws,
-        ROUND((SUM(wins) * 100.0) / (SUM(wins) + SUM(losses) + SUM(draws)), 2) AS WinPercentage
+    SELECT archetype_played,
+           wins,
+           losses,
+           draws,
+           ROUND(win_percent * 100, 2) as win_percent
+    FROM (
+      SELECT 1 as rank,
+             'Overall' as archetype_played,
+             sum(p.wins) as wins,
+             sum(p.losses) as losses,
+             sum(p.draws) as draws,
+             sum(p.wins) * 1.0 / (sum(p.wins) + sum(p.losses) + sum(p.draws)) as Win_Percent
       FROM participants p
-      INNER JOIN events e ON e.id = p.event_id
-      WHERE p.player_name = (
+      INNER JOIN events e ON p.event_id = e.id
+      LEFT OUTER JOIN archetypesplayed ap ON (ap.player_name = p.player_name and ap.event_id = p.event_id)
+      WHERE p.player_name IN (
         SELECT player_name
-        FROM (  
-          SELECT DISTINCT ON (e.id, it.user_id, it.player_name) e.id, it.user_id, it.player_name
-          FROM inputtracker it
-            INNER JOIN events e ON e.id = it.event_id
-          WHERE it.user_id = {user_id}
-            AND e.discord_id = {discord_id}
-            AND e.game_id = {game_id}
-            AND e.format_id = {format_id}
-          )
-        GROUP BY (user_id, player_name)
-        ORDER BY COUNT(*) DESC
-        LIMIT 1
+        FROM archetypesplayed
+        WHERE submitter_id = {user_id}
+        GROUP BY player_name
       )
-        AND e.game_id = {game_id}
-        AND e.format_id = {format_id}
-        AND e.discord_id = {discord_id}
-        AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-      GROUP BY archetype_played
-    )
-    UNION
-    (
-      SELECT 1,
-      'Overall', 
-      SUM(wins) AS wins, 
-      SUM(losses) as Losses, 
-      SUM(draws) as draws,
-      ROUND((SUM(wins) * 100.0) / (SUM(wins) + SUM(losses) + SUM(draws)), 2) AS WinPercentage
+      AND e.discord_id = {discord_id}
+      AND e.event_date BETWEEN '{start_date}' and '{end_date}'
+      AND e.format_id = {format_id}
+      AND e.game_id = {game_id}
+        UNION
+      SELECT 2 as rank,
+             COALESCE(ap.archetype_played,'UNKNOWN'),
+             sum(p.wins) as wins,
+             sum(p.losses) as losses,
+             sum(p.draws) as draws,
+             sum(p.wins) *1.0 / (sum(p.wins) + sum(p.losses) + sum(p.draws)) as Win_Percent
       FROM participants p
-      INNER JOIN events e ON e.id = p.event_id
-      WHERE p.player_name = (
+      INNER JOIN events e ON p.event_id = e.id
+      LEFT OUTER JOIN archetypesplayed ap ON (ap.player_name = p.player_name and ap.event_id = p.event_id)
+      WHERE p.player_name IN (
         SELECT player_name
-        FROM (  
-          SELECT DISTINCT ON (e.id, it.user_id, it.player_name) e.id, it.user_id, it.player_name
-          FROM inputtracker it
-            INNER JOIN events e ON e.id = it.event_id
-          WHERE it.user_id = {user_id}
-            AND e.discord_id = {discord_id}
-            AND e.game_id = {game_id}
-            AND e.format_id = {format_id}
-          )
-        GROUP BY (user_id, player_name)
-        ORDER BY COUNT(*) DESC
-        LIMIT 1
+        FROM archetypesplayed
+        WHERE submitter_id = {user_id}
+        GROUP BY player_name
       )
-        AND e.game_id = {game_id}
-        AND e.format_id = {format_id}
-        AND e.discord_id = {discord_id}
-        AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-      GROUP BY player_name
+      AND e.discord_id = {discord_id}
+      AND e.event_date BETWEEN '{start_date}' and '{end_date}'
+      AND e.format_id = {format_id}
+      AND e.game_id = {game_id}
+    GROUP BY ap.archetype_played
     )
-  )
+    ORDER BY rank
   '''
   
   with conn, conn.cursor() as cur:
     cur.execute(command)
     rows = cur.fetchall()
     cur.close()
-    if not rows:
-      raise Exception('No data found. Please use the /claim command to submit your data.')
     return rows
 
 #Is this proper to do? Saves coding, looks wonky
@@ -153,21 +156,23 @@ def GetStoreData(discord_id, start_date, end_date):
   criteria = [start_date, end_date]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT c.name AS GameName, '
-    command += 'f.name AS FormatName, '
-    command += 'e.event_date AS EventDate, '
-    command += 'p.player_name AS PlayerName, '
-    command += 'p.archetype_played AS ArchetypePlayed, '
-    command += 'p.wins AS Wins, '
-    command += 'p.losses AS Losses, '
-    command += 'p.draws AS Draws '
-    command += 'FROM participants p '
-    command += 'INNER JOIN events e on e.id = p.event_id '
-    command += 'INNER JOIN cardgames c on c.id = e.game_id '
-    command += 'INNER JOIN formats f on f.id = e.format_id '
-    command += 'INNER JOIN stores s on s.discord_id = e.discord_id '
-    command += 'WHERE e.event_date >= %s '
-    command += 'AND e.event_date <= %s '
+    command =  '''
+    SELECT c.name AS GameName,
+      f.name AS FormatName,
+      e.event_date AS EventDate,
+      p.player_name AS PlayerName,
+      p.archetype_played AS ArchetypePlayed,
+      p.wins AS Wins,
+      p.losses AS Losses,
+      p.draws AS Draws
+    FROM participants p
+    INNER JOIN events e on e.id = p.event_id
+    INNER JOIN cardgames c on c.id = e.game_id
+    INNER JOIN formats f on f.id = e.format_id
+    INNER JOIN stores s on s.discord_id = e.discord_id
+    WHERE e.event_date >= %s
+      AND e.event_date <= %s 
+    '''
     if discord_id != settings.DATAGUILDID:
       criteria.append(discord_id)
       command += 'AND e.discord_id = %s '
@@ -183,12 +188,12 @@ def ViewEvent(event_id):
   criteria = [event_id]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command = """
+    command = '''
     SELECT archetype_played, wins, losses, draws
     FROM participants p
     WHERE event_id = %s
     ORDER BY wins DESC, draws DESC
-    """
+    '''
 
     cur.execute(command, criteria)
     rows = cur.fetchall()
@@ -201,17 +206,11 @@ def CreateEvent(event_date,
   criteria = [event_date, discord_id, game.ID, 0]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'INSERT INTO Events (event_date, discord_id, game_id, last_update'
-    if game.HasFormats:
-      command += ', format_id'
-      criteria.append(format.ID)
-    command += ') '
-    command += 'VALUES (%s, %s, %s, %s'
-    if game.HasFormats:
-      command += ', %s'
-    command += ') '
-    command += 'RETURNING *'
-
+    command = f'''
+    INSERT INTO Events (event_date, discord_id, game_id, last_update {', format_id' if game.HasFormats else ''})
+    VALUES ('{event_date}', {discord_id}, {game.ID}, 0{f' , {format.ID}' if game.HasFormats else ''})
+    RETURNING *
+    '''
     cur.execute(command, criteria)
     conn.commit()
     event = cur.fetchone()
@@ -226,34 +225,28 @@ def RegisterStore(discord_id,
                   owner_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'INSERT INTO Stores (store_name, discord_id, discord_name, owner_id, owner_name, isApproved, used_for_data) '
-    command += 'VALUES (%s, %s, %s, %s, %s, %s, %s) '
-    command += 'RETURNING *'
+    command = f'''
+    INSERT INTO Stores (store_name, discord_id, discord_name, owner_id, owner_name, isApproved, used_for_data)
+    VALUES (%s, {discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {False}, {True})
+    RETURNING *
+    '''
 
-    cur.execute(command, (store_name,
-                          discord_id,
-                          discord_name,
-                          owner_id,
-                          owner_name,
-                          False,
-                          True)
-               )
+    cur.execute(command, [store_name])
 
     conn.commit()
-    rowid = cur.fetchone()
-
-    return rowid
+    row = cur.fetchone()
+    return row
 
 def GetEventMeta(event_id):
   criteria = [event_id]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command = f"""
+    command = f'''
     SELECT archetype_played, wins
     FROM participants
     WHERE event_id = {event_id}
     ORDER BY wins DESC
-    """
+    '''
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows
@@ -302,12 +295,13 @@ def AddResult(event_id,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     try:
-      command = 'INSERT INTO Participants (event_id, player_name, archetype_played, wins, losses, draws, submitter_id) '
-      command += 'VALUES (%s, %s, %s, %s, %s, %s, %s) '
-      command += 'RETURNING *     '
+      command = '''
+      INSERT INTO Participants (event_id, player_name, wins, losses, draws, submitter_id)
+      VALUES (%s, %s, %s, %s, %s, %s)
+      RETURNING *
+      '''
       cur.execute(command, (event_id,
                             player.PlayerName.upper(),
-                            'UNKNOWN',
                             player.Wins,
                             player.Losses,
                             player.Draws,
@@ -355,71 +349,48 @@ def AddRoundResult(event_id,
     except psycopg2.errors.UniqueViolation:
       return None
 
-def TrackInput(store_discord,
-               event_id,
+def TrackInput(event_id,
                updater_name,
                updater_id,
                archetype_played,
                todays_date,
                player_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  command =  'INSERT INTO InputTracker (user_name, event_id, user_id, archetype_played, date_submitted, player_name) '
-  command += 'VALUES (%s, %s, %s, %s, %s, %s)'
-  criteria = (updater_name,
-              event_id,
-              updater_id,
-              archetype_played,
-              todays_date,
-              player_name)
+  command = f'''
+  INSERT INTO InputTracker (user_name, event_id, user_id, archetype_played, date_submitted, player_name)
+  VALUES ('{updater_name}', {event_id}, {updater_id}, '{archetype_played}', '{todays_date}', '{player_name}')
+  RETURNING *
+  '''
   
   with conn, conn.cursor() as cur:   
-    cur.execute(command, criteria)
-    conn.commit()
-
-def GetSpiceId(event_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  command = f'''
-  SELECT spicerack_id
-  FROM events
-  WHERE spicerack_id = {event_id}
-  '''
-  with conn, conn.cursor() as cur:
     cur.execute(command)
-    row = cur.fetchone()
-    return row[0] if row else None
-
-def Claim(event_id,
-          name,
-          archetype,
-          updater_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  command =  'UPDATE Participants '
-  command += 'SET archetype_played = %s, submitter_id = %s '
-  command += 'WHERE event_id = %s '
-  command += 'AND player_name = %s '
-  command += 'RETURNING *'
-
-  criteria = (archetype, updater_id, event_id, name)
-  with conn, conn.cursor() as cur:  
-    cur.execute(command, criteria)
     conn.commit()
 
+def GetFormatByMap(channel_id):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    SELECT f.id, f.name, f.last_ban_update
+    FROM formatchannelmaps fc
+    INNER JOIN formats f ON f.id = fc.format_id
+    WHERE channel_id = {channel_id}
+    '''
+    cur.execute(command)
     row = cur.fetchone()
     return row
 
-def GetFormat(game_id,
-              format_name):
+def GetFormatsByGameId(game_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT id, name FROM Formats '
-    command += 'WHERE game_id =  %s AND name = %s '
-    criteria = (game_id, format_name)
-    
-    cur.execute(command, criteria)
+    command = f'''
+    SELECT id, name
+    FROM formats
+    WHERE game_id = {game_id}
+    ORDER BY name
+    '''
+    cur.execute(command)
     rows = cur.fetchall()
-    if len(rows) == 0:
-      return None
-  return rows[0]
+    return rows
 
 def GetEvent(discord_id,
              date,
@@ -429,19 +400,14 @@ def GetEvent(discord_id,
               game.ID]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT id, discord_id, event_date, game_id, format_id, last_update, spicerack_id '
-    command += 'FROM events '
-    command += 'WHERE discord_id = %s '
-    command += 'AND game_id = %s '
-    if date is not None:
-      command += 'AND event_date = %s '
-      criteria.append(date)
-    if format != '':
-      command += 'AND format_id = %s '
-      criteria.append(format.ID)
-    command += 'ORDER BY event_date DESC '
-    command += 'LIMIT 1'
-
+    command = f'''
+    SELECT id, discord_id, event_date, game_id, format_id, last_update, spicerack_id
+    FROM events
+    WHERE discord_id = {discord_id}
+    AND game_id = {game.ID}
+    {f'AND format_id = {format.ID}' if format else ''}
+    AND event_date = '{date}'
+    '''
     cur.execute(command, criteria)
     rows = cur.fetchall()
     if len(rows) == 0:
@@ -485,19 +451,6 @@ def GetStores(name = '',
     rows = cur.fetchall()
     return rows
 
-def GetAllFormats(game_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = '''
-    SELECT id, name
-    FROM Formats
-    WHERE game_id = %s
-    '''
-    criteria = [game_id]
-    cur.execute(command, criteria)
-    rows = cur.fetchall()
-    return rows
-
 def DeleteDemo():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
@@ -516,24 +469,18 @@ def UpdateDemo(event_id, event_date):
     cur.execute(command, criteria)
     conn.commit()
   
-def GetGame(discord_id,
-            used_name):
+def GetGameByMap(category_id:int):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  '''
-    SELECT cg.id, cg.name, cg.hasFormats
-    FROM cardgames cg
-    INNER JOIN gamenamemaps gnm ON cg.id = gnm.game_id
-    WHERE gnm.used_name = %s
-    AND gnm.discord_id = %s
+    command =  f'''
+    SELECT id, name, hasformats
+    FROM cardgames g
+    INNER JOIN gamecategorymaps gc ON g.id = gc.game_id
+    WHERE category_id = {category_id}
     '''
-    criteria = (used_name, discord_id)
-    
-    cur.execute(command, criteria)
-    rows = cur.fetchall()
-    if len(rows) == 0:
-      return None
-    return rows[0]
+    cur.execute(command)
+    row = cur.fetchone()
+    return row
     
 def GetDataRowsForMetagame(game,
                            format,
@@ -543,53 +490,51 @@ def GetDataRowsForMetagame(game,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     criteria = [game.ID, start_date, end_date]
-    command = ''
-    command += 'WITH x AS ( '
-    command += 'SELECT p.archetype_played, COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () as MetaPercentage, '
-    command += '(sum(p.wins) * 1.0) / (sum(p.wins) + sum(p.losses)) as WinPercentage '
-    command += 'FROM Participants p '
-    command += 'INNER JOIN Events e ON p.event_id = e.id '
-    command += 'INNER JOIN Stores s on e.discord_id = s.discord_id '
-    command += 'WHERE e.game_id = %s '
-    command += 'AND e.event_date >= %s AND event_date <= %s '
-    if game.HasFormats:
-      command += 'AND e.format_id = %s '
-      criteria.append(format.ID)
-    if discord_id != settings.DATAGUILDID:
-      command += 'AND e.discord_id = %s '
-      criteria.append(discord_id)
-    else:
-      command += 'and s.used_for_data = true '
-    command += 'GROUP BY p.archetype_played '
-    command += 'ORDER BY p.archetype_played '
-    command += ') '
-    command += 'SELECT archetype_played, '
-    command += 'ROUND(MetaPercentage * 100, 2) AS MetaPercentage, '
-    command += 'ROUND(WinPercentage * 100, 2) AS WinPercentage, '
-    command += 'ROUND(MetaPercentage * WinPercentage * 100, 2) AS Combined '
-    command += 'FROM x '
-    command += 'WHERE MetaPercentage >= 0.02 '
-    command += 'ORDER BY Combined DESC, archetype_played'
-
+    command = f'''
+  SELECT archetype_played,
+         ROUND(metagame_percent * 100, 2) AS metagame_percent,
+         ROUND(win_percent * 100, 2) AS win_percent,
+         ROUND(metagame_percent * win_percent * 100, 2) as Combined
+  FROM (
+    WITH X AS (
+      SELECT DISTINCT on (event_id, player_name)
+        event_id, player_name, archetype_played
+      FROM archetypesplayed
+      WHERE event_id IN (
+        SELECT id
+        FROM events e
+        INNER JOIN stores s ON s.discord_id = e.discord_id
+        WHERE e.discord_id = {discord_id}
+        AND e.game_id = {game.ID}
+        AND e.format_id = {format.ID}
+        AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+        ORDER BY e.event_date DESC
+      )
+      ORDER BY event_id, player_name, date_submitted desc
+    )
+    SELECT COALESCE(X.archetype_played,'UNKNOWN') as archetype_played,
+           COUNT(*) * 1.0 / SUM(count(*)) OVER () as Metagame_Percent,
+           sum(p.wins) * 1.0 / (sum(p.wins) + sum(p.losses) + sum(p.draws)) as Win_percent
+    FROM participants p
+    LEFT OUTER JOIN X on X.event_id = p.event_id and X.player_name = p.player_name
+    WHERE p.event_id IN (
+      SELECT id
+      FROM events e
+      INNER JOIN stores s ON s.discord_id = e.discord_id
+      WHERE e.discord_id = {discord_id}
+        AND e.game_id = {game.ID}
+        AND e.format_id = {format.ID}
+        AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+      ORDER BY event_date DESC
+    )
+    GROUP BY 1
+  )
+  WHERE metagame_percent >= 0.02
+  ORDER BY 4 DESC
+    '''
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows
-
-def GetBanDate(format_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  criteria = [format_id]
-
-  with conn, conn.cursor() as cur:
-    command = '''
-    SELECT last_ban_update
-    FROM formats
-    WHERE id = %s
-    '''
-
-    cur.execute(command, criteria)
-    rows = cur.fetchone()
-    print('Ban Update Result:',rows)
-    return rows if rows else None
 
 def GetTopPlayers(discord_id,
                   game_id,
@@ -687,66 +632,49 @@ def GetAttendance(discord_id,
                  start_date,
                  end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  criteria = [game.ID, start_date, end_date]
   with conn, conn.cursor() as cur:
-    command =  'SELECT e.event_date, '
-    if discord_id == settings.DATAGUILDID:
-      command += 's.store_name, '
-    command += 'COUNT(*) '
-    command += 'FROM events e '
-    command += 'INNER JOIN participants p on e.id = p.event_id '
-    command += 'INNER JOIN Stores s on s.discord_id = e.discord_id '
-    command += 'WHERE e.game_id = %s '
-    command += 'AND e.event_date >= %s '
-    command += 'AND e.event_date <= %s '
-    if discord_id != settings.DATAGUILDID:
-      command += 'AND e.discord_id = %s '
-      criteria.append(discord_id)
-    else:
-      command += 'AND s.used_for_data = true '
-    if format != '':
-      command += 'AND e.format_id = %s '
-      criteria.append(format.ID)
-    command += 'GROUP BY e.id, s.store_name '
-    command += 'ORDER BY e.event_date DESC '
-    cur.execute(command, criteria)
-    rows = cur.fetchall()
-    return rows
-
-def GetData(databasename):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'SELECT * FROM {databasename}'
-    cur.execute(command, [databasename])
-    rows = cur.fetchall()
-    return rows
-
-# Putting this here in case it's usable later, it should probably go with GetData
-def GetColumnNames(table):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'''
-    SELECT column_name
-    FROM information_schema.columns
-    WHERE table_name = \'{table}\'
-    ORDER BY ordinal_position
+    command =  f'''
+    SELECT e.event_date, COUNT(*)
+    FROM events e
+    INNER JOIN participants p on e.id = p.event_id
+    INNER JOIN Stores s on s.discord_id = e.discord_id
+    WHERE e.game_id = {game.ID}
+      AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+      AND e.discord_id = {discord_id}
+      AND e.format_id = {format.ID}
+    GROUP BY e.id, s.store_name
+    ORDER BY e.event_date DESC
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    print('Column Names:', rows)
-    return rows 
-    
-def AddGameMap(discord_id, game_id, used_name):
+    return rows
+
+def AddGameMap(discord_id:int,
+               game_id:int,
+               category_id:int):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    try:
-      command =  'INSERT INTO GameNameMaps (discord_id, game_id, used_name) '
-      command += 'VALUES (%s, %s, %s) '
-      command += 'RETURNING *'
-      criteria = (discord_id, game_id, used_name)
-      cur.execute(command, criteria)
-      conn.commit()
-      row = cur.fetchone()
-      return row
-    except psycopg2.errors.UniqueViolation:
-      return None
+    command = f'''
+    INSERT INTO GameCategoryMaps (discord_id, game_id, category_id)
+    VALUES ({discord_id}, {game_id}, {category_id})
+    RETURNING *
+    '''
+    cur.execute(command)
+    conn.commit()
+    row = cur.fetchone()
+    return row
+
+def AddFormatMap(discord_id:int,
+                 format_id:int,
+                 channel_id:int):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    INSERT INTO FormatChannelMaps (discord_id, format_id, channel_id)
+    VALUES ({discord_id}, {format_id}, {channel_id})
+    RETURNING *
+    '''
+    cur.execute(command)
+    conn.commit()
+    row = cur.fetchone()
+    return row
