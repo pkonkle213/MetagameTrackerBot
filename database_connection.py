@@ -3,6 +3,25 @@ import psycopg2
 
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
+def AddArchetype(event_id,
+                 player_name,
+                 archetype_played,
+                 date_submitted,
+                 submitter_id,
+                submitter_name):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    INSERT INTO ArchetypeSubmissions (event_id, player_name, archetype_played, date_submitted, submitter_id, submitter_username, reported)
+    VALUES ({event_id}, '{player_name}', '{archetype_played}', '{date_submitted}', {submitter_id}, '{submitter_name}', {False})
+    RETURNING *
+    '''
+    cur.execute(command)
+    conn.commit()
+    row = cur.fetchone()
+    return row
+  
+
 def GetUnknown(discord_id, game_id, format_id, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   command = f'''
@@ -11,7 +30,7 @@ def GetUnknown(discord_id, game_id, format_id, start_date, end_date):
          ap.archetype_played
   FROM participants p
   INNER JOIN events e ON e.id = p.event_id
-  LEFT OUTER JOIN archetypesplayed ap ON (ap.event_id = p.event_id AND ap.player_name = p.player_name)
+  LEFT OUTER JOIN ArchetypeSubmissions ap ON (ap.event_id = p.event_id AND ap.player_name = p.player_name)
   WHERE e.discord_id = {discord_id}
     AND e.format_id = {format_id}
     AND e.game_id = {game_id}
@@ -49,10 +68,10 @@ def GetStats(discord_id,
              sum(p.wins) * 1.0 / (sum(p.wins) + sum(p.losses) + sum(p.draws)) as Win_Percent
       FROM participants p
       INNER JOIN events e ON p.event_id = e.id
-      LEFT OUTER JOIN archetypesplayed ap ON (ap.player_name = p.player_name and ap.event_id = p.event_id)
+      LEFT OUTER JOIN ArchetypeSubmissions ap ON (ap.player_name = p.player_name and ap.event_id = p.event_id)
       WHERE p.player_name IN (
         SELECT player_name
-        FROM archetypesplayed
+        FROM ArchetypeSubmissions
         WHERE submitter_id = {user_id}
         GROUP BY player_name
       )
@@ -69,10 +88,10 @@ def GetStats(discord_id,
              sum(p.wins) *1.0 / (sum(p.wins) + sum(p.losses) + sum(p.draws)) as Win_Percent
       FROM participants p
       INNER JOIN events e ON p.event_id = e.id
-      LEFT OUTER JOIN archetypesplayed ap ON (ap.player_name = p.player_name and ap.event_id = p.event_id)
+      LEFT OUTER JOIN ArchetypeSubmissions ap ON (ap.player_name = p.player_name and ap.event_id = p.event_id)
       WHERE p.player_name IN (
         SELECT player_name
-        FROM archetypesplayed
+        FROM ArchetypeSubmissions
         WHERE submitter_id = {user_id}
         GROUP BY player_name
       )
@@ -170,7 +189,7 @@ def GetStoreData(discord_id, format, start_date, end_date):
       INNER JOIN cardgames c on c.id = e.game_id
       INNER JOIN formats f on f.id = e.format_id
       INNER JOIN stores s on s.discord_id = e.discord_id
-      LEFT JOIN archetypesplayed ap ON (ap.player_name = p.player_name AND ap.event_id = p.event_id)
+      LEFT JOIN ArchetypeSubmissions ap ON (ap.player_name = p.player_name AND ap.event_id = p.event_id)
     WHERE e.event_date BETWEEN '{start_date}' AND '{end_date}'
       AND s.discord_id = {discord_id}
       {f'AND e.format_id = {format.ID}' if format else ''}
@@ -238,10 +257,20 @@ def GetEventMeta(event_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
-    SELECT archetype_played, wins
-    FROM participants
-    WHERE event_id = {event_id}
-    ORDER BY wins DESC
+    WITH X AS (
+      SELECT DISTINCT on (event_id, player_name)
+          event_id, player_name, archetype_played
+      FROM ArchetypeSubmissions
+      WHERE event_id = {event_id}
+      AND reported = {False}
+      ORDER BY event_id, player_name, id desc
+    )
+    SELECT X.archetype_played,
+           p.wins
+    FROM participants p
+    LEFT OUTER JOIN X on X.event_id = p.event_id and X.player_name = p.player_name
+    WHERE p.event_id = {event_id}
+    ORDER BY p.wins DESC
     '''
     cur.execute(command, criteria)
     rows = cur.fetchall()
@@ -388,27 +417,27 @@ def GetFormatsByGameId(game_id):
     rows = cur.fetchall()
     return rows
 
-def GetEvent(discord_id,
-             date,
-             game,
-             format):
-  criteria = [discord_id,
-              game.ID]
+def GetEventObj(discord_id,
+                date,
+                game,
+                format,
+                player_name = ''):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
-    SELECT id, discord_id, event_date, game_id, format_id, last_update, spicerack_id
-    FROM events
-    WHERE discord_id = {discord_id}
-    AND game_id = {game.ID}
-    {f'AND format_id = {format.ID}' if format else ''}
-    AND event_date = '{date}'
+    SELECT *
+    FROM events e
+    INNER JOIN participants p ON e.id = p.event_id
+    WHERE e.discord_id = {discord_id}
+    AND e.game_id = {game.ID}
+    {f'AND e.format_id = {format.ID}' if format else ''}
+    {f"AND e.event_date = '{date}'" if date else "AND e.event_date BETWEEN current_date - 14 AND current_date"}    
+    {f"AND p.player_name = '{player_name}'" if player_name != '' else ''}
+    ORDER BY event_date DESC
+    LIMIT 1
     '''
-    cur.execute(command, criteria)
-    rows = cur.fetchall()
-    if len(rows) == 0:
-      return None
-    return rows[0]
+    cur.execute(command)
+    return cur.fetchone()
 
 def GetStores(name = '',
               discord_id = 0,
@@ -444,8 +473,7 @@ def GetStores(name = '',
   criteria = criteria[:-4]
   with conn, conn.cursor() as cur:
     cur.execute(command + criteria, criteria_list)
-    rows = cur.fetchall()
-    return rows
+    return cur.fetchall()
 
 def DeleteDemo():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -495,7 +523,7 @@ def GetDataRowsForMetagame(game,
     WITH X AS (
       SELECT DISTINCT on (event_id, player_name)
         event_id, player_name, archetype_played
-      FROM archetypesplayed
+      FROM ArchetypeSubmissions
       WHERE event_id IN (
         SELECT id
         FROM events e
@@ -506,7 +534,7 @@ def GetDataRowsForMetagame(game,
         AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
         ORDER BY e.event_date DESC
       )
-      ORDER BY event_id, player_name, date_submitted desc
+      ORDER BY event_id, player_name, id desc
     )
     SELECT COALESCE(X.archetype_played,'UNKNOWN') as archetype_played,
            COUNT(*) * 1.0 / SUM(count(*)) OVER () as Metagame_Percent,
@@ -586,18 +614,28 @@ def GetPercentage(event_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f"""
-    SELECT 1 - metapercent AS ReportedPercent
+    SELECT 1 - (sum(MetaCount) - MAX(TotalDecks)) / MAX(TotalDecks) as ReportedPercent
     FROM (
-      SELECT archetype_played, COUNT(*) / SUM(COUNT(*)) OVER () AS MetaPercent
-      FROM Participants
-      WHERE event_id = {event_id}
-      GROUP BY archetype_played
+      WITH X AS (
+        SELECT DISTINCT on (event_id, player_name)
+            event_id, player_name, archetype_played
+        FROM ArchetypeSubmissions
+        WHERE event_id = {event_id}
+        AND reported = {False}
+        ORDER BY event_id, player_name, id desc
+      )
+      SELECT X.archetype_played,
+             COUNT(*) AS MetaCount,
+             SUM(count(*)) OVER () as TotalDecks
+      FROM participants p
+      LEFT OUTER JOIN X on X.event_id = p.event_id and X.player_name = p.player_name
+      WHERE p.event_id = {event_id}
+      GROUP BY 1
     )
-    WHERE archetype_played = 'UNKNOWN'
     """
     cur.execute(command)
-    rows = cur.fetchall()
-    return rows[0][0] if rows else 1
+    row = cur.fetchone()
+    return row[0] if row else None
 
 def UpdateEvent(event_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -609,6 +647,9 @@ def UpdateEvent(event_id):
     RETURNING *
     """
     cur.execute(command)
+    conn.commit()
+    row = cur.fetchone()
+    return row
 
 def GetAttendance(discord_id,
                  game,

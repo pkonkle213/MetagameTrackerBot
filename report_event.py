@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from database_connection import GetEvent, CreateEvent, AddResult
+from database_connection import GetEventObj, CreateEvent, AddResult
 from date_functions import GetToday
 from interaction_data import GetInteractionData
 from tuple_conversions import ConvertToEvent
@@ -11,7 +11,7 @@ async def SubmitData(bot, message, data):
                                                    store=True)
   #TODO: Should I Confirm date? How do I handle data that's input late?
   event_date = GetToday()
-  event_obj = GetEvent(store.DiscordId, event_date, game, format)
+  event_obj = GetEventObj(store.DiscordId, event_date, game, format)
   
   if event_obj is None:
     event_obj = CreateEvent(event_date, store.DiscordId, game, format)

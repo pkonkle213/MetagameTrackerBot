@@ -1,3 +1,4 @@
+from custom_errors import DateRangeError, EventNotFoundError
 import data_translation
 import discord
 import interaction_data
@@ -5,7 +6,7 @@ import settings
 import logging
 from discord.ext import commands
 from attendance_report import GetStoreAttendance
-from claim_result import ClaimResult
+from claim_result import ClaimResult, CheckEventPercentage, OneEvent
 from demo_functions import NewDemo
 from format_mapper import AddStoreFormatMap, GetFormatOptions
 from game_mapper import AddStoreGameMap, GetGameOptions
@@ -98,6 +99,7 @@ async def MessageChannel(msg, guildId, channelId):
 
 #TODO: This is a mess, needs to be refactored
 async def Error(interaction, error):
+  print('Error:', error)
   command = interaction.command.name
   text = interaction.message.content if interaction.message else ''
   error_message = f'''
@@ -106,7 +108,7 @@ async def Error(interaction, error):
   Text: {text}
   '''
   await ErrorMessage(error_message)
-  await interaction.response.send_message('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
+  await interaction.followup.send('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
 
 async def ErrorMessage(msg):
   await MessageChannel(msg, settings.BOTGUILD.id, settings.ERRORCHANNELID)
@@ -395,59 +397,6 @@ async def DownloadData(interaction: discord.Interaction,
                     file)
   await interaction.followup.send('The data for the store will arrive by message')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-@bot.tree.command(name="demo",
-                     description="Set up the database for a demonstration",
-                     guild=settings.BOTGUILD)
-async def Demo(interaction: discord.Interaction):
-  await interaction.response.defer()
-  NewDemo()
-  await interaction.followup.send('All set up!')
-
-@Demo.error
-async def demo_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
-
-
-
-
-
-#TODO: This needs to be broken up into smaller functions
-#1) Submit the data to inputtracker
-#2) Check to see if the event reporting has hit a new milestone
 @bot.tree.command(name='claim',
                      description='Enter your deck archetype',
                      guild=settings.TESTSTOREGUILD)
@@ -466,17 +415,45 @@ async def Claim(interaction: discord.Interaction,
     Date of event (MM/DD/YYYY)
   """
   await interaction.response.defer(ephemeral=True)
-  output = ClaimResult(interaction, player_name, archetype, date)
-  await interaction.followup.send(output)
-
+  try:
+    archetype_submitted, event = ClaimResult(interaction, player_name, archetype, date)
+    if archetype_submitted is None:
+      await interaction.followup.send('Unable to submit the archetype. Please try again later.')
+    followup = CheckEventPercentage(event)
+    if followup[1]:
+      if followup[2]:
+        title, headers, data = OneEvent(event)
+        output = BuildTableOutput(title, headers, data)
+        await MessageChannel(output, interaction.guild_id, interaction.channel_id)
+      else:
+        await MessageChannel(followup[0], interaction.guild_id, interaction.channel_id)
+    else:
+      await interaction.followup.send(followup[0])
+  except EventNotFoundError as error:
+    print('Event not found')
+    await interaction.followup.send(error.message)
+  except DateRangeError as error:
+    print('Date range error')
+    await interaction.followup.send(error.message)
 
 @Claim.error
 async def Claim_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+@bot.tree.command(name="demo",
+                     description="Set up the database for a demonstration",
+                     guild=settings.BOTGUILD)
+async def Demo(interaction: discord.Interaction):
+  await interaction.response.defer()
+  NewDemo()
+  await interaction.followup.send('All set up!')
+
+@Demo.error
+async def demo_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
 
 @DownloadData.error
 async def DownloadData_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.WARNING)
+bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)

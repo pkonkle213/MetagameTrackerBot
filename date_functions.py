@@ -21,9 +21,6 @@ def BuildDateRange(start_date, end_date, format):
 def DateDifference(date1, date2):
   return abs((date1 - date2).days)
 
-def FormatDate(date):
-  return date.strftime('%B %d')
-
 def GetCurrentQuarter():
   now = datetime.now(pytz.timezone('America/New_York'))
   return (now.year, (now.month + 2) // 3)
