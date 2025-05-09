@@ -1,24 +1,24 @@
-import discord
 import data_translation
-from game_mapper import GetGameOptions
+import discord
+import interaction_data
 import settings
 import logging
 from discord.ext import commands
 from attendance_report import GetStoreAttendance
-from demo_functions import NewDemo
-from unknown_archetypes import GetAllUnknown
-from select_menu_bones import SelectMenu
-from game_mapper import AddStoreGameMap
-from format_mapper import AddStoreFormatMap, GetFormatOptions
 from claim_result import ClaimResult
-from report_event import SubmitData
+from demo_functions import NewDemo
+from format_mapper import AddStoreFormatMap, GetFormatOptions
+from game_mapper import AddStoreGameMap, GetGameOptions
 from metagame_report import GetMyMetagame
-import interaction_data
-from store_data_download import GetDataReport
 from output_builder import BuildTableOutput
 from player_win_record import PlayRecord
 from register_store import RegisterNewStore, SetPermissions
+from report_event import SubmitData
+from select_menu_bones import SelectMenu
 from store_approval import ApproveMyStore, DisapproveMyStore
+from store_data_download import GetDataReport
+from unknown_archetypes import GetAllUnknown
+from top_players import GetTopPlayers
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -59,8 +59,6 @@ async def on_message(message):
     await message.delete()
     output = await SubmitData(bot, message, data)
     await message.channel.send(output)
-
-
 
 #TODO: Double check these are needed and accurate
 def isOwner(interaction: discord.Interaction):
@@ -297,8 +295,105 @@ async def Attendance(interaction: discord.Interaction):
 async def attendance_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+@bot.tree.command(name="topplayers",
+                     description="Get the top players of the format",
+                     guild=settings.TESTSTOREGUILD)
+@discord.app_commands.checks.has_role("MTSubmitter")
+async def TopPlayers(interaction: discord.Interaction,
+                     start_date: str = '',
+                     end_date: str = ''):
+  """
+  Parameters
+  ----------
+  start_date: string
+    Beginning of Date Range (MM/DD/YYYY)
+  end_date: string
+    End of Date Range (MM/DD/YYYY)
+  """
+  await interaction.response.defer(ephemeral=True)
+  data, title, headers = GetTopPlayers(interaction,
+                                       start_date,
+                                       end_date)
+  output = BuildTableOutput(title, headers, data)
+  await interaction.followup.send(output)
+
+@TopPlayers.error
+async def topplayers_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
+
+@bot.tree.command(name='unknown',
+                     description='See what archetypes still need submitted for a date range',
+                     guild=settings.TESTSTOREGUILD)
+async def IntoTheUnknown(interaction: discord.Interaction,
+                         start_date: str = '',
+                         end_date: str = ''):
+  """
+  Parameters
+  ----------
+  start_date: string
+    Beginning of Date Range (MM/DD/YYYY)
+  end_date: string
+    End of Date Range (MM/DD/YYYY)
+  """
+  await interaction.response.defer(ephemeral=True)
+  data, title, headers = GetAllUnknown(interaction, start_date, end_date)
+  output = BuildTableOutput(title, headers, data)
+  await interaction.followup.send(output)
+
+@IntoTheUnknown.error
+async def IntoTheUnknown_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
+
+@bot.tree.command(name='approvestore',
+                     description='Approve a store to track',
+                     guild=settings.BOTGUILD)
+@discord.app_commands.check(isPhil)
+async def ApproveStore(interaction: discord.Interaction, discord_id: str):
+  await interaction.response.defer()
+  discord_id_int = int(discord_id)
+  store = ApproveMyStore(discord_id_int)
+  await MessageUser(f'{store.StoreName.title()} has been approved to track metagame data!', store.OwnerId)
+  await interaction.followup.send(f'{store.StoreName.title()} ({store.DiscordId}) is now approved to track their data')
+
+@ApproveStore.error
+async def ApproveStore_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
 
 
+@bot.tree.command(name='disapprovestore',
+                     description='Disapprove a store to track',
+                     guild=settings.BOTGUILD)
+@discord.app_commands.check(isPhil)
+async def DisapproveStore(interaction: discord.Interaction, discord_id: str):
+  discord_id_int = int(discord_id)
+  store = DisapproveMyStore(discord_id_int)
+  await interaction.response.send_message(f'{store.StoreName.title()} ({store.DiscordId}) no longer approved to track')
+
+#TODO: Is there a better way to require a date be inputted?
+#https://discord.com/developers/docs/reference#message-formatting
+@bot.tree.command(name='downloaddata',
+                  description='Download the data for a store for a date range',
+                  guild=settings.TESTSTOREGUILD)
+@discord.app_commands.check(isOwner)
+async def DownloadData(interaction: discord.Interaction,
+                       start_date: str = '',
+                       end_date: str = ''):
+  """
+  Parameters
+  ----------
+  start_date: string
+    Beginning of Date Range (MM/DD/YYYY)
+  end_date: string
+    End of Date Range (MM/DD/YYYY)
+  """
+  await interaction.response.defer(ephemeral=True)
+  title, file = GetDataReport(interaction, start_date, end_date)
+  if file is None:
+    await interaction.followup.send('No data found for this store')
+  await MessageUser(title,
+                    interaction.user.id,
+                    file)
+  await interaction.followup.send('The data for the store will arrive by message')
 
 
 
@@ -342,91 +437,13 @@ async def Demo(interaction: discord.Interaction):
   NewDemo()
   await interaction.followup.send('All set up!')
 
-
 @Demo.error
 async def demo_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 
 
-#TODO: Should this instead get a date range and default to the last 8 weeks instead of quarters?
-@bot.tree.command(name="topplayers",
-                     description="Get the top players of the format",
-                     guild=settings.TESTSTOREGUILD)
-@discord.app_commands.checks.has_role("MTSubmitter")
-async def TopPlayers(interaction: discord.Interaction,
-                     year: discord.app_commands.Range[int, 2000] = 0,
-                     quarter: discord.app_commands.Range[int, 1, 4] = 0,
-                     top: discord.app_commands.Range[int, 1, 10] = 10):
-  """
-  Parameters
-  ----------
-  year: int
-    The year to get the top players for
-  quarter: int
-    The quarter to get the top players for
-  top: int
-    The number of top players to get
-  """
-  await interaction.response.defer(ephemeral=True)
-  game_name = interaction.channel.category.name
-  discord_id = interaction.guild.id
-  format_name = interaction.channel.name
-  output = data_translation.GetTopPlayers(discord_id,
-                                          game_name,
-                                          format_name,
-                                          year,
-                                          quarter,
-                                          top)
-  await interaction.followup.send(output)
 
-
-@TopPlayers.error
-async def topplayers_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
-
-@bot.tree.command(name='approvestore',
-                     description='Approve a store to track',
-                     guild=settings.BOTGUILD)
-@discord.app_commands.check(isPhil)
-async def ApproveStore(interaction: discord.Interaction, discord_id: str):
-  await interaction.response.defer()
-  discord_id_int = int(discord_id)
-  store = ApproveMyStore(discord_id_int)
-  await MessageUser(f'{store.StoreName.title()} has been approved to track metagame data!', store.OwnerId)
-  await interaction.followup.send(f'{store.StoreName.title()} is now approved to track their data')
-
-@ApproveStore.error
-async def ApproveStore_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
-
-@bot.tree.command(name='unknown',
-                     description='Get the unknown archetypes for a date range',
-                     guild=settings.TESTSTOREGUILD)
-async def IntoTheUnknown(interaction: discord.Interaction,
-                         start_date: str = '',
-                         end_date: str = ''):
-  """
-  Parameters
-  ----------
-  start_date: string
-    Beginning of Date Range (MM/DD/YYYY)
-  end_date: string
-    End of Date Range (MM/DD/YYYY)
-  """
-  await interaction.response.defer(ephemeral=True)
-  data, title, headers = GetAllUnknown(interaction, start_date, end_date)
-  output = BuildTableOutput(title, headers, data)
-  await interaction.followup.send(output)
-
-@bot.tree.command(name='disapprovestore',
-                     description='Disapprove a store to track',
-                     guild=settings.BOTGUILD)
-@discord.app_commands.check(isPhil)
-async def DisapproveStore(interaction: discord.Interaction, discord_id: str):
-  discord_id_int = int(discord_id)
-  store = DisapproveMyStore(discord_id_int)
-  await interaction.response.send_message(f'Store {store.StoreName.title()} ({store.DiscordId}) no longer approved to track')
 
 #TODO: This needs to be broken up into smaller functions
 #1) Submit the data to inputtracker
@@ -457,35 +474,6 @@ async def Claim(interaction: discord.Interaction,
 async def Claim_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-#TODO: Is there a better way to require a date be inputted?
-#https://discord.com/developers/docs/reference#message-formatting
-@bot.tree.command(name='downloaddata',
-                     description='Download the data for a store for a date range',
-                     guild=settings.TESTSTOREGUILD)
-@discord.app_commands.check(isOwner)
-async def DownloadData(interaction: discord.Interaction,
-                       start_date: str = '',
-                       end_date: str = ''):
-  """
-  Parameters
-  ----------
-  start_date: string
-    Beginning of Date Range (MM/DD/YYYY)
-  end_date: string
-    End of Date Range (MM/DD/YYYY)
-  """
-  await interaction.response.defer(ephemeral=True)
-  guild =interaction.guild
-  if guild is None:
-    raise Exception('No guild found')
-  discord_id = guild.id
-  file = GetDataReport(discord_id, start_date, end_date)
-  if file is None:
-    await interaction.followup.send('No data found for this store')
-  await MessageUser(f'Here is the data for {guild.name}',
-                    interaction.user.id,
-                    file)
-  await interaction.followup.send('The data for the store will arrive by message')
 
 @DownloadData.error
 async def DownloadData_error(interaction: discord.Interaction, error):

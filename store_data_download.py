@@ -1,18 +1,19 @@
 from discord import File
 from io import BytesIO
-from date_functions import ConvertToDate, GetToday
+from date_functions import BuildDateRange
 from database_connection import GetStoreData
+from interaction_data import GetInteractionData
 
-
-def GetDataReport(discord_id, start_date, end_date):
-  date_start = ConvertToDate(start_date if start_date != '' else '1/1/2024')
-  date_end = ConvertToDate(end_date) if end_date != '' else GetToday()
-  data = GetStoreData(discord_id, date_start, date_end)
+def GetDataReport(interaction, start_date, end_date):
+  game, format, store, user_id = GetInteractionData(interaction, store=True, game=True)
+  date_start, date_end = BuildDateRange(start_date, end_date, format)
+  data = GetStoreData(store.DiscordId, format, date_start, date_end)
   if len(data) == 0:
-    return None
+    return None, None
   header = 'GAME,FORMAT,DATE,PLAYER_NAME,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS'
   file = ConvertRowsToFile(data, 'MyStoreData', header)
-  return file
+  message = f'Here is the data for {store.StoreName.title()}'
+  return message, file
 
 def ConvertRowsToFile(data, filename, header):
   data_list = []

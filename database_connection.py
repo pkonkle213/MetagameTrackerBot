@@ -1,22 +1,23 @@
 import os
 import psycopg2
-import settings
 
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
-#TODO: Update for when participants are joined with archetypes played
 def GetUnknown(discord_id, game_id, format_id, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   command = f'''
-  SELECT e.event_date, p.player_name
+  SELECT e.event_date,
+         p.player_name,
+         ap.archetype_played
   FROM participants p
   INNER JOIN events e ON e.id = p.event_id
-  WHERE e.game_id = {game_id}
-  AND e.format_id = {format_id}
-  AND e.discord_id = {discord_id}
-  AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-  AND p.archetype_played = 'UNKNOWN'
-  ORDER BY event_date desc, player_name
+  LEFT OUTER JOIN archetypesplayed ap ON (ap.event_id = p.event_id AND ap.player_name = p.player_name)
+  WHERE e.discord_id = {discord_id}
+    AND e.format_id = {format_id}
+    AND e.game_id = {game_id}
+    AND ap.archetype_played IS NULL
+    AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+  ORDER BY e.event_date DESC, p.player_name
   '''
 
   with conn, conn.cursor() as cur:
@@ -90,9 +91,10 @@ def GetStats(discord_id,
     cur.close()
     return rows
 
-#Is this proper to do? Saves coding, looks wonky
 def GetAnalysis(discord_id, game_id, format_id, weeks, isMeta, dates):
   (EREnd, ERStart, BREnd, BRStart) = dates
+  #TODO: Is this proper to do? Saves coding, looks sloppy
+  #One formula is for win percentage, the other is for metagame percentage
   formula = 'COUNT(*) * 1.0 / SUM(COUNT(*)) OVER()' if isMeta else '(sum(p.wins) * 1.0) / (sum(p.wins) + sum(p.losses))'
   with conn, conn.cursor() as cur:
     command = f"""
@@ -151,51 +153,45 @@ def GetAnalysis(discord_id, game_id, format_id, weeks, isMeta, dates):
     cur.close()
     return rows
 
-#TODO: Clean up as a single string
-def GetStoreData(discord_id, start_date, end_date):
-  criteria = [start_date, end_date]
+def GetStoreData(discord_id, format, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  '''
+    command =  f'''
     SELECT c.name AS GameName,
-      f.name AS FormatName,
-      e.event_date AS EventDate,
-      p.player_name AS PlayerName,
-      p.archetype_played AS ArchetypePlayed,
-      p.wins AS Wins,
-      p.losses AS Losses,
-      p.draws AS Draws
+           f.name AS FormatName,
+           e.event_date AS EventDate,
+           p.player_name AS PlayerName,
+           COALESCE(ap.archetype_played,'UNKNOWN') AS ArchetypePlayed,
+           p.wins AS Wins,
+           p.losses AS Losses,
+           p.draws AS Draws
     FROM participants p
-    INNER JOIN events e on e.id = p.event_id
-    INNER JOIN cardgames c on c.id = e.game_id
-    INNER JOIN formats f on f.id = e.format_id
-    INNER JOIN stores s on s.discord_id = e.discord_id
-    WHERE e.event_date >= %s
-      AND e.event_date <= %s 
+      INNER JOIN events e on e.id = p.event_id
+      INNER JOIN cardgames c on c.id = e.game_id
+      INNER JOIN formats f on f.id = e.format_id
+      INNER JOIN stores s on s.discord_id = e.discord_id
+      LEFT JOIN archetypesplayed ap ON (ap.player_name = p.player_name AND ap.event_id = p.event_id)
+    WHERE e.event_date BETWEEN '{start_date}' AND '{end_date}'
+      AND s.discord_id = {discord_id}
+      {f'AND e.format_id = {format.ID}' if format else ''}
+    ORDER BY 3 desc, 6 desc
     '''
-    if discord_id != settings.DATAGUILDID:
-      criteria.append(discord_id)
-      command += 'AND e.discord_id = %s '
-    else:
-      command += 'AND s.used_for_data = true '
-    command += 'ORDER BY e.event_date, p.wins DESC '
-
-    cur.execute(command, criteria)
+  
+    cur.execute(command)
     rows = cur.fetchall()
     return rows
   
 def ViewEvent(event_id):
-  criteria = [event_id]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command = '''
+    command = f'''
     SELECT archetype_played, wins, losses, draws
     FROM participants p
-    WHERE event_id = %s
+    WHERE event_id = {event_id}
     ORDER BY wins DESC, draws DESC
     '''
 
-    cur.execute(command, criteria)
+    cur.execute(command)
     rows = cur.fetchall()
     return rows
 
@@ -536,51 +532,39 @@ def GetDataRowsForMetagame(game,
     rows = cur.fetchall()
     return rows
 
-def GetTopPlayers(discord_id,
-                  game_id,
-                  format,
-                  start_date,
-                  end_date,
-                  top_number):
+def GetTopPlayerData(discord_id,
+                     game_id,
+                     format_id,
+                     start_date,
+                     end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT player_name,
-      round(eventpercent * 100, 2) as eventpercent,
-      round(winpercent * 100, 2) as winpercent,
-      round(eventpercent * winpercent * 100, 2) as Combined
-    FROM (SELECT player_name,
-        count(*) * 1.0 /
-        (SELECT COUNT(*)
-          FROM events
-          WHERE game_id = {game_id} 
-    '''
-
-    if discord_id != settings.DATAGUILDID:
-      command += f'AND discord_id = {discord_id} '
-      
-    if format != '':
-      command += f'AND format_id = {format.ID} '
-         
-    command += f'''
-          AND event_date BETWEEN '{start_date}' AND '{end_date}') AS eventpercent,
-        (sum(wins) * 1.0) / (sum(wins) + sum(losses) + sum(draws)) as winpercent
-      FROM events e
-      INNER JOIN participants p ON p.event_id = e.id
-      WHERE game_id = 1
-      '''
-    
-    if discord_id != settings.DATAGUILDID:
-      command += f'AND discord_id = {discord_id} '
-
-    if format != '':
-      command += f'AND format_id = {format.ID} '
-    
-    command += f'''
-      AND event_date BETWEEN '{start_date}' AND '{end_date}'
-      GROUP BY player_name)
+           round(eventpercent * 100, 2) as eventpercent,
+           round(winpercent * 100, 2) as winpercent,
+           round(eventpercent * winpercent * 100, 2) as Combined
+    FROM (
+      SELECT p.player_name,
+             COUNT(*) * 1.0 / (
+                SELECT COUNT(*)
+                FROM events
+                WHERE game_id = {game_id}
+                AND format_id = {format_id}
+                AND discord_id = {discord_id}
+                AND event_date BETWEEN '{start_date}' AND '{end_date}'
+             ) as eventpercent,
+             sum(p.wins) * 1.0 / (sum(p.wins) + sum(p.losses) + sum(p.draws)) as winpercent
+      FROM participants p
+      INNER JOIN events e ON e.id = p.event_id
+      WHERE e.event_date BETWEEN '{start_date}' AND '{end_date}'
+        AND game_id = {game_id}
+        AND format_id = {format_id}
+        AND discord_id = {discord_id}
+      GROUP BY p.player_name
+    )
     ORDER BY combined desc
-    LIMIT {top_number}
+    LIMIT 10
     '''
   
     cur.execute(command)

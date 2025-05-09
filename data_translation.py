@@ -121,7 +121,7 @@ def Claim(date, game_name, format_name, player_name, archetype_played,
   return None
 
 
-def GetTopPlayers(discord_id, game_name, format_name, year, quarter,
+def GetTopPlayerDa(discord_id, game_name, format_name, year, quarter,
                   top_number):
   date_range = date_functions.GetQuarterRange(year, quarter)
   start_date = date_range[0]
