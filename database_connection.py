@@ -21,7 +21,6 @@ def AddArchetype(event_id,
     row = cur.fetchone()
     return row
   
-
 def GetUnknown(discord_id, game_id, format_id, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   command = f'''

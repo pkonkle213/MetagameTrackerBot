@@ -1,20 +1,14 @@
-from discord import Interaction, TextChannel
-from interaction_data import GetInteractionData
+from discord import Interaction
+from interaction_data import GetInteractionData, SplitInteractionData
 from database_connection import AddFormatMap, GetFormatsByGameId
 
 def AddStoreFormatMap(interaction:Interaction, chosen_format):
-  game, format, store, user_id = GetInteractionData(interaction,
-                                                    store=True,
-                                                    game=True)
-  #TODO: I think this is double checking, DRY, so it should be refactored
-  channel = interaction.channel
-  if not isinstance(channel, TextChannel):
-    return 'Cannot map a format to something that is not a channel'
+  discord_id, category_id, channel_id, user_id = SplitInteractionData(interaction)
   
-  rows = AddFormatMap(store.DiscordId, chosen_format[0], channel.id)
+  rows = AddFormatMap(discord_id, chosen_format[0], channel_id)
   if rows is None:
     return 'Unable to add game map'
-  return f'Success! This channel ({channel.name.title()}) is now mapped to {chosen_format[1].title()}'
+  return f'Success! This channel ({channel_id}) is now mapped to {chosen_format[1].title()}'
 
 def GetFormatOptions(interaction:Interaction):
   game, format, store, user_id = GetInteractionData(interaction,

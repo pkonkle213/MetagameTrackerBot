@@ -8,10 +8,10 @@ def GetInteractionData(interaction,
                       format=False,
                       store=False):
   Requirements = namedtuple("Requirements",["Game","Format","Store"])
-  requirements = Requirements(game,format,store)
+  requirements = Requirements(game, format, store)
   raw_data = SplitInteractionData(interaction)
-  data = FormatInteractionData(raw_data, requirements)
-  return data
+  formatted_data = FormatInteractionData(raw_data, requirements)
+  return formatted_data
 
 def SplitInteractionData(interaction):
   discord_guild = interaction.guild
@@ -35,6 +35,9 @@ def SplitInteractionData(interaction):
     user_id = interaction.user.id
   if isinstance(interaction, discord.Message):
     user_id = interaction.author.id
+
+  if user_id == -1:
+    raise Exception('No user found!?')
   Data = namedtuple("Data",["DiscordId", "CategoryId", "ChannelId", "UserId"])
   return Data(discord_id, category_id, channel_id, user_id)
 

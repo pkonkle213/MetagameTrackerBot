@@ -61,7 +61,6 @@ async def on_message(message):
     output = await SubmitData(bot, message, data)
     await message.channel.send(output)
 
-#TODO: Double check these are needed and accurate
 def isOwner(interaction: discord.Interaction):
   userid = interaction.user.id
   ownerid = interaction.guild.owner_id if interaction.guild else None
@@ -97,15 +96,13 @@ async def MessageChannel(msg, guildId, channelId):
 
   await channel.send(f'{msg}')
 
-#TODO: This is a mess, needs to be refactored
+#TODO: Any chance we can have better information about the error?
 async def Error(interaction, error):
   print('Error:', error)
   command = interaction.command.name
-  text = interaction.message.content if interaction.message else ''
   error_message = f'''
   {interaction.user.display_name} ({interaction.user.id}) got an error: {error}
   Command: {command}
-  Text: {text}
   '''
   await ErrorMessage(error_message)
   await interaction.followup.send('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
@@ -180,8 +177,6 @@ async def register_error(interaction: discord.Interaction, error):
   await interaction.followup.send('Unable to register the store. This has been reported')
   await Error(interaction, error)
 
-#TODO: I think GameCategoryMaps and FormatChannelMaps should include the discordID simply so if a store is deleted, the maps are deleted too
-#This could also be good to create a complex primary key with (discordid, channelid) or (discordid, categoryid) as I'm not sure if channelid or categoryid are unique across multiple discord guilds
 @bot.tree.command(name='mapgame',
                      description='Map your category to a game',
                      guild=settings.TESTSTOREGUILD)
@@ -281,13 +276,21 @@ async def WLDRecord(interaction: discord.Interaction,
 async def WLDRecord_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-#TODO: Update to ask for date range
 @bot.tree.command(name="attendance",
-                     description="Get the attendance for the last 8 weeks",
-                     guild=settings.TESTSTOREGUILD)
-async def Attendance(interaction: discord.Interaction):
+                     description="Get the attendance for a date range")
+async def Attendance(interaction: discord.Interaction,
+                     start_date: str = '',
+                     end_date: str = ''):
+  """
+  Parameters
+  ----------
+  start_date: string
+    Beginning of Date Range (MM/DD/YYYY)
+  end_date: string
+    End of Date Range (MM/DD/YYYY)
+  """
   await interaction.response.defer()
-  data, title, headers = GetStoreAttendance(interaction)
+  data, title, headers = GetStoreAttendance(interaction, start_date, end_date)
   output = BuildTableOutput(title,
                             headers,
                             data)

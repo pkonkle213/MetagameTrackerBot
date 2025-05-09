@@ -1,17 +1,14 @@
 from discord import Interaction
-from date_functions import GetToday, GetStartDate
+from date_functions import BuildDateRange
 from interaction_data import GetInteractionData
 from database_connection import GetAttendance
 
 #TODO: Make this more flexible to allow for multiple stores (DATAGUILD)
-def GetStoreAttendance(interaction:Interaction):
+def GetStoreAttendance(interaction:Interaction, start_date, end_date):
   game, format, store, userId = GetInteractionData(interaction,
                                                    game=True,
                                                    store=True)
-
-  date_end = GetToday()
-  date_start = GetStartDate(date_end)
-
+  date_start, date_end = BuildDateRange(start_date, end_date, format)
   data = GetAttendance(store.DiscordId,
                        game,
                        format,
