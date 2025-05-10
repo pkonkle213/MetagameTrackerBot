@@ -146,8 +146,7 @@ async def Feedback_error(interaction: discord.Interaction, error):
                      description="The new thing I want to test",
                      guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
-  ...
-  
+  ... 
 
 @ATest.error
 async def ATest_error(interaction: discord.Interaction, error):
@@ -340,7 +339,7 @@ async def IntoTheUnknown(interaction: discord.Interaction,
   end_date: string
     End of Date Range (MM/DD/YYYY)
   """
-  await interaction.response.defer(ephemeral=True)
+  await interaction.response.defer()
   data, title, headers = GetAllUnknown(interaction, start_date, end_date)
   output = BuildTableOutput(title, headers, data)
   await interaction.followup.send(output)
@@ -422,16 +421,17 @@ async def Claim(interaction: discord.Interaction,
     archetype_submitted, event = ClaimResult(interaction, player_name, archetype, date)
     if archetype_submitted is None:
       await interaction.followup.send('Unable to submit the archetype. Please try again later.')
+    else:
+      await interaction.followup.send('Thank you for submitting the archetype!')
+      
     followup = CheckEventPercentage(event)
-    if followup[1]:
-      if followup[2]:
+    if followup:
+      if followup[1]:
         title, headers, data = OneEvent(event)
         output = BuildTableOutput(title, headers, data)
         await MessageChannel(output, interaction.guild_id, interaction.channel_id)
       else:
         await MessageChannel(followup[0], interaction.guild_id, interaction.channel_id)
-    else:
-      await interaction.followup.send(followup[0])
   except EventNotFoundError as error:
     print('Event not found')
     await interaction.followup.send(error.message)

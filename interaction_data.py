@@ -51,7 +51,7 @@ def GetGame(category_id:int, required):
   return tc.ConvertToGame(game_obj)
 
 def GetFormat(game, channel_id:int, required):
-  if not game.HasFormats:
+  if game is None or not game.HasFormats:
     return None
   format_obj = db.GetFormatByMap(channel_id)
   if format_obj is None:

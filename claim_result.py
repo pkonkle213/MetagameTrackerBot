@@ -51,11 +51,11 @@ def CheckEventPercentage(event):
     str_date = event.EventDate.strftime('%B %d')
     #TODO: I feel like this is cheating. I'm returning a tuple of Message, FollowUpToChannel, NeedsTable
     if event.LastUpdate + 1 < 4:
-      followup = (f'Congratulations! The {str_date} event is now {percent_reported:.0%} reported!', True, False)
+      followup = (f'Congratulations! The {str_date} event is now {percent_reported:.0%} reported!', False)
     else:
-      followup = (f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!',True, True)
+      followup = (f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!', True)
     return followup
-  return ('Thank you for submitting the archetype!', False, False)
+  return None
 
 def OneEvent(event):
   event_meta = GetEventMeta(event.ID)
