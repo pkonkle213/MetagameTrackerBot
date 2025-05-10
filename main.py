@@ -153,8 +153,7 @@ async def ATest_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name="register",
-                     description="Register your store",
-                     guild=settings.TESTSTOREGUILD)
+                     description="Register your store")
 @discord.app_commands.check(isOwner)
 async def Register(interaction: discord.Interaction,
                    store_name: str):
@@ -177,8 +176,7 @@ async def register_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name='mapgame',
-                     description='Map your category to a game',
-                     guild=settings.TESTSTOREGUILD)
+                     description='Map your category to a game')
 @discord.app_commands.checks.has_role("Owner")
 async def AddGameMap(interaction: discord.Interaction):
   await interaction.response.defer(ephemeral=True)
@@ -194,8 +192,7 @@ async def AddGameMap_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name='mapformat',
-                     description='Map your channel to a format',
-                     guild=settings.TESTSTOREGUILD)
+                     description='Map your channel to a format')
 @discord.app_commands.checks.has_role("Owner")
 async def AddFormatMap(interaction: discord.Interaction):
   await interaction.response.defer(ephemeral=True)
@@ -211,8 +208,7 @@ async def AddFormatMap_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name="submitcheck",
-                     description="To test if you can submit data",
-                     guild=settings.TESTSTOREGUILD)
+                     description="To test if you can submit data")
 async def SubmitCheck(interaction: discord.Interaction):
   if not isSubmitter(interaction.guild, interaction.user):
     await interaction.response.send_message('You don\'t have the MTSubmitter role. Please contact your discord\'s owner')
@@ -226,8 +222,7 @@ async def SubmitCheck_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name="metagame",
-                     description="Get the metagame",
-                     guild=settings.TESTSTOREGUILD)
+                     description="Get the metagame")
 async def Metagame(interaction: discord.Interaction,
                    start_date: str = '',
                    end_date: str = ''):
@@ -253,8 +248,7 @@ async def metagame_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name="playrecord",
-   description="Look up your win/loss record(s)",
-   guild=settings.TESTSTOREGUILD)
+                  description="Look up your win/loss record(s)")
 async def WLDRecord(interaction: discord.Interaction,
   start_date: str = '',
   end_date: str = ''):
@@ -300,8 +294,7 @@ async def attendance_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name="topplayers",
-                     description="Get the top players of the format",
-                     guild=settings.TESTSTOREGUILD)
+                  description="Get the top players of the format")
 @discord.app_commands.checks.has_role("MTSubmitter")
 async def TopPlayers(interaction: discord.Interaction,
                      start_date: str = '',
@@ -326,8 +319,7 @@ async def topplayers_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name='unknown',
-                     description='See what archetypes still need submitted for a date range',
-                     guild=settings.TESTSTOREGUILD)
+                  description='See what archetypes still need submitted for a date range')
 async def IntoTheUnknown(interaction: discord.Interaction,
                          start_date: str = '',
                          end_date: str = ''):
@@ -376,8 +368,7 @@ async def DisapproveStore(interaction: discord.Interaction, discord_id: str):
 #TODO: Is there a better way to require a date be inputted?
 #https://discord.com/developers/docs/reference#message-formatting
 @bot.tree.command(name='downloaddata',
-                  description='Download the data for a store for a date range',
-                  guild=settings.TESTSTOREGUILD)
+                  description='Download the data for a store for a date range')
 @discord.app_commands.check(isOwner)
 async def DownloadData(interaction: discord.Interaction,
                        start_date: str = '',
@@ -400,8 +391,7 @@ async def DownloadData(interaction: discord.Interaction,
   await interaction.followup.send('The data for the store will arrive by message')
 
 @bot.tree.command(name='claim',
-                     description='Enter your deck archetype',
-                     guild=settings.TESTSTOREGUILD)
+                  description='Enter your deck archetype')
 async def Claim(interaction: discord.Interaction,
                 player_name: str,
                 archetype: str,
