@@ -193,12 +193,15 @@ async def AddGameMap_error(interaction: discord.Interaction, error):
 @discord.app_commands.checks.has_role("MTSubmitter")
 async def AddFormatMap(interaction: discord.Interaction):
   await interaction.response.defer(ephemeral=True)
-  message = 'Please select a format'
-  placeholder = 'Choose a format'
   dynamic_options = GetFormatOptions(interaction)
-  result = await SelectMenu(interaction, message, placeholder, dynamic_options)
-  output = AddStoreFormatMap(interaction, result)
-  await interaction.followup.send(output, ephemeral=True)
+  if dynamic_options is None or len(dynamic_options) == 0:
+    await interaction.followup.send('No formats found for this game')
+  else:
+    message = 'Please select a format'
+    placeholder = 'Choose a format'
+    result = await SelectMenu(interaction, message, placeholder, dynamic_options)
+    output = AddStoreFormatMap(interaction, result)
+    await interaction.followup.send(output, ephemeral=True)
 
 @AddFormatMap.error
 async def AddFormatMap_error(interaction: discord.Interaction, error):
