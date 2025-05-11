@@ -51,7 +51,8 @@ def GetStats(discord_id,
              start_date,
              end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  
+
+  #I left this unformated, sorry. It's hard to read, but it works...I think
   command = f'''
     SELECT archetype_played,
            wins,
@@ -298,8 +299,12 @@ def SetStoreTrackingStatus(approval_status,
                            store_discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'UPDATE Stores SET isApproved = %s '
-    command += 'WHERE discord_id = %s returning * '
+    command = f'''
+    UPDATE Stores
+    SET isApproved = {approval_status}
+    WHERE discord_id = {store_discord_id}
+    RETURNING *
+    '''
     criteria = (approval_status, store_discord_id)
     cur.execute(command, criteria)
     conn.commit()
@@ -310,11 +315,13 @@ def GetParticipantId(event_id, player_name):
   criteria = [event_id, player_name]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT id '
-    command += 'FROM participants '
-    command += 'WHERE event_id = %s '
-    command += 'AND player_name = %s '
-    command += 'LIMIT 1'
+    command =  '''
+    SELECT id
+    FROM participants
+    WHERE event_id = %s
+    AND player_name = %s
+    LIMIT 1
+    '''
     cur.execute(command, criteria)
     rowid = cur.fetchone()
     return rowid[0] if rowid else None
@@ -323,14 +330,19 @@ def Increase(playerid, wins, losses, draws):
   criteria = [wins, losses, draws, playerid]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'UPDATE participants '
-    command += 'SET wins = wins + %s, '
-    command += 'losses = losses + %s, '
-    command += 'draws = draws + %s '
-    command += 'WHERE id = %s '
+    command = f'''
+    UPDATE participants
+    SET wins = wins + {wins},
+        losses = losses + {losses},
+        draws = draws + {draws}
+    WHERE id = {playerid}
+    RETURNING *
+    '''
 
     cur.execute(command, criteria)
     conn.commit()
+    row = cur.fetchone()
+    return row[0] if row else None
 
 def AddResult(event_id,
               player,
@@ -338,6 +350,7 @@ def AddResult(event_id,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     try:
+      #I'm choosing to inject these values due to player_name technically being a string of user input
       command = '''
       INSERT INTO Participants (event_id, player_name, wins, losses, draws, submitter_id)
       VALUES (%s, %s, %s, %s, %s, %s)
@@ -360,31 +373,37 @@ def GetRoundNumber(event_id):
   criteria = [event_id]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT MAX(round_number) '
-    command += 'FROM rounddetails '
-    command += 'WHERE event_id = %s '
-    command += 'GROUP BY event_id '
+    command = f'''
+    SELECT MAX(round_number)
+    FROM rounddetails
+    WHERE event_id = {event_id}
+    '''
 
     cur.execute(command, criteria)
     row = cur.fetchone()
-    return row[0] if row else None
+    if row is None:
+      return 0
+    elif row[0] is None:
+      return 0
+    else:
+      return row[0]
 
 def AddRoundResult(event_id,
                    round_number,
                    player1id,
                    player2id,
-                   winner_id):
+                   winner_id,
+                   submitter_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     try:
-      command = 'INSERT INTO rounddetails (event_id, round_number, player1_id, player2_id, winner_id) '
-      command += 'VALUES (%s, %s, %s, %s, %s) '
-      command += 'RETURNING *     '
-      cur.execute(command, (event_id,
-                            round_number,
-                            player1id,
-                            player2id,
-                            winner_id))
+      command = f'''
+      INSERT INTO rounddetails (event_id, round_number, player1_id, {'player2_id,' if player2id else ''} winner_id, submitter_id)
+      VALUES ({event_id}, {round_number}, {player1id}, {f'{player2id}, ' if player2id else ''}{winner_id}, {submitter_id})
+      RETURNING *
+      '''
+      print('AddRoundResult command:', command)
+      cur.execute(command)
 
       conn.commit()
       row = cur.fetchone()

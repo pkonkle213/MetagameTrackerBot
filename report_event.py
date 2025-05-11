@@ -1,8 +1,8 @@
 from enum import Enum, auto
-from database_connection import GetEventObj, CreateEvent, AddResult
+from database_connection import GetEventObj, CreateEvent, AddResult, GetRoundNumber, GetParticipantId, Increase, AddRoundResult
 from date_functions import GetToday
 from interaction_data import GetInteractionData
-from tuple_conversions import ConvertToEvent
+from tuple_conversions import ConvertToEvent, Participant, Round
 
 async def SubmitData(bot, message, data):
   game, format, store, userId = GetInteractionData(message,
@@ -17,7 +17,12 @@ async def SubmitData(bot, message, data):
     event_obj = CreateEvent(event_date, store.DiscordId, game, format)
 
   event = ConvertToEvent(event_obj)
-  output = AddParticipantResults(event.ID, data, userId)
+  if isinstance(data[0],Participant):
+    output = AddParticipantResults(event.ID, data, userId)
+  elif isinstance(data[0], Round):
+    output = AddRoundResults(event.ID, data, userId)
+  else:
+    raise Exception('Congratulations, you\'ve reached the impossible to reach area.')
   return output
 
 def AddParticipantResults(event_id, data, submitterId):
@@ -29,53 +34,62 @@ def AddParticipantResults(event_id, data, submitterId):
 
   return f'{successes} entries were added. Feel free to use /claim and update the archetypes!'
 
-#####################################################################################################
-#TODO: Not implemented, needs to be updated and retweaked
 class Winner(Enum):
   TIE = auto()
   PLAYER1 = auto()
   PLAYER2 = auto()
 
 def AddRoundResults(event_id, data, submitterId):
-  round_number = (database_connection.GetRoundNumber(event_id) or 0) + 1
-  print('Round number:', round_number)
+  successes = 0
+  round_number = GetRoundNumber(event_id) + 1
   for round in data:
-    result = None
     if round.P1Wins > round.P2Wins:
       result = Winner.PLAYER1
     elif round.P2Wins > round.P1Wins:
       result = Winner.PLAYER2
     else:
       result = Winner.TIE
-
-    player1id = database_connection.GetParticipantId(event_id,
-                                                     round.P1Name.upper())
-    player2id = database_connection.GetParticipantId(event_id,
-                                                     round.P2Name.upper())
+    
+    player1id = GetParticipantId(event_id,
+                                 round.P1Name.upper())
+    player2id = GetParticipantId(event_id,
+                                 round.P2Name.upper())
 
     if player1id is None:
-      person = tuple_conversions.Participant(round.P1Name.upper(), 0, 0, 0)
-      player1id = database_connection.AddResult(event_id, person,
-                                                submitterId)
+      person = Participant(round.P1Name.upper(), 0, 0, 0)
+      player1id = AddResult(event_id,
+                            person,
+                            submitterId)
 
-    if player2id is None:
-      person = tuple_conversions.Participant(round.P2Name.upper(), 0, 0, 0)
-      player2id = database_connection.AddResult(event_id, person,
-                                                submitterId)
+    if round.P2Name != 'Bye' and player2id is None:
+      person = Participant(round.P2Name.upper(), 0, 0, 0)
+      player2id = AddResult(event_id,
+                            person,
+                            submitterId)
+    else:
+      player2id = None
 
-    #increase each player's wins, losses, and draws by 1 where appropriate
-    if result == Winner.PLAYER1:
-      database_connection.Increase(player1id, 1, 0, 0)
-      database_connection.Increase(player2id, 0, 1, 0)
-      database_connection.AddRoundResult(event_id, round_number, player1id,
-                                         player2id, player1id)
-    elif result == Winner.PLAYER2:
-      database_connection.Increase(player2id, 1, 0, 0)
-      database_connection.Increase(player1id, 0, 1, 0)
-      database_connection.AddRoundResult(event_id, round_number, player1id,
-                                         player2id, player2id)
-    elif result == Winner.TIE:
-      database_connection.Increase(player1id, 0, 0, 1)
-      database_connection.Increase(player2id, 0, 0, 1)
-      database_connection.AddRoundResult(event_id, round_number, player1id,
-                                         player2id, None)
+    winner_id = player1id if result == Winner.PLAYER1 else player2id if result == Winner.PLAYER2 else None
+    increase_one = Increase(player1id,
+       1 if result == Winner.PLAYER1 else 0,
+       1 if result == Winner.PLAYER2 else 0,
+       1 if result == Winner.TIE else 0)
+    if not increase_one:
+      raise Exception('Unable to increase participant record one')
+    if round.P2Name != 'Bye':
+      increase_two = Increase(player2id,
+         1 if result == Winner.PLAYER2 else 0,
+         1 if result == Winner.PLAYER1 else 0,
+         1 if result == Winner.TIE else 0)
+      if not increase_two:
+        raise Exception('Unable to increase participant record two')
+    result = AddRoundResult(event_id,
+                            round_number,
+                            player1id,
+                            player2id,
+                            winner_id,
+                            submitterId)
+    if result:
+      successes += 1
+
+    return f'Ready for the next round, as {successes} entries were added. Feel free to use /claim and update the archetypes!'

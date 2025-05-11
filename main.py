@@ -6,6 +6,7 @@ import settings
 import logging
 from discord.ext import commands
 from attendance_report import GetStoreAttendance
+from checks import isSubmitter
 from claim_result import ClaimResult, CheckEventPercentage, OneEvent
 from demo_functions import NewDemo
 from format_mapper import AddStoreFormatMap, GetFormatOptions
@@ -49,7 +50,7 @@ async def on_message(message):
 
   data = data_translation.ConvertMessageToParticipants(message.content)
   if data is not None:
-    if not isSubmitter(message.guild, message.author):
+    if not isSubmitter(message.guild, message.author, 'MTSubmitter'):
       await ErrorMessage(f'{str(message.author).title()} ({message.author.id}) lacks the permission to submit data')
       return
     if not storeCanTrack(message.guild):
@@ -68,10 +69,6 @@ def isOwner(interaction: discord.Interaction):
 
 def isPhil(interaction: discord.Interaction):
   return interaction.user.id == settings.PHILID
-
-def isSubmitter(guild, author):
-  role = discord.utils.find(lambda r: r.name == 'MTSubmitter', guild.roles)
-  return role in author.roles
 
 def storeCanTrack(guild):
   store = interaction_data.GetStore(guild.id)
@@ -177,7 +174,7 @@ async def register_error(interaction: discord.Interaction, error):
 
 @bot.tree.command(name='mapgame',
                      description='Map your category to a game')
-@discord.app_commands.checks.has_role("Owner")
+@discord.app_commands.checks.has_role("MTSubmitter")
 async def AddGameMap(interaction: discord.Interaction):
   await interaction.response.defer(ephemeral=True)
   message = 'Please select a game'
@@ -193,7 +190,7 @@ async def AddGameMap_error(interaction: discord.Interaction, error):
 
 @bot.tree.command(name='mapformat',
                      description='Map your channel to a format')
-@discord.app_commands.checks.has_role("Owner")
+@discord.app_commands.checks.has_role("MTSubmitter")
 async def AddFormatMap(interaction: discord.Interaction):
   await interaction.response.defer(ephemeral=True)
   message = 'Please select a format'
@@ -210,7 +207,7 @@ async def AddFormatMap_error(interaction: discord.Interaction, error):
 @bot.tree.command(name="submitcheck",
                      description="To test if you can submit data")
 async def SubmitCheck(interaction: discord.Interaction):
-  if not isSubmitter(interaction.guild, interaction.user):
+  if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter'):
     await interaction.response.send_message('You don\'t have the MTSubmitter role. Please contact your discord\'s owner')
   elif not storeCanTrack(interaction.guild):
     await interaction.response.send_message('This store isn\'t approved to submit data')

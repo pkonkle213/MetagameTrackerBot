@@ -1,17 +1,12 @@
-import date_functions
-import database_connection
-import output_builder
-from tuple_conversions import Participant
+from tuple_conversions import Participant, Round
 
 def ConvertMessageToParticipants(message):
   #TODO: Can I use polymorphism to make this more readable?
   data = CompanionParticipants(message)
   if data is None:
     data = MeleeParticipants(message)
-  ''' Not implemented yet
   if data is None:
     data = CompanionRoundByRound(message)
-  '''
   return data
 
 def CompanionParticipants(message):
@@ -24,9 +19,9 @@ def CompanionParticipants(message):
       int(row_list[2]) #Points obtained
       record = row_list[3].split('/')
       participant = Participant(row_list[1],
-                                                  int(record[0]),
-                                                  int(record[1]),
-                                                  int(record[2]))
+                                int(record[0]),
+                                int(record[1]),
+                                int(record[2]))
       data.append(participant)
     return data
   except Exception:
@@ -41,16 +36,14 @@ def MeleeParticipants(message):
       name = ' '.join(rows[i + 1].split(' ')[0:-1])
       record = rows[i + 2].split('    ')[0].split('-')
       participant = Participant(name,
-                                                  int(record[0]),
-                                                  int(record[1]),
-                                                  int(record[2]))
+                                int(record[0]),
+                                int(record[1]),
+                                int(record[2]))
       data.append(participant)
     return data
   except Exception:
     return None
 
-
-#TODO: Message from Tom obtained. Need to work around BYE rounds
 def CompanionRoundByRound(message):
   data = []
   rows = message.split('\n')
@@ -58,15 +51,21 @@ def CompanionRoundByRound(message):
     for i in range(0, len(rows), 6):
       row = rows[i:i + 6]
       print('Raw row:', row)
-      #This issue that if the last row is a bye, this breaks
-      #row[3]=='Bye'
-      p1name = row[1]
-      p1gw = row[3][0]
-      p2gw = row[3][1]
-      p2name = row[4]
-      result = tuple_conversions.Round(p1name, int(p1gw), p2name, int(p2gw))
-      print('Result:', result)
-      data.append(result)
+      
+      if row[3] != 'Bye':
+        p1name = row[1]
+        p1gw = row[3][0]
+        p2gw = row[3][1]
+        p2name = row[4]
+        result = Round(p1name, int(p1gw), p2name, int(p2gw))
+        data.append(result)
+      if row[3] == 'Bye':
+        p1name = row[0]
+        p1gw = 2
+        p2name = 'Bye'
+        p2gw = 0
+        result = Round(p1name, int(p1gw), p2name, int(p2gw))
+        data.append(result)
     return data
   except Exception as exception:
     print('Rows:', rows)

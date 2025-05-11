@@ -1,3 +1,4 @@
+from checks import isSubmitter
 from custom_errors import DateRangeError, EventNotFoundError
 from date_functions import ConvertToDate, GetToday, DateDifference
 from discord import Interaction
@@ -9,9 +10,9 @@ def ClaimResult(interaction:Interaction, player_name:str, archetype:str, date:st
   #TODO: if the archetype has an emoji or special character, reject it
   date_used = '' if date == '' else ConvertToDate(date)
   date_today = GetToday()
-  if date_used != '':
+  if date_used != '' and not isSubmitter: #This should also check the submitter's role. If they have the MTSubmitter role, they can submit for any date
     if DateDifference(date_today, date_used) > 14:
-      raise DateRangeError('You can only claim archetypes for events within the last 14 days')
+      raise DateRangeError('You can only claim archetypes for events within the last 14 days. Please contact your store owner to have them submit the archetype.')
   else:
     date_used = None
 
