@@ -1,6 +1,7 @@
-from custom_errors import DateRangeError, EventNotFoundError
+from custom_errors import DateRangeError, EventNotFoundError, BadWordError
 import data_translation
 import discord
+from flag_bad_word import AddBadWord
 import interaction_data
 import settings
 import logging
@@ -120,6 +121,12 @@ async def GetBot(interaction: discord.Interaction):
 async def GetBot_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+@bot.tree.command(name="getguild",
+                     description="Display the invite to the bot's server",
+                     guild=settings.BOTGUILD)
+async def GetGuild(interaction: discord.Interaction):
+  await interaction.response.send_message(f'Here is the link to my server: {settings.MYBOTGUILDURL}')
+
 @bot.tree.command(name="getsop",
                      description="Display the url to get the bot",
                      guild=settings.BOTGUILD)
@@ -139,15 +146,38 @@ async def Feedback(interaction: discord.Interaction):
 async def Feedback_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+#Something I'd like to test:
+#@discord.app_commands.AppCommand(default_member_permissions=0)
+#?????
 @bot.tree.command(name="atest",
                      description="The new thing I want to test",
                      guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
-  ... 
-
+  test = ...
+  if not test:
+    await interaction.response.send_message("Nope, something didn't work")
+  else:
+    await interaction.response.send_message("Yep, it worked")
+  
 @ATest.error
 async def ATest_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
+
+@bot.tree.command(name='addword',
+                 description='Add a banned word',
+                 guild=settings.TESTSTOREGUILD)
+@discord.app_commands.checks.has_role('MTSubmitter')
+async def BadWord(interaction: discord.Interaction,
+                   word:str):
+  if len(word) <3:
+    await interaction.response.send_message('Word must be at least 3 characters long')
+  else:
+    await interaction.response.defer(ephemeral=True)
+    check = AddBadWord(interaction, word)
+    if check:
+      await interaction.followup.send('Word added and offending archetypes disabled')
+    else:
+      await interaction.followup.send('Something went wrong. Please try again later.', ephemeral=True)
 
 @bot.tree.command(name="register",
                      description="Register your store")
@@ -422,6 +452,9 @@ async def Claim(interaction: discord.Interaction,
         await MessageChannel(output, interaction.guild_id, interaction.channel_id)
       else:
         await MessageChannel(followup[0], interaction.guild_id, interaction.channel_id)
+  except BadWordError as error:
+    print(f'Bad word error: {error}')
+    await interaction.followup.send(error.message)
   except EventNotFoundError as error:
     print('Event not found')
     await interaction.followup.send(error.message)
@@ -449,4 +482,4 @@ async def demo_error(interaction: discord.Interaction, error):
 async def DownloadData_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)
+bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.INFO)

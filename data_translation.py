@@ -24,8 +24,9 @@ def CompanionParticipants(message):
                                 int(record[2]))
       data.append(participant)
     return data
-  except Exception:
-    print('Not data from Companion')
+  except Exception as exception:
+    print('Rows:', rows)
+    print('Companion Participants Exception:', exception)
     return None
 
 def MeleeParticipants(message):
@@ -41,7 +42,9 @@ def MeleeParticipants(message):
                                 int(record[2]))
       data.append(participant)
     return data
-  except Exception:
+  except Exception as exception:
+    print('Rows:', rows)
+    print('Melee Participants Exception:', exception)
     return None
 
 def CompanionRoundByRound(message):
@@ -49,9 +52,7 @@ def CompanionRoundByRound(message):
   rows = message.split('\n')
   try:
     for i in range(0, len(rows), 6):
-      row = rows[i:i + 6]
-      print('Raw row:', row)
-      
+      row = rows[i:i + 6]      
       if row[3] != 'Bye':
         p1name = row[1]
         p1gw = row[3][0]

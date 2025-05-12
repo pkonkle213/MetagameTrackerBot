@@ -5,14 +5,8 @@ description = ""
 authors = ["Your Name <you@example.com>"]
 requires-python = ">=3.11"
 dependencies = [
-    "certifi>=2024.12.14",
-    "data>=0.4",
-    "discord-py>=2.4.0",
+    "discord-py>=2.5.2",
     "psycopg2-binary>=2.9.10",
-    "pycord>=0.1.1",
-    "pypdf2==3.0.1",
-    "python-dotenv>=1.0.1",
-    "pytz>=2024.2",
-    "requests>=2.32.3",
-    "wikimedia-spicerack>=10.1.0",
+    "python-dotenv>=1.1.0",
+    "pytz>=2025.2",
 ]

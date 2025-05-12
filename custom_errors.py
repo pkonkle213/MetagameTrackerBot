@@ -10,3 +10,8 @@ class DateRangeError(CustomError):
   def __init__(self, message):
     self.message = message
     super().__init__(self.message)
+
+class BadWordError(CustomError):
+  def __init__(self, message):
+    self.message = message
+    super().__init__(self.message)

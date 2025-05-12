@@ -1,0 +1,2 @@
+When running tests, under 'Shell', run "pytest {test file name here}"
+Example: "pytest test_date_functions.py"

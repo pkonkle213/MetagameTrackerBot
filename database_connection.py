@@ -1,7 +1,106 @@
 import os
 import psycopg2
+from psycopg2.errors import UniqueViolation
 
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
+
+def AddWord(word):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  try:
+    with conn, conn.cursor() as cur:
+      criteria = [word]
+      command = '''
+      INSERT INTO BadWords (badword)
+      VALUES (%s)
+      RETURNING *
+      '''
+      
+      cur.execute(command, criteria)
+      conn.commit()
+      row = cur.fetchall()
+      print('AddWord returns:', row)
+      return row
+  except UniqueViolation:
+    return None
+
+def GetWord(word):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = '''
+    SELECT id, badword
+    FROM BadWords
+    WHERE badword = %s
+    '''
+    criteria = [word]
+    cur.execute(command, criteria)
+    rows = cur.fetchall()
+    print('GetWord returns:', rows)
+    return rows
+
+def GetWordsForDiscord(discord_id):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    SELECT b.badword
+    FROM BadWords b
+    INNER JOIN badwords_stores bs ON b.id = bs.badword_id
+    WHERE bs.discord_id = {discord_id}
+    '''
+    cur.execute(command)
+    rows = cur.fetchall()
+    print('GetWordsForDiscord returns:', rows)
+    return rows
+
+def AddBadWordBridge(discord_id, word_id):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    INSERT INTO badwords_stores (discord_id, badword_id)
+    VALUES ({discord_id}, {word_id})
+    RETURNING *
+    '''
+    cur.execute(command)
+    conn.commit()
+    row = cur.fetchone()
+    print('AddBadWordBridge returns:', row)
+    return row
+
+def MatchDisabledArchetypes(discord_id, user_id):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    SELECT e.event_date, asu.player_name, asu.archetype_played, asu.date_submitted, asu.submitter_username
+    FROM archetypesubmissions asu
+    INNER JOIN events e ON e.id = asu.event_id
+    WHERE e.discord_id = {discord_id}
+      AND asu.submitter_id = {user_id}
+      AND asu.reported = True
+      AND e.event_date BETWEEN current_date - 30 AND current_date
+    '''
+    cur.execute(command)
+    rows = cur.fetchall()
+    print('MatchDisabledArchetypes returns:', rows)
+    return rows
+
+def DisableMatchingWords(discord_id, word):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    UPDATE ArchetypeSubmissions
+    SET reported = True
+    WHERE event_id IN (
+      SELECT id
+      FROM events
+      WHERE discord_id = {discord_id}
+    )
+    AND archetype_played LIKE '%{word}%'
+    RETURNING *
+    '''
+    cur.execute(command)
+    conn.commit()
+    row = cur.fetchone()
+    print('DisableMatchingWords returns:', row)
+    return row
 
 def AddArchetype(event_id,
                  player_name,
@@ -388,6 +487,18 @@ def GetRoundNumber(event_id):
     else:
       return row[0]
 
+def GetBadWord(word):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    SELECT id, word
+    FROM badwords
+    WHERE badword = '{word}'
+    '''
+    cur.execute(command)
+    row = cur.fetchone()
+    return row
+
 def AddRoundResult(event_id,
                    round_number,
                    player1id,
@@ -402,7 +513,6 @@ def AddRoundResult(event_id,
       VALUES ({event_id}, {round_number}, {player1id}, {f'{player2id}, ' if player2id else ''}{winner_id}, {submitter_id})
       RETURNING *
       '''
-      print('AddRoundResult command:', command)
       cur.execute(command)
 
       conn.commit()

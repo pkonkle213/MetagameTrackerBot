@@ -13,7 +13,6 @@ def PlayRecord(interaction:Interaction,
   date_start, date_end = BuildDateRange(start_date,
                                         end_date,
                                         format)
-  print('userid', user_id)
   data = GetStats(store.DiscordId,
                   game.ID,
                   format.ID,
