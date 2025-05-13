@@ -1,6 +1,0 @@
-DONE - Current state: select all archetypes that are 'UNKNOWN'
-
-Future state: select with the fancy LEFT OUTER JOIN, then from that CTE select all rows that are null for archetype_played
-
-Command should take in discord_id, game, format to query
-Ultimate output should be date (ordered desc) and player name (ordered asc)

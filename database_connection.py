@@ -18,7 +18,6 @@ def AddWord(word):
       cur.execute(command, criteria)
       conn.commit()
       row = cur.fetchall()
-      print('AddWord returns:', row)
       return row
   except UniqueViolation:
     return None
@@ -34,7 +33,6 @@ def GetWord(word):
     criteria = [word]
     cur.execute(command, criteria)
     rows = cur.fetchall()
-    print('GetWord returns:', rows)
     return rows
 
 def GetWordsForDiscord(discord_id):
@@ -48,7 +46,6 @@ def GetWordsForDiscord(discord_id):
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    print('GetWordsForDiscord returns:', rows)
     return rows
 
 def AddBadWordBridge(discord_id, word_id):
@@ -62,7 +59,6 @@ def AddBadWordBridge(discord_id, word_id):
     cur.execute(command)
     conn.commit()
     row = cur.fetchone()
-    print('AddBadWordBridge returns:', row)
     return row
 
 def MatchDisabledArchetypes(discord_id, user_id):
@@ -79,7 +75,6 @@ def MatchDisabledArchetypes(discord_id, user_id):
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    print('MatchDisabledArchetypes returns:', rows)
     return rows
 
 def DisableMatchingWords(discord_id, word):
@@ -99,7 +94,6 @@ def DisableMatchingWords(discord_id, word):
     cur.execute(command)
     conn.commit()
     row = cur.fetchone()
-    print('DisableMatchingWords returns:', row)
     return row
 
 def AddArchetype(event_id,
@@ -158,9 +152,12 @@ def GetStats(discord_id,
            losses,
            draws,
            ROUND(winpercentage * 100, 2) as winpercentage
-    FROM (
-    (WITH X AS (
-    SELECT DISTINCT on (event_id, player_name)
+    FROM
+    (
+      (
+      WITH X AS
+        (
+        SELECT DISTINCT on (event_id, player_name)
       event_id, player_name, archetype_played
     FROM ArchetypeSubmissions
     WHERE event_id IN (

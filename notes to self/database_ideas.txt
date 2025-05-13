@@ -1,9 +1,0 @@
-Are any IDs defunct?
-
-Thinking of:
-cardgames (name)
-events (discord_id, event_date, game_id, format_id)
-formats (game_id, name)
-inputtracker (event_id, player_name)
-participants (event_id, player_name)
-rounddetails (?)

@@ -1,4 +1,0 @@
-I need to delete the "archetype_played" column from participants.
-This requires me to update the inputtracker so that archetypes aren't lost
-DONE - I'll probably need to download each table and fill out an excel sheet to get all the UPDATE scripts needed, which will be SUPER fun to run one by one
-inputtracker will become archetypesplayed, recording the same information
