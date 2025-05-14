@@ -44,6 +44,7 @@ async def on_ready():
   except Exception as error:
     print(f'Error syncing commands: {error}')
 
+#TODO: Right now, an event can be submitted by rounds AND in total. I need a way to prevent both from happening. Maybe another column in events to mark how it was submitted??
 @bot.event
 async def on_message(message):
   if message.author == bot.user:
@@ -58,7 +59,9 @@ async def on_message(message):
       await ErrorMessage(f'{str(message.guild).title()} ({message.guild.id}) is not approved to track data')
       return
 
-    await message.channel.send(f'Attempting to add {len(data)} participants an event')
+    type = 'participants' if isinstance(data[0], data_translation.Participant) else 'tables'
+
+    await message.channel.send(f"Attempting to add {len(data)} {type} to today's event")
     await message.delete()
     output = await SubmitData(bot, message, data)
     await message.channel.send(output)

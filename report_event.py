@@ -9,7 +9,7 @@ async def SubmitData(bot, message, data):
                                                    game=True,
                                                    format=True,
                                                    store=True)
-  #TODO: Should I Confirm date? How do I handle data that's input late?
+  #TODO: Should I Confirm date? How should I handle data that's input late?
   event_date = GetToday()
   event_obj = GetEventObj(store.DiscordId, event_date, game, format)
   
@@ -17,12 +17,13 @@ async def SubmitData(bot, message, data):
     event_obj = CreateEvent(event_date, store.DiscordId, game, format)
 
   event = ConvertToEvent(event_obj)
+  print('Event:', event)
   if isinstance(data[0],Participant):
     output = AddParticipantResults(event.ID, data, userId)
   elif isinstance(data[0], Round):
     output = AddRoundResults(event.ID, data, userId)
   else:
-    raise Exception('Congratulations, you\'ve reached the impossible to reach area.')
+    raise Exception("Congratulations, you've reached the impossible to reach area.")
   return output
 
 def AddParticipantResults(event_id, data, submitterId):
@@ -49,7 +50,7 @@ def AddRoundResults(event_id, data, submitterId):
       result = Winner.PLAYER2
     else:
       result = Winner.TIE
-    
+
     player1id = GetParticipantId(event_id,
                                  round.P1Name.upper())
     player2id = GetParticipantId(event_id,
@@ -60,15 +61,15 @@ def AddRoundResults(event_id, data, submitterId):
       player1id = AddResult(event_id,
                             person,
                             submitterId)
-
+  
     if round.P2Name != 'Bye' and player2id is None:
       person = Participant(round.P2Name.upper(), 0, 0, 0)
       player2id = AddResult(event_id,
                             person,
                             submitterId)
-    else:
+    elif round.P2Name == 'Bye':
       player2id = None
-
+    
     winner_id = player1id if result == Winner.PLAYER1 else player2id if result == Winner.PLAYER2 else None
     increase_one = Increase(player1id,
        1 if result == Winner.PLAYER1 else 0,
@@ -92,4 +93,4 @@ def AddRoundResults(event_id, data, submitterId):
     if result:
       successes += 1
 
-    return f'Ready for the next round, as {successes} entries were added. Feel free to use /claim and update the archetypes!'
+  return f'Ready for the next round, as {successes} entries were added. Feel free to use /claim and update the archetypes!'

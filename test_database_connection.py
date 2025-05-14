@@ -3,6 +3,7 @@ import pytest
 import psycopg2
 from database_connection import GetWord, AddWord
 
+#I don't know how or why this works, but it does.
 @pytest.fixture
 def mock_db_connection(monkeypatch):
     class MockCursor:

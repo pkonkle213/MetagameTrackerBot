@@ -52,13 +52,15 @@ def CompanionRoundByRound(message):
   rows = message.split('\n')
   try:
     for i in range(0, len(rows), 6):
-      row = rows[i:i + 6]      
+      row = rows[i:i + 6]
+      print('Row:', row)
       if row[3] != 'Bye':
         p1name = row[1]
         p1gw = row[3][0]
         p2gw = row[3][1]
         p2name = row[4]
         result = Round(p1name, int(p1gw), p2name, int(p2gw))
+        print('Result:', result)
         data.append(result)
       if row[3] == 'Bye':
         p1name = row[0]
@@ -66,6 +68,7 @@ def CompanionRoundByRound(message):
         p2name = 'Bye'
         p2gw = 0
         result = Round(p1name, int(p1gw), p2name, int(p2gw))
+        print('Result:', result)
         data.append(result)
     return data
   except Exception as exception:
