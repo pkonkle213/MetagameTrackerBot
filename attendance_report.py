@@ -6,8 +6,8 @@ from database_connection import GetAttendance
 #TODO: Make this more flexible to allow for multiple stores (DATAGUILD)
 def GetStoreAttendance(interaction:Interaction, start_date, end_date):
   game, format, store, userId = GetInteractionData(interaction,
-                                                   game=True,
-                                                   store=True)
+    game=True,
+    store=True)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   data = GetAttendance(store.DiscordId,
                        game,
@@ -17,4 +17,6 @@ def GetStoreAttendance(interaction:Interaction, start_date, end_date):
   subject = format.FormatName.title() if game.HasFormats and format is not None else game.Name.title()
   title = f'{subject} attendance from {date_start} to {date_end}'
   headers = ['Date', 'Players']
+  if not format:
+    headers.insert(1, 'Format')
   return (data, title, headers)

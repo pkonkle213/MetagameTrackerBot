@@ -1,7 +1,6 @@
 from tuple_conversions import Participant, Round
 
 def ConvertMessageToParticipants(message):
-  #TODO: Can I use polymorphism to make this more readable?
   data = CompanionParticipants(message)
   if data is None:
     data = MeleeParticipants(message)

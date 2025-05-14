@@ -8,7 +8,6 @@ from tuple_conversions import ConvertToEvent
 from interaction_data import GetInteractionData
 
 def ClaimResult(interaction:Interaction, player_name:str, archetype:str, date:str):
-  #TODO: if the archetype has an emoji or special character, reject it
   date_used = '' if date == '' else ConvertToDate(date)
   date_today = GetToday()
   if date_used != '' and not isSubmitter:
@@ -18,7 +17,7 @@ def ClaimResult(interaction:Interaction, player_name:str, archetype:str, date:st
     date_used = None
 
   game, format, store, userId = GetInteractionData(interaction, game=True, format=True, store=True)
-
+  archetype = archetype.encode('ascii', 'ignore').decode('ascii')
   if ContainsBadWord(interaction, archetype):
     raise Exception('Archetype contains a banned word')
   if not CanSubmitArchetypes(store.DiscordId, userId):
@@ -57,7 +56,6 @@ def CheckEventPercentage(event):
     if check is None:
       raise Exception('Unable to update event: ' + event.ID)
     str_date = event.EventDate.strftime('%B %d')
-    #TODO: I feel like this is cheating. I'm returning a tuple of Message, FollowUpToChannel, NeedsTable
     if event.LastUpdate + 1 < 4:
       followup = (f'Congratulations! The {str_date} event is now {percent_reported:.0%} reported!', False)
     else:

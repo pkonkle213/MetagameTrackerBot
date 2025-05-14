@@ -35,8 +35,6 @@ def ContainsBadWord(interaction:Interaction, bad_word):
 
   return False
 
-#TODO: How long should this look for offenses?
-#Should this be flexible per store? It's currently hard coded at 30 days
 def CanSubmitArchetypes(discord_id, user_id):
   offenses = MatchDisabledArchetypes(discord_id, user_id)
   return len(offenses) < 3

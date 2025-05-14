@@ -237,68 +237,6 @@ def GetStats(discord_id,
     cur.close()
     return rows
 
-def GetAnalysis(discord_id, game_id, format_id, weeks, isMeta, dates):
-  (EREnd, ERStart, BREnd, BRStart) = dates
-  #TODO: Is this proper to do? Saves coding, looks sloppy
-  #One formula is for win percentage, the other is for metagame percentage
-  formula = 'COUNT(*) * 1.0 / SUM(COUNT(*)) OVER()' if isMeta else '(sum(p.wins) * 1.0) / (sum(p.wins) + sum(p.losses))'
-  with conn, conn.cursor() as cur:
-    command = f"""
-      SELECT archetype_played,
-        ROUND(BeginningRange * 100, 2) AS BeginningRange,
-        ROUND(EndingRange * 100, 2) AS EndingRange,
-        ROUND((EndingRange - BeginningRange) * 100, 2) AS Shift
-      FROM (
-        SELECT Decks.archetype_played,
-          SUM(COALESCE(BeginningRange.StatBR, 0)) AS BeginningRange,
-          SUM(COALESCE(EndingRange.StatER, 0)) AS EndingRange
-        FROM (
-          SELECT DISTINCT archetype_played
-          FROM participants
-          WHERE event_id IN (
-            SELECT id
-            FROM events
-            WHERE game_id = {game_id}
-            AND format_id = {format_id}
-            AND discord_id = {discord_id}
-            AND event_date >= '{BRStart}'
-            AND event_date <= '{EREnd}'
-          )
-        ) AS Decks
-        LEFT OUTER JOIN (
-          SELECT p.archetype_played,
-            {formula} AS StatBR
-          FROM participants p
-          INNER JOIN events e ON p.event_id = e.id
-          WHERE e.event_date >= '{BRStart}'
-          AND e.event_date <= '{BREnd}'
-          AND e.game_id = {game_id}
-          AND e.format_id = {format_id}
-          AND e.discord_id = {discord_id}
-          GROUP BY p.archetype_played
-        ) AS BeginningRange ON Decks.archetype_played = BeginningRange.archetype_played
-        LEFT OUTER JOIN (
-          SELECT p.archetype_played,
-            {formula} AS StatER
-          FROM participants p
-          INNER JOIN events e ON p.event_id = e.id
-          WHERE e.event_date >= '{ERStart}'
-          AND e.event_date <= '{EREnd}'
-          AND e.game_id = {game_id}
-          AND e.format_id = {format_id}
-          AND e.discord_id = {discord_id}
-          GROUP BY p.archetype_played
-        ) AS EndingRange ON Decks.archetype_played = EndingRange.archetype_played
-        GROUP BY Decks.archetype_played
-      )
-      WHERE EndingRange >=.02 OR BeginningRange >= .02
-      ORDER BY Shift DESC, archetype_played
-      """
-    cur.execute(command)
-    rows = cur.fetchall()
-    cur.close()
-    return rows
-
 def GetStoreData(discord_id, format, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
@@ -827,17 +765,19 @@ def GetAttendance(discord_id,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command =  f'''
-    SELECT e.event_date, COUNT(*)
-    FROM events e
-    INNER JOIN participants p on e.id = p.event_id
+    SELECT e.event_date, {'f.name,' if not format else ''} COUNT(*)
+    FROM Events e
+    INNER JOIN Participants p on e.id = p.event_id
     INNER JOIN Stores s on s.discord_id = e.discord_id
+    {'INNER JOIN Formats f on f.id = e.format_id' if not format else ''}
     WHERE e.game_id = {game.ID}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
       AND e.discord_id = {discord_id}
-      AND e.format_id = {format.ID}
-    GROUP BY e.id, s.store_name
+      {f'AND e.format_id = {format.ID}' if format else ''}
+    GROUP BY e.id {', f.name' if not format else ''}
     ORDER BY e.event_date DESC
     '''
+    print('Command:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows

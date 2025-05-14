@@ -1,4 +1,3 @@
-from custom_errors import DateRangeError, EventNotFoundError, BadWordError
 import data_translation
 import discord
 from flag_bad_word import AddBadWord
@@ -10,9 +9,11 @@ from attendance_report import GetStoreAttendance
 from checks import isSubmitter
 from claim_result import ClaimResult, CheckEventPercentage, OneEvent
 from demo_functions import NewDemo
+from custom_errors import DateRangeError, EventNotFoundError, BadWordError
 from format_mapper import AddStoreFormatMap, GetFormatOptions
 from game_mapper import AddStoreGameMap, GetGameOptions
 from metagame_report import GetMyMetagame
+from date_menu import MyDateView
 from output_builder import BuildTableOutput
 from player_win_record import PlayRecord
 from register_store import RegisterNewStore, SetPermissions
@@ -59,6 +60,9 @@ async def on_message(message):
       await ErrorMessage(f'{str(message.guild).title()} ({message.guild.id}) is not approved to track data')
       return
 
+    view = MyDateView()
+    thisdate = await message.channel.send('Please confirm the date of the event', view=view)
+    print('This Date:', thisdate)
     type = 'participants' if isinstance(data[0], data_translation.Participant) else 'tables'
 
     await message.channel.send(f"Attempting to add {len(data)} {type} to today's event")
@@ -97,13 +101,16 @@ async def MessageChannel(msg, guildId, channelId):
 
   await channel.send(f'{msg}')
 
-#TODO: Any chance we can have better information about the error?
 async def Error(interaction, error):
-  print('Error:', error)
-  command = interaction.command.name
   error_message = f'''
   {interaction.user.display_name} ({interaction.user.id}) got an error: {error}
-  Command: {command}
+  Command: {interaction.command.name}
+  Parameters: {interaction.command.parameters}
+  Description: {interaction.command.description}
+  Default permissions: {interaction.command.default_permissions}
+  Contexts: {interaction.command.allowed_contexts}
+  Installs: {interaction.command.allowed_installs}
+  Callback: {interaction.command.callback}
   '''
   await ErrorMessage(error_message)
   await interaction.followup.send('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
@@ -485,4 +492,4 @@ async def demo_error(interaction: discord.Interaction, error):
 async def DownloadData_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.INFO)
+bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)
