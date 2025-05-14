@@ -2,6 +2,7 @@ from discord import Interaction
 from date_functions import BuildDateRange
 from interaction_data import GetInteractionData
 from database_connection import GetAttendance
+from settings import DATAGUILDID
 
 #TODO: Make this more flexible to allow for multiple stores (DATAGUILD)
 def GetStoreAttendance(interaction:Interaction, start_date, end_date):
@@ -9,7 +10,8 @@ def GetStoreAttendance(interaction:Interaction, start_date, end_date):
     game=True,
     store=True)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
-  data = GetAttendance(store.DiscordId,
+
+  data = GetAttendance(store,
                        game,
                        format,
                        date_start,
@@ -19,4 +21,7 @@ def GetStoreAttendance(interaction:Interaction, start_date, end_date):
   headers = ['Date', 'Players']
   if not format:
     headers.insert(1, 'Format')
+  if not store:
+    headers.insert(1, 'Store')
+  
   return (data, title, headers)

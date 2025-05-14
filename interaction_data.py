@@ -1,5 +1,6 @@
 from collections import namedtuple
 import discord
+from settings import DATAGUILDID
 import tuple_conversions as tc
 import database_connection as db
 
@@ -73,7 +74,10 @@ def GetStore(discord_id, required=True):
 def FormatInteractionData(data, requirements):
   game = GetGame(data.CategoryId, requirements.Game)
   format = GetFormat(game, data.ChannelId, requirements.Format)
-  store = GetStore(data.DiscordId, requirements.Store)
+  if data.DiscordId == DATAGUILDID:
+    store = None
+  else:
+    store = GetStore(data.DiscordId, requirements.Store)
 
   Data = namedtuple("Data",["Game","Format","Store","UserId"])
   return Data(game,format,store,data.UserId)

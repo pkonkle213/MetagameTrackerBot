@@ -1,19 +1,19 @@
-import data_translation
 import discord
-from flag_bad_word import AddBadWord
+from discord.ext import commands
 import interaction_data
 import settings
 import logging
-from discord.ext import commands
 from attendance_report import GetStoreAttendance
 from checks import isSubmitter
 from claim_result import ClaimResult, CheckEventPercentage, OneEvent
-from demo_functions import NewDemo
 from custom_errors import DateRangeError, EventNotFoundError, BadWordError
+from data_translation import ConvertMessageToParticipants
+from date_menu import MyDateView
+from demo_functions import NewDemo
+from flag_bad_word import AddBadWord
 from format_mapper import AddStoreFormatMap, GetFormatOptions
 from game_mapper import AddStoreGameMap, GetGameOptions
 from metagame_report import GetMyMetagame
-from date_menu import MyDateView
 from output_builder import BuildTableOutput
 from player_win_record import PlayRecord
 from register_store import RegisterNewStore, SetPermissions
@@ -51,7 +51,7 @@ async def on_message(message):
   if message.author == bot.user:
     return
 
-  data = data_translation.ConvertMessageToParticipants(message.content)
+  data = ConvertMessageToParticipants(message.content)
   if data is not None:
     if not isSubmitter(message.guild, message.author, 'MTSubmitter'):
       await ErrorMessage(f'{str(message.author).title()} ({message.author.id}) lacks the permission to submit data')
@@ -60,9 +60,9 @@ async def on_message(message):
       await ErrorMessage(f'{str(message.guild).title()} ({message.guild.id}) is not approved to track data')
       return
 
-    view = MyDateView()
-    thisdate = await message.channel.send('Please confirm the date of the event', view=view)
-    print('This Date:', thisdate)
+    #view = MyDateView()
+    #thisdate = await message.channel.send('Please confirm the date of the event', view=view)
+    #print('This Date:', thisdate)
     type = 'participants' if isinstance(data[0], data_translation.Participant) else 'tables'
 
     await message.channel.send(f"Attempting to add {len(data)} {type} to today's event")
@@ -116,45 +116,41 @@ async def Error(interaction, error):
   await interaction.followup.send('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
 
 async def ErrorMessage(msg):
-  await MessageChannel(msg, settings.BOTGUILD.id, settings.ERRORCHANNELID)
+  await MessageChannel(msg,
+                       settings.BOTGUILD.id,
+                       settings.ERRORCHANNELID)
 
 async def ApprovalMessage(msg):
-  await MessageChannel(msg, settings.BOTGUILD.id, settings.APPROVALCHANNELID)
+  await MessageChannel(msg,
+                       settings.BOTGUILD.id,
+                       settings.APPROVALCHANNELID)
 
 @bot.tree.command(name="getbot",
-                     description="Display the url to get the bot",
-                     guild=settings.BOTGUILD)
+                  description="Display the url to get the bot",
+                  guild=settings.BOTGUILD)
 async def GetBot(interaction: discord.Interaction):
   await interaction.response.send_message(f'Here is the link to my bot: {settings.MYBOTURL}')
 
-@GetBot.error
-async def GetBot_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
-
 @bot.tree.command(name="getguild",
-                     description="Display the invite to the bot's server",
-                     guild=settings.BOTGUILD)
+                  description="Display the invite to the bot's server")
 async def GetGuild(interaction: discord.Interaction):
   await interaction.response.send_message(f'Here is the link to my server: {settings.MYBOTGUILDURL}')
 
+@bot.tree.command(name='zoomout',
+                  description='Get an invite to my data hub with more stores')
+async def ZoomOut(interaction: discord.Interaction):
+  await interaction.response.send_message(f'Here is the link to my data hub: {settings.DATAHUBINVITE}')
+
 @bot.tree.command(name="getsop",
-                     description="Display the url to get the bot",
-                     guild=settings.BOTGUILD)
+                  description="Display the url to get the bot",
+                  guild=settings.BOTGUILD)
 async def GetSOP(interaction: discord.Interaction):
   await interaction.response.send_message(f'Here is the link to my bot: {settings.SOPURL}')
-
-@GetSOP.error
-async def GetSOP_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
 
 @bot.tree.command(name="feedback",
                      description="Provide feedback on the bot")
 async def Feedback(interaction: discord.Interaction):
-  await interaction.response.send_message(f'Follow this link: {settings.FEEDBACKURL}', ephemeral=True)
-
-@Feedback.error
-async def Feedback_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
+  await interaction.response.send_message(f'Follow this link: {settings.FEEDBACKURL}')
 
 #Something I'd like to test:
 #@discord.app_commands.AppCommand(default_member_permissions=0)
@@ -163,6 +159,10 @@ async def Feedback_error(interaction: discord.Interaction, error):
                      description="The new thing I want to test",
                      guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
+  view = MyDateView()
+  thisdate = await message.channel.send('Please confirm the date of the event', view=view)
+  print('This Date:', thisdate)
+
   test = ...
   if not test:
     await interaction.response.send_message("Nope, something didn't work")

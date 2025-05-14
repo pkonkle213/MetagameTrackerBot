@@ -1,5 +1,6 @@
 import os
 import psycopg2
+from settings import DATAGUILDID
 from psycopg2.errors import UniqueViolation
 
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -606,53 +607,52 @@ def GetDataRowsForMetagame(game,
                            format,
                            start_date,
                            end_date,
-                           discord_id):
+                           store):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    criteria = [game.ID, start_date, end_date]
     command = f'''
-  SELECT archetype_played,
-         ROUND(metagame_percent * 100, 2) AS metagame_percent,
-         ROUND(win_percent * 100, 2) AS win_percent,
-         ROUND(metagame_percent * win_percent * 100, 2) as Combined
-  FROM (
-    WITH X AS (
-      SELECT DISTINCT on (event_id, player_name)
-        event_id, player_name, archetype_played
-      FROM ArchetypeSubmissions
-      WHERE event_id IN (
+    SELECT archetype_played,
+           ROUND(metagame_percent * 100, 2) AS metagame_percent,
+           ROUND(win_percent * 100, 2) AS win_percent,
+           ROUND(metagame_percent * win_percent * 100, 2) as Combined
+    FROM (
+      WITH X AS (
+        SELECT DISTINCT on (event_id, player_name)
+          event_id, player_name, archetype_played
+        FROM ArchetypeSubmissions
+        WHERE event_id IN (
+          SELECT id
+          FROM events e
+          INNER JOIN stores s ON s.discord_id = e.discord_id
+          WHERE e.game_id = {game.ID}
+          AND e.format_id = {format.ID}
+          AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+          {f'AND e.discord_id = {store.DiscordId}' if store else ''}
+          ORDER BY e.event_date DESC
+        )
+        ORDER BY event_id, player_name, id desc
+      )
+      SELECT COALESCE(X.archetype_played,'UNKNOWN') as archetype_played,
+             COUNT(*) * 1.0 / SUM(count(*)) OVER () as Metagame_Percent,
+             sum(p.wins) * 1.0 / (sum(p.wins) + sum(p.losses) + sum(p.draws)) as Win_percent
+      FROM participants p
+      LEFT OUTER JOIN X on X.event_id = p.event_id and X.player_name = p.player_name
+      WHERE p.event_id IN (
         SELECT id
         FROM events e
         INNER JOIN stores s ON s.discord_id = e.discord_id
-        WHERE e.discord_id = {discord_id}
-        AND e.game_id = {game.ID}
-        AND e.format_id = {format.ID}
-        AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-        ORDER BY e.event_date DESC
+        WHERE e.game_id = {game.ID}
+          AND e.format_id = {format.ID}
+          AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+          {f'AND e.discord_id = {store.DiscordId}' if store else ''}
+        ORDER BY event_date DESC
       )
-      ORDER BY event_id, player_name, id desc
+      GROUP BY 1
     )
-    SELECT COALESCE(X.archetype_played,'UNKNOWN') as archetype_played,
-           COUNT(*) * 1.0 / SUM(count(*)) OVER () as Metagame_Percent,
-           sum(p.wins) * 1.0 / (sum(p.wins) + sum(p.losses) + sum(p.draws)) as Win_percent
-    FROM participants p
-    LEFT OUTER JOIN X on X.event_id = p.event_id and X.player_name = p.player_name
-    WHERE p.event_id IN (
-      SELECT id
-      FROM events e
-      INNER JOIN stores s ON s.discord_id = e.discord_id
-      WHERE e.discord_id = {discord_id}
-        AND e.game_id = {game.ID}
-        AND e.format_id = {format.ID}
-        AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-      ORDER BY event_date DESC
-    )
-    GROUP BY 1
-  )
-  WHERE metagame_percent >= 0.02
-  ORDER BY 4 DESC
+    WHERE metagame_percent >= 0.02
+    ORDER BY 4 DESC
     '''
-    cur.execute(command, criteria)
+    cur.execute(command)
     rows = cur.fetchall()
     return rows
 
@@ -757,7 +757,7 @@ def UpdateEvent(event_id):
     row = cur.fetchone()
     return row
 
-def GetAttendance(discord_id,
+def GetAttendance(store,
                  game,
                  format,
                  start_date,
@@ -765,16 +765,21 @@ def GetAttendance(discord_id,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command =  f'''
-    SELECT e.event_date, {'f.name,' if not format else ''} COUNT(*)
+    SELECT e.event_date,
+      {'s.store_name,' if not store else ''}
+      {'f.name,' if not format else ''}
+      COUNT(*)
     FROM Events e
     INNER JOIN Participants p on e.id = p.event_id
     INNER JOIN Stores s on s.discord_id = e.discord_id
     {'INNER JOIN Formats f on f.id = e.format_id' if not format else ''}
-    WHERE e.game_id = {game.ID}
-      AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-      AND e.discord_id = {discord_id}
+    WHERE e.event_date BETWEEN '{start_date}' AND '{end_date}'
+      AND e.game_id = {game.ID} 
+      {f'AND e.discord_id = {store.DiscordId}' if store else ''}
       {f'AND e.format_id = {format.ID}' if format else ''}
-    GROUP BY e.id {', f.name' if not format else ''}
+    GROUP BY e.id
+      {', f.name' if not format else ''}
+      {', s.store_name' if not store else ''}
     ORDER BY e.event_date DESC
     '''
     print('Command:', command)
