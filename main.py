@@ -7,7 +7,7 @@ from attendance_report import GetStoreAttendance
 from checks import isSubmitter
 from claim_result import ClaimResult, CheckEventPercentage, OneEvent
 from custom_errors import DateRangeError, EventNotFoundError, BadWordError
-from data_translation import ConvertMessageToParticipants
+from data_translation import ConvertMessageToParticipants, Participant, Round
 from date_menu import MyDateView
 from demo_functions import NewDemo
 from flag_bad_word import AddBadWord
@@ -63,7 +63,7 @@ async def on_message(message):
     #view = MyDateView()
     #thisdate = await message.channel.send('Please confirm the date of the event', view=view)
     #print('This Date:', thisdate)
-    type = 'participants' if isinstance(data[0], data_translation.Participant) else 'tables'
+    type = 'participants' if isinstance(data[0], Participant) else 'tables'
 
     await message.channel.send(f"Attempting to add {len(data)} {type} to today's event")
     await message.delete()
@@ -174,12 +174,17 @@ async def ATest_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name='addword',
-                 description='Add a banned word',
-                 guild=settings.TESTSTOREGUILD)
+                 description='Add a banned word')
 @discord.app_commands.checks.has_role('MTSubmitter')
 async def BadWord(interaction: discord.Interaction,
                    word:str):
-  if len(word) <3:
+  """
+  Parameters
+  ----------
+  word: string
+    The bad word or phrase to ban
+  """
+  if len(word) < 3:
     await interaction.response.send_message('Word must be at least 3 characters long')
   else:
     await interaction.response.defer(ephemeral=True)
@@ -247,6 +252,7 @@ async def AddFormatMap(interaction: discord.Interaction):
 async def AddFormatMap_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+#TODO: Needs to check that the store is registered, the category is mapped, and the channel is mapped
 @bot.tree.command(name="submitcheck",
                      description="To test if you can submit data")
 async def SubmitCheck(interaction: discord.Interaction):
@@ -430,6 +436,10 @@ async def DownloadData(interaction: discord.Interaction,
                     file)
   await interaction.followup.send('The data for the store will arrive by message')
 
+@DownloadData.error
+async def DownloadData_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
+
 @bot.tree.command(name='claim',
                   description='Enter your deck archetype')
 async def Claim(interaction: discord.Interaction,
@@ -486,10 +496,6 @@ async def Demo(interaction: discord.Interaction):
 
 @Demo.error
 async def demo_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
-
-@DownloadData.error
-async def DownloadData_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)

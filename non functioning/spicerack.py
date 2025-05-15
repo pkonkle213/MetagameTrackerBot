@@ -3,7 +3,7 @@ import requests
 import database_connection
 
 def GetSpicerackData(discord_id, event_id):
-  store_obj = database_connection.GetStores(discord_id = discord_id)
+  store_obj = database_connection.GetStoreByDiscord(discord_id = discord_id)
   if store_obj is None:
     raise Exception('Store not found')
   store = tuple_conversions.ConvertToStore(store_obj[0])
@@ -27,7 +27,7 @@ def GetSpicerackData(discord_id, event_id):
   return output
 
 def GetEventData(discord_id, event_id):
-  store = database_connection.GetStores(discord_id=discord_id)
+  store = database_connection.GetStoreByDiscord(discord_id=discord_id)
   if store is None:
     raise Exception("Store not found")
 

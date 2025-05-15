@@ -3,7 +3,7 @@ import date_functions
 
 def NewDemo():
   #Deletes my test store and its events in the database so I can offer a live update
-  DeleteDemo()
+  #DeleteDemo()
 
   #Event IDs and the weeks before today that they happened
   ids = [

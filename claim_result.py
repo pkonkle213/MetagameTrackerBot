@@ -1,5 +1,5 @@
 from checks import isSubmitter
-from custom_errors import DateRangeError, EventNotFoundError
+from custom_errors import DateRangeError, EventNotFoundError, BadWordError
 from date_functions import ConvertToDate, GetToday, DateDifference
 from flag_bad_word import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
@@ -19,9 +19,9 @@ def ClaimResult(interaction:Interaction, player_name:str, archetype:str, date:st
   game, format, store, userId = GetInteractionData(interaction, game=True, format=True, store=True)
   archetype = archetype.encode('ascii', 'ignore').decode('ascii')
   if ContainsBadWord(interaction, archetype):
-    raise Exception('Archetype contains a banned word')
+    raise BadWordError('Archetype contains a banned word')
   if not CanSubmitArchetypes(store.DiscordId, userId):
-    raise Exception('You have submitted too many bad archetypes. Please contact your store owner to have them submit the archetype.')
+    raise BadWordError('You have submitted too many bad archetypes. Please contact your store owner to have them submit the archetype.')
   
   updater_name = interaction.user.display_name.upper()
   archetype = archetype.upper()

@@ -145,8 +145,6 @@ def GetStats(discord_id,
              start_date,
              end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-
-  #I left this unformated, sorry. It's hard to read, but it works...I think
   command = f'''
     SELECT archetype_played,
            wins,
@@ -238,15 +236,32 @@ def GetStats(discord_id,
     cur.close()
     return rows
 
-def GetStoreData(discord_id, format, start_date, end_date):
+def GetStoreData(store, game, format, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command =  f'''
+    WITH X AS (
+      SELECT DISTINCT on (event_id, player_name)
+      event_id, player_name, archetype_played
+    FROM ArchetypeSubmissions
+    WHERE event_id IN (
+      SELECT id
+      FROM events e
+      INNER JOIN stores s ON s.discord_id = e.discord_id
+      WHERE e.discord_id = {store.DiscordId}
+      {f'AND e.game_id = {game.ID}' if game else ''}
+      {f'AND e.format_id = {format.ID}' if format else ''}
+      AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+      ORDER BY e.event_date DESC
+      )
+    AND reported = {False}
+    ORDER BY event_id, player_name, id desc
+    )
     SELECT c.name AS GameName,
            f.name AS FormatName,
            e.event_date AS EventDate,
            p.player_name AS PlayerName,
-           COALESCE(ap.archetype_played,'UNKNOWN') AS ArchetypePlayed,
+           COALESCE(X.archetype_played,'UNKNOWN') AS ArchetypePlayed,
            p.wins AS Wins,
            p.losses AS Losses,
            p.draws AS Draws
@@ -254,10 +269,10 @@ def GetStoreData(discord_id, format, start_date, end_date):
       INNER JOIN events e on e.id = p.event_id
       INNER JOIN cardgames c on c.id = e.game_id
       INNER JOIN formats f on f.id = e.format_id
-      INNER JOIN stores s on s.discord_id = e.discord_id
-      LEFT JOIN ArchetypeSubmissions ap ON (ap.player_name = p.player_name AND ap.event_id = p.event_id)
+      LEFT JOIN X ON (X.player_name = p.player_name AND X.event_id = p.event_id)
     WHERE e.event_date BETWEEN '{start_date}' AND '{end_date}'
-      AND s.discord_id = {discord_id}
+      AND e.discord_id = {store.DiscordId}
+      {f'AND e.game_id = {game.ID}' if game else ''}
       {f'AND e.format_id = {format.ID}' if format else ''}
     ORDER BY 3 desc, 6 desc
     '''
@@ -528,7 +543,7 @@ def GetEventObj(discord_id,
     WHERE e.discord_id = {discord_id}
     AND e.game_id = {game.ID}
     {f'AND e.format_id = {format.ID}' if format else ''}
-    {f"AND e.event_date = '{date}'" if date else "AND e.event_date BETWEEN current_date - 14 AND current_date"}    
+    {f"AND e.event_date = '{date}'" if date else "AND e.event_date BETWEEN current_date - 14 AND current_date"}
     {f"AND p.player_name = '{player_name}'" if player_name != '' else ''}
     ORDER BY event_date DESC
     LIMIT 1
@@ -536,42 +551,19 @@ def GetEventObj(discord_id,
     cur.execute(command)
     return cur.fetchone()
 
-def GetStores(name = '',
-              discord_id = 0,
-              discord_name = '',
-              owner = 0,
-              approval_status = ''):
+def GetStoreByDiscord(discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  command =  'SELECT discord_id, discord_name, store_name, owner_id, owner_name, isApproved, used_for_data, SpicerackKey '
-  command += 'FROM Stores '
-  
-  criteria = 'WHERE '
-  criteria_list = []
-  
-  if name != '':
-    criteria += 'name = %s AND '
-    criteria_list.append(name)
-  if discord_id != 0:
-    criteria += 'discord_id = %s AND '
-    criteria_list.append(discord_id)
-  if discord_name != '':
-    criteria += 'discord_name = %s AND '
-    criteria_list.append(discord_name)
-  if owner != 0:
-    criteria += 'owner = %s AND '
-    criteria_list.append(owner)
-  if approval_status != '':
-    criteria += 'approval_status = %s AND '
-    criteria_list.append(approval_status)
-  
-  if len(criteria_list) == 0:
-    raise Exception('No criteria provided')
-    
-  criteria = criteria[:-4]
+  command =  f'''
+  SELECT discord_id, discord_name, store_name, owner_id, owner_name, isApproved, used_for_data, SpicerackKey
+  FROM Stores
+  WHERE discord_id = {discord_id}
+  '''
+
   with conn, conn.cursor() as cur:
-    cur.execute(command + criteria, criteria_list)
+    cur.execute(command)
     return cur.fetchall()
 
+#This command is never called, I don't feel it's necessary to delete the store for a demo
 def DeleteDemo():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
@@ -711,33 +703,33 @@ def GetPercentage(event_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f"""
-SELECT (sum / totaldecks) as ReportPercent
-FROM (
-  SELECT sum(metacount), totaldecks
-  FROM (
-    SELECT archetype_played, sum(metacount) AS metacount, TotalDecks
+    SELECT (sum / totaldecks) as ReportPercent
     FROM (
-      WITH X AS (
-        SELECT DISTINCT on (event_id, player_name)
-          event_id, player_name, archetype_played
-        FROM ArchetypeSubmissions
-        WHERE event_id = {event_id}
-          AND reported = False
-        ORDER BY event_id, player_name, id desc
+      SELECT sum(metacount), totaldecks
+      FROM (
+        SELECT archetype_played, sum(metacount) AS metacount, TotalDecks
+        FROM (
+          WITH X AS (
+            SELECT DISTINCT on (event_id, player_name)
+              event_id, player_name, archetype_played
+            FROM ArchetypeSubmissions
+            WHERE event_id = {event_id}
+              AND reported = False
+            ORDER BY event_id, player_name, id desc
+          )
+          SELECT X.archetype_played,
+                 COUNT(*) AS MetaCount,
+                 SUM(count(*)) OVER () as TotalDecks
+          FROM participants p
+          LEFT OUTER JOIN X on X.event_id = p.event_id and X.player_name = p.player_name
+          WHERE p.event_id = {event_id}
+          GROUP BY 1
+        )
+        WHERE archetype_played IS NOT NULL
+        GROUP BY archetype_played, TotalDecks
       )
-      SELECT X.archetype_played,
-             COUNT(*) AS MetaCount,
-             SUM(count(*)) OVER () as TotalDecks
-      FROM participants p
-      LEFT OUTER JOIN X on X.event_id = p.event_id and X.player_name = p.player_name
-      WHERE p.event_id = {event_id}
-      GROUP BY 1
+      GROUP BY totaldecks
     )
-    WHERE archetype_played IS NOT NULL
-    GROUP BY archetype_played, TotalDecks
-  )
-  GROUP BY totaldecks
-)
     """
     cur.execute(command)
     row = cur.fetchone()

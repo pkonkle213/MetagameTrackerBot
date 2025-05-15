@@ -63,7 +63,7 @@ def GetFormat(game, channel_id:int, required):
   return tc.ConvertToFormat(format_obj)
 
 def GetStore(discord_id, required=True):
-  store_obj = db.GetStores(discord_id=discord_id)
+  store_obj = db.GetStoreByDiscord(discord_id)
   if store_obj is None:
     if required:
       raise Exception('Store not found')
