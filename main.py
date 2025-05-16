@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-import interaction_data
 import settings
 import logging
 from attendance_report import GetStoreAttendance
@@ -10,9 +9,10 @@ from custom_errors import DateRangeError, EventNotFoundError, BadWordError
 from data_translation import ConvertMessageToParticipants, Participant, Round
 from date_menu import MyDateView
 from demo_functions import NewDemo
-from flag_bad_word import AddBadWord
+from flag_bad_word import AddBadWord, Offenders
 from format_mapper import AddStoreFormatMap, GetFormatOptions
 from game_mapper import AddStoreGameMap, GetGameOptions
+from interaction_data import GetInteractionData, GetStore
 from metagame_report import GetMyMetagame
 from output_builder import BuildTableOutput
 from player_win_record import PlayRecord
@@ -79,7 +79,7 @@ def isPhil(interaction: discord.Interaction):
   return interaction.user.id == settings.PHILID
 
 def storeCanTrack(guild):
-  store = interaction_data.GetStore(guild.id)
+  store = GetStore(guild.id)
   return store is not None and store.ApprovalStatus
 
 async def MessageUser(msg, userId, file=None):
@@ -106,7 +106,6 @@ async def Error(interaction, error):
   {interaction.user.display_name} ({interaction.user.id}) got an error: {error}
   Command: {interaction.command.name}
   Parameters: {interaction.command.parameters}
-  Description: {interaction.command.description}
   Default permissions: {interaction.command.default_permissions}
   Contexts: {interaction.command.allowed_contexts}
   Installs: {interaction.command.allowed_installs}
@@ -256,12 +255,23 @@ async def AddFormatMap_error(interaction: discord.Interaction, error):
 @bot.tree.command(name="submitcheck",
                      description="To test if you can submit data")
 async def SubmitCheck(interaction: discord.Interaction):
+  issues = ['Issues I detect:']
+  game, format, store, userId = GetInteractionData(interaction)
+  if not store:
+    issues.append('- Store not registered')
+  if not store.ApprovalStatus:
+    issues.append('- Store not approved for data submission')
   if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter'):
-    await interaction.response.send_message('You don\'t have the MTSubmitter role. Please contact your discord\'s owner')
-  elif not storeCanTrack(interaction.guild):
-    await interaction.response.send_message('This store isn\'t approved to submit data')
-  else:
+    issues.append("- You don't have the MTSubmitter role.")
+  if not game:
+    issues.append('- Category not mapped to a game')
+  if not format:
+    issues.append('- Channel not mapped to a format')
+
+  if len(issues) == 1:
     await interaction.response.send_message('Everything looks good. Please reach out to Phil to test your data')
+  else:
+    await interaction.response.send_message('\n'.join(issues))
 
 @SubmitCheck.error
 async def SubmitCheck_error(interaction: discord.Interaction, error):
@@ -440,6 +450,7 @@ async def DownloadData(interaction: discord.Interaction,
 async def DownloadData_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+#TODO: Can I make this command flexible to accept 'LORCANA' as an archetype and then it prompts the user for up to two ink colors? Or do I make a new command?
 @bot.tree.command(name='claim',
                   description='Enter your deck archetype')
 async def Claim(interaction: discord.Interaction,
@@ -486,9 +497,18 @@ async def Claim(interaction: discord.Interaction,
 async def Claim_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+@bot.tree.command(name='offenders',
+                  description='See who has been flagged for bad words/phrases')
+@discord.app_commands.checks.has_role('MTSubmitter')
+async def StoreOffenders(interaction: discord.Interaction):
+  await interaction.response.defer(ephemeral=True)
+  data, title, headers = Offenders(interaction)
+  output = BuildTableOutput(title, headers, data)
+  await interaction.followup.send(output)
+
 @bot.tree.command(name="demo",
-                     description="Set up the database for a demonstration",
-                     guild=settings.BOTGUILD)
+                  description="Set up the database for a demonstration",
+                  guild=settings.BOTGUILD)
 async def Demo(interaction: discord.Interaction):
   await interaction.response.defer()
   NewDemo()

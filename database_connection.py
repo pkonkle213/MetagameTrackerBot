@@ -5,6 +5,32 @@ from psycopg2.errors import UniqueViolation
 
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
+def GetOffenders(game, format, store):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    SELECT asu.date_submitted,
+           asu.submitter_username,
+           asu.submitter_id,
+           e.event_date,
+           {'g.name,' if not game else ''}
+           {'f.name,' if not format else ''}
+           asu.player_name,
+           asu.archetype_played
+    FROM ArchetypeSubmissions asu
+    INNER JOIN Events e on e.id = asu.event_id
+    INNER JOIN CardGames c on c.id = e.game_id
+    INNER JOIN Formats f on f.id = e.format_id
+    WHERE asu.reported = True
+    AND e.discord_id = {store.DiscordId}
+    {f'AND e.game_id = {game.ID}' if game else ''}
+    {f'AND e.format_id = {format.ID}' if format else ''}
+    ORDER BY asu.date_submitted DESC
+    '''
+    cur.execute(command)
+    rows = cur.fetchall()
+    return rows
+
 def AddWord(word):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   try:

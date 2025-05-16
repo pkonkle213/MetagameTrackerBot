@@ -1,5 +1,6 @@
 from collections import namedtuple
-from database_connection import AddWord, GetWord, MatchDisabledArchetypes, DisableMatchingWords, AddBadWordBridge, GetWordsForDiscord
+from interaction_data import GetInteractionData
+from database_connection import AddWord, GetWord, MatchDisabledArchetypes, DisableMatchingWords, AddBadWordBridge, GetWordsForDiscord, GetOffenders
 from discord import Interaction
 
 def AddBadWord(interaction:Interaction, bad_word):
@@ -38,3 +39,14 @@ def ContainsBadWord(interaction:Interaction, bad_word):
 def CanSubmitArchetypes(discord_id, user_id):
   offenses = MatchDisabledArchetypes(discord_id, user_id)
   return len(offenses) < 3
+
+def Offenders(interaction:Interaction):
+  game, format, store, user_id = GetInteractionData(interaction, game=True, store=True)
+  offenders = GetOffenders(game, format, store)
+  headers = ['Date Submitted', 'Submitter', 'Submitter ID', 'Event Date', 'Player Name', 'Archetype Played']
+  if not format:
+    headers.insert(5, 'Format')
+  if not game:
+    headers.insert(5, 'Game')
+  title = 'Those who have been flagged for bad words/phrases'
+  return offenders, title, headers
