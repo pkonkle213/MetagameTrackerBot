@@ -1,4 +1,5 @@
 from collections import namedtuple
+from custom_errors import KnownError
 import discord
 from settings import DATAGUILDID
 import tuple_conversions as tc
@@ -17,28 +18,28 @@ def GetInteractionData(interaction,
 def SplitInteractionData(interaction):
   discord_guild = interaction.guild
   if discord_guild is None:
-    raise Exception('No guild found')
+    raise KnownError('No guild found')
   discord_id = discord_guild.id
   
   channel = interaction.channel
   if channel is None or not isinstance(channel,discord.TextChannel) or isinstance(channel,discord.GroupChannel):
-    raise Exception('No channel found')
+    raise KnownError('No channel found.')
 
   channel_id = channel.id
   
   category = channel.category
   if category is None:
-    raise Exception('No category found')
+    raise KnownError('No category found.')
   category_id = category.id
   
   user_id = -1
   if isinstance(interaction, discord.Interaction):
     user_id = interaction.user.id
-  if isinstance(interaction, discord.Message):
+  elif isinstance(interaction, discord.Message):
     user_id = interaction.author.id
-
-  if user_id == -1:
-    raise Exception('No user found!?')
+  else:
+    raise KnownError('No user found!?')
+    
   Data = namedtuple("Data",["DiscordId", "CategoryId", "ChannelId", "UserId"])
   return Data(discord_id, category_id, channel_id, user_id)
 
@@ -46,7 +47,7 @@ def GetGame(category_id:int, required):
   game_obj = db.GetGameByMap(category_id)
   if game_obj is None:
     if required:
-      raise Exception('Game not found')
+      raise KnownError('Game not found. Please map a game to this category.')
     else:
       return None
   return tc.ConvertToGame(game_obj)
@@ -57,7 +58,7 @@ def GetFormat(game, channel_id:int, required):
   format_obj = db.GetFormatByMap(channel_id)
   if format_obj is None:
     if required:
-      raise Exception('Format not found')
+      raise KnownError('Format not found. Please map a format to this channel.')
     else:
       return None
   return tc.ConvertToFormat(format_obj)
@@ -66,7 +67,7 @@ def GetStore(discord_id, required=True):
   store_obj = db.GetStoreByDiscord(discord_id)
   if store_obj is None:
     if required:
-      raise Exception('Store not found')
+      raise KnownError('Store not found. Please register your store.')
     else:
       return None
   return tc.ConvertToStore(store_obj[0])

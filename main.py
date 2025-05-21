@@ -5,7 +5,7 @@ import logging
 from attendance_report import GetStoreAttendance
 from checks import isSubmitter
 from claim_result import ClaimResult, CheckEventPercentage, OneEvent
-from custom_errors import DateRangeError, EventNotFoundError, BadWordError
+from custom_errors import DateRangeError, EventNotFoundError, BadWordError, KnownError
 from data_translation import ConvertMessageToParticipants, Participant, Round
 from date_menu import MyDateView
 from demo_functions import NewDemo
@@ -102,17 +102,20 @@ async def MessageChannel(msg, guildId, channelId):
   await channel.send(f'{msg}')
 
 async def Error(interaction, error):
-  error_message = f'''
-  {interaction.user.display_name} ({interaction.user.id}) got an error: {error}
-  Command: {interaction.command.name}
-  Parameters: {interaction.command.parameters}
-  Default permissions: {interaction.command.default_permissions}
-  Contexts: {interaction.command.allowed_contexts}
-  Installs: {interaction.command.allowed_installs}
-  Callback: {interaction.command.callback}
-  '''
-  await ErrorMessage(error_message)
-  await interaction.followup.send('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
+  if isinstance(error, KnownError):
+    await interaction.followup.send(error.message)
+  else:
+    error_message = f'''
+    {interaction.user.display_name} ({interaction.user.id}) got an error: {error}
+    Command: {interaction.command.name}
+    Parameters: {interaction.command.parameters}
+    Default permissions: {interaction.command.default_permissions}
+    Contexts: {interaction.command.allowed_contexts}
+    Installs: {interaction.command.allowed_installs}
+    Callback: {interaction.command.callback}
+    '''
+    await ErrorMessage(error_message)
+    await interaction.followup.send('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
 
 async def ErrorMessage(msg):
   await MessageChannel(msg,
@@ -158,10 +161,7 @@ async def Feedback(interaction: discord.Interaction):
                      description="The new thing I want to test",
                      guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
-  view = MyDateView()
-  thisdate = await message.channel.send('Please confirm the date of the event', view=view)
-  print('This Date:', thisdate)
-
+  
   test = ...
   if not test:
     await interaction.response.send_message("Nope, something didn't work")
@@ -225,7 +225,7 @@ async def AddGameMap(interaction: discord.Interaction):
   placeholder = 'Choose a game'
   dynamic_options = GetGameOptions()
   result = await SelectMenu(interaction, message, placeholder, dynamic_options)
-  output = AddStoreGameMap(interaction, result)
+  output = AddStoreGameMap(interaction, result[0])
   await interaction.followup.send(output, ephemeral=True)
 
 @AddGameMap.error
@@ -244,7 +244,7 @@ async def AddFormatMap(interaction: discord.Interaction):
     message = 'Please select a format'
     placeholder = 'Choose a format'
     result = await SelectMenu(interaction, message, placeholder, dynamic_options)
-    output = AddStoreFormatMap(interaction, result)
+    output = AddStoreFormatMap(interaction, result[0])
     await interaction.followup.send(output, ephemeral=True)
 
 @AddFormatMap.error
@@ -389,8 +389,11 @@ async def IntoTheUnknown(interaction: discord.Interaction,
   """
   await interaction.response.defer()
   data, title, headers = GetAllUnknown(interaction, start_date, end_date)
-  output = BuildTableOutput(title, headers, data)
-  await interaction.followup.send(output)
+  if data is None or len(data) == 0:
+    await interaction.followup.send('Congratulations! No unknown archetypes found for this format')
+  else:
+    output = BuildTableOutput(title, headers, data)
+    await interaction.followup.send(output)
 
 @IntoTheUnknown.error
 async def IntoTheUnknown_error(interaction: discord.Interaction, error):
@@ -468,30 +471,20 @@ async def Claim(interaction: discord.Interaction,
     Date of event (MM/DD/YYYY)
   """
   await interaction.response.defer(ephemeral=True)
-  try:
-    archetype_submitted, event = ClaimResult(interaction, player_name, archetype, date)
-    if archetype_submitted is None:
-      await interaction.followup.send('Unable to submit the archetype. Please try again later.')
+  archetype_submitted, event = await ClaimResult(interaction, player_name, archetype, date)
+  if archetype_submitted is None:
+    await interaction.followup.send('Unable to submit the archetype. Please try again later.')
+  else:
+    await interaction.followup.send('Thank you for submitting the archetype!')
+    
+  followup = CheckEventPercentage(event)
+  if followup:
+    if followup[1]:
+      title, headers, data = OneEvent(event)
+      output = BuildTableOutput(title, headers, data)
+      await MessageChannel(output, interaction.guild_id, interaction.channel_id)
     else:
-      await interaction.followup.send('Thank you for submitting the archetype!')
-      
-    followup = CheckEventPercentage(event)
-    if followup:
-      if followup[1]:
-        title, headers, data = OneEvent(event)
-        output = BuildTableOutput(title, headers, data)
-        await MessageChannel(output, interaction.guild_id, interaction.channel_id)
-      else:
-        await MessageChannel(followup[0], interaction.guild_id, interaction.channel_id)
-  except BadWordError as error:
-    print(f'Bad word error: {error}')
-    await interaction.followup.send(error.message)
-  except EventNotFoundError as error:
-    print('Event not found')
-    await interaction.followup.send(error.message)
-  except DateRangeError as error:
-    print('Date range error')
-    await interaction.followup.send(error.message)
+      await MessageChannel(followup[0], interaction.guild_id, interaction.channel_id)
 
 @Claim.error
 async def Claim_error(interaction: discord.Interaction, error):

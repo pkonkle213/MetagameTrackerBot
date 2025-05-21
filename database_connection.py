@@ -3,7 +3,38 @@ import psycopg2
 from settings import DATAGUILDID
 from psycopg2.errors import UniqueViolation
 
+#With this file reaching about 1000 lines, I think it's time to break it up into multiple files with relevant methods in each
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
+
+def AnalyizeRoundByRound(event_id):
+  #Not yet implemented
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    WITH X AS (
+    SELECT DISTINCT on (event_id, player_name)
+      event_id, player_name, archetype_played
+    FROM ArchetypeSubmissions
+    WHERE event_id = {event_id}
+    AND reported = {False}
+    ORDER BY event_id, player_name, id desc
+    )
+    select rd.round_number,
+           X1.archetype_played as player_one_archetype,
+           X2.archetype_played as player_two_archetype,
+           X3.archetype_played as winner_archetype
+    from rounddetails rd
+    inner join participants po on rd.player1_id = po.id
+    left join X as X1 on X1.event_id = rd.event_id and X1.player_name = po.player_name
+    inner join participants pt on rd.player2_id = pt.id
+    left join X as X2 on X2.event_id = rd.event_id and X2.player_name = pt.player_name
+    inner join participants w on rd.winner_id = w.id
+    left join X as X3 on X3.event_id = rd.event_id and X3.player_name = w.player_name
+    order by rd.round_number, rd.player1_id
+    '''
+    cur.execute(command)
+    rows = cur.fetchall()
+    return rows
 
 def GetOffenders(game, format, store):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -21,7 +52,7 @@ def GetOffenders(game, format, store):
     INNER JOIN Events e on e.id = asu.event_id
     INNER JOIN CardGames c on c.id = e.game_id
     INNER JOIN Formats f on f.id = e.format_id
-    WHERE asu.reported = True
+    WHERE asu.reported = {True}
     AND e.discord_id = {store.DiscordId}
     {f'AND e.game_id = {game.ID}' if game else ''}
     {f'AND e.format_id = {format.ID}' if format else ''}
@@ -88,7 +119,9 @@ def AddBadWordBridge(discord_id, word_id):
     row = cur.fetchone()
     return row
 
+#Currently hardcoded to 30 day time frame, but could be flexible
 def MatchDisabledArchetypes(discord_id, user_id):
+  days = 30
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
@@ -97,8 +130,8 @@ def MatchDisabledArchetypes(discord_id, user_id):
     INNER JOIN events e ON e.id = asu.event_id
     WHERE e.discord_id = {discord_id}
       AND asu.submitter_id = {user_id}
-      AND asu.reported = True
-      AND e.event_date BETWEEN current_date - 30 AND current_date
+      AND asu.reported = {True}
+      AND e.event_date BETWEEN current_date - {days} AND current_date
     '''
     cur.execute(command)
     rows = cur.fetchall()
@@ -161,9 +194,10 @@ def GetUnknown(discord_id, game_id, format_id, start_date, end_date):
   with conn, conn.cursor() as cur:
     cur.execute(command)
     rows = cur.fetchall()
-    cur.close() #IS THIS WHAT I'VE BEEN MISSING FROM OTHER METHODS!?
+    cur.close() #TODO: IS THIS WHAT I'VE BEEN MISSING FROM OTHER METHODS!?
     return rows
 
+#TODO: Check that this doesn't display disabled archetypes
 def GetStats(discord_id,
              game_id,
              format_id,
@@ -193,16 +227,16 @@ def GetStats(discord_id,
             AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
           ORDER BY e.event_date DESC
         )
-          AND player_name IN (
-            SELECT player_name
-            FROM ArchetypeSubmissions asu
-            INNER JOIN events e ON e.id = asu.event_id
-            WHERE submitter_id = {user_id}
-              AND discord_id = {discord_id}
-            GROUP BY player_name
-            ORDER BY COUNT(*) DESC
-            LIMIT 1
-          )
+        AND player_name IN (
+          SELECT player_name
+          FROM ArchetypeSubmissions asu
+          INNER JOIN events e ON e.id = asu.event_id
+          WHERE submitter_id = {user_id}
+            AND discord_id = {discord_id}
+          GROUP BY player_name
+          ORDER BY COUNT(*) DESC
+          LIMIT 1
+        )
         ORDER BY event_id, player_name, id desc
       )
       SELECT 1 as Rank,
@@ -593,8 +627,8 @@ def GetStoreByDiscord(discord_id):
 def DeleteDemo():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'DELETE FROM Events WHERE discord_id = 1339313300394999931 and id > 12; '
-    command += 'DELETE FROM Stores WHERE discord_id = 1339313300394999931; '
+    command =  'DELETE FROM Events WHERE discord_id = 1357401531435192431 and id > 12; '
+    #command += 'DELETE FROM Stores WHERE discord_id = 1357401531435192431; '
     cur.execute(command)
     conn.commit()
   
@@ -648,6 +682,7 @@ def GetDataRowsForMetagame(game,
           {f'AND e.discord_id = {store.DiscordId}' if store else ''}
           ORDER BY e.event_date DESC
         )
+        AND reported = {False}
         ORDER BY event_id, player_name, id desc
       )
       SELECT COALESCE(X.archetype_played,'UNKNOWN') as archetype_played,
@@ -740,7 +775,7 @@ def GetPercentage(event_id):
               event_id, player_name, archetype_played
             FROM ArchetypeSubmissions
             WHERE event_id = {event_id}
-              AND reported = False
+              AND reported = {False}
             ORDER BY event_id, player_name, id desc
           )
           SELECT X.archetype_played,
@@ -813,6 +848,8 @@ def AddGameMap(discord_id:int,
     command = f'''
     INSERT INTO GameCategoryMaps (discord_id, game_id, category_id)
     VALUES ({discord_id}, {game_id}, {category_id})
+    ON CONFLICT (discord_id, category_id) DO UPDATE
+    SET game_id = {game_id}
     RETURNING *
     '''
     cur.execute(command)
@@ -828,6 +865,8 @@ def AddFormatMap(discord_id:int,
     command = f'''
     INSERT INTO FormatChannelMaps (discord_id, format_id, channel_id)
     VALUES ({discord_id}, {format_id}, {channel_id})
+    ON CONFLICT (discord_id, channel_id) DO UPDATE
+    SET format_id = {format_id}
     RETURNING *
     '''
     cur.execute(command)

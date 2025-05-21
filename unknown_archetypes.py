@@ -13,4 +13,4 @@ def GetAllUnknown(interaction:Interaction, start_date, end_date):
                     date_end)
   title = f'Unknown Archetypes from {date_start} to {date_end}'
   headers = ['Date', 'Player Name']
-  return (data, title, headers)
+  return data, title, headers

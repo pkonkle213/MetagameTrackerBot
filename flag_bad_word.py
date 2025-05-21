@@ -27,11 +27,8 @@ def AddBadWord(interaction:Interaction, bad_word):
   
 def ContainsBadWord(interaction:Interaction, bad_word):
   bad_words = GetWordsForDiscord(interaction.guild_id)
-  print('Bad words:', bad_words)
   for word in bad_words:
-    print('Word:', word)
     if word[0] in bad_word.upper():
-      print('We got one!')
       return True
 
   return False

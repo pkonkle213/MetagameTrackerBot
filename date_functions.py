@@ -15,7 +15,6 @@ def BuildDateRange(start_date, end_date, format):
     date_start = ConvertToDate(start_date)
   elif format is not None and format.LastBanUpdate > date_start:
     date_start = format.LastBanUpdate
-  print('Building dates:', 'start:', date_start, 'end:', date_end)
   return date_start, date_end
 
 def DateDifference(date1, date2):

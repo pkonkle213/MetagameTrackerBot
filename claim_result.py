@@ -1,27 +1,32 @@
 from checks import isSubmitter
-from custom_errors import DateRangeError, EventNotFoundError, BadWordError
+from custom_errors import KnownError
 from date_functions import ConvertToDate, GetToday, DateDifference
+from select_menu_bones import SelectMenu
 from flag_bad_word import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
 from database_connection import AddArchetype, GetEventObj, GetPercentage, UpdateEvent, GetEventMeta
 from tuple_conversions import ConvertToEvent
 from interaction_data import GetInteractionData
 
-def ClaimResult(interaction:Interaction, player_name:str, archetype:str, date:str):
+async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, date:str):
   date_used = '' if date == '' else ConvertToDate(date)
   date_today = GetToday()
   if date_used != '' and not isSubmitter:
     if DateDifference(date_today, date_used) > 14:
-      raise DateRangeError('You can only claim archetypes for events within the last 14 days. Please contact your store owner to have them submit the archetype.')
+      raise KnownError('You can only claim archetypes for events within the last 14 days. Please contact your store owner to have them submit the archetype.')
   else:
     date_used = None
 
   game, format, store, userId = GetInteractionData(interaction, game=True, format=True, store=True)
   archetype = archetype.encode('ascii', 'ignore').decode('ascii')
   if ContainsBadWord(interaction, archetype):
-    raise BadWordError('Archetype contains a banned word')
+    raise KnownError('Archetype contains a banned word')
   if not CanSubmitArchetypes(store.DiscordId, userId):
-    raise BadWordError('You have submitted too many bad archetypes. Please contact your store owner to have them submit the archetype.')
+    raise KnownError('You have submitted too many bad archetypes. Please contact your store owner to have them submit the archetype.')
+
+  if game.Name.upper() == 'LORCANA':
+    inks = await LorcanaInkMenu(interaction)
+    archetype = f'{inks} - {archetype}'
   
   updater_name = interaction.user.display_name.upper()
   archetype = archetype.upper()
@@ -33,7 +38,7 @@ def ClaimResult(interaction:Interaction, player_name:str, archetype:str, date:st
                    player_name)
   print('Event found:', event)
   if event is None:
-    raise EventNotFoundError('Event not found. Please ensure all parameters are correct')
+    raise KnownError('Event not found. Please ensure all parameters are correct')
   archetype_added = AddArchetype(event.ID,
                         player_name,
                         archetype,
@@ -75,3 +80,23 @@ def GetAndConvertEvent(guild_id, event_date, game, format, player_name):
   if event_obj is None:
     return None
   return ConvertToEvent(event_obj)
+
+async def LorcanaInkMenu(interaction):
+  ink_colors = [(1, 'Amber'),
+    (2, 'Amethyst'),
+    (3, 'Emerald'),
+    (4, 'Ruby'),
+    (5, 'Saphhire'),
+    (6, 'Steel')]
+  message = 'Please select your ink colors'
+  placeholder = 'Choose your ink colors'
+  inks = await SelectMenu(interaction,
+              message,
+              placeholder,
+              ink_colors,
+              2)
+  inks = sorted(inks)
+  if len(inks) == 2:
+    return f'{inks[0][1].title()}/{inks[1][1].title()}'
+  if len(inks) == 1:
+    return f'{inks[0][1].title()}'
