@@ -5,9 +5,9 @@ import logging
 from attendance_report import GetStoreAttendance
 from checks import isSubmitter
 from claim_result import ClaimResult, CheckEventPercentage, OneEvent
-from custom_errors import DateRangeError, EventNotFoundError, BadWordError, KnownError
+from custom_errors import KnownError
 from data_translation import ConvertMessageToParticipants, Participant, Round
-from date_menu import MyDateView
+#from date_menu import MyDateView
 from demo_functions import NewDemo
 from flag_bad_word import AddBadWord, Offenders
 from format_mapper import AddStoreFormatMap, GetFormatOptions
@@ -102,17 +102,20 @@ async def MessageChannel(msg, guildId, channelId):
   await channel.send(f'{msg}')
 
 async def Error(interaction, error):
+  #TODO: The error isn't being caught correctly here, so I need to figure out how to do that
   if isinstance(error, KnownError):
     await interaction.followup.send(error.message)
   else:
     error_message = f'''
     {interaction.user.display_name} ({interaction.user.id}) got an error: {error}
-    Command: {interaction.command.name}
-    Parameters: {interaction.command.parameters}
-    Default permissions: {interaction.command.default_permissions}
-    Contexts: {interaction.command.allowed_contexts}
-    Installs: {interaction.command.allowed_installs}
-    Callback: {interaction.command.callback}
+    Error Type: {type(error)}
+    Traceback: {error.__traceback__}
+    Command Name: {error.command.name}
+    Guild: {error.guild}
+    Channel: {error.channel}
+    User: {error.user}
+    Message: {error.message}
+    Parameters: {error.parameters}
     '''
     await ErrorMessage(error_message)
     await interaction.followup.send('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
@@ -278,7 +281,7 @@ async def SubmitCheck_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name="metagame",
-                     description="Get the metagame")
+                  description="Get the metagame")
 async def Metagame(interaction: discord.Interaction,
                    start_date: str = '',
                    end_date: str = ''):
@@ -453,7 +456,6 @@ async def DownloadData(interaction: discord.Interaction,
 async def DownloadData_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-#TODO: Can I make this command flexible to accept 'LORCANA' as an archetype and then it prompts the user for up to two ink colors? Or do I make a new command?
 @bot.tree.command(name='claim',
                   description='Enter your deck archetype')
 async def Claim(interaction: discord.Interaction,
@@ -471,6 +473,7 @@ async def Claim(interaction: discord.Interaction,
     Date of event (MM/DD/YYYY)
   """
   await interaction.response.defer(ephemeral=True)
+  archetype = archetype.strip()
   archetype_submitted, event = await ClaimResult(interaction, player_name, archetype, date)
   if archetype_submitted is None:
     await interaction.followup.send('Unable to submit the archetype. Please try again later.')

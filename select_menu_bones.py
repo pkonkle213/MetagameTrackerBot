@@ -1,7 +1,6 @@
 from discord.ui import Select, View
 import discord
 
-#TODO: This needs to be adjusted, as my Lorcana menu needs to allow for two selections
 async def SelectMenu(interaction:discord.Interaction,
                      message:str,
                      placeholder:str,
