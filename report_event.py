@@ -4,17 +4,16 @@ from date_functions import GetToday
 from interaction_data import GetInteractionData
 from tuple_conversions import ConvertToEvent, Participant, Round
 
-async def SubmitData(bot, message, data):
+async def SubmitData(message, data, date):
   game, format, store, userId = GetInteractionData(message,
                                                    game=True,
                                                    format=True,
                                                    store=True)
   #TODO: Should I Confirm date? How should I handle data that's input late?
-  event_date = GetToday()
-  event_obj = GetEventObj(store.DiscordId, event_date, game, format)
+  event_obj = GetEventObj(store.DiscordId, date, game, format)
   
   if event_obj is None:
-    event_obj = CreateEvent(event_date, store.DiscordId, game, format)
+    event_obj = CreateEvent(date, store.DiscordId, game, format)
 
   event = ConvertToEvent(event_obj)
   print('Event:', event)

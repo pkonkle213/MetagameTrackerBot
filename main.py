@@ -7,12 +7,12 @@ from checks import isSubmitter
 from claim_result import ClaimResult, CheckEventPercentage, OneEvent
 from custom_errors import KnownError
 from data_translation import ConvertMessageToParticipants, Participant, Round
-#from date_menu import MyDateView
 from demo_functions import NewDemo
 from flag_bad_word import AddBadWord, Offenders
 from format_mapper import AddStoreFormatMap, GetFormatOptions
 from game_mapper import AddStoreGameMap, GetGameOptions
 from interaction_data import GetInteractionData, GetStore
+from text_input import GetTextInput
 from metagame_report import GetMyMetagame
 from output_builder import BuildTableOutput
 from player_win_record import PlayRecord
@@ -60,14 +60,13 @@ async def on_message(message):
       await ErrorMessage(f'{str(message.guild).title()} ({message.guild.id}) is not approved to track data')
       return
 
-    #view = MyDateView()
-    #thisdate = await message.channel.send('Please confirm the date of the event', view=view)
-    #print('This Date:', thisdate)
+    date = await GetTextInput(bot, message)
+    print('Outside date:', date)
     type = 'participants' if isinstance(data[0], Participant) else 'tables'
 
-    await message.channel.send(f"Attempting to add {len(data)} {type} to today's event")
+    await message.channel.send(f"Attempting to add {len(data)} {type} to event")
     await message.delete()
-    output = await SubmitData(bot, message, data)
+    output = await SubmitData(message, data, date)
     await message.channel.send(output)
 
 def isOwner(interaction: discord.Interaction):
@@ -109,13 +108,11 @@ async def Error(interaction, error):
     error_message = f'''
     {interaction.user.display_name} ({interaction.user.id}) got an error: {error}
     Error Type: {type(error)}
-    Traceback: {error.__traceback__}
-    Command Name: {error.command.name}
-    Guild: {error.guild}
-    Channel: {error.channel}
-    User: {error.user}
-    Message: {error.message}
-    Parameters: {error.parameters}
+    Traceback: {str(error.__traceback__)}
+    Command Name: {interaction.command.name}
+    Guild: {interaction.guild}
+    Channel: {interaction.channel}
+    User: {interaction.user}
     '''
     await ErrorMessage(error_message)
     await interaction.followup.send('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
@@ -164,9 +161,9 @@ async def Feedback(interaction: discord.Interaction):
                      description="The new thing I want to test",
                      guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
-  
-  test = ...
-  if not test:
+  result = await GetTextInput(interaction, bot)
+  test = True
+  if not result:
     await interaction.response.send_message("Nope, something didn't work")
   else:
     await interaction.response.send_message("Yep, it worked")
