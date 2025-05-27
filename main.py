@@ -7,8 +7,8 @@ from checks import isSubmitter
 from claim_result import ClaimResult, CheckEventPercentage, OneEvent
 from custom_errors import KnownError
 from data_translation import ConvertMessageToParticipants, Participant, Round
-from demo_functions import NewDemo
 from date_functions.date_functions import GetToday
+from demo_functions import NewDemo
 from flag_bad_word import AddBadWord, Offenders
 from format_mapper import AddStoreFormatMap, GetFormatOptions
 from game_mapper import AddStoreGameMap, GetGameOptions
@@ -22,8 +22,8 @@ from report_event import SubmitData
 from select_menu_bones import SelectMenu
 from store_approval import ApproveMyStore, DisapproveMyStore
 from store_data_download import GetDataReport
-from unknown_archetypes import GetAllUnknown
 from top_players import GetTopPlayers
+from unknown_archetypes import GetAllUnknown
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -61,12 +61,14 @@ async def on_message(message):
       await ErrorMessage(f'{str(message.guild).title()} ({message.guild.id}) is not approved to track data')
       return
     date = GetToday()
+
+    #TODO: Update this to confirm a date. This didn't get tested before pushing it live
     #date = await GetTextInput(bot, message)
     #print('Outside date:', date)
+    #print('Outside type of date:', type(date))
     type = 'participants' if isinstance(data[0], Participant) else 'tables'
 
     await message.channel.send(f"Attempting to add {len(data)} {type} to event")
-    '''
     msg  = f"Guild name: {message.guild.name}\n"
     msg += f"Guild id: {message.guild.id}\n"
     msg += f"Channel name: {message.channel.name}\n"
@@ -75,7 +77,6 @@ async def on_message(message):
     msg += f"Author id: {message.author.id}\n"
     msg += f"Message content: {message.content}\n"
     await MessageChannel(msg, settings.BOTGUILD.id, settings.BOTEVENTINPUTID)
-    '''
     print(message.content)
     await message.delete()
     output = await SubmitData(message, data, date)
@@ -115,14 +116,19 @@ async def MessageChannel(msg, guildId, channelId):
   await channel.send(f'{msg}')
 
 async def Error(interaction, error):
-  #TODO: The error isn't being caught correctly here, so I need to figure out how to do that
+  #TODO: The error isn't being caught correctly here. I need to figure out how to do that
+  #This is to keep error messages clear and concise, and especially specific for me
   if isinstance(error, KnownError):
     await interaction.followup.send(error.message)
   else:
+    #TODO: Traceback is still not giving me a clear message of what happened.
     error_message = f'''
     {interaction.user.display_name} ({interaction.user.id}) got an error: {error}
     Error Type: {type(error)}
-    Traceback: {str(error.__traceback__)}
+    Error Message: {str(error)}
+    Error Args: {error.args}
+    Error Details: {error.__dict__}
+    Traceback: {error.__traceback__}
     Command Name: {interaction.command.name}
     Guild: {interaction.guild}
     Channel: {interaction.channel}
@@ -265,7 +271,6 @@ async def AddFormatMap(interaction: discord.Interaction):
 async def AddFormatMap_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-#TODO: Needs to check that the store is registered, the category is mapped, and the channel is mapped
 @bot.tree.command(name="submitcheck",
                   description="To test if you can submit data")
 async def SubmitCheck(interaction: discord.Interaction):
@@ -354,6 +359,8 @@ async def Attendance(interaction: discord.Interaction,
   """
   await interaction.response.defer()
   data, title, headers = GetStoreAttendance(interaction, start_date, end_date)
+  if data is None or len(data) == 0:
+    await interaction.followup.send('No attendance data found for this store and/or format')
   output = BuildTableOutput(title,
                             headers,
                             data)

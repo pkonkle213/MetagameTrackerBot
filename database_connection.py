@@ -828,6 +828,7 @@ def GetAttendance(store,
     {'INNER JOIN Formats f on f.id = e.format_id' if not format else ''}
     WHERE e.event_date BETWEEN '{start_date}' AND '{end_date}'
       AND e.game_id = {game.ID} 
+      AND s.used_for_data = {True}
       {f'AND e.discord_id = {store.DiscordId}' if store else ''}
       {f'AND e.format_id = {format.ID}' if format else ''}
     GROUP BY e.id
