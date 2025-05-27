@@ -13,7 +13,7 @@ def BuildDateRange(start_date, end_date, format):
   date_start = GetStartDate(date_end)
   if start_date != '':
     date_start = ConvertToDate(start_date)
-  elif format is not None and format.LastBanUpdate > date_start:
+  elif format is not None and format.LastBanUpdate is not None and format.LastBanUpdate > date_start:
     date_start = format.LastBanUpdate
   return date_start, date_end
 

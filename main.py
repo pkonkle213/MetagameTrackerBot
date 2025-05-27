@@ -74,7 +74,7 @@ async def on_message(message):
     msg += f"Author name: {message.author.name}\n"
     msg += f"Author id: {message.author.id}\n"
     msg += f"Message content: {message.content}\n"
-    await MessageChannel(msg, settings.BOTGUILD, settings.BOTEVENTINPUTID)
+    await MessageChannel(msg, settings.BOTGUILD.id, settings.BOTEVENTINPUTID)
     '''
     print(message.content)
     await message.delete()
@@ -152,9 +152,9 @@ async def GetBot(interaction: discord.Interaction):
 async def GetGuild(interaction: discord.Interaction):
   await interaction.response.send_message(f'Here is the link to my server: {settings.MYBOTGUILDURL}')
 
-@bot.tree.command(name='zoomout',
+@bot.tree.command(name='viewalldata',
                   description='Get an invite to my data hub with more stores')
-async def ZoomOut(interaction: discord.Interaction):
+async def ViewAllData(interaction: discord.Interaction):
   await interaction.response.send_message(f'Here is the link to my data hub: {settings.DATAHUBINVITE}')
 
 @bot.tree.command(name="getsop",
