@@ -8,6 +8,7 @@ from claim_result import ClaimResult, CheckEventPercentage, OneEvent
 from custom_errors import KnownError
 from data_translation import ConvertMessageToParticipants, Participant, Round
 from demo_functions import NewDemo
+from date_functions.date_functions import GetToday
 from flag_bad_word import AddBadWord, Offenders
 from format_mapper import AddStoreFormatMap, GetFormatOptions
 from game_mapper import AddStoreGameMap, GetGameOptions
@@ -59,12 +60,23 @@ async def on_message(message):
     if not storeCanTrack(message.guild):
       await ErrorMessage(f'{str(message.guild).title()} ({message.guild.id}) is not approved to track data')
       return
-
-    date = await GetTextInput(bot, message)
-    print('Outside date:', date)
+    date = GetToday()
+    #date = await GetTextInput(bot, message)
+    #print('Outside date:', date)
     type = 'participants' if isinstance(data[0], Participant) else 'tables'
 
     await message.channel.send(f"Attempting to add {len(data)} {type} to event")
+    '''
+    msg  = f"Guild name: {message.guild.name}\n"
+    msg += f"Guild id: {message.guild.id}\n"
+    msg += f"Channel name: {message.channel.name}\n"
+    msg += f"Channel id: {message.channel.id}\n"
+    msg += f"Author name: {message.author.name}\n"
+    msg += f"Author id: {message.author.id}\n"
+    msg += f"Message content: {message.content}\n"
+    await MessageChannel(msg, settings.BOTGUILD, settings.BOTEVENTINPUTID)
+    '''
+    print(message.content)
     await message.delete()
     output = await SubmitData(message, data, date)
     await message.channel.send(output)
@@ -91,9 +103,11 @@ async def MessageUser(msg, userId, file=None):
 async def MessageChannel(msg, guildId, channelId):
   server = bot.get_guild(int(guildId))
   if server is None:
+    print(f'Server {guildId} not found')
     raise Exception(f'Server {guildId} not found')
   channel = server.get_channel(int(channelId))
   if channel is None:
+    print(f'Channel {channelId} not found')
     raise Exception(f'Channel {channelId} not found')
   if not isinstance(channel, discord.TextChannel):
     raise Exception(f'Channel {channelId} is not a text channel')
@@ -150,7 +164,7 @@ async def GetSOP(interaction: discord.Interaction):
   await interaction.response.send_message(f'Here is the link to my bot: {settings.SOPURL}')
 
 @bot.tree.command(name="feedback",
-                     description="Provide feedback on the bot")
+                  description="Provide feedback on the bot")
 async def Feedback(interaction: discord.Interaction):
   await interaction.response.send_message(f'Follow this link: {settings.FEEDBACKURL}')
 
@@ -158,8 +172,8 @@ async def Feedback(interaction: discord.Interaction):
 #@discord.app_commands.AppCommand(default_member_permissions=0)
 #?????
 @bot.tree.command(name="atest",
-                     description="The new thing I want to test",
-                     guild=settings.TESTSTOREGUILD)
+                  description="The new thing I want to test",
+                  guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
   result = await GetTextInput(interaction, bot)
   test = True
@@ -173,7 +187,7 @@ async def ATest_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name='addword',
-                 description='Add a banned word')
+                  description='Add a banned word')
 @discord.app_commands.checks.has_role('MTSubmitter')
 async def BadWord(interaction: discord.Interaction,
                    word:str):
@@ -194,7 +208,7 @@ async def BadWord(interaction: discord.Interaction,
       await interaction.followup.send('Something went wrong. Please try again later.', ephemeral=True)
 
 @bot.tree.command(name="register",
-                     description="Register your store")
+                  description="Register your store")
 @discord.app_commands.check(isOwner)
 async def Register(interaction: discord.Interaction,
                    store_name: str):
@@ -217,7 +231,7 @@ async def register_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name='mapgame',
-                     description='Map your category to a game')
+                  description='Map your category to a game')
 @discord.app_commands.checks.has_role("MTSubmitter")
 async def AddGameMap(interaction: discord.Interaction):
   await interaction.response.defer(ephemeral=True)
@@ -233,7 +247,7 @@ async def AddGameMap_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name='mapformat',
-                     description='Map your channel to a format')
+                  description='Map your channel to a format')
 @discord.app_commands.checks.has_role("MTSubmitter")
 async def AddFormatMap(interaction: discord.Interaction):
   await interaction.response.defer(ephemeral=True)
@@ -253,7 +267,7 @@ async def AddFormatMap_error(interaction: discord.Interaction, error):
 
 #TODO: Needs to check that the store is registered, the category is mapped, and the channel is mapped
 @bot.tree.command(name="submitcheck",
-                     description="To test if you can submit data")
+                  description="To test if you can submit data")
 async def SubmitCheck(interaction: discord.Interaction):
   issues = ['Issues I detect:']
   game, format, store, userId = GetInteractionData(interaction)
@@ -269,9 +283,9 @@ async def SubmitCheck(interaction: discord.Interaction):
     issues.append('- Channel not mapped to a format')
 
   if len(issues) == 1:
-    await interaction.response.send_message('Everything looks good. Please reach out to Phil to test your data')
+    await interaction.response.send_message('Everything looks good. Please reach out to Phil to test your data', ephemeral=True)
   else:
-    await interaction.response.send_message('\n'.join(issues))
+    await interaction.response.send_message('\n'.join(issues), ephemeral=True)
 
 @SubmitCheck.error
 async def SubmitCheck_error(interaction: discord.Interaction, error):
@@ -326,7 +340,7 @@ async def WLDRecord_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name="attendance",
-                     description="Get the attendance for a date range")
+                  description="Get the attendance for a date range")
 async def Attendance(interaction: discord.Interaction,
                      start_date: str = '',
                      end_date: str = ''):

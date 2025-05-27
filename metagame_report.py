@@ -1,7 +1,7 @@
 from discord import Interaction
 from database_connection import GetDataRowsForMetagame
 from interaction_data import GetInteractionData
-from date_functions import BuildDateRange
+from date_functions.date_functions import BuildDateRange
 
 def GetMyMetagame(interaction:Interaction,
   start_date:str,

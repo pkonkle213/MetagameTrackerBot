@@ -1,7 +1,7 @@
 from discord import Interaction
 from database_connection import GetUnknown
 from interaction_data import GetInteractionData
-from date_functions import BuildDateRange
+from date_functions.date_functions import BuildDateRange
 
 def GetAllUnknown(interaction:Interaction, start_date, end_date):
   game, format, store, user_id = GetInteractionData(interaction, game=True, format=True, store=True)

@@ -1,5 +1,5 @@
 from database_connection import DeleteDemo, UpdateDemo
-import date_functions
+from date_functions.date_functions import GetToday, GetWeeksAgo
 
 def NewDemo():
   #Deletes my test store and its events in the database so I can offer a live update
@@ -21,6 +21,6 @@ def NewDemo():
       (12, 1),
   ]
   for id in ids:
-    today = date_functions.GetToday()
-    date = date_functions.GetWeeksAgo(today, id[1])
+    today = GetToday()
+    date = GetWeeksAgo(today, id[1])
     UpdateDemo(id[0], date)

@@ -1,6 +1,5 @@
 from enum import Enum, auto
 from database_connection import GetEventObj, CreateEvent, AddResult, GetRoundNumber, GetParticipantId, Increase, AddRoundResult
-from date_functions import GetToday
 from interaction_data import GetInteractionData
 from tuple_conversions import ConvertToEvent, Participant, Round
 
@@ -16,7 +15,6 @@ async def SubmitData(message, data, date):
     event_obj = CreateEvent(date, store.DiscordId, game, format)
 
   event = ConvertToEvent(event_obj)
-  print('Event:', event)
   if isinstance(data[0],Participant):
     output = AddParticipantResults(event.ID, data, userId)
   elif isinstance(data[0], Round):

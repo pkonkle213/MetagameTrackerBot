@@ -1,5 +1,6 @@
 import datetime
 
+#TODO: This should be generalized to be used for any text input
 async def GetTextInput(bot, message):
   await message.reply("Please enter a date in MM-DD-YYYY format:")
 

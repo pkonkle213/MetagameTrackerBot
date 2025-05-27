@@ -1,21 +1,3 @@
-from discord import Interaction
-import date_functions
-
-def DiscordInfo(interaction:Interaction):
-  response = []
-  currentDateTime = str(date_functions.GetToday())
-  response.append(f'Current Date: {currentDateTime}')
-  response.append(f'Message Author Name: {str(interaction.user)}')
-  response.append(f'Message Author ID: {str(interaction.user.id)}')
-  response.append(f'Discord Guild Name: {str(interaction.guild.name)}')
-  response.append(f'Discord Guild ID: {str(interaction.guild.id)}')
-  response.append(f'Discord Guild Category: {str(interaction.channel.category)}')
-  response.append(f'Discord Guild Category ID: {str(interaction.channel.category.id)}')
-  response.append(f'Discord Guild Channel: {str(interaction.channel)}')
-  response.append(f'Discord Guild Channel ID: {str(interaction.channel.id)}')
-
-  return '\n'.join(response)
-
 def MaxLength(headers, collection):
   buffer = 2
   maxLengths = []

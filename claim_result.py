@@ -1,6 +1,6 @@
 from checks import isSubmitter
 from custom_errors import KnownError
-from date_functions import ConvertToDate, GetToday, DateDifference
+from date_functions.date_functions import ConvertToDate, GetToday, DateDifference
 from select_menu_bones import SelectMenu
 from flag_bad_word import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
