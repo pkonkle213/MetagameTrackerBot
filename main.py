@@ -63,12 +63,13 @@ async def on_message(message):
     date = GetToday()
 
     #TODO: Update this to confirm a date. This didn't get tested before pushing it live
-    #date = await GetTextInput(bot, message)
-    #print('Outside date:', date)
-    #print('Outside type of date:', type(date))
-    type = 'participants' if isinstance(data[0], Participant) else 'tables'
+    result = await GetTextInput(bot, message)
+    print('Outside date:', result)
+    print('Outside type of date:', type(result))
+    
+    message_type = 'participants' if isinstance(data[0], Participant) else 'tables'
 
-    await message.channel.send(f"Attempting to add {len(data)} {type} to event")
+    await message.channel.send(f"Attempting to add {len(data)} {message_type} to event")
     msg  = f"Guild name: {message.guild.name}\n"
     msg += f"Guild id: {message.guild.id}\n"
     msg += f"Channel name: {message.channel.name}\n"
@@ -179,12 +180,16 @@ async def Feedback(interaction: discord.Interaction):
                   description="The new thing I want to test",
                   guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
-  result = await GetTextInput(interaction, bot)
-  test = True
+  await interaction.response.defer()
+  result = await GetTextInput(bot, interaction)
+  #date = await GetTextInput(bot, message)
+  print('Outside date:', result)
+  print('Outside type of date:', type(result))
+  
   if not result:
-    await interaction.response.send_message("Nope, something didn't work")
+    await interaction.followup.send("Nope, something didn't work")
   else:
-    await interaction.response.send_message("Yep, it worked")
+    await interaction.followup.send("Yep, it worked")
   
 @ATest.error
 async def ATest_error(interaction: discord.Interaction, error):
