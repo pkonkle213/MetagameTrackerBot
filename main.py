@@ -125,8 +125,6 @@ async def Error(interaction, error):
     error_message = f'''
     {interaction.user.display_name} ({interaction.user.id}) got an error: {error}
     Error Type: {type(error)}
-    Error Message: {str(error)}
-    Error Args: {error.args}
     Error Details: {error.__dict__}
     Traceback: {error.__traceback__}
     Command Name: {interaction.command.name}
@@ -274,6 +272,7 @@ async def AddFormatMap_error(interaction: discord.Interaction, error):
 @bot.tree.command(name="submitcheck",
                   description="To test if you can submit data")
 async def SubmitCheck(interaction: discord.Interaction):
+  await interaction.response.defer(ephemeral=True)
   issues = ['Issues I detect:']
   game, format, store, userId = GetInteractionData(interaction)
   if not store:
@@ -288,9 +287,9 @@ async def SubmitCheck(interaction: discord.Interaction):
     issues.append('- Channel not mapped to a format')
 
   if len(issues) == 1:
-    await interaction.response.send_message('Everything looks good. Please reach out to Phil to test your data', ephemeral=True)
+    await interaction.followup.send('Everything looks good. Please reach out to Phil to test your data')
   else:
-    await interaction.response.send_message('\n'.join(issues), ephemeral=True)
+    await interaction.followup.send('\n'.join(issues))
 
 @SubmitCheck.error
 async def SubmitCheck_error(interaction: discord.Interaction, error):
@@ -489,10 +488,12 @@ async def Claim(interaction: discord.Interaction,
     The deck archetype you played
   date: string
     Date of event (MM/DD/YYYY)
+  is_you: string
+    Are you reporting your own archetype? (Y/N)
   """
   await interaction.response.defer(ephemeral=True)
   archetype = archetype.strip()
-  archetype_submitted, event = await ClaimResult(interaction, player_name, archetype, date)
+  archetype_submitted, event = await ClaimResult(interaction, player_name, archetype, date, is_you)
   if archetype_submitted is None:
     await interaction.followup.send('Unable to submit the archetype. Please try again later.')
   else:

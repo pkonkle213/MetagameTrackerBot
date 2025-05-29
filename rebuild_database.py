@@ -3,6 +3,7 @@ import psycopg2
 
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
+#This is only to be used when I need to rebuild the database
 def RebuildDatabase():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:

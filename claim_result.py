@@ -8,7 +8,7 @@ from database_connection import AddArchetype, GetEventObj, GetPercentage, Update
 from tuple_conversions import ConvertToEvent
 from interaction_data import GetInteractionData
 
-async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, date:str):
+async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, date:str, is_you:str):
   date_used = '' if date == '' else ConvertToDate(date)
   date_today = GetToday()
   if date_used != '' and not isSubmitter:
@@ -16,6 +16,8 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
       raise KnownError('You can only claim archetypes for events within the last 14 days. Please contact your store owner to have them submit the archetype.')
   else:
     date_used = None
+
+  is_user = is_you.lower() == 'y'
 
   game, format, store, userId = GetInteractionData(interaction, game=True, format=True, store=True)
   archetype = archetype.encode('ascii', 'ignore').decode('ascii')
@@ -42,7 +44,6 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
   archetype_added = AddArchetype(event.ID,
                         player_name,
                         archetype,
-                        date_today,
                         userId,
                         updater_name)
   return archetype_added, event
@@ -64,6 +65,7 @@ def CheckEventPercentage(event):
     if event.LastUpdate + 1 < 4:
       followup = (f'Congratulations! The {str_date} event is now {percent_reported:.0%} reported!', False)
     else:
+      #TODO: If the event is complete, I would like to update my data guild automatically with the metagame and attendance data
       followup = (f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!', True)
     return followup
   return None
@@ -83,11 +85,11 @@ def GetAndConvertEvent(guild_id, event_date, game, format, player_name):
 
 async def LorcanaInkMenu(interaction):
   ink_colors = [(1, 'Amber'),
-    (2, 'Amethyst'),
-    (3, 'Emerald'),
-    (4, 'Ruby'),
-    (5, 'Saphhire'),
-    (6, 'Steel')]
+                (2, 'Amethyst'),
+                (3, 'Emerald'),
+                (4, 'Ruby'),
+                (5, 'Saphhire'),
+                (6, 'Steel')]
   message = 'Please select your ink colors'
   placeholder = 'Choose your ink colors'
   inks = await SelectMenu(interaction,
