@@ -57,7 +57,8 @@ async def on_message(message):
     if not isSubmitter(message.guild, message.author, 'MTSubmitter'):
       await ErrorMessage(f'{str(message.author).title()} ({message.author.id}) lacks the permission to submit data')
       return
-    if not storeCanTrack(message.guild):
+    store = GetStore(message.guild.id)
+    if store is not None and not store.ApprovalStatus:
       await ErrorMessage(f'{str(message.guild).title()} ({message.guild.id}) is not approved to track data')
       return
     date = GetToday()
@@ -75,7 +76,7 @@ async def on_message(message):
     msg += f"Channel id: {message.channel.id}\n"
     msg += f"Author name: {message.author.name}\n"
     msg += f"Author id: {message.author.id}\n"
-    msg += f"Message content: {message.content}\n"
+    msg += f"Message content:\n{message.content}"
     await MessageChannel(msg, settings.BOTGUILD.id, settings.BOTEVENTINPUTID)
     print(message.content)
     await message.delete()
@@ -89,10 +90,6 @@ def isOwner(interaction: discord.Interaction):
 
 def isPhil(interaction: discord.Interaction):
   return interaction.user.id == settings.PHILID
-
-def storeCanTrack(guild):
-  store = GetStore(guild.id)
-  return store is not None and store.ApprovalStatus
 
 async def MessageUser(msg, userId, file=None):
   user = await bot.fetch_user(userId)
