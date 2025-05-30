@@ -8,7 +8,6 @@ async def SubmitData(message, data, date):
                                                    game=True,
                                                    format=True,
                                                    store=True)
-  #TODO: Should I Confirm date? How should I handle data that's input late?
   event_obj = GetEventObj(store.DiscordId, date, game, format)
   
   if event_obj is None:
