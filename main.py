@@ -58,18 +58,19 @@ async def on_message(message):
       await ErrorMessage(f'{str(message.author).title()} ({message.author.id}) lacks the permission to submit data')
       return
     store = GetStore(message.guild.id)
-    if store is not None and not store.ApprovalStatus:
+    if store is None or not store.ApprovalStatus:
       await ErrorMessage(f'{str(message.guild).title()} ({message.guild.id}) is not approved to track data')
       return
     date = GetToday()
 
     #TODO: Update this to confirm a date. This didn't get tested before pushing it live
-    #date = await GetTextInput(bot, message)
-    #print('Outside date:', date)
-    #print('Outside type of date:', type(date))
-    type = 'participants' if isinstance(data[0], Participant) else 'tables'
+    result = await GetTextInput(bot, message)
+    print('Outside date:', result)
+    print('Outside type of date:', type(result))
+    
+    message_type = 'participants' if isinstance(data[0], Participant) else 'tables'
 
-    await message.channel.send(f"Attempting to add {len(data)} {type} to event")
+    await message.channel.send(f"Attempting to add {len(data)} {message_type} to event")
     msg  = f"Guild name: {message.guild.name}\n"
     msg += f"Guild id: {message.guild.id}\n"
     msg += f"Channel name: {message.channel.name}\n"
@@ -122,8 +123,6 @@ async def Error(interaction, error):
     error_message = f'''
     {interaction.user.display_name} ({interaction.user.id}) got an error: {error}
     Error Type: {type(error)}
-    Error Message: {str(error)}
-    Error Args: {error.args}
     Error Details: {error.__dict__}
     Traceback: {error.__traceback__}
     Command Name: {interaction.command.name}
@@ -178,12 +177,16 @@ async def Feedback(interaction: discord.Interaction):
                   description="The new thing I want to test",
                   guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
-  result = await GetTextInput(interaction, bot)
-  test = True
+  await interaction.response.defer()
+  result = await GetTextInput(bot, interaction)
+  #date = await GetTextInput(bot, message)
+  print('Outside date:', result)
+  print('Outside type of date:', type(result))
+  
   if not result:
-    await interaction.response.send_message("Nope, something didn't work")
+    await interaction.followup.send("Nope, something didn't work")
   else:
-    await interaction.response.send_message("Yep, it worked")
+    await interaction.followup.send("Yep, it worked")
   
 @ATest.error
 async def ATest_error(interaction: discord.Interaction, error):
@@ -271,6 +274,7 @@ async def AddFormatMap_error(interaction: discord.Interaction, error):
 @bot.tree.command(name="submitcheck",
                   description="To test if you can submit data")
 async def SubmitCheck(interaction: discord.Interaction):
+  await interaction.response.defer(ephemeral=True)
   issues = ['Issues I detect:']
   game, format, store, userId = GetInteractionData(interaction)
   if not store:
@@ -285,9 +289,9 @@ async def SubmitCheck(interaction: discord.Interaction):
     issues.append('- Channel not mapped to a format')
 
   if len(issues) == 1:
-    await interaction.response.send_message('Everything looks good. Please reach out to Phil to test your data', ephemeral=True)
+    await interaction.followup.send('Everything looks good. Please reach out to Phil to test your data')
   else:
-    await interaction.response.send_message('\n'.join(issues), ephemeral=True)
+    await interaction.followup.send('\n'.join(issues))
 
 @SubmitCheck.error
 async def SubmitCheck_error(interaction: discord.Interaction, error):
@@ -486,10 +490,12 @@ async def Claim(interaction: discord.Interaction,
     The deck archetype you played
   date: string
     Date of event (MM/DD/YYYY)
+  is_you: string
+    Are you reporting your own archetype? (Y/N)
   """
   await interaction.response.defer(ephemeral=True)
   archetype = archetype.strip()
-  archetype_submitted, event = await ClaimResult(interaction, player_name, archetype, date)
+  archetype_submitted, event = await ClaimResult(interaction, player_name, archetype, date, is_you)
   if archetype_submitted is None:
     await interaction.followup.send('Unable to submit the archetype. Please try again later.')
   else:

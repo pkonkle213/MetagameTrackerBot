@@ -5,7 +5,7 @@ from date_functions.date_functions import BuildDateRange
 
 def GetAllUnknown(interaction:Interaction, start_date, end_date):
   game, format, store, user_id = GetInteractionData(interaction, game=True, format=True, store=True)
-  date_start, date_end = BuildDateRange(start_date, end_date, format)
+  date_start, date_end = BuildDateRange(start_date, end_date, format, 2)
   data = GetUnknown(store.DiscordId,
                     game.ID,
                     format.ID,

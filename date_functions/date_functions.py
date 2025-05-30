@@ -8,9 +8,9 @@ def GetAnalysisDates(weeks):
   BRStart = GetWeeksAgo(BREnd, weeks)
   return (EREnd, ERStart, BREnd, BRStart)
 
-def BuildDateRange(start_date, end_date, format):
+def BuildDateRange(start_date, end_date, format, weeks=8):
   date_end = GetToday() if end_date == '' else ConvertToDate(end_date)
-  date_start = GetStartDate(date_end)
+  date_start = GetStartDate(date_end, weeks)
   if start_date != '':
     date_start = ConvertToDate(start_date)
   elif format is not None and format.LastBanUpdate is not None and format.LastBanUpdate > date_start:
@@ -46,8 +46,8 @@ def GetQuarterRange(year, quarter):
     end_date = next_month - timedelta(days=1)
   return (start_date, end_date)
   
-def GetStartDate(end_date):
-  start = end_date - timedelta(days=end_date.weekday()) - timedelta(weeks=8)
+def GetStartDate(end_date, weeks):
+  start = end_date - timedelta(days=end_date.weekday()) - timedelta(weeks=weeks)
   return start
 
 def GetWeeksAgo(date, weeks):
