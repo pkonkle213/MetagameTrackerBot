@@ -61,12 +61,9 @@ async def on_message(message):
     if store is None or not store.ApprovalStatus:
       await ErrorMessage(f'{str(message.guild).title()} ({message.guild.id}) is not approved to track data')
       return
-    date = GetToday()
-
-    #TODO: Update this to confirm a date. This didn't get tested before pushing it live
-    result = await GetTextInput(bot, message)
-    print('Outside date:', result)
-    print('Outside type of date:', type(result))
+    date = await GetTextInput(bot, message)
+    print('Outside date:', date)
+    print('Outside type of date:', type(date))
     
     message_type = 'participants' if isinstance(data[0], Participant) else 'tables'
 
