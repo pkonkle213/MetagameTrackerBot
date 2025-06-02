@@ -1,5 +1,6 @@
 import discord
 from database_connection import RegisterStore
+from settings import BOTGUILD
 from tuple_conversions import ConvertToStore
 
 def RegisterNewStore(interaction: discord.Interaction, store_name: str):
@@ -25,6 +26,7 @@ def RegisterNewStore(interaction: discord.Interaction, store_name: str):
   
   return ConvertToStore(storeobj)
 
+#TODO: I'd also like set the owner to a Store Owner role for my bot guild
 async def SetPermissions(interaction):
   owner = interaction.guild.owner
   owner_role = discord.utils.find(lambda r: r.name == 'Owner',
@@ -47,3 +49,13 @@ async def SetPermissions(interaction):
   everyone_role = interaction.guild.default_role
   await interaction.channel.set_permissions(everyone_role,
                                             overwrite=permissions)
+
+async def AssignStoreOwnerRoleInBotGuild(bot:discord.Client, interaction):
+  bot_guild = bot.get_guild(int(BOTGUILD.id))
+  if bot_guild is None:
+    raise Exception('Bot guild not found')
+  store_owner_role = discord.utils.find(lambda r: r.name == 'Store Owner',
+                                        bot_guild.roles)
+  
+  store_owner = interaction.guild.owner.id
+  await store_owner.add_roles(store_owner_role)

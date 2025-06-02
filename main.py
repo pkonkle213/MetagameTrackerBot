@@ -7,7 +7,6 @@ from checks import isSubmitter
 from claim_result import ClaimResult, CheckEventPercentage, OneEvent
 from custom_errors import KnownError
 from data_translation import ConvertMessageToParticipants, Participant, Round
-from date_functions.date_functions import GetToday
 from demo_functions import NewDemo
 from flag_bad_word import AddBadWord, Offenders
 from format_mapper import AddStoreFormatMap, GetFormatOptions
@@ -17,7 +16,7 @@ from text_input import GetTextInput
 from metagame_report import GetMyMetagame
 from output_builder import BuildTableOutput
 from player_win_record import PlayRecord
-from register_store import RegisterNewStore, SetPermissions
+from register_store import AssignStoreOwnerRoleInBotGuild, RegisterNewStore, SetPermissions
 from report_event import SubmitData
 from select_menu_bones import SelectMenu
 from store_approval import ApproveMyStore, DisapproveMyStore
@@ -224,6 +223,7 @@ async def Register(interaction: discord.Interaction,
   await interaction.response.defer()
   store = RegisterNewStore(interaction, store_name)
   await SetPermissions(interaction)
+  await AssignStoreOwnerRoleInBotGuild(bot, interaction)
   await MessageUser(f'{store.StoreName.title()} has registered to track their data. DiscordId: {store.DiscordId}', settings.PHILID)
   await MessageChannel(f'{store.StoreName.title()} has registered to track their data. DiscordId: {store.DiscordId}', settings.BOTGUILD.id, settings.APPROVALCHANNELID)
   await interaction.followup.send(f'Registered {store_name.title()} with discord {store.DiscordName.title()} with owner {interaction.user}')
@@ -487,12 +487,10 @@ async def Claim(interaction: discord.Interaction,
     The deck archetype you played
   date: string
     Date of event (MM/DD/YYYY)
-  is_you: string
-    Are you reporting your own archetype? (Y/N)
   """
   await interaction.response.defer(ephemeral=True)
   archetype = archetype.strip()
-  archetype_submitted, event = await ClaimResult(interaction, player_name, archetype, date, is_you)
+  archetype_submitted, event = await ClaimResult(interaction, player_name, archetype, date)
   if archetype_submitted is None:
     await interaction.followup.send('Unable to submit the archetype. Please try again later.')
   else:

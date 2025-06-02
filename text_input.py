@@ -13,5 +13,4 @@ async def GetTextInput(bot, message:Message):
   date_obj = datetime.datetime.strptime(date_str, "%m/%d/%Y").date()
   if date_obj < datetime.date.today() - datetime.timedelta(days=14):
       raise Exception("Date is too far in the past.")
-  await message.reply(f"Date set to: {date_obj}")
   return date_obj

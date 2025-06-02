@@ -34,7 +34,6 @@ def AnalyizeRoundByRound(event_id):
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    cur.close()
     return rows
 
 def GetOffenders(game, format, store):
@@ -61,7 +60,6 @@ def GetOffenders(game, format, store):
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    cur.close()
     return rows
 
 def AddWord(word):
@@ -78,7 +76,6 @@ def AddWord(word):
       cur.execute(command, criteria)
       conn.commit()
       row = cur.fetchall()
-      cur.close()
       return row
   except UniqueViolation:
     return None
@@ -94,7 +91,6 @@ def GetWord(word):
     criteria = [word]
     cur.execute(command, criteria)
     rows = cur.fetchall()
-    cur.close()
     return rows
 
 def GetWordsForDiscord(discord_id):
@@ -108,7 +104,6 @@ def GetWordsForDiscord(discord_id):
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    cur.close()
     return rows
 
 def AddBadWordBridge(discord_id, word_id):
@@ -122,7 +117,6 @@ def AddBadWordBridge(discord_id, word_id):
     cur.execute(command)
     conn.commit()
     row = cur.fetchone()
-    cur.close()
     return row
 
 #Currently hardcoded to 30 day time frame, but could be flexible
@@ -141,7 +135,6 @@ def MatchDisabledArchetypes(discord_id, user_id):
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    cur.close()
     return rows
 
 #TODO: Probably should inject the word instead of having it in the string. Safety and all that jazz
@@ -162,7 +155,6 @@ def DisableMatchingWords(discord_id, word):
     cur.execute(command)
     conn.commit()
     row = cur.fetchone()
-    cur.close()
     return row
 
 def AddArchetype(event_id,
@@ -180,7 +172,6 @@ def AddArchetype(event_id,
     cur.execute(command)
     conn.commit()
     row = cur.fetchone()
-    cur.close()
     return row
   
 def GetUnknown(discord_id, game_id, format_id, start_date, end_date):
@@ -203,7 +194,6 @@ def GetUnknown(discord_id, game_id, format_id, start_date, end_date):
   with conn, conn.cursor() as cur:
     cur.execute(command)
     rows = cur.fetchall()
-    cur.close()
     return rows
 
 #TODO: Check that this doesn't display disabled archetypes
@@ -303,7 +293,6 @@ def GetStats(discord_id,
   with conn, conn.cursor() as cur:
     cur.execute(command)
     rows = cur.fetchall()
-    cur.close()
     return rows
 
 def GetStoreData(store, game, format, start_date, end_date):
@@ -349,7 +338,6 @@ def GetStoreData(store, game, format, start_date, end_date):
   
     cur.execute(command)
     rows = cur.fetchall()
-    cur.close()
     return rows
   
 def ViewEvent(event_id):
@@ -364,7 +352,6 @@ def ViewEvent(event_id):
 
     cur.execute(command)
     rows = cur.fetchall()
-    cur.close()
     return rows
 
 def CreateEvent(event_date,
@@ -382,8 +369,6 @@ def CreateEvent(event_date,
     cur.execute(command, criteria)
     conn.commit()
     event = cur.fetchone()
-
-    cur.close()
     return event if event else None
 
 
@@ -404,7 +389,6 @@ def RegisterStore(discord_id,
 
     conn.commit()
     row = cur.fetchone()
-    cur.close()
     return row
 
 def GetEventMeta(event_id):
@@ -429,7 +413,6 @@ def GetEventMeta(event_id):
     '''
     cur.execute(command, criteria)
     rows = cur.fetchall()
-    cur.close()
     return rows
 
 def SetStoreTrackingStatus(approval_status,
@@ -446,7 +429,6 @@ def SetStoreTrackingStatus(approval_status,
     cur.execute(command, criteria)
     conn.commit()
     store = cur.fetchone()
-    cur.close()
     return store
 
 def GetParticipantId(event_id, player_name):
@@ -462,7 +444,6 @@ def GetParticipantId(event_id, player_name):
     '''
     cur.execute(command, criteria)
     rowid = cur.fetchone()
-    cur.close()
     return rowid[0] if rowid else None
 
 def Increase(playerid, wins, losses, draws):
@@ -481,7 +462,6 @@ def Increase(playerid, wins, losses, draws):
     cur.execute(command, criteria)
     conn.commit()
     row = cur.fetchone()
-    cur.close()
     return row[0] if row else None
 
 def AddResult(event_id,
@@ -505,7 +485,6 @@ def AddResult(event_id,
 
       conn.commit()
       row = cur.fetchone()
-      cur.close()
       return row[0] if row else None
     except psycopg2.errors.UniqueViolation:
       return None
@@ -522,7 +501,6 @@ def GetRoundNumber(event_id):
 
     cur.execute(command, criteria)
     row = cur.fetchone()
-    cur.close()
     if row is None:
       return 0
     elif row[0] is None:
@@ -540,7 +518,6 @@ def GetBadWord(word):
     '''
     cur.execute(command)
     row = cur.fetchone()
-    cur.close()
     return row
 
 def AddRoundResult(event_id,
@@ -561,7 +538,6 @@ def AddRoundResult(event_id,
 
       conn.commit()
       row = cur.fetchone()
-      cur.close()
       return row[0] if row else None
     except psycopg2.errors.UniqueViolation:
       return None
@@ -577,7 +553,6 @@ def GetFormatByMap(channel_id):
     '''
     cur.execute(command)
     row = cur.fetchone()
-    cur.close()
     return row
 
 def GetFormatsByGameId(game_id):
@@ -591,7 +566,6 @@ def GetFormatsByGameId(game_id):
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    cur.close()
     return rows
 
 def GetEventObj(discord_id,
@@ -614,8 +588,8 @@ def GetEventObj(discord_id,
     LIMIT 1
     '''
     cur.execute(command)
-    cur.close()
-    return cur.fetchone()
+    row = cur.fetchone()
+    return row if row else None
 
 def GetStoreByDiscord(discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -627,8 +601,8 @@ def GetStoreByDiscord(discord_id):
 
   with conn, conn.cursor() as cur:
     cur.execute(command)
-    cur.close()
-    return cur.fetchall()
+    rows = cur.fetchall()
+    return rows if rows else None
 
 #This command is never called, I don't feel it's necessary to delete the store for a demo
 def DeleteDemo():
@@ -638,7 +612,6 @@ def DeleteDemo():
     #command += 'DELETE FROM Stores WHERE discord_id = 1357401531435192431; '
     cur.execute(command)
     conn.commit()
-    cur.close()
   
 def UpdateDemo(event_id, event_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -649,7 +622,6 @@ def UpdateDemo(event_id, event_date):
     criteria = (event_date, event_id)
     cur.execute(command, criteria)
     conn.commit()
-    cur.close()
   
 def GetGameByMap(category_id:int):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -662,7 +634,6 @@ def GetGameByMap(category_id:int):
     '''
     cur.execute(command)
     row = cur.fetchone()
-    cur.close()
     return row
     
 def GetDataRowsForMetagame(game,
@@ -717,7 +688,6 @@ def GetDataRowsForMetagame(game,
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    cur.close()
     return rows
 
 def GetTopPlayerData(discord_id,
@@ -756,8 +726,7 @@ def GetTopPlayerData(discord_id,
     '''
   
     cur.execute(command)
-    rows = cur.fetchall()  
-    cur.close()
+    rows = cur.fetchall()
     return rows
 
 def GetAllGames():
@@ -768,7 +737,6 @@ def GetAllGames():
     command += 'ORDER BY name '
     cur.execute(command)
     rows = cur.fetchall()
-    cur.close()
     return rows
 
 #TODO: HAHAHAHAH this is awful, but it works. Maybe I can clean this up?
@@ -806,7 +774,6 @@ def GetPercentage(event_id):
     """
     cur.execute(command)
     row = cur.fetchone()
-    cur.close()
     return row[0] if row else None
 
 def UpdateEvent(event_id):
@@ -821,7 +788,6 @@ def UpdateEvent(event_id):
     cur.execute(command)
     conn.commit()
     row = cur.fetchone()
-    cur.close()
     return row
 
 def GetAttendance(store,
@@ -853,7 +819,6 @@ def GetAttendance(store,
     print('Command:', command)
     cur.execute(command)
     rows = cur.fetchall()
-    cur.close()
     return rows
 
 def AddGameMap(discord_id:int,
@@ -871,7 +836,6 @@ def AddGameMap(discord_id:int,
     cur.execute(command)
     conn.commit()
     row = cur.fetchone()
-    cur.close()
     return row
 
 def AddFormatMap(discord_id:int,
@@ -889,6 +853,5 @@ def AddFormatMap(discord_id:int,
     cur.execute(command)
     conn.commit()
     row = cur.fetchone()
-    cur.close()
     return row
     

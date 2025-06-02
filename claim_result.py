@@ -8,7 +8,7 @@ from database_connection import AddArchetype, GetEventObj, GetPercentage, Update
 from tuple_conversions import ConvertToEvent
 from interaction_data import GetInteractionData
 
-async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, date:str, is_you:str):
+async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, date:str):
   date_used = '' if date == '' else ConvertToDate(date)
   date_today = GetToday()
   if date_used != '' and not isSubmitter:
@@ -17,7 +17,7 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
   else:
     date_used = None
 
-  is_user = is_you.lower() == 'y'
+  #is_user = is_you.lower() == 'y'
 
   game, format, store, userId = GetInteractionData(interaction, game=True, format=True, store=True)
   archetype = archetype.encode('ascii', 'ignore').decode('ascii')
