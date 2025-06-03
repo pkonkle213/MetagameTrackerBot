@@ -8,14 +8,13 @@ def PlayRecord(interaction:Interaction,
                end_date:str):
   game, format, store, user_id = GetInteractionData(interaction,
                                                     game=True,
-                                                    format=True,
                                                     store=True)
   date_start, date_end = BuildDateRange(start_date,
                                         end_date,
                                         format)
   data = GetStats(store.DiscordId,
-                  game.ID,
-                  format.ID,
+                  game,
+                  format,
                   user_id,
                   date_start,
                   date_end)

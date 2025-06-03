@@ -1,0 +1,1 @@
+--TODO: How can a store see the % reported for each event?

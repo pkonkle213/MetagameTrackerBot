@@ -25,11 +25,12 @@ async def SubmitData(message, data, date):
 def AddParticipantResults(event_id, data, submitterId):
   successes = 0
   for person in data:
-    output = AddResult(event_id, person, submitterId)
-    if output:
-      successes += 1
+    if person.PlayerName != '':
+      output = AddResult(event_id, person, submitterId)
+      if output:
+        successes += 1
 
-  return f'{successes} entries were added. Feel free to use /claim and update the archetypes!'
+  return f'{successes} entries were added. {len(data)-successes} were skipped. Feel free to use /claim and update the archetypes!'
 
 class Winner(Enum):
   TIE = auto()
@@ -65,7 +66,7 @@ def AddRoundResults(event_id, data, submitterId):
                             submitterId)
     elif round.P2Name == 'Bye':
       player2id = None
-    
+
     winner_id = player1id if result == Winner.PLAYER1 else player2id if result == Winner.PLAYER2 else None
     increase_one = Increase(player1id,
        1 if result == Winner.PLAYER1 else 0,

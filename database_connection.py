@@ -197,97 +197,59 @@ def GetUnknown(discord_id, game_id, format_id, start_date, end_date):
     return rows
 
 #TODO: Check that this doesn't display disabled archetypes
-#TODO: When in a channel that's not mapped, I'd like to list all formats and archetypes within
 def GetStats(discord_id,
-             game_id,
-             format_id,
+             game,
+             format,
              user_id,
              start_date,
              end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   command = f'''
-    SELECT archetype_played,
-           wins,
-           losses,
-           draws,
-           ROUND(winpercentage * 100, 2) as winpercentage
-    FROM (
-      (
-      WITH X AS (
-        SELECT DISTINCT on (event_id, player_name)
-          event_id, player_name, archetype_played
-        FROM ArchetypeSubmissions
-        WHERE event_id IN (
-          SELECT id
-          FROM events e
-          INNER JOIN stores s ON s.discord_id = e.discord_id
-          WHERE e.discord_id = {discord_id}
-            AND e.game_id = {game_id}
-            AND e.format_id = {format_id}
-            AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-          ORDER BY e.event_date DESC
-        )
-        AND player_name IN (
-          SELECT player_name
-          FROM ArchetypeSubmissions asu
-          INNER JOIN events e ON e.id = asu.event_id
-          WHERE submitter_id = {user_id}
-            AND discord_id = {discord_id}
-          GROUP BY player_name
-          ORDER BY COUNT(*) DESC
-          LIMIT 1
-        )
-        ORDER BY event_id, player_name, id desc
-      )
-      SELECT 1 as Rank,
-             'OVERALL' as archetype_played,
-             sum(wins) as wins,
-             sum(losses) as losses,
-             sum(draws) as draws,
-             sum(wins) * 1.0 / (sum(wins) + sum(losses)+sum(draws)) as winpercentage
-      FROM X
-      INNER JOIN participants p ON p.event_id = X.event_id AND p.player_name = X.player_name
-    )
-    UNION
-    (
-      WITH X AS (
-        SELECT DISTINCT on (event_id, player_name)
-          event_id, player_name, archetype_played
-        FROM ArchetypeSubmissions
-        WHERE event_id IN (
-          SELECT id
-          FROM events e
-          INNER JOIN stores s ON s.discord_id = e.discord_id
-          WHERE e.discord_id = {discord_id}
-            AND e.game_id = {game_id}
-            AND e.format_id = {format_id}
-            AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-          ORDER BY e.event_date DESC
-        )
-        AND player_name IN (
-          SELECT player_name
-          FROM ArchetypeSubmissions asu
-          INNER JOIN events e ON e.id = asu.event_id
-          WHERE submitter_id = {user_id}
-            AND discord_id = {discord_id}
-          GROUP BY player_name
-          ORDER BY COUNT(*) DESC
-          LIMIT 1
-        )
-        ORDER BY event_id, player_name, id desc
-      )
-      SELECT 2 as Rank,
-             COALESCE(X.archetype_played,'UNKNOWN') as archetype_played,
-             sum(wins) as wins,
-             sum(losses) as losses,
-             sum(draws) as draws,
-             sum(wins) * 1.0 / (sum(wins) + sum(losses)+sum(draws)) as winpercentage
-      FROM X
-      INNER JOIN participants p ON p.event_id = X.event_id AND p.player_name = X.player_name
-      GROUP BY archetype_played
-      ORDER BY archetype_played)
-    )
-    ORDER BY rank
+  WITH X AS (
+    SELECT {'f.name as format_name,' if not format else ''}
+      COALESCE(archetype_played,'UNKNOWN') as archetype_played,
+      sum(wins) as wins,
+      sum(losses) as losses,
+      sum(draws) as draws
+    FROM participants p
+    INNER JOIN events e ON e.id = p.event_id
+    INNER JOIN formats f ON f.id = e.format_id
+    LEFT JOIN (SELECT DISTINCT on (event_id, player_name)
+                 event_id, player_name, archetype_played, submitter_id
+               FROM ArchetypeSubmissions
+               ORDER BY event_id, player_name, id desc) asu ON asu.event_id = e.id and asu.player_name = p.player_name
+    WHERE p.player_name = (SELECT player_name
+                           FROM archetypesubmissions
+                           WHERE submitter_id = {user_id}
+                           GROUP BY player_name
+                           ORDER BY count(*) desc
+                           LIMIT 1)
+      AND discord_id = {discord_id}
+      {f'AND e.format_id = {format.ID}' if format else ''}
+      AND e.game_id = {game.ID}
+    GROUP BY {'f.name,' if not format else ''} archetype_played)
+  SELECT  archetype_played,
+          {'format_name,' if not format else ''}
+          wins,
+          losses,
+          draws,
+          1.0 * wins / (wins + losses + draws) as win_percentage
+  FROM  ((SELECT '1' as rank,
+            'Overall' as archetype_played,
+            {"' ' as format_name," if not format else ''}
+            sum(wins) as wins,
+            sum(losses) as losses,
+            sum(draws) as draws
+          FROM X)
+          UNION
+         (SELECT '2' as rank,
+            {'format_name,' if not format else ''}
+            archetype_played,
+            wins,
+            losses,
+            draws
+          FROM X))
+  ORDER BY rank, {'format_name, ' if not format else ''} archetype_played
   '''
   
   with conn, conn.cursor() as cur:
@@ -644,11 +606,6 @@ def GetDataRowsForMetagame(game,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
-    SELECT archetype_played,
-           ROUND(metagame_percent * 100, 2) AS metagame_percent,
-           ROUND(win_percent * 100, 2) AS win_percent,
-           ROUND(metagame_percent * win_percent * 100, 2) as Combined
-    FROM (
       WITH X AS (
         SELECT DISTINCT on (event_id, player_name)
           event_id, player_name, archetype_played
@@ -667,6 +624,11 @@ def GetDataRowsForMetagame(game,
         ORDER BY event_id, player_name, id desc
       )
       SELECT COALESCE(X.archetype_played,'UNKNOWN') as archetype_played,
+    SELECT archetype_played,
+           ROUND(metagame_percent * 100, 2) AS metagame_percent,
+           ROUND(win_percent * 100, 2) AS win_percent,
+           ROUND(metagame_percent * win_percent * 100, 2) as Combined
+    FROM (
              COUNT(*) * 1.0 / SUM(count(*)) OVER () as Metagame_Percent,
              sum(p.wins) * 1.0 / (sum(p.wins) + sum(p.losses) + sum(p.draws)) as Win_percent
       FROM participants p
@@ -682,6 +644,7 @@ def GetDataRowsForMetagame(game,
         ORDER BY event_date DESC
       )
       GROUP BY 1
+      UNION
     )
     WHERE metagame_percent >= 0.02
     ORDER BY 4 DESC
