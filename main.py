@@ -23,6 +23,7 @@ from store_approval import ApproveMyStore, DisapproveMyStore
 from store_data_download import GetDataReport
 from top_players import GetTopPlayers
 from unknown_archetypes import GetAllUnknown
+from store_event_reported.events_reported import GetMyEventsReported
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -529,5 +530,15 @@ async def Demo(interaction: discord.Interaction):
 @Demo.error
 async def demo_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
+
+@bot.tree.command(name='myeventsrepored',
+                  description='See how well your events are reported',
+                 guild=settings.TESTSTOREGUILD)
+@discord.app_commands.checks.has_role('MTSubmitter')
+async def MyEventsReported(interaction: discord.Interaction):
+  await interaction.response.defer(ephemeral=True)
+  data, title, headers = GetMyEventsReported(interaction)
+  output = BuildTableOutput(title, headers, data)
+  await interaction.followup.send(output)
 
 bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)
