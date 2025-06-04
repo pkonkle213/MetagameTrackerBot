@@ -647,6 +647,11 @@ def GetDataRowsForMetagame(game,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
+    SELECT archetype_played,
+           ROUND(metagame_percent * 100, 2) AS metagame_percent,
+           ROUND(win_percent * 100, 2) AS win_percent,
+           ROUND(metagame_percent * win_percent * 100, 2) as Combined
+    FROM (
       WITH X AS (
         SELECT DISTINCT on (event_id, player_name)
           event_id, player_name, archetype_played
@@ -665,11 +670,6 @@ def GetDataRowsForMetagame(game,
         ORDER BY event_id, player_name, id desc
       )
       SELECT COALESCE(X.archetype_played,'UNKNOWN') as archetype_played,
-    SELECT archetype_played,
-           ROUND(metagame_percent * 100, 2) AS metagame_percent,
-           ROUND(win_percent * 100, 2) AS win_percent,
-           ROUND(metagame_percent * win_percent * 100, 2) as Combined
-    FROM (
              COUNT(*) * 1.0 / SUM(count(*)) OVER () as Metagame_Percent,
              sum(p.wins) * 1.0 / (sum(p.wins) + sum(p.losses) + sum(p.draws)) as Win_percent
       FROM participants p
@@ -685,7 +685,6 @@ def GetDataRowsForMetagame(game,
         ORDER BY event_date DESC
       )
       GROUP BY 1
-      UNION
     )
     WHERE metagame_percent >= 0.02
     ORDER BY 4 DESC
