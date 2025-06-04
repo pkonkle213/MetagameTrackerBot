@@ -171,20 +171,17 @@ async def Feedback(interaction: discord.Interaction):
 #@discord.app_commands.AppCommand(default_member_permissions=0)
 #?????
 @bot.tree.command(name="atest",
-                  description="The new thing I want to test",
-                  guild=settings.TESTSTOREGUILD)
+  description="The new thing I want to test",
+  guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
   await interaction.response.defer()
-  result = await GetTextInput(bot, interaction)
-  #date = await GetTextInput(bot, message)
-  print('Outside date:', result)
-  print('Outside type of date:', type(result))
-  
+  result = 'Hi!'
+
   if not result:
     await interaction.followup.send("Nope, something didn't work")
   else:
     await interaction.followup.send("Yep, it worked")
-  
+
 @ATest.error
 async def ATest_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
@@ -229,6 +226,8 @@ async def Register(interaction: discord.Interaction,
   await MessageChannel(f'{store.StoreName.title()} has registered to track their data. DiscordId: {store.DiscordId}', settings.BOTGUILD.id, settings.APPROVALCHANNELID)
   await interaction.followup.send(f'Registered {store_name.title()} with discord {store.DiscordName.title()} with owner {interaction.user}')
 
+#TODO: More specific error catching needs to be in the command.
+#Catching errors like this is removing the type of error and more details that I could be using
 @Register.error
 async def register_error(interaction: discord.Interaction, error):
   await interaction.followup.send('Unable to register the store. This has been reported')
@@ -495,7 +494,8 @@ async def Claim(interaction: discord.Interaction,
   if archetype_submitted is None:
     await interaction.followup.send('Unable to submit the archetype. Please try again later.')
   else:
-    await interaction.followup.send('Thank you for submitting the archetype!')
+    #id like this to say 'thank you for submitting the archetype for [date] [format]'
+    await interaction.followup.send(f"Thank you for submitting the archetype for {event.EventDate.strftime('%B %d')}'s event!")
     
   followup = CheckEventPercentage(event)
   if followup:

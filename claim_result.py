@@ -17,8 +17,6 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
   else:
     date_used = None
 
-  #is_user = is_you.lower() == 'y'
-
   game, format, store, userId = GetInteractionData(interaction, game=True, format=True, store=True)
   archetype = archetype.encode('ascii', 'ignore').decode('ascii')
   if ContainsBadWord(interaction, archetype):
@@ -34,10 +32,10 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
   archetype = archetype.upper()
   player_name = player_name.upper()
   event = GetAndConvertEvent(store.DiscordId,
-                   date_used,
-                   game,
-                   format,
-                   player_name)
+                             date_used,
+                             game,
+                             format,
+                             player_name)
   print('Event found:', event)
   if event is None:
     raise KnownError('Event not found. Please ensure all parameters are correct')
