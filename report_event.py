@@ -69,18 +69,19 @@ def AddRoundResults(event_id, data, submitterId):
 
     winner_id = player1id if result == Winner.PLAYER1 else player2id if result == Winner.PLAYER2 else None
     increase_one = Increase(player1id,
-       1 if result == Winner.PLAYER1 else 0,
-       1 if result == Winner.PLAYER2 else 0,
-       1 if result == Winner.TIE else 0)
+                            1 if result == Winner.PLAYER1 else 0,
+                            1 if result == Winner.PLAYER2 else 0,
+                            1 if result == Winner.TIE else 0)
     if not increase_one:
       raise Exception('Unable to increase participant record one')
-    if round.P2Name != 'Bye':
+    if round.P2Name.lower() != 'bye':
       increase_two = Increase(player2id,
-         1 if result == Winner.PLAYER2 else 0,
-         1 if result == Winner.PLAYER1 else 0,
-         1 if result == Winner.TIE else 0)
+                              1 if result == Winner.PLAYER2 else 0,
+                              1 if result == Winner.PLAYER1 else 0,
+                              1 if result == Winner.TIE else 0)
       if not increase_two:
         raise Exception('Unable to increase participant record two')
+    
     result = AddRoundResult(event_id,
                             round_number,
                             player1id,

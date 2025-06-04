@@ -523,8 +523,18 @@ def AddRoundResult(event_id,
   with conn, conn.cursor() as cur:
     try:
       command = f'''
-      INSERT INTO RoundDetails (event_id, round_number, player1_id, {'player2_id,' if player2id else ''} winner_id, submitter_id)
-      VALUES ({event_id}, {round_number}, {player1id}, {f'{player2id}, ' if player2id else ''}{winner_id}, {submitter_id})
+      INSERT INTO RoundDetails (event_id,
+      round_number,
+      player1_id,
+      {'player2_id,' if player2id else ''}
+      {'winner_id,' if winner_id else ''}
+      submitter_id)
+      VALUES ({event_id},
+      {round_number},
+      {player1id},
+      {f'{player2id}, ' if player2id else ''}
+      {f'{winner_id},' if winner_id else ''}
+      {submitter_id})
       RETURNING *
       '''
       cur.execute(command)
