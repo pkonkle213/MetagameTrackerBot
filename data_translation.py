@@ -17,7 +17,7 @@ def CompanionParticipants(message):
       int(row_list[0]) #Standing
       int(row_list[2]) #Points obtained
       record = row_list[3].split('/')
-      participant = Participant(row_list[1],
+      participant = Participant(row_list[1].encode('ascii', 'ignore').decode('ascii'),
                                 int(record[0]),
                                 int(record[1]),
                                 int(record[2]))
@@ -54,7 +54,7 @@ def CompanionRoundByRound(message):
       row = rows[i:i + 6]
       #print('Row:', row)
       if row[3] != 'Bye':
-        p1name = row[1]
+        p1name = row[1].encode('ascii', 'ignore').decode('ascii')
         p1gw = row[3][0]
         p2gw = row[3][1]
         p2name = row[4]
@@ -62,7 +62,7 @@ def CompanionRoundByRound(message):
         #print('Result:', result)
         data.append(result)
       if row[3] == 'Bye':
-        p1name = row[0]
+        p1name = row[0].encode('ascii', 'ignore').decode('ascii')
         p1gw = 2
         p2name = 'Bye'
         p2gw = 0
