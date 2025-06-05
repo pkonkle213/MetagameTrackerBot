@@ -38,7 +38,8 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
                              player_name)
   print('Event found:', event)
   if event is None:
-    raise KnownError('Event not found. Please ensure all parameters are correct')
+    raise KnownError('Event not found. Please ensure all parameters are correct, especially your name (as it appears in Companion)')
+  #TODO: This should confirm that the information (date of event, name, and archetype) is correct before submitting
   archetype_added = AddArchetype(event.ID,
                         player_name,
                         archetype,

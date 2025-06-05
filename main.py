@@ -12,7 +12,7 @@ from flag_bad_word import AddBadWord, Offenders
 from format_mapper import AddStoreFormatMap, GetFormatOptions
 from game_mapper import AddStoreGameMap, GetGameOptions
 from interaction_data import GetInteractionData, GetStore
-from text_input import GetTextInput
+from new_text_input import ClaimCheckModal
 from metagame_report import GetMyMetagame
 from output_builder import BuildTableOutput
 from player_win_record import PlayRecord
@@ -21,9 +21,10 @@ from report_event import SubmitData
 from select_menu_bones import SelectMenu
 from store_approval import ApproveMyStore, DisapproveMyStore
 from store_data_download import GetDataReport
+from store_event_reported.events_reported import GetMyEventsReported
+from text_input import GetTextInput
 from top_players import GetTopPlayers
 from unknown_archetypes import GetAllUnknown
-from store_event_reported.events_reported import GetMyEventsReported
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -62,8 +63,6 @@ async def on_message(message):
       await ErrorMessage(f'{str(message.guild).title()} ({message.guild.id}) is not approved to track data')
       return
     date = await GetTextInput(bot, message)
-    print('Outside date:', date)
-    print('Outside type of date:', type(date))
     
     message_type = 'participants' if isinstance(data[0], Participant) else 'tables'
 
@@ -76,7 +75,6 @@ async def on_message(message):
     msg += f"Author id: {message.author.id}\n"
     msg += f"Message content:\n{message.content}"
     await MessageChannel(msg, settings.BOTGUILD.id, settings.BOTEVENTINPUTID)
-    print(message.content)
     await message.delete()
     output = await SubmitData(message, data, date)
     await message.channel.send(output)
@@ -116,7 +114,7 @@ async def Error(interaction, error):
   if isinstance(error, KnownError):
     await interaction.followup.send(error.message)
   else:
-    #TODO: Traceback is still not giving me a clear message of what happened.
+    #TODO: Error Type, Error details, and Traceback are still not giving me a clear message of what happened.
     error_message = f'''
     {interaction.user.display_name} ({interaction.user.id}) got an error: {error}
     Error Type: {type(error)}
@@ -128,7 +126,6 @@ async def Error(interaction, error):
     User: {interaction.user}
     '''
     await ErrorMessage(error_message)
-    await interaction.followup.send('Something went wrong, it has been reported. Please try again later.', ephemeral=True)
 
 async def ErrorMessage(msg):
   await MessageChannel(msg,
@@ -171,20 +168,31 @@ async def Feedback(interaction: discord.Interaction):
 #@discord.app_commands.AppCommand(default_member_permissions=0)
 #?????
 @bot.tree.command(name="atest",
-  description="The new thing I want to test",
-  guild=settings.TESTSTOREGUILD)
+                  description="The new thing I want to test",
+                  guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
+  print('Time to test!')
   await interaction.response.defer()
-  result = 'Hi!'
+  # Create an instance of our modal
+  modal = ClaimCheckModal()
+  print('Modal created, sending to user')
 
-  if not result:
-    await interaction.followup.send("Nope, something didn't work")
+  # Send the modal to the user.
+  # The modal will block the execution of this command until it's submitted or times out.
+  await interaction.response.send_modal(modal)
+
+  # Wait for the modal to be submitted or time out.
+  # The wait() method will return when `on_submit` or `on_timeout` is called.
+  await modal.wait()
+
+  # After modal.wait() returns, check if the modal was actually submitted
+  if modal.is_submitted:
+      # The submitted_message is now available!
+      response_message = f"You submitted the claim check: **'{modal.submitted_message}'**"
+      # Use follow-up as the initial response was a modal
+      await interaction.followup.send(response_message, ephemeral=False) # Make visible to everyone
   else:
-    await interaction.followup.send("Yep, it worked")
-
-@ATest.error
-async def ATest_error(interaction: discord.Interaction, error):
-  await Error(interaction, error)
+      await interaction.followup.send("Claim check modal was dismissed or timed out.", ephemeral=True)
 
 @bot.tree.command(name='addword',
                   description='Add a banned word')
@@ -363,10 +371,11 @@ async def Attendance(interaction: discord.Interaction,
   data, title, headers = GetStoreAttendance(interaction, start_date, end_date)
   if data is None or len(data) == 0:
     await interaction.followup.send('No attendance data found for this store and/or format')
-  output = BuildTableOutput(title,
-                            headers,
-                            data)
-  await interaction.followup.send(output)
+  else:
+    output = BuildTableOutput(title,
+                              headers,
+                              data)
+    await interaction.followup.send(output)
 
 @Attendance.error
 async def attendance_error(interaction: discord.Interaction, error):
@@ -494,22 +503,23 @@ async def Claim(interaction: discord.Interaction,
   """
   await interaction.response.defer(ephemeral=True)
   archetype = archetype.strip().encode('ascii', 'ignore').decode('ascii')
-  print('Sending:', player_name, archetype, date)
-  archetype_submitted, event = await ClaimResult(interaction, player_name, archetype, date)
-  if archetype_submitted is None:
-    await interaction.followup.send('Unable to submit the archetype. Please try again later.')
-  else:
-    #id like this to say 'thank you for submitting the archetype for [date] [format]'
-    await interaction.followup.send(f"Thank you for submitting the archetype for {event.EventDate.strftime('%B %d')}'s event!")
-    
-  followup = CheckEventPercentage(event)
-  if followup:
-    if followup[1]:
-      title, headers, data = OneEvent(event)
-      output = BuildTableOutput(title, headers, data)
-      await MessageChannel(output, interaction.guild_id, interaction.channel_id)
+  try:
+    archetype_submitted, event = await ClaimResult(interaction, player_name, archetype, date)
+    if archetype_submitted is None:
+      await interaction.followup.send('Unable to submit the archetype. Please try again later.')
     else:
-      await MessageChannel(followup[0], interaction.guild_id, interaction.channel_id)
+      await interaction.followup.send(f"Thank you for submitting the archetype for {event.EventDate.strftime('%B %d')}'s event!")
+    followup = CheckEventPercentage(event)
+    if followup:
+      if followup[1]:
+        title, headers, data = OneEvent(event)
+        output = BuildTableOutput(title, headers, data)
+        await MessageChannel(output, interaction.guild_id, interaction.channel_id)
+      else:
+        await MessageChannel(followup[0], interaction.guild_id, interaction.channel_id)
+  except KnownError as exception:
+    await Error(interaction, exception) #Y this no work?!
+    await interaction.followup.send(exception.message, ephemeral=True)
 
 @Claim.error
 async def Claim_error(interaction: discord.Interaction, error):
