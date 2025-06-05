@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from custom_errors import KnownError
 from database_connection import GetEventObj, CreateEvent, AddResult, GetRoundNumber, GetParticipantId, Increase, AddRoundResult
 from interaction_data import GetInteractionData
 from tuple_conversions import ConvertToEvent, Participant, Round
@@ -8,8 +9,10 @@ async def SubmitData(message, data, date):
                                                    game=True,
                                                    format=True,
                                                    store=True)
+  if store is None or not store.ApprovalStatus:
+    raise KnownError('This store is not approved to submit data.')
+    
   event_obj = GetEventObj(store.DiscordId, date, game, format)
-  
   if event_obj is None:
     event_obj = CreateEvent(date, store.DiscordId, game, format)
 

@@ -11,8 +11,8 @@ from demo_functions import NewDemo
 from flag_bad_word import AddBadWord, Offenders
 from format_mapper import AddStoreFormatMap, GetFormatOptions
 from game_mapper import AddStoreGameMap, GetGameOptions
-from interaction_data import GetInteractionData, GetStore
-from new_text_input import ClaimCheckModal
+from interaction_data import GetInteractionData
+from text_modal import SubmitDataModal
 from metagame_report import GetMyMetagame
 from output_builder import BuildTableOutput
 from player_win_record import PlayRecord
@@ -22,7 +22,6 @@ from select_menu_bones import SelectMenu
 from store_approval import ApproveMyStore, DisapproveMyStore
 from store_data_download import GetDataReport
 from store_event_reported.events_reported import GetMyEventsReported
-from text_input import GetTextInput
 from top_players import GetTopPlayers
 from unknown_archetypes import GetAllUnknown
 
@@ -46,38 +45,6 @@ async def on_ready():
     print(f'Synced {len(sync_test_guild)} command(s) to guild Test Guild -> {settings.TESTSTOREGUILD.id}')
   except Exception as error:
     print(f'Error syncing commands: {error}')
-
-#TODO: Right now, an event can be submitted by rounds AND in total. I need a way to prevent both from happening. Maybe another column in events to mark how it was submitted??
-@bot.event
-async def on_message(message):
-  if message.author == bot.user:
-    return
-
-  data = ConvertMessageToParticipants(message.content)
-  if data is not None:
-    if not isSubmitter(message.guild, message.author, 'MTSubmitter'):
-      await ErrorMessage(f'{str(message.author).title()} ({message.author.id}) lacks the permission to submit data')
-      return
-    store = GetStore(message.guild.id)
-    if store is None or not store.ApprovalStatus:
-      await ErrorMessage(f'{str(message.guild).title()} ({message.guild.id}) is not approved to track data')
-      return
-    date = await GetTextInput(bot, message)
-    
-    message_type = 'participants' if isinstance(data[0], Participant) else 'tables'
-
-    await message.channel.send(f"Attempting to add {len(data)} {message_type} to event")
-    msg  = f"Guild name: {message.guild.name}\n"
-    msg += f"Guild id: {message.guild.id}\n"
-    msg += f"Channel name: {message.channel.name}\n"
-    msg += f"Channel id: {message.channel.id}\n"
-    msg += f"Author name: {message.author.name}\n"
-    msg += f"Author id: {message.author.id}\n"
-    msg += f"Message content:\n{message.content}"
-    await MessageChannel(msg, settings.BOTGUILD.id, settings.BOTEVENTINPUTID)
-    await message.delete()
-    output = await SubmitData(message, data, date)
-    await message.channel.send(output)
 
 def isOwner(interaction: discord.Interaction):
   userid = interaction.user.id
@@ -169,30 +136,39 @@ async def Feedback(interaction: discord.Interaction):
                   description="The new thing I want to test",
                   guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
-  print('Time to test!')
-  #await interaction.response.defer()
-  # Create an instance of our modal
-  modal = ClaimCheckModal()
-  print('Modal created, sending to user')
-
-  # Send the modal to the user.
-  # The modal will block the execution of this command until it's submitted or times out.
+  ...
+  
+@bot.tree.command(name="submitdata",
+                  description="Submitting your event's data")
+async def SubmitDataCommand(interaction: discord.Interaction):
+  modal = SubmitDataModal()
   await interaction.response.send_modal(modal)
-  print('Modal sent to user, waiting for a response')
-
-  # Wait for the modal to be submitted or time out.
-  # The wait() method will return when `on_submit` or `on_timeout` is called.
   await modal.wait()
-  print('Done waiting')
-
-  # After modal.wait() returns, check if the modal was actually submitted
-  if modal.is_submitted:
-      # The submitted_message is now available!
-      response_message = f"You submitted the following:\nMessage: {modal.submitted_message}\nDate: {modal.submitted_date}"
-      # Use follow-up as the initial response was a modal
-      await interaction.followup.send(response_message, ephemeral=False) # Make visible to everyone
+  
+  if not modal.is_submitted:
+    await interaction.followup.send("Claim check modal was dismissed or timed out.", ephemeral=True)
   else:
-      await interaction.followup.send("Claim check modal was dismissed or timed out.", ephemeral=True)
+    data = ConvertMessageToParticipants(modal.submitted_message)
+    if data is not None:
+      date = modal.submitted_date
+  
+      message_type = 'participants' if isinstance(data[0], Participant) else 'tables'
+  
+      await interaction.followup.send(f"Attempting to add {len(data)} {message_type} to event")
+      msg  = f"Guild name: {interaction.guild.name}\n"
+      msg += f"Guild id: {interaction.guild.id}\n"
+      msg += f"Channel name: {interaction.channel.name}\n"
+      msg += f"Channel id: {interaction.channel.id}\n"
+      msg += f"Author name: {interaction.user.name}\n"
+      msg += f"Author id: {interaction.user.id}\n"
+      msg += f"Message content:\n{modal.submitted_message}"
+      await MessageChannel(msg, settings.BOTGUILD.id, settings.BOTEVENTINPUTID)
+      output = await SubmitData(interaction, data, date)
+      await interaction.followup.send(output)
+
+@SubmitDataCommand.error
+async def SubmitDataCommand_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
 
 @bot.tree.command(name='addword',
                   description='Add a banned word')
