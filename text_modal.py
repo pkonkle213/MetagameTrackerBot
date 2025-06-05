@@ -1,6 +1,7 @@
+from date_functions.date_functions import GetToday
 import discord
 
-class SubmitDataModal(discord.ui.Modal, title='Claim Check'):
+class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
   #Are these necessary?
   #data: str = ''
   #date: str = ''
@@ -10,12 +11,13 @@ class SubmitDataModal(discord.ui.Modal, title='Claim Check'):
     label='Date',
     style=discord.TextStyle.short,
     placeholder='MM/DD/YYYY',
+    default=GetToday().strftime('%m/%d/%Y'),
     required=True,
     max_length=10
   )
   
   message_input = discord.ui.TextInput(
-    label='Message',
+    label='Event Data',
     style=discord.TextStyle.paragraph,
     placeholder='Paste your data here',
     required=True,

@@ -140,13 +140,14 @@ async def ATest(interaction: discord.Interaction):
   
 @bot.tree.command(name="submitdata",
                   description="Submitting your event's data")
+@discord.app_commands.checks.has_role('MTSubmitter')
 async def SubmitDataCommand(interaction: discord.Interaction):
   modal = SubmitDataModal()
   await interaction.response.send_modal(modal)
   await modal.wait()
   
   if not modal.is_submitted:
-    await interaction.followup.send("Claim check modal was dismissed or timed out.", ephemeral=True)
+    await interaction.followup.send("SubmitData modal was dismissed or timed out. Please try again", ephemeral=True)
   else:
     data = ConvertMessageToParticipants(modal.submitted_message)
     if data is not None:
@@ -257,7 +258,8 @@ async def AddFormatMap_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name="submitcheck",
-                  description="To test if you can submit data")
+                  description="To test if you can submit data",
+                 guild=settings.TESTSTOREGUILD)
 async def SubmitCheck(interaction: discord.Interaction):
   await interaction.response.defer(ephemeral=True)
   issues = ['Issues I detect:']
