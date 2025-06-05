@@ -164,15 +164,13 @@ async def GetSOP(interaction: discord.Interaction):
 async def Feedback(interaction: discord.Interaction):
   await interaction.response.send_message(f'Follow this link: {settings.FEEDBACKURL}')
 
-#Something I'd like to test:
-#@discord.app_commands.AppCommand(default_member_permissions=0)
-#?????
+#Something I'd like to test: @discord.app_commands.AppCommand(default_member_permissions=0)
 @bot.tree.command(name="atest",
                   description="The new thing I want to test",
                   guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
   print('Time to test!')
-  await interaction.response.defer()
+  #await interaction.response.defer()
   # Create an instance of our modal
   modal = ClaimCheckModal()
   print('Modal created, sending to user')
@@ -180,15 +178,17 @@ async def ATest(interaction: discord.Interaction):
   # Send the modal to the user.
   # The modal will block the execution of this command until it's submitted or times out.
   await interaction.response.send_modal(modal)
+  print('Modal sent to user, waiting for a response')
 
   # Wait for the modal to be submitted or time out.
   # The wait() method will return when `on_submit` or `on_timeout` is called.
   await modal.wait()
+  print('Done waiting')
 
   # After modal.wait() returns, check if the modal was actually submitted
   if modal.is_submitted:
       # The submitted_message is now available!
-      response_message = f"You submitted the claim check: **'{modal.submitted_message}'**"
+      response_message = f"You submitted the following:\nMessage: {modal.submitted_message}\nDate: {modal.submitted_date}"
       # Use follow-up as the initial response was a modal
       await interaction.followup.send(response_message, ephemeral=False) # Make visible to everyone
   else:
