@@ -292,57 +292,34 @@ def GetStoreData(store, game, format, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command =  f'''
-    WITH X AS (
-      SELECT DISTINCT on (event_id, player_name)
-      event_id, player_name, archetype_played
-    FROM ArchetypeSubmissions
-    WHERE event_id IN (
-      SELECT id
-      FROM events e
-      INNER JOIN stores s ON s.discord_id = e.discord_id
-      WHERE e.discord_id = {store.DiscordId}
-      {f'AND e.game_id = {game.ID}' if game else ''}
-      {f'AND e.format_id = {format.ID}' if format else ''}
-      AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-      ORDER BY e.event_date DESC
-      )
-    AND reported = {False}
-    ORDER BY event_id, player_name, id desc
-    )
     SELECT c.name AS GameName,
-           f.name AS FormatName,
-           e.event_date AS EventDate,
-           p.player_name AS PlayerName,
-           COALESCE(X.archetype_played,'UNKNOWN') AS ArchetypePlayed,
-           p.wins AS Wins,
-           p.losses AS Losses,
-           p.draws AS Draws
+      f.name AS FormatName,
+      e.event_date AS EventDate,
+      p.player_name AS PlayerName,
+      COALESCE(X.archetype_played,'UNKNOWN') AS ArchetypePlayed,
+      p.wins AS Wins,
+      p.losses AS Losses,
+      p.draws AS Draws
     FROM participants p
       INNER JOIN events e on e.id = p.event_id
       INNER JOIN cardgames c on c.id = e.game_id
       INNER JOIN formats f on f.id = e.format_id
-      LEFT JOIN X ON (X.player_name = p.player_name AND X.event_id = p.event_id)
-    WHERE e.event_date BETWEEN '{start_date}' AND '{end_date}'
-      AND e.discord_id = {store.DiscordId}
-      {f'AND e.game_id = {game.ID}' if game else ''}
-      {f'AND e.format_id = {format.ID}' if format else ''}
-    ORDER BY 3 desc, 6 desc
+      LEFT JOIN ( SELECT DISTINCT on (event_id, player_name)
+                    event_id, player_name, archetype_played
+                  FROM ArchetypeSubmissions
+                  WHERE event_id IN ( SELECT id
+                                      FROM events e
+                                        INNER JOIN stores s ON s.discord_id = e.discord_id
+                                      ORDER BY e.event_date DESC)
+                    AND reported = False
+                  ORDER BY event_id, player_name, id desc) X ON (X.player_name = p.player_name AND X.event_id = p.event_id)
+    WHERE e.discord_id = {store.DiscordId}
+          {f'AND e.game_id = {game.ID}' if game else ''}
+          {f'AND e.format_id = {format.ID}' if format else ''}
+          AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+    ORDER BY 3 desc, 6 desc, 8 desc, 7 desc
     '''
   
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
-  
-def ViewEvent(event_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'''
-    SELECT archetype_played, wins, losses, draws
-    FROM participants p
-    WHERE event_id = {event_id}
-    ORDER BY wins DESC, draws DESC
-    '''
-
     cur.execute(command)
     rows = cur.fetchall()
     return rows
@@ -351,7 +328,6 @@ def CreateEvent(event_date,
                 discord_id,
                 game,
                 format):
-  criteria = [event_date, discord_id, game.ID, 0]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
@@ -359,7 +335,7 @@ def CreateEvent(event_date,
     VALUES ('{event_date}', {discord_id}, {game.ID}, 0{f' , {format.ID}' if game.HasFormats else ''})
     RETURNING *
     '''
-    cur.execute(command, criteria)
+    cur.execute(command)
     conn.commit()
     event = cur.fetchone()
     return event if event else None
@@ -420,13 +396,13 @@ def SetStoreTrackingStatus(approval_status,
     return store
 
 def GetParticipantId(event_id, player_name):
-  criteria = [event_id, player_name]
+  criteria = [player_name]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  '''
+    command =  f'''
     SELECT id
     FROM participants
-    WHERE event_id = %s
+    WHERE event_id = {event_id}
     AND player_name = %s
     LIMIT 1
     '''
