@@ -389,18 +389,13 @@ def GetEventMeta(event_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
-    WITH X AS (
-      SELECT DISTINCT on (event_id, player_name)
-          event_id, player_name, archetype_played
-      FROM ArchetypeSubmissions
-      WHERE event_id = {event_id}
-      AND reported = {False}
-      ORDER BY event_id, player_name, id desc
-    )
     SELECT X.archetype_played,
-           p.wins
+      p.wins
     FROM participants p
-    LEFT OUTER JOIN X on X.event_id = p.event_id and X.player_name = p.player_name
+    LEFT JOIN ( SELECT DISTINCT on (event_id, player_name)
+                  event_id, player_name, archetype_played
+                FROM ArchetypeSubmissions
+                ORDER BY event_id, player_name, id desc) X on X.event_id = p.event_id and X.player_name = p.player_name
     WHERE p.event_id = {event_id}
     ORDER BY p.wins DESC
     '''
