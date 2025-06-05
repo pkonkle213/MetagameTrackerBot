@@ -18,7 +18,7 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
     date_used = None
 
   game, format, store, userId = GetInteractionData(interaction, game=True, format=True, store=True)
-  archetype = archetype.encode('ascii', 'ignore').decode('ascii')
+  archetype = archetype.upper()
   if ContainsBadWord(interaction, archetype):
     raise KnownError('Archetype contains a banned word')
   if not CanSubmitArchetypes(store.DiscordId, userId):
@@ -29,8 +29,8 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
     archetype = f'{inks} - {archetype}'
   
   updater_name = interaction.user.display_name.upper()
-  archetype = archetype.upper()
   player_name = player_name.upper()
+  print('Sending:', store.DiscordId, date_used, game, format, player_name)
   event = GetAndConvertEvent(store.DiscordId,
                              date_used,
                              game,

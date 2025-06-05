@@ -207,6 +207,10 @@ async def BadWord(interaction: discord.Interaction,
     else:
       await interaction.followup.send('Something went wrong. Please try again later.', ephemeral=True)
 
+@BadWord.error
+async def BadWord_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
+
 @bot.tree.command(name="register",
                   description="Register your store")
 @discord.app_commands.check(isOwner)
@@ -489,7 +493,8 @@ async def Claim(interaction: discord.Interaction,
     Date of event (MM/DD/YYYY)
   """
   await interaction.response.defer(ephemeral=True)
-  archetype = archetype.strip()
+  archetype = archetype.strip().encode('ascii', 'ignore').decode('ascii')
+  print('Sending:', player_name, archetype, date)
   archetype_submitted, event = await ClaimResult(interaction, player_name, archetype, date)
   if archetype_submitted is None:
     await interaction.followup.send('Unable to submit the archetype. Please try again later.')
