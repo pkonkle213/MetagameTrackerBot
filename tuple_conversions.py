@@ -20,8 +20,7 @@ Store = namedtuple('Store', ['DiscordId',
                              'OwnerId',
                              'OwnerName',
                              'ApprovalStatus',
-                             'UsedForData',
-                             'SpicerackKey'])
+                             'UsedForData'])
 
 Participant = namedtuple('Participant',['PlayerName',
                                        'Wins',
@@ -63,8 +62,7 @@ def ConvertToStore(store):
                int(store[3]),
                store[4],
                store[5],
-               store[6],
-               store[7])
+               store[6])
 
 def ConvertToGame(game_obj):
   return Game(int(game_obj[0]),

@@ -75,9 +75,11 @@ async def MessageChannel(msg, guildId, channelId):
 
   await channel.send(f'{msg}')
 
-async def Error(interaction, error):
+async def Error(interaction, error, phil_message = ''):
   #TODO: The error isn't being caught correctly here. I need to figure out how to do that
   #This is to keep error messages clear and concise, and especially specific for me
+  if phil_message != '':
+    await MessageUser(phil_message, settings.PHILID)
   print('Type of error:',type(error))
   if isinstance(error, commands.MissingRole):
     await interaction.followup.send("Sorry, you lack the right role to use this command.")
@@ -502,7 +504,13 @@ async def Claim(interaction: discord.Interaction,
       else:
         await MessageChannel(followup[0], interaction.guild_id, interaction.channel_id)
   except KnownError as exception:
-    await Error(interaction, exception) #Y this no work?!
+    phil_message = f'''
+    Error in Claim: {exception.message}
+    player_name = {player_name}
+    archetype = {archetype}
+    date = {date}
+    '''
+    await Error(interaction, exception, phil_message) #Y this no work?!
     await interaction.followup.send(exception.message, ephemeral=True)
 
 @Claim.error
