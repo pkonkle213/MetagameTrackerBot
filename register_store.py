@@ -52,10 +52,21 @@ async def SetPermissions(interaction):
 
 async def AssignStoreOwnerRoleInBotGuild(bot:discord.Client, interaction):
   bot_guild = bot.get_guild(int(BOTGUILD.id))
+  print('Bot guild:', bot_guild)
+  print('Type of bot guild:', type(bot_guild))
   if bot_guild is None:
     raise Exception('Bot guild not found')
-  store_owner_role = discord.utils.find(lambda r: r.name == 'Store Owner',
+  user = await bot_guild.fetch_member(interaction.user.id)
+  user_get = bot_guild.get_member(interaction.user.id)
+
+  print('User_fetch:', user)
+  print('User_get:', user_get)
+  if user is None:
+    raise Exception('User not found')
+  store_owner_role = discord.utils.find(lambda r: r.name == 'Store Owners',
                                         bot_guild.roles)
-  
-  store_owner = interaction.guild.owner.id
-  await store_owner.add_roles(store_owner_role)
+  print('Store Owner role:', store_owner_role)
+  if store_owner_role is None:
+    raise Exception('Store Owner role not found')
+    
+  await user.add_roles(store_owner_role)

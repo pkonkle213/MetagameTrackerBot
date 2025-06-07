@@ -25,7 +25,7 @@ from store_event_reported.events_reported import GetMyEventsReported
 from top_players import GetTopPlayers
 from unknown_archetypes import GetAllUnknown
 
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.message_content = True
 intents.members = True
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
@@ -78,7 +78,10 @@ async def MessageChannel(msg, guildId, channelId):
 async def Error(interaction, error):
   #TODO: The error isn't being caught correctly here. I need to figure out how to do that
   #This is to keep error messages clear and concise, and especially specific for me
-  if isinstance(error, KnownError):
+  print('Type of error:',type(error))
+  if isinstance(error, commands.MissingRole):
+    await interaction.followup.send("Sorry, you lack the right role to use this command.")
+  elif isinstance(error, KnownError):
     await interaction.followup.send(error.message)
   else:
     #TODO: Error Type, Error details, and Traceback are still not giving me a clear message of what happened.
@@ -131,16 +134,17 @@ async def GetSOP(interaction: discord.Interaction):
 async def Feedback(interaction: discord.Interaction):
   await interaction.response.send_message(f'Follow this link: {settings.FEEDBACKURL}')
 
-#Something I'd like to test: @discord.app_commands.AppCommand(default_member_permissions=0)
+#TODO: See if default_permissions() can be used for specific roles
+#@discord.app_commands.default_permissions()
 @bot.tree.command(name="atest",
                   description="The new thing I want to test",
                   guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
-  ...
+  await interaction.response.send_message(f'Me: {interaction.user.mention}')
   
 @bot.tree.command(name="submitdata",
                   description="Submitting your event's data")
-@discord.app_commands.checks.has_role('MTSubmitter')
+@commands.has_role('MTSubmitter')
 async def SubmitDataCommand(interaction: discord.Interaction):
   modal = SubmitDataModal()
   await interaction.response.send_modal(modal)
@@ -209,6 +213,8 @@ async def Register(interaction: discord.Interaction,
   """
   await interaction.response.defer()
   store = RegisterNewStore(interaction, store_name)
+  if store is None:
+    raise Exception('Unable to register store')
   await SetPermissions(interaction)
   await AssignStoreOwnerRoleInBotGuild(bot, interaction)
   await MessageUser(f'{store.StoreName.title()} has registered to track their data. DiscordId: {store.DiscordId}', settings.PHILID)
@@ -219,7 +225,7 @@ async def Register(interaction: discord.Interaction,
 #Catching errors like this is removing the type of error and more details that I could be using
 @Register.error
 async def register_error(interaction: discord.Interaction, error):
-  await interaction.followup.send('Unable to register the store. This has been reported')
+  await interaction.followup.send('Unable to complete registration for the store. This has been reported')
   await Error(interaction, error)
 
 @bot.tree.command(name='mapgame',
@@ -259,7 +265,7 @@ async def AddFormatMap_error(interaction: discord.Interaction, error):
 
 @bot.tree.command(name="submitcheck",
                   description="To test if you can submit data",
-                 guild=settings.TESTSTOREGUILD)
+                  guild=settings.TESTSTOREGUILD)
 async def SubmitCheck(interaction: discord.Interaction):
   await interaction.response.defer(ephemeral=True)
   issues = ['Issues I detect:']
@@ -524,7 +530,7 @@ async def Demo(interaction: discord.Interaction):
 async def demo_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-@bot.tree.command(name='myeventsrepored',
+@bot.tree.command(name='myeventsreported',
                   description='See how well your events are reported',
                  guild=settings.TESTSTOREGUILD)
 @discord.app_commands.checks.has_role('MTSubmitter')
