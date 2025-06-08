@@ -1,4 +1,3 @@
-
 import pytest
 import psycopg2
 from database_connection import GetWord, AddWord

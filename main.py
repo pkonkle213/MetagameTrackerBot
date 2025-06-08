@@ -25,7 +25,7 @@ from store_event_reported.events_reported import GetMyEventsReported
 from top_players import GetTopPlayers
 from unknown_archetypes import GetAllUnknown
 
-intents = discord.Intents.all()
+intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
@@ -136,12 +136,12 @@ async def GetSOP(interaction: discord.Interaction):
 async def Feedback(interaction: discord.Interaction):
   await interaction.response.send_message(f'Follow this link: {settings.FEEDBACKURL}')
 
-#TODO: See if default_permissions() can be used for specific roles
-#@discord.app_commands.default_permissions()
 @bot.tree.command(name="atest",
                   description="The new thing I want to test",
                   guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
+  integrations = await interaction.guild.integrations()
+  print('Integrations:', integrations)
   await interaction.response.send_message(f'Me: {interaction.user.mention}')
   
 @bot.tree.command(name="submitdata",
@@ -442,8 +442,6 @@ async def DisapproveStore(interaction: discord.Interaction, discord_id: str):
   store = DisapproveMyStore(discord_id_int)
   await interaction.response.send_message(f'{store.StoreName.title()} ({store.DiscordId}) no longer approved to track')
 
-#TODO: Is there a better way to require a date be inputted?
-#https://discord.com/developers/docs/reference#message-formatting
 @bot.tree.command(name='downloaddata',
                   description='Download the data for a store for a date range')
 @discord.app_commands.check(isOwner)

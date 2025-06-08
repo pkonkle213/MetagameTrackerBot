@@ -31,7 +31,7 @@ def GetStoreReportedPercentage(discord_id,
     INNER JOIN events e ON x.id = e.id
     INNER JOIN formats f ON f.id = e.format_id
     GROUP BY e.event_date{', f.name' if not format else ''}
-    ORDER BY e.event_date desc{', name' if not format else ''}
+    ORDER BY e.event_date desc{', f.name' if not format else ''}
     '''
     cur.execute(command)
     rows = cur.fetchall()
@@ -227,7 +227,6 @@ def GetUnknown(discord_id, game_id, format_id, start_date, end_date):
     rows = cur.fetchall()
     return rows
 
-#TODO: Check that this doesn't display disabled archetypes
 def GetStats(discord_id,
              game,
              format,
@@ -248,6 +247,7 @@ def GetStats(discord_id,
     LEFT JOIN (SELECT DISTINCT on (event_id, player_name)
                  event_id, player_name, archetype_played, submitter_id
                FROM ArchetypeSubmissions
+               WHERE reported = FALSE
                ORDER BY event_id, player_name, id desc) asu ON asu.event_id = e.id and asu.player_name = p.player_name
     WHERE p.player_name = (SELECT player_name
                            FROM archetypesubmissions
@@ -568,7 +568,7 @@ def GetEventObj(discord_id,
 def GetStoreByDiscord(discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   command =  f'''
-  SELECT discord_id, discord_name, store_name, owner_id, owner_name, isApproved, used_for_data
+  SELECT discord_id, discord_name, store_name, owner_id, owner_name, isApproved, used_for_data, payment_level
   FROM Stores
   WHERE discord_id = {discord_id}
   '''
@@ -713,38 +713,18 @@ def GetAllGames():
     rows = cur.fetchall()
     return rows
 
-#TODO: HAHAHAHAH this is awful, but it works. Maybe I can clean this up?
 def GetPercentage(event_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f"""
-    SELECT (sum / totaldecks) as ReportPercent
-    FROM (
-      SELECT sum(metacount), totaldecks
-      FROM (
-        SELECT archetype_played, sum(metacount) AS metacount, TotalDecks
-        FROM (
-          WITH X AS (
-            SELECT DISTINCT on (event_id, player_name)
-              event_id, player_name, archetype_played
-            FROM ArchetypeSubmissions
-            WHERE event_id = {event_id}
-              AND reported = {False}
-            ORDER BY event_id, player_name, id desc
-          )
-          SELECT X.archetype_played,
-                 COUNT(*) AS MetaCount,
-                 SUM(count(*)) OVER () as TotalDecks
-          FROM participants p
-          LEFT OUTER JOIN X on X.event_id = p.event_id and X.player_name = p.player_name
-          WHERE p.event_id = {event_id}
-          GROUP BY 1
-        )
-        WHERE archetype_played IS NOT NULL
-        GROUP BY archetype_played, TotalDecks
-      )
-      GROUP BY totaldecks
-    )
+    SELECT COUNT(CASE WHEN archetype_played IS NOT NULL THEN 1 END) / SUM(count(*)) OVER () as percentage
+    FROM participants p
+    LEFT OUTER JOIN ( SELECT DISTINCT on (event_id, player_name)
+                        event_id, player_name, archetype_played
+                      FROM ArchetypeSubmissions
+                      WHERE reported = False
+                      ORDER BY event_id, player_name, id desc) X on X.event_id = p.event_id and X.player_name = p.player_name
+      WHERE p.event_id = {event_id}
     """
     cur.execute(command)
     row = cur.fetchone()

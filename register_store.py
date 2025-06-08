@@ -26,7 +26,6 @@ def RegisterNewStore(interaction: discord.Interaction, store_name: str):
   
   return ConvertToStore(storeobj)
 
-#TODO: I'd also like set the owner to a Store Owner role for my bot guild
 async def SetPermissions(interaction):
   owner = interaction.guild.owner
   owner_role = discord.utils.find(lambda r: r.name == 'Owner',
