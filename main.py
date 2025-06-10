@@ -538,11 +538,14 @@ async def demo_error(interaction: discord.Interaction, error):
 
 @bot.tree.command(name='myeventsreported',
                   description='See how well your events are reported',
-                 guild=settings.TESTSTOREGUILD)
-@discord.app_commands.checks.has_role('MTSubmitter')
-async def MyEventsReported(interaction: discord.Interaction):
+                  guild=settings.BOTGUILD)
+@discord.app_commands.check(isPhil)
+async def MyEventsReported(interaction: discord.Interaction, discord_id:str = ''):
   await interaction.response.defer(ephemeral=True)
-  data, title, headers = GetMyEventsReported(interaction)
+  discord_id_int = 0
+  if discord_id != '':
+    discord_id_int = int(discord_id)
+  data, title, headers = GetMyEventsReported(interaction, discord_id_int)
   output = BuildTableOutput(title, headers, data)
   await interaction.followup.send(output)
 
