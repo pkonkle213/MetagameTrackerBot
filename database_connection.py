@@ -228,13 +228,14 @@ def GetStats(discord_id,
       AND discord_id = {discord_id}
       {f'AND e.format_id = {format.ID}' if format else ''}
       AND e.game_id = {game.ID}
+      AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     GROUP BY {'f.name,' if not format else ''} archetype_played)
   SELECT  archetype_played,
           {'format_name,' if not format else ''}
           wins,
           losses,
           draws,
-          1.0 * wins / (wins + losses + draws) as win_percentage
+          ROUND(100.0 * wins / (wins + losses + draws), 2) as win_percentage
   FROM  ((SELECT '1' as rank,
             'Overall' as archetype_played,
             {"' ' as format_name," if not format else ''}
