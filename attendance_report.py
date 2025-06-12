@@ -7,8 +7,7 @@ from settings import DATAGUILDID
 #TODO: Make this more flexible to allow for multiple stores (DATAGUILD)
 def GetStoreAttendance(interaction:Interaction, start_date, end_date):
   game, format, store, userId = GetInteractionData(interaction,
-    game=True,
-    store=True)
+                                                   game=True)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
 
   data = GetAttendance(store,

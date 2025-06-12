@@ -143,7 +143,8 @@ async def ATest(interaction: discord.Interaction):
   integrations = await interaction.guild.integrations()
   print('Integrations:', integrations)
   await interaction.response.send_message(f'Me: {interaction.user.mention}')
-  
+
+
 @bot.tree.command(name="submitdata",
                   description="Submitting your event's data")
 @commands.has_role('MTSubmitter')
@@ -160,8 +161,9 @@ async def SubmitDataCommand(interaction: discord.Interaction):
       date = modal.submitted_date
   
       message_type = 'participants' if isinstance(data[0], Participant) else 'tables'
-  
-      await interaction.followup.send(f"Attempting to add {len(data)} {message_type} to event")
+
+#TODO: This should be ephemeral (invisible to everyone)
+      await interaction.followup.send(f"Attempting to add {len(data)} {message_type} to event", ephemeral=True)
       msg  = f"Guild name: {interaction.guild.name}\n"
       msg += f"Guild id: {interaction.guild.id}\n"
       msg += f"Channel name: {interaction.channel.name}\n"

@@ -730,7 +730,7 @@ def GetAttendance(store,
     FROM Events e
     INNER JOIN Participants p on e.id = p.event_id
     INNER JOIN Stores s on s.discord_id = e.discord_id
-    {'INNER JOIN Formats f on f.id = e.format_id' if not format else ''}
+    INNER JOIN Formats f on f.id = e.format_id
     WHERE e.event_date BETWEEN '{start_date}' AND '{end_date}'
       AND e.game_id = {game.ID} 
       AND s.used_for_data = {True}
