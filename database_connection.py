@@ -523,7 +523,7 @@ def GetEventObj(discord_id,
     command = f'''
     SELECT *
     FROM events e
-    INNER JOIN participants p ON e.id = p.event_id
+    LEFT JOIN participants p ON e.id = p.event_id
     WHERE e.discord_id = {discord_id}
     AND e.game_id = {game.ID}
     {f'AND e.format_id = {format.ID}' if format else ''}
@@ -532,6 +532,7 @@ def GetEventObj(discord_id,
     ORDER BY event_date DESC
     LIMIT 1
     '''
+    print('Commmand:', command)
     cur.execute(command)
     row = cur.fetchone()
     return row if row else None
@@ -589,51 +590,83 @@ def GetDataRowsForMetagame(game,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
-    SELECT archetype_played,
-           ROUND(metagame_percent * 100, 2) AS metagame_percent,
-           ROUND(win_percent * 100, 2) AS win_percent,
-           ROUND(metagame_percent * win_percent * 100, 2) as Combined
+    SELECT
+      archetype_played,
+      ROUND(metagame_percent * 100, 2) AS metagame_percent,
+      ROUND(win_percent * 100, 2) AS win_percent,
+      ROUND(metagame_percent * win_percent * 100, 2) AS Combined
     FROM (
-      WITH X AS (
-        SELECT DISTINCT on (event_id, player_name)
-          event_id, player_name, archetype_played
-        FROM ArchetypeSubmissions
-        WHERE event_id IN (
-          SELECT id
-          FROM events e
+        SELECT
+          COALESCE(X.archetype_played, 'UNKNOWN') AS archetype_played,
+          COUNT(*) * 1.0 / SUM(count(*)) OVER () AS Metagame_Percent,
+          sum(p.wins) * 1.0 / (sum(p.wins) + sum(p.losses) + sum(p.draws)) AS Win_percent
+        FROM
+          participants p
+          LEFT OUTER JOIN (
+            SELECT DISTINCT
+              ON (event_id, player_name) event_id,
+              player_name,
+              archetype_played
+            FROM
+              ArchetypeSubmissions
+            WHERE
+              reported = FALSE
+            ORDER BY
+              event_id,
+              player_name,
+              id DESC
+          ) X ON X.event_id = p.event_id
+          AND X.player_name = p.player_name
+          INNER JOIN events e ON p.event_id = e.id
           INNER JOIN stores s ON s.discord_id = e.discord_id
-          WHERE e.game_id = {game.ID}
+        WHERE
+          e.game_id = {game.ID}
           AND e.format_id = {format.ID}
           AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
           {f'AND e.discord_id = {store.DiscordId}' if store else ''}
-          ORDER BY e.event_date DESC
-        )
-        AND reported = {False}
-        ORDER BY event_id, player_name, id desc
+          AND s.used_for_data = TRUE
+        GROUP BY
+          X.archetype_played
       )
-      SELECT COALESCE(X.archetype_played,'UNKNOWN') as archetype_played,
-             COUNT(*) * 1.0 / SUM(count(*)) OVER () as Metagame_Percent,
-             sum(p.wins) * 1.0 / (sum(p.wins) + sum(p.losses) + sum(p.draws)) as Win_percent
-      FROM participants p
-      LEFT OUTER JOIN X on X.event_id = p.event_id and X.player_name = p.player_name
-      WHERE p.event_id IN (
-        SELECT id
-        FROM events e
-        INNER JOIN stores s ON s.discord_id = e.discord_id
-        WHERE e.game_id = {game.ID}
-          AND e.format_id = {format.ID}
-          AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-          {f'AND e.discord_id = {store.DiscordId}' if store else ''}
-        ORDER BY event_date DESC
-      )
-      GROUP BY 1
-    )
-    WHERE metagame_percent >= 0.02
-    ORDER BY 4 DESC
+    WHERE
+      metagame_percent >= 0.02
+    ORDER BY
+      4 DESC
     '''
     cur.execute(command)
     rows = cur.fetchall()
     return rows
+
+def SubmitTable(event_id,
+                p1name,
+                p1wins,
+                p2name,
+                p2wins,
+                round_number,
+                submitter_id):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    INSERT INTO RoundDetails (event_id,
+    round_number,
+    player1_game_wins,
+    player2_game_wins,
+    player1_name,
+    player2_name,
+    submitter_id)
+    VALUES ({event_id},
+    {round_number},
+    {p1wins},
+    {p2wins},
+    '{p1name}',
+    '{p2name}',
+    {submitter_id})
+    RETURNING *
+    '''
+    cur.execute(command)
+    conn.commit()
+    row = cur.fetchone()
+    return row if row else None
 
 def GetTopPlayerData(discord_id,
                      game_id,

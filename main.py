@@ -157,12 +157,13 @@ async def SubmitDataCommand(interaction: discord.Interaction):
     await interaction.followup.send("SubmitData modal was dismissed or timed out. Please try again", ephemeral=True)
   else:
     data = ConvertMessageToParticipants(modal.submitted_message)
-    if data is not None:
+    if data is None:
+      await interaction.followup.send("Unable to submit. Please try again", ephemeral=True)
+    else:
       date = modal.submitted_date
   
       message_type = 'participants' if isinstance(data[0], Participant) else 'tables'
 
-#TODO: This should be ephemeral (invisible to everyone)
       await interaction.followup.send(f"Attempting to add {len(data)} {message_type} to event", ephemeral=True)
       msg  = f"Guild name: {interaction.guild.name}\n"
       msg += f"Guild id: {interaction.guild.id}\n"
