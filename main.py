@@ -76,8 +76,7 @@ async def MessageChannel(msg, guildId, channelId):
   await channel.send(f'{msg}')
 
 async def Error(interaction, error, phil_message = ''):
-  #TODO: The error isn't being caught correctly here. I need to figure out how to do that
-  #This is to keep error messages clear and concise, and especially specific for me
+  #TODO: Known errors should be caught within the command/method, not caught out here.
   if phil_message != '':
     await MessageUser(phil_message, settings.PHILID)
   print('Type of error:',type(error))
@@ -86,7 +85,6 @@ async def Error(interaction, error, phil_message = ''):
   elif isinstance(error, KnownError):
     await interaction.followup.send(error.message)
   else:
-    #TODO: Error Type, Error details, and Traceback are still not giving me a clear message of what happened.
     error_message = f'''
     {interaction.user.display_name} ({interaction.user.id}) got an error: {error}
     Error Type: {type(error)}
@@ -189,7 +187,7 @@ async def BadWord(interaction: discord.Interaction,
   Parameters
   ----------
   word: string
-    The bad word or phrase to ban
+    The inappropriate word or phrase to ban
   """
   if len(word) < 3:
     await interaction.response.send_message('Word must be at least 3 characters long')
@@ -226,8 +224,6 @@ async def Register(interaction: discord.Interaction,
   await MessageChannel(f'{store.StoreName.title()} has registered to track their data. DiscordId: {store.DiscordId}', settings.BOTGUILD.id, settings.APPROVALCHANNELID)
   await interaction.followup.send(f'Registered {store_name.title()} with discord {store.DiscordName.title()} with owner {interaction.user}')
 
-#TODO: More specific error catching needs to be in the command.
-#Catching errors like this is removing the type of error and more details that I could be using
 @Register.error
 async def register_error(interaction: discord.Interaction, error):
   await interaction.followup.send('Unable to complete registration for the store. This has been reported')

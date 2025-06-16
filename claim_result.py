@@ -39,7 +39,6 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
   print('Event found:', event)
   if event is None:
     raise KnownError('Event not found. Please ensure all parameters are correct, especially your name (as it appears in Companion)')
-  #TODO: This should confirm that the information (date of event, name, and archetype) is correct before submitting
   archetype_added = AddArchetype(event.ID,
                         player_name,
                         archetype,
@@ -49,13 +48,9 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
 
 def CheckEventPercentage(event):
   percent_reported = GetPercentage(event.ID)
-  print('Percent reported:', percent_reported)
   if percent_reported is None:
     raise Exception('Unable to find event by ID: ' + event.ID)
 
-  print('Event last update:',event.LastUpdate)
-  print('Comparison:', (event.LastUpdate + 1) / 4)
-  print('Test:', percent_reported >= (event.LastUpdate + 1) / 4)
   if percent_reported >= (event.LastUpdate + 1) / 4:
     check = UpdateEvent(event.ID)
     if check is None:
@@ -92,10 +87,10 @@ async def LorcanaInkMenu(interaction):
   message = 'Please select your ink colors'
   placeholder = 'Choose your ink colors'
   inks = await SelectMenu(interaction,
-              message,
-              placeholder,
-              ink_colors,
-              2)
+                          message,
+                          placeholder,
+                          ink_colors,
+                          2)
   inks = sorted(inks)
   if len(inks) == 2:
     return f'{inks[0][1].title()}/{inks[1][1].title()}'

@@ -33,7 +33,7 @@ async def SetPermissions(interaction):
   mtsubmitter_role = discord.utils.find(lambda r: r.name == 'MTSubmitter',
                                         interaction.guild.roles)
 
-  #TODO: This is giving me a "Missing Permissions" error even when manage_roles is true
+  #TODO: This is giving me a "Missing Permissions" error even when manage_roles is true??
   if owner_role is None:
     owner_role = await interaction.guild.create_role(name="Owner",
                                                      permissions=discord.Permissions.all())
