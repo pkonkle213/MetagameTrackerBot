@@ -142,7 +142,6 @@ async def ATest(interaction: discord.Interaction):
   print('Integrations:', integrations)
   await interaction.response.send_message(f'Me: {interaction.user.mention}')
 
-
 @bot.tree.command(name="submitdata",
                   description="Submitting your event's data")
 @commands.has_role('MTSubmitter')
@@ -156,7 +155,8 @@ async def SubmitDataCommand(interaction: discord.Interaction):
   else:
     data = ConvertMessageToParticipants(modal.submitted_message)
     if data is None:
-      await interaction.followup.send("Unable to submit. Please try again", ephemeral=True)
+      await interaction.followup.send("Unable to submit due to not recognizing the form data. Please try again", ephemeral=True)
+      await ErrorMessage(modal.submitted_message)
     else:
       date = modal.submitted_date
   
