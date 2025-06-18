@@ -6,36 +6,6 @@ from psycopg2.errors import UniqueViolation
 #With this file reaching about 1000 lines, I think it's time to break it up into multiple files with relevant methods in each
 conn = psycopg2.connect(os.environ['DATABASE_URL'])
 
-def AnalyizeRoundByRound(event_id):
-  #Not yet implemented
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'''
-    WITH X AS (
-    SELECT DISTINCT on (event_id, player_name)
-      event_id, player_name, archetype_played
-    FROM ArchetypeSubmissions
-    WHERE event_id = {event_id}
-    AND reported = {False}
-    ORDER BY event_id, player_name, id desc
-    )
-    select rd.round_number,
-           X1.archetype_played as player_one_archetype,
-           X2.archetype_played as player_two_archetype,
-           X3.archetype_played as winner_archetype
-    from rounddetails rd
-    inner join participants po on rd.player1_id = po.id
-    left join X as X1 on X1.event_id = rd.event_id and X1.player_name = po.player_name
-    inner join participants pt on rd.player2_id = pt.id
-    left join X as X2 on X2.event_id = rd.event_id and X2.player_name = pt.player_name
-    inner join participants w on rd.winner_id = w.id
-    left join X as X3 on X3.event_id = rd.event_id and X3.player_name = w.player_name
-    order by rd.round_number, rd.player1_id
-    '''
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
-
 def GetOffenders(game, format, store):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
@@ -178,18 +148,54 @@ def AddArchetype(event_id,
 def GetUnknown(discord_id, game_id, format_id, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   command = f'''
-  SELECT e.event_date,
-         p.player_name,
-         ap.archetype_played
-  FROM participants p
-  INNER JOIN events e ON e.id = p.event_id
-  LEFT OUTER JOIN ArchetypeSubmissions ap ON (ap.event_id = p.event_id AND ap.player_name = p.player_name)
-  WHERE e.discord_id = {discord_id}
-    AND e.format_id = {format_id}
-    AND e.game_id = {game_id}
-    AND ap.archetype_played IS NULL
+  SELECT
+    e.event_date,
+    p.player_name
+  FROM
+    (
+      SELECT
+        event_id,
+        p.player_name
+      FROM
+        participants p
+      UNION
+      SELECT
+        event_id,
+        player1_name AS player_name
+      FROM
+        rounddetails
+      UNION
+      SELECT
+        event_id,
+        player2_name AS player_name
+      FROM
+        rounddetails
+      WHERE player2_name != 'BYE'
+    ) p
+    INNER JOIN events e ON p.event_id = e.id
+    LEFT JOIN (
+      SELECT DISTINCT ON (event_id, player_name)
+        event_id,
+        player_name,
+        archetype_played,
+        submitter_id
+      FROM
+        ArchetypeSubmissions
+      WHERE
+        reported = FALSE
+      ORDER BY
+        event_id,
+        player_name,
+        id DESC
+    ) ap ON p.event_id = ap.event_id
+    AND p.player_name = ap.player_name
+  WHERE
+    archetype_played IS NULL
     AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-  ORDER BY e.event_date DESC, p.player_name
+    AND e.game_id = {game_id}
+    AND e.format_id = {format_id}
+    AND e.discord_id = {discord_id}
+  ORDER BY e.event_date desc, player_name
   '''
 
   with conn, conn.cursor() as cur:
@@ -206,52 +212,160 @@ def GetStats(discord_id,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   command = f'''
   WITH X AS (
-    SELECT {'f.name as format_name,' if not format else ''}
-      COALESCE(archetype_played,'UNKNOWN') as archetype_played,
-      sum(wins) as wins,
-      sum(losses) as losses,
-      sum(draws) as draws
-    FROM participants p
-    INNER JOIN events e ON e.id = p.event_id
-    INNER JOIN formats f ON f.id = e.format_id
-    LEFT JOIN (SELECT DISTINCT on (event_id, player_name)
-                 event_id, player_name, archetype_played, submitter_id
-               FROM ArchetypeSubmissions
-               WHERE reported = FALSE
-               ORDER BY event_id, player_name, id desc) asu ON asu.event_id = e.id and asu.player_name = p.player_name
-    WHERE p.player_name = (SELECT player_name
-                           FROM archetypesubmissions
-                           WHERE submitter_id = {user_id}
-                           GROUP BY player_name
-                           ORDER BY count(*) desc
-                           LIMIT 1)
-      AND discord_id = {discord_id}
-      {f'AND e.format_id = {format.ID}' if format else ''}
-      AND e.game_id = {game.ID}
-      AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-    GROUP BY {'f.name,' if not format else ''} archetype_played)
-  SELECT  archetype_played,
-          {'format_name,' if not format else ''}
+    SELECT
+      {'f.name as format_name,' if not format else ''}
+      archetype_played,
+      sum(wins) AS wins,
+      sum(losses) AS losses,
+      sum(draws) AS draws
+    FROM
+      (
+        SELECT
+          event_id,
+          player_name,
           wins,
           losses,
-          draws,
-          ROUND(100.0 * wins / (wins + losses + draws), 2) as win_percentage
-  FROM  ((SELECT 1 as rank,
-            'Overall' as archetype_played,
-            {"' ' as format_name," if not format else ''}
-            sum(wins) as wins,
-            sum(losses) as losses,
-            sum(draws) as draws
-          FROM X)
-          UNION
-         (SELECT 2 as rank,
-            {'format_name,' if not format else ''}
-            archetype_played,
-            wins,
-            losses,
-            draws
-          FROM X))
-  ORDER BY rank, {'format_name, ' if not format else ''} archetype_played
+          draws
+        FROM
+          participants
+        UNION
+        SELECT
+          event_id,
+          p.player_name,
+          COUNT(
+            CASE
+              WHEN match_result = 'WIN' THEN 1
+            END
+          ) AS wins,
+          COUNT(
+            CASE
+              WHEN match_result = 'LOSS' THEN 1
+            END
+          ) AS losses,
+          COUNT(
+            CASE
+              WHEN match_result = 'DRAW' THEN 1
+            END
+          ) AS draws
+        FROM
+          (
+            SELECT
+              event_id,
+              player1_name AS player_name,
+              CASE
+                WHEN player1_game_wins > player2_game_wins THEN 'WIN'
+                WHEN player1_game_wins = player2_game_wins THEN 'DRAW'
+                ELSE 'LOSS'
+              END AS match_result
+            FROM
+              rounddetails
+            UNION ALL
+            SELECT
+              event_id,
+              player2_name AS player_name,
+              CASE
+                WHEN player2_game_wins > player1_game_wins THEN 'WIN'
+                WHEN player2_game_wins = player1_game_wins THEN 'DRAW'
+                ELSE 'LOSS'
+              END AS match_result
+            FROM
+              rounddetails
+            WHERE
+              player2_name != 'BYE'
+            ORDER BY
+              player_name
+          ) p
+        GROUP BY
+          event_id,
+          p.player_name
+        UNION ALL
+        SELECT
+          event_id,
+          player_name,
+          wins,
+          losses,
+          draws
+        FROM
+          participants
+      ) r
+      INNER JOIN events e ON r.event_id = e.id
+      INNER JOIN formats f ON f.id = e.format_id
+      LEFT JOIN (
+        SELECT DISTINCT
+          ON (event_id, player_name) event_id,
+          player_name,
+          archetype_played,
+          submitter_id
+        FROM
+          ArchetypeSubmissions
+        WHERE
+          reported = FALSE
+        ORDER BY
+          event_id,
+          player_name,
+          id DESC
+      ) asu ON asu.event_id = r.event_id
+      AND asu.player_name = r.player_name
+    WHERE
+      r.player_name = (
+        SELECT
+          player_name
+        FROM
+          archetypesubmissions
+        WHERE
+          submitter_id = {user_id}
+        GROUP BY
+          player_name
+        ORDER BY
+          COUNT(*) DESC
+        LIMIT
+          1
+      )
+      AND e.discord_id = {discord_id}
+      AND e.game_id = {game.ID}
+      {f'AND e.format_id = {format.ID}' if format else ''}
+      AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+    GROUP BY
+      {'f.name,' if not format else ''} 
+      archetype_played
+  )
+  SELECT
+    {'format_name,' if not format else ''}
+    archetype_played,
+    wins,
+    losses,
+    draws,
+    ROUND(100.0 * wins / (wins + losses + draws), 2) AS win_percentage
+  FROM
+    (
+      (
+        SELECT
+          1 AS rank,
+          {"' ' as format_name," if not format else ''}
+          'Overall' AS archetype_played,
+          sum(wins) AS wins,
+          sum(losses) AS losses,
+          sum(draws) AS draws
+        FROM
+          X
+      )
+      UNION
+      (
+        SELECT
+          2 AS rank,
+          {'format_name,' if not format else ''}
+          archetype_played,
+          wins,
+          losses,
+          draws
+        FROM
+          X
+      )
+    )
+  ORDER BY
+    rank,
+    {'format_name, ' if not format else ''}
+    archetype_played
   '''
   
   with conn, conn.cursor() as cur:
@@ -263,32 +377,114 @@ def GetStoreData(store, game, format, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command =  f'''
-    SELECT c.name AS GameName,
-      f.name AS FormatName,
-      e.event_date AS EventDate,
-      p.player_name AS PlayerName,
-      COALESCE(X.archetype_played,'UNKNOWN') AS ArchetypePlayed,
+    SELECT
+      c.name AS Game_Name,
+      f.name AS Format_Name,
+      e.event_date AS Event_Date,
+      p.player_name AS Player_Name,
+      COALESCE(asu.archetype_played, 'UNKNOWN') AS Archetype_Played,
       p.wins AS Wins,
       p.losses AS Losses,
       p.draws AS Draws
-    FROM participants p
-      INNER JOIN events e on e.id = p.event_id
-      INNER JOIN cardgames c on c.id = e.game_id
-      INNER JOIN formats f on f.id = e.format_id
-      LEFT JOIN ( SELECT DISTINCT on (event_id, player_name)
-                    event_id, player_name, archetype_played
-                  FROM ArchetypeSubmissions
-                  WHERE event_id IN ( SELECT id
-                                      FROM events e
-                                        INNER JOIN stores s ON s.discord_id = e.discord_id
-                                      ORDER BY e.event_date DESC)
-                    AND reported = False
-                  ORDER BY event_id, player_name, id desc) X ON (X.player_name = p.player_name AND X.event_id = p.event_id)
+    FROM
+      (
+        SELECT
+          event_id,
+          p.player_name,
+          COUNT(
+            CASE
+              WHEN match_result = 'WIN' THEN 1
+            END
+          ) AS wins,
+          COUNT(
+            CASE
+              WHEN match_result = 'LOSS' THEN 1
+            END
+          ) AS losses,
+          COUNT(
+            CASE
+              WHEN match_result = 'DRAW' THEN 1
+            END
+          ) AS draws
+        FROM
+          (
+            SELECT
+              event_id,
+              player1_name AS player_name,
+              CASE
+                WHEN player1_game_wins > player2_game_wins THEN 'WIN'
+                WHEN player1_game_wins = player2_game_wins THEN 'DRAW'
+                ELSE 'LOSS'
+              END AS match_result
+            FROM
+              rounddetails rd
+              INNER JOIN events e ON e.id = rd.event_id
+            WHERE
+              e.discord_id = 1210746744602890310
+            UNION ALL
+            SELECT
+              event_id,
+              player2_name AS player_name,
+              CASE
+                WHEN player2_game_wins > player1_game_wins THEN 'WIN'
+                WHEN player2_game_wins = player1_game_wins THEN 'DRAW'
+                ELSE 'LOSS'
+              END AS match_result
+            FROM
+              rounddetails rd
+              INNER JOIN events e ON e.id = rd.event_id
+            WHERE
+              e.discord_id = 1210746744602890310
+              AND player2_name != 'BYE'
+            ORDER BY
+              player_name
+          ) p
+        GROUP BY
+          event_id,
+          p.player_name
+        UNION ALL
+        SELECT
+          event_id,
+          player_name,
+          wins,
+          losses,
+          draws
+        FROM
+          participants p
+          INNER JOIN events e ON e.id = p.event_id
+        WHERE
+          e.discord_id = 1210746744602890310
+      ) p
+      INNER JOIN events e ON e.id = p.event_id
+      INNER JOIN cardgames c ON c.id = e.game_id
+      INNER JOIN formats f ON f.id = e.format_id
+      LEFT JOIN (
+        SELECT DISTINCT
+          ON (event_id, player_name) event_id,
+          player_name,
+          archetype_played
+        FROM
+          ArchetypeSubmissions
+        WHERE
+          reported = FALSE
+        ORDER BY
+          event_id,
+          player_name,
+          id DESC
+      ) asu ON (
+        asu.player_name = p.player_name
+        AND asu.event_id = p.event_id
+      )
     WHERE e.discord_id = {store.DiscordId}
           {f'AND e.game_id = {game.ID}' if game else ''}
           {f'AND e.format_id = {format.ID}' if format else ''}
           AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-    ORDER BY 3 desc, 6 desc, 8 desc, 7 desc
+    ORDER BY
+      game_name,
+      format_name,
+      event_date DESC,
+      wins desc,
+      draws desc
     '''
   
     cur.execute(command)
@@ -336,15 +532,89 @@ def GetEventMeta(event_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
-    SELECT X.archetype_played,
-      p.wins
-    FROM participants p
-    LEFT JOIN ( SELECT DISTINCT on (event_id, player_name)
-                  event_id, player_name, archetype_played
-                FROM ArchetypeSubmissions
-                ORDER BY event_id, player_name, id desc) X on X.event_id = p.event_id and X.player_name = p.player_name
-    WHERE p.event_id = {event_id}
-    ORDER BY p.wins DESC
+    SELECT
+      archetype_played,
+      wins
+    FROM
+      (
+        SELECT
+          event_id,
+          p.player_name,
+          COUNT(
+            CASE
+              WHEN match_result = 'WIN' THEN 1
+            END
+          ) AS wins,
+          COUNT(
+            CASE
+              WHEN match_result = 'LOSS' THEN 1
+            END
+          ) AS losses,
+          COUNT(
+            CASE
+              WHEN match_result = 'DRAW' THEN 1
+            END
+          ) AS draws
+        FROM
+          (
+            SELECT
+              event_id,
+              player1_name AS player_name,
+              CASE
+                WHEN player1_game_wins > player2_game_wins THEN 'WIN'
+                WHEN player1_game_wins = player2_game_wins THEN 'DRAW'
+                ELSE 'LOSS'
+              END AS match_result
+            FROM
+              rounddetails
+            WHERE
+              event_id = {event_id}
+            UNION ALL
+            SELECT
+              event_id,
+              player2_name AS player_name,
+              CASE
+                WHEN player2_game_wins > player1_game_wins THEN 'WIN'
+                WHEN player2_game_wins = player1_game_wins THEN 'DRAW'
+                ELSE 'LOSS'
+              END AS match_result
+            FROM
+              rounddetails
+            WHERE
+              player2_name != 'BYE'
+              AND event_id = {event_id}
+            ORDER BY
+              player_name
+          ) p
+        GROUP BY
+          event_id,
+          p.player_name
+        UNION ALL
+        SELECT
+          event_id,
+          player_name,
+          wins,
+          losses,
+          draws
+        FROM
+          participants
+        WHERE
+          event_id = {event_id}
+      ) x
+      LEFT JOIN (
+        SELECT DISTINCT
+          ON (event_id, player_name) event_id,
+          player_name,
+          archetype_played
+        FROM
+          ArchetypeSubmissions
+        ORDER BY
+          event_id,
+          player_name,
+          id DESC
+      ) ap ON ap.event_id = x.event_id
+      AND ap.player_name = x.player_name
+    ORDER BY wins desc
     '''
     cur.execute(command, criteria)
     rows = cur.fetchall()
@@ -521,18 +791,18 @@ def GetEventObj(discord_id,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
-    SELECT *
+    SELECT e.id, e.discord_id, e.event_date, e.game_id, e.format_id, e.last_update
     FROM events e
     LEFT JOIN participants p ON e.id = p.event_id
+    LEFT JOIN rounddetails rd ON e.id = rd.event_id
     WHERE e.discord_id = {discord_id}
     AND e.game_id = {game.ID}
     {f'AND e.format_id = {format.ID}' if format else ''}
     {f"AND e.event_date = '{date}'" if date else "AND e.event_date BETWEEN current_date - 14 AND current_date"}
-    {f"AND p.player_name = '{player_name}'" if player_name != '' else ''}
+    {f"AND (p.player_name = '{player_name}' OR rd.player1_name = '{player_name}' OR rd.player2_name = '{player_name}')" if player_name != '' else ''}
     ORDER BY event_date DESC
     LIMIT 1
     '''
-    print('Commmand:', command)
     cur.execute(command)
     row = cur.fetchone()
     return row if row else None
@@ -562,11 +832,12 @@ def DeleteDemo():
 def UpdateDemo(event_id, event_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'UPDATE events '
-    command += 'SET event_date = %s '
-    command += 'WHERE id = %s '
-    criteria = (event_date, event_id)
-    cur.execute(command, criteria)
+    command = f'''
+    UPDATE events
+    SET event_date = '{event_date}'
+    WHERE id = {event_id}
+    '''
+    cur.execute(command)
     conn.commit()
   
 def GetGameByMap(category_id:int):
@@ -798,9 +1069,11 @@ def GetTopPlayerData(discord_id,
 def GetAllGames():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command =  'SELECT id, name, hasFormats '
-    command += 'FROM CardGames '
-    command += 'ORDER BY name '
+    command = '''
+    SELECT id, name, hasFormats
+    FROM CardGames
+    ORDER BY name
+    '''
     cur.execute(command)
     rows = cur.fetchall()
     return rows
@@ -809,14 +1082,51 @@ def GetPercentage(event_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f"""
-    SELECT COUNT(CASE WHEN archetype_played IS NOT NULL THEN 1 END) / SUM(count(*)) OVER () as percentage
-    FROM participants p
-    LEFT OUTER JOIN ( SELECT DISTINCT on (event_id, player_name)
-                        event_id, player_name, archetype_played
-                      FROM ArchetypeSubmissions
-                      WHERE reported = False
-                      ORDER BY event_id, player_name, id desc) X on X.event_id = p.event_id and X.player_name = p.player_name
-      WHERE p.event_id = {event_id}
+    SELECT
+      COUNT(
+        CASE
+          WHEN archetype_played IS NOT NULL THEN 1
+        END
+      ) / SUM(count(*)) OVER () AS percentage
+    FROM
+      (
+        SELECT
+          event_id,
+          player_name
+        FROM
+          participants p
+        UNION
+        SELECT
+          event_id,
+          player1_name AS player_name
+        FROM
+          rounddetails rd
+        UNION
+        SELECT
+          event_id,
+          player2_name AS player_name
+        FROM
+          rounddetails rd
+        WHERE
+          player2_name != 'BYE'
+      ) p
+      LEFT OUTER JOIN (
+        SELECT DISTINCT
+          ON (event_id, player_name) event_id,
+          player_name,
+          archetype_played
+        FROM
+          ArchetypeSubmissions
+        WHERE
+          reported = FALSE
+        ORDER BY
+          event_id,
+          player_name,
+          id DESC
+      ) X ON X.event_id = p.event_id
+      AND X.player_name = p.player_name
+    WHERE
+      p.event_id = {event_id}    
     """
     cur.execute(command)
     row = cur.fetchone()

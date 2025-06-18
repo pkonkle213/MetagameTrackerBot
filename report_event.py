@@ -15,11 +15,9 @@ async def SubmitData(message, data, date_str):
   
   date = ConvertToDate(date_str)    
   event_obj = GetEventObj(store.DiscordId, date, game, format)
-  print('Event Obj:', event_obj)
   if event_obj is None:
     event_obj = CreateEvent(date, store.DiscordId, game, format)
 
-  print('Event Obj2:', event_obj)
 
   event = ConvertToEvent(event_obj)
   if isinstance(data[0],Participant):

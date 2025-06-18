@@ -1,41 +1,65 @@
-SELECT player1_archetype, player2_archetype, ROUND(100 * COUNT(CASE WHEN player1_won THEN 1 END) / COUNT(*), 2) as win_percentage
-FROM (
-WITH Y AS (
-WITH X AS (
-SELECT DISTINCT on (event_id, player_name)
-  event_id, player_name, archetype_played
-FROM ArchetypeSubmissions
-ORDER BY event_id, player_name, id desc)
 SELECT
-  COALESCE(x1.archetype_played, 'UNKNOWN') AS player1_archetype,
-  CASE
-    WHEN COALESCE(p2.player_name, 'BYE') = 'BYE' THEN 'NONE'
-  ELSE
-    COALESCE(x2.archetype_played, 'UNKNOWN')
-  END AS player2_archetype,
-  pw.id = p1.id AS player1_won
-FROM rounddetails rd
-  INNER JOIN participants p1 on p1.id = rd.player1_id
-  LEFT JOIN X x1 ON (x1.event_id = rd.event_id AND x1.player_name = p1.player_name)
-  LEFT JOIN participants p2 on p2.id = rd.player2_id
-  LEFT JOIN X x2 ON (x2.event_id = rd.event_id AND x2.player_name = p2.player_name)
-  LEFT JOIN participants pw on pw.id = rd.winner_id
-  LEFT JOIN X xw ON (xw.event_id = rd.event_id AND xw.player_name = pw.player_name)
-)
-(SELECT player1_archetype, player2_archetype, player1_won
-FROM Y
-WHERE player1_won IS NOT NULL
-  AND player2_archetype != 'NONE'
-ORDER BY player1_won desc)
-UNION
-(SELECT
-  player2_archetype as player1_archetype,
-  player1_archetype as player2_archetype,
-  player1_won = FALSE as player1_won
-FROM Y
-WHERE player2_archetype != 'NONE'
-AND player1_won IS NOT NULL)
-)
-WHERE player2_archetype != player1_archetype
-GROUP BY player1_archetype, player2_archetype
-ORDER BY player1_archetype, player2_archetype
+  player_archetype,
+  opponent_archetype,
+  COUNT(CASE WHEN result = 'WIN' THEN 1 END) AS wins,
+  COUNT(CASE WHEN result = 'LOSS' THEN 1 END) AS losses,
+  COUNT(CASE WHEN result = 'DRAW' THEN 1 END) AS draws,
+  1.0 * COUNT(CASE WHEN result = 'WIN' THEN 1 END) / (COUNT(CASE WHEN result = 'WIN' THEN 1 END) + COUNT(CASE WHEN result = 'LOSS' THEN 1 END)+ COUNT(CASE WHEN result = 'DRAW' THEN 1 END)) as win_percentage
+FROM
+  (
+    WITH
+      X AS (
+        SELECT DISTINCT
+          ON (event_id, player_name) event_id,
+          player_name,
+          archetype_played
+        FROM
+          ArchetypeSubmissions
+        WHERE
+          reported = FALSE
+        ORDER BY
+          event_id,
+          player_name,
+          id DESC
+      ) (
+        SELECT
+          X1.archetype_played AS player_archetype,
+          COALESCE(X2.archetype_played, 'BYE') AS opponent_archetype,
+          CASE
+            WHEN rd.player1_game_wins > player2_game_wins THEN 'WIN'
+            WHEN rd.player1_game_wins = rd.player2_game_wins THEN 'DRAW'
+            ELSE 'LOSS'
+          END AS result
+        FROM
+          rounddetails rd
+          LEFT JOIN X AS X1 ON X1.event_id = rd.event_id
+          AND X1.player_name = rd.player1_name
+          LEFT JOIN X AS X2 ON X2.event_id = rd.event_id
+          AND X2.player_name = rd.player2_name
+        WHERE
+          X1.archetype_played != X2.archetype_played
+          AND X1.archetype_played IS NOT NULL
+        UNION ALL
+        SELECT
+          X2.archetype_played AS player_archetype,
+          COALESCE(X1.archetype_played, 'BYE') AS opponent_archetype,
+          CASE
+            WHEN rd.player2_game_wins > player1_game_wins THEN 'WIN'
+            WHEN rd.player2_game_wins = rd.player1_game_wins THEN 'DRAW'
+            ELSE 'LOSS'
+          END AS result
+        FROM
+          rounddetails rd
+          LEFT JOIN X AS X1 ON X1.event_id = rd.event_id
+          AND X1.player_name = rd.player1_name
+          LEFT JOIN X AS X2 ON X2.event_id = rd.event_id
+          AND X2.player_name = rd.player2_name
+        WHERE
+          rd.player2_name != 'BYE'
+          AND X2.archetype_played IS NOT NULL
+          AND X1.archetype_played != X2.archetype_played
+      )
+  )
+GROUP BY
+  player_archetype,
+  opponent_archetype

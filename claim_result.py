@@ -17,7 +17,10 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
   else:
     date_used = None
 
-  game, format, store, userId = GetInteractionData(interaction, game=True, format=True, store=True)
+  game, format, store, userId = GetInteractionData(interaction,
+                                                   game=True,
+                                                   format=True,
+                                                   store=True)
   archetype = archetype.upper()
   if ContainsBadWord(interaction, archetype):
     raise KnownError('Archetype contains a banned word')
@@ -30,15 +33,14 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
   
   updater_name = interaction.user.display_name.upper()
   player_name = player_name.upper()
-  print('Sending:', store.DiscordId, date_used, game, format, player_name)
   event = GetAndConvertEvent(store.DiscordId,
                              date_used,
                              game,
                              format,
                              player_name)
-  print('Event found:', event)
   if event is None:
     raise KnownError('Event not found. Please ensure all parameters are correct, especially your name (as it appears in Companion)')
+
   archetype_added = AddArchetype(event.ID,
                         player_name,
                         archetype,

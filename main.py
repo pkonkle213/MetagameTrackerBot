@@ -469,7 +469,7 @@ async def DownloadData_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
 @bot.tree.command(name='claim',
-                  description='Enter your deck archetype')
+                  description='Enter the deck archetype for a player and their last played event')
 async def Claim(interaction: discord.Interaction,
                 player_name: str,
                 archetype: str,
@@ -507,7 +507,7 @@ async def Claim(interaction: discord.Interaction,
     archetype = {archetype}
     date = {date}
     '''
-    await Error(interaction, exception, phil_message) #Y this no work?!
+    await Error(interaction, exception, phil_message)
     await interaction.followup.send(exception.message, ephemeral=True)
 
 @Claim.error

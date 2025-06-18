@@ -1,3 +1,4 @@
+import unicodedata
 from tuple_conversions import Participant, Round
 
 def ConvertMessageToParticipants(message):
@@ -8,6 +9,19 @@ def ConvertMessageToParticipants(message):
     data = CompanionRoundByRound(message)
   return data
 
+#TODO: This function needs to be tested with a variety of names
+def FormatPlayerName(name):
+  print('Input Name:', name)
+  nfkd_form = unicodedata.normalize('NFKD', name)
+  print('NFKD Form:', nfkd_form)
+  name = ''.join([c for c in nfkd_form if not unicodedata.combining(c)])
+  print('Combining:', name)
+  name = name.encode('ascii', 'ignore').decode('ascii')
+  print('Ascii:', name)
+  
+  print('Output Name:',name)
+  return name
+
 def CompanionParticipants(message):
   data = []
   rows = message.split('\n')
@@ -17,10 +31,13 @@ def CompanionParticipants(message):
       int(row_list[0]) #Standing
       int(row_list[2]) #Points obtained
       record = row_list[3].split('/')
-      participant = Participant(row_list[1].encode('ascii', 'ignore').decode('ascii'),
+      print(row_list)
+      player_name = FormatPlayerName(row_list[1])
+      participant = Participant(player_name,
                                 int(record[0]),
                                 int(record[1]),
                                 int(record[2]))
+      print('Participant:', participant)
       data.append(participant)
     return data
   except Exception as exception:
