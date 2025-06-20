@@ -1,6 +1,5 @@
 import os
 import psycopg2
-from settings import DATAGUILDID
 from psycopg2.errors import UniqueViolation
 
 #With this file reaching about 1000 lines, I think it's time to break it up into multiple files with relevant methods in each

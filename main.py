@@ -22,6 +22,7 @@ from select_menu_bones import SelectMenu
 from store_approval import ApproveMyStore, DisapproveMyStore
 from store_data_download import GetDataReport
 from store_event_reported.events_reported import GetMyEventsReported
+from personal_matchups.personal_matchups import PersonalMatchups
 from top_players import GetTopPlayers
 from unknown_archetypes import GetAllUnknown
 
@@ -547,5 +548,25 @@ async def MyEventsReported(interaction: discord.Interaction, discord_id:str = ''
   data, title, headers = GetMyEventsReported(interaction, discord_id_int)
   output = BuildTableOutput(title, headers, data)
   await interaction.followup.send(output)
+
+@MyEventsReported.error
+async def MyEventsReported_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
+
+#TODO: Limit this command to guilds who have a payment level of 2
+@bot.tree.command(name='personalmatchups',
+                  description='See your matchups against archetypes in this format')
+async def PersonalMatchupReport(interaction: discord.Interaction,
+                                start_date: str = '',
+                                end_date: str = ''):
+  await interaction.response.defer(ephemeral=True)
+  data, title, headers = PersonalMatchups(interaction, start_date, end_date)
+  output = BuildTableOutput(title, headers, data)
+  await interaction.followup.send(output)
+'''
+@PersonalMatchupReport.error
+async def PersonalMatchupReport_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
+'''
 
 bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)
