@@ -71,7 +71,6 @@ def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id)
     ORDER BY
       asu.archetype_played
     '''
-    print('Command:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows

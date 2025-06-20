@@ -12,6 +12,7 @@ from flag_bad_word import AddBadWord, Offenders
 from format_mapper import AddStoreFormatMap, GetFormatOptions
 from game_mapper import AddStoreGameMap, GetGameOptions
 from interaction_data import GetInteractionData
+from level2stores.get_level_2_stores import GetLevel2Stores
 from text_modal import SubmitDataModal
 from metagame_report import GetMyMetagame
 from output_builder import BuildTableOutput
@@ -37,15 +38,34 @@ bot = commands.Bot(command_prefix='?', intents=intents)
 async def on_ready():
   print(f'Logged on as {format(bot.user)}!')
 
-  try:
+  try: 
     sync_global = await bot.tree.sync()
     print(f'Synced {len(sync_global)} commands globally, allegedly')
+    for guild in level2guilds:
+      sync_store = await bot.tree.sync(guild=guild)
+      print(f'Syncing {len(sync_store)} commands for {guild.id}')
     sync_my_bot = await bot.tree.sync(guild=settings.BOTGUILD)
     print(f'Synced {len(sync_my_bot)} command(s) to guild My Bot -> {settings.BOTGUILD.id}')
     sync_test_guild = await bot.tree.sync(guild=settings.TESTSTOREGUILD)
     print(f'Synced {len(sync_test_guild)} command(s) to guild Test Guild -> {settings.TESTSTOREGUILD.id}')
   except Exception as error:
     print(f'Error syncing commands: {error}')
+
+def PrintInfo(command):
+  print('Name:', command.name)
+  print('Name Local:', command.name_localizations)
+  print('Description:', command.description)
+  print('Description Local:', command.description_localizations)
+  print('Guild:', command.guild)
+  print('Guild ID:', command.guild_id)
+  print('AllowedContexts:', command.allowed_contexts)
+  print('AllowedInstalls:', command.allowed_installs)
+  print('Application_id:', command.application_id)
+  print('Default member permissions:', command.default_member_permissions)
+  #print('Default permissions:', command.default_permissions)
+  print('Dm_permission:', command.dm_permission)
+  #print('Extras:', command.extras)
+  print('Options:', command.options)
 
 def isOwner(interaction: discord.Interaction):
   userid = interaction.user.id
@@ -67,14 +87,15 @@ async def MessageChannel(msg, guildId, channelId):
   if server is None:
     print(f'Server {guildId} not found')
     raise Exception(f'Server {guildId} not found')
-  channel = server.get_channel(int(channelId))
-  if channel is None:
-    print(f'Channel {channelId} not found')
-    raise Exception(f'Channel {channelId} not found')
-  if not isinstance(channel, discord.TextChannel):
-    raise Exception(f'Channel {channelId} is not a text channel')
+  if msg != '':
+    channel = server.get_channel(int(channelId))
+    if channel is None:
+      print(f'Channel {channelId} not found')
+      raise Exception(f'Channel {channelId} not found')
+    if not isinstance(channel, discord.TextChannel):
+      raise Exception(f'Channel {channelId} is not a text channel')
 
-  await channel.send(f'{msg}')
+    await channel.send(f'{msg}')
 
 async def Error(interaction, error, phil_message = ''):
   #TODO: Known errors should be caught within the command/method, not caught out here.
@@ -108,6 +129,11 @@ async def ApprovalMessage(msg):
                        settings.BOTGUILD.id,
                        settings.APPROVALCHANNELID)
 
+level2guilds = GetLevel2Stores()
+
+async def Help(interaction: discord.Interaction):
+  await interaction.response.send_message(f'Here is the link to my help: {settings.SOPURL}')
+
 @bot.tree.command(name="getbot",
                   description="Display the url to get the bot",
                   guild=settings.BOTGUILD)
@@ -139,8 +165,7 @@ async def Feedback(interaction: discord.Interaction):
                   description="The new thing I want to test",
                   guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
-  integrations = await interaction.guild.integrations()
-  print('Integrations:', integrations)
+ 
   await interaction.response.send_message(f'Me: {interaction.user.mention}')
 
 @bot.tree.command(name="submitdata",
@@ -555,13 +580,15 @@ async def MyEventsReported_error(interaction: discord.Interaction, error):
 
 #TODO: Limit this command to guilds who have a payment level of 2
 @bot.tree.command(name='personalmatchups',
-                  description='See your matchups against archetypes in this format')
+                  description='See your matchups against archetypes in this format',
+                  guilds=level2guilds)
 async def PersonalMatchupReport(interaction: discord.Interaction,
                                 start_date: str = '',
                                 end_date: str = ''):
   await interaction.response.defer(ephemeral=True)
   data, title, headers = PersonalMatchups(interaction, start_date, end_date)
   output = BuildTableOutput(title, headers, data)
+  print('Output:', output)
   await interaction.followup.send(output)
 '''
 @PersonalMatchupReport.error
