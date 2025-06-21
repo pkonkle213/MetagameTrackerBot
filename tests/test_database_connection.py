@@ -1,6 +1,6 @@
 import pytest
 import psycopg2
-from database_connection import GetWord, AddWord
+from data.ban_word_data import GetWord, AddWord
 
 #I don't know how or why this works, but it does.
 @pytest.fixture

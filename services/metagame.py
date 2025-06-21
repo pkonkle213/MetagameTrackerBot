@@ -1,7 +1,7 @@
 from discord import Interaction
-from database_connection import GetDataRowsForMetagame
+from data.metagame_data import GetMetagame
 from interaction_data import GetInteractionData
-from date_functions.date_functions import BuildDateRange
+from date_functions import BuildDateRange
 
 def GetMyMetagame(interaction:Interaction,
   start_date:str,
@@ -10,7 +10,7 @@ def GetMyMetagame(interaction:Interaction,
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   print('Metagame date range:', date_start, date_end)
   title_name = format.FormatName.title() if format else game.Name.title()
-  data = GetDataRowsForMetagame(game, format, date_start, date_end, store)
+  data = GetMetagame(game, format, date_start, date_end, store)
   title = f'{title_name} metagame from {date_start} to {date_end}'
   headers = ['Deck Archetype', 'Meta %', 'Win %', 'Combined %']
   

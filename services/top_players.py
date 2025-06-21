@@ -1,7 +1,7 @@
 from discord import Interaction
-from date_functions.date_functions import BuildDateRange
+from date_functions import BuildDateRange
 from interaction_data import GetInteractionData
-from database_connection import GetTopPlayerData
+from data.player_data import GetTopPlayerData
 
 def GetTopPlayers(interaction:Interaction, start_date, end_date):
   game, format, store, user_id = GetInteractionData(interaction, game=True, store=True)

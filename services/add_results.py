@@ -1,7 +1,7 @@
-from enum import Enum, auto
 from custom_errors import KnownError
-from database_connection import GetEventObj, CreateEvent, AddResult, GetRoundNumber, GetParticipantId, Increase, AddRoundResult, SubmitTable
-from date_functions.date_functions import ConvertToDate
+from data.add_results_data import AddResult, GetRoundNumber, SubmitTable
+from date_functions import ConvertToDate
+from data.event_data import GetEventObj, CreateEvent
 from interaction_data import GetInteractionData
 from tuple_conversions import ConvertToEvent, Participant, Round
 

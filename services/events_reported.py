@@ -1,4 +1,4 @@
-from store_event_reported.database_report import GetStoreReportedPercentage
+from data.events_reported_data import GetStoreReportedPercentage
 
 def GetMyEventsReported(interaction, discord_id):
   data = GetStoreReportedPercentage(discord_id)

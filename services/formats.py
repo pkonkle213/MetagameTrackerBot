@@ -1,6 +1,6 @@
 from discord import Interaction
 from interaction_data import GetInteractionData, SplitInteractionData
-from database_connection import AddFormatMap, GetFormatsByGameId
+from data.formats_data import AddFormatMap, GetFormatsByGameId
 
 def AddStoreFormatMap(interaction:Interaction, chosen_format):
   discord_id, category_id, channel_id, user_id = SplitInteractionData(interaction)

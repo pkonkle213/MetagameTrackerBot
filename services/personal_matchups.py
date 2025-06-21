@@ -1,6 +1,6 @@
-from personal_matchups.database_function import GetPersonalMatchups
+from data.personal_matchup_data import GetPersonalMatchups
 from interaction_data import GetInteractionData
-from date_functions.date_functions import BuildDateRange
+from services.date_functions import BuildDateRange
 
 def PersonalMatchups(interaction, start_date, end_date):
   game, format, store, user_id = GetInteractionData(interaction,

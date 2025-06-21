@@ -1,4 +1,4 @@
-from level2stores.database_connection import GetStoresByPaymentLevel
+from data.level_2_stores_data import GetStoresByPaymentLevel
 import discord
 
 def GetLevel2Stores():

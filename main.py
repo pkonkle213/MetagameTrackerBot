@@ -2,30 +2,29 @@ import discord
 from discord.ext import commands
 import settings
 import logging
-from attendance_report import GetStoreAttendance
+from services.store_attendance import GetStoreAttendance
 from checks import isSubmitter
-from claim_result import ClaimResult, CheckEventPercentage, OneEvent
+from services.claim_result import ClaimResult, CheckEventPercentage, OneEvent
 from custom_errors import KnownError
 from data_translation import ConvertMessageToParticipants, Participant, Round
-from demo_functions import NewDemo
-from flag_bad_word import AddBadWord, Offenders
-from format_mapper import AddStoreFormatMap, GetFormatOptions
-from game_mapper import AddStoreGameMap, GetGameOptions
+from services.demonstration_functions import NewDemo
+from services.ban_word import AddBadWord, Offenders
+from services.formats import AddStoreFormatMap, GetFormatOptions
+from services.game_mapper import AddStoreGameMap, GetGameOptions
 from interaction_data import GetInteractionData
-from level2stores.get_level_2_stores import GetLevel2Stores
+from services.level_2_stores import GetLevel2Stores
 from text_modal import SubmitDataModal
-from metagame_report import GetMyMetagame
+from services.metagame import GetMyMetagame
 from output_builder import BuildTableOutput
-from player_win_record import PlayRecord
-from register_store import AssignStoreOwnerRoleInBotGuild, RegisterNewStore, SetPermissions
-from report_event import SubmitData
+from services.player_win_record import PlayRecord
+from services.store_services import AssignStoreOwnerRoleInBotGuild, RegisterNewStore, SetPermissions, ApproveMyStore, DisapproveMyStore
+from services.add_results import SubmitData
 from select_menu_bones import SelectMenu
-from store_approval import ApproveMyStore, DisapproveMyStore
-from store_data_download import GetDataReport
-from store_event_reported.events_reported import GetMyEventsReported
-from personal_matchups.personal_matchups import PersonalMatchups
-from top_players import GetTopPlayers
-from unknown_archetypes import GetAllUnknown
+from services.store_data_download import GetDataReport
+from services.events_reported import GetMyEventsReported
+from services.personal_matchups import PersonalMatchups
+from services.top_players import GetTopPlayers
+from services.unknown_archetypes import GetAllUnknown
 
 intents = discord.Intents.default()
 intents.message_content = True

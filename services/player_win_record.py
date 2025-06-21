@@ -1,6 +1,6 @@
 from discord import Interaction
-from database_connection import GetStats
-from date_functions.date_functions import BuildDateRange
+from data.player_data import GetStats
+from date_functions import BuildDateRange
 from interaction_data import GetInteractionData
 
 def PlayRecord(interaction:Interaction,

@@ -1,10 +1,12 @@
 from checks import isSubmitter
 from custom_errors import KnownError
-from date_functions.date_functions import ConvertToDate, GetToday, DateDifference
+from services.date_functions import ConvertToDate, GetToday, DateDifference
 from select_menu_bones import SelectMenu
-from flag_bad_word import CanSubmitArchetypes, ContainsBadWord
+from services.ban_word import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
-from database_connection import AddArchetype, GetEventObj, GetPercentage, UpdateEvent, GetEventMeta
+from data.archetype_data import AddArchetype
+from data.event_data import GetEventObj, GetEventMeta
+from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from tuple_conversions import ConvertToEvent
 from interaction_data import GetInteractionData
 
@@ -49,7 +51,7 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
   return archetype_added, event
 
 def CheckEventPercentage(event):
-  percent_reported = GetPercentage(event.ID)
+  percent_reported = GetEventReportedPercentage(event.ID)
   if percent_reported is None:
     raise Exception('Unable to find event by ID: ' + event.ID)
 

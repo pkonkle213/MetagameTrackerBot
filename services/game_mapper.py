@@ -1,6 +1,6 @@
 from discord import Interaction, TextChannel
 from interaction_data import GetInteractionData
-from database_connection import AddGameMap, GetAllGames
+from data.games_data import AddGameMap, GetAllGames
 
 def AddStoreGameMap(interaction:Interaction, chosen_game):
   game, format, store, user_id = GetInteractionData(interaction,

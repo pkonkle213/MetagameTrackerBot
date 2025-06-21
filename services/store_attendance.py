@@ -1,7 +1,7 @@
 from discord import Interaction
-from date_functions.date_functions import BuildDateRange
+from date_functions import BuildDateRange
 from interaction_data import GetInteractionData
-from database_connection import GetAttendance
+from data.store_attendance_data import GetAttendance
 
 def GetStoreAttendance(interaction:Interaction, start_date, end_date):
   game, format, store, userId = GetInteractionData(interaction,

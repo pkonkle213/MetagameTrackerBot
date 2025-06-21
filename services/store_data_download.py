@@ -1,7 +1,7 @@
 from discord import File
 from io import BytesIO
-from date_functions.date_functions import BuildDateRange
-from database_connection import GetStoreData
+from date_functions import BuildDateRange
+from data.store_data import GetStoreData
 from interaction_data import GetInteractionData
 
 def GetDataReport(interaction, start_date, end_date):
