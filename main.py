@@ -561,12 +561,18 @@ async def Demo(interaction: discord.Interaction):
 async def demo_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-@bot.tree.command(name='myeventsreported',
-                  description='See how well your events are reported',
+@bot.tree.command(name='eventsreported',
+                  description='See how well events are reported',
                   guild=settings.BOTGUILD)
 @discord.app_commands.check(isPhil)
 async def MyEventsReported(interaction: discord.Interaction, discord_id:str = ''):
-  await interaction.response.defer(ephemeral=True)
+  '''
+  Parameters:
+  ----------
+  discord_id: string
+    The discord id of the store to check
+  '''
+  await interaction.response.defer()
   discord_id_int = 0
   if discord_id != '':
     discord_id_int = int(discord_id)
@@ -578,7 +584,6 @@ async def MyEventsReported(interaction: discord.Interaction, discord_id:str = ''
 async def MyEventsReported_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-#TODO: Limit this command to guilds who have a payment level of 2
 @bot.tree.command(name='personalmatchups',
                   description='See your matchups against archetypes in this format',
                   guilds=level2guilds)
@@ -590,10 +595,9 @@ async def PersonalMatchupReport(interaction: discord.Interaction,
   output = BuildTableOutput(title, headers, data)
   print('Output:', output)
   await interaction.followup.send(output)
-'''
+
 @PersonalMatchupReport.error
 async def PersonalMatchupReport_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
-'''
 
 bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)
