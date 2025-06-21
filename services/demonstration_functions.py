@@ -1,5 +1,5 @@
 from data.demonstration_data import DeleteDemo, UpdateDemo
-from date_functions import GetToday, GetWeeksAgo
+from services.date_functions import GetToday, GetWeeksAgo
 
 def NewDemo():
   #Deletes my test store and its events in the database so I can offer a live update

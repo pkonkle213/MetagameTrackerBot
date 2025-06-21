@@ -1,5 +1,5 @@
 import discord
-from data.store_data import RegisterStore
+from data.store_data import RegisterStore, SetStoreTrackingStatus
 from settings import BOTGUILD
 from tuple_conversions import ConvertToStore
 

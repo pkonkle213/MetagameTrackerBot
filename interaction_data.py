@@ -3,7 +3,7 @@ from custom_errors import KnownError
 import discord
 from settings import DATAGUILDID
 import tuple_conversions as tc
-import database_connection as db
+import data.interaction_data as db
 
 def GetInteractionData(interaction,
                       game=False,

@@ -1,4 +1,4 @@
-from date_functions.date_functions import GetToday
+from services.date_functions import GetToday
 import discord
 
 class SubmitDataModal(discord.ui.Modal, title='Submit Data'):

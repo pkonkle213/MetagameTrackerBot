@@ -1,6 +1,6 @@
 from custom_errors import KnownError
 from data.add_results_data import AddResult, GetRoundNumber, SubmitTable
-from date_functions import ConvertToDate
+from services.date_functions import ConvertToDate
 from data.event_data import GetEventObj, CreateEvent
 from interaction_data import GetInteractionData
 from tuple_conversions import ConvertToEvent, Participant, Round
