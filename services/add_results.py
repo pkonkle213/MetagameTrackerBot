@@ -1,5 +1,6 @@
 from custom_errors import KnownError
 from data.add_results_data import AddResult, GetRoundNumber, SubmitTable
+from services.name_services import ConvertName
 from services.date_functions import ConvertToDate
 from data.event_data import GetEventObj, CreateEvent
 from interaction_data import GetInteractionData
@@ -17,8 +18,6 @@ async def SubmitData(message, data, date_str):
   event_obj = GetEventObj(store.DiscordId, date, game, format)
   if event_obj is None:
     event_obj = CreateEvent(date, store.DiscordId, game, format)
-
-
   event = ConvertToEvent(event_obj)
   if isinstance(data[0],Participant):
     output = AddParticipantResults(event, data, userId)
@@ -32,6 +31,7 @@ def AddParticipantResults(event, data, submitterId):
   successes = 0
   for person in data:
     if person.PlayerName != '':
+      person.PlayerName = ConvertName(person.PlayerName)
       output = AddResult(event.ID, person, submitterId)
       if output:
         successes += 1
@@ -42,10 +42,11 @@ def AddRoundResults(event, data, submitterId):
   successes = 0
   round_number = GetRoundNumber(event.ID) + 1
   for table in data:
+    
     result = SubmitTable(event.ID,
-                         table.P1Name.upper(),
+                         ConvertName(table.P1Name),
                          table.P1Wins,
-                         table.P2Name.upper(),
+                         ConvertName(table.P2Name),
                          table.P2Wins,
                          round_number,
                          submitterId)

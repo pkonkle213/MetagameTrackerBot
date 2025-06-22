@@ -6,6 +6,7 @@ from services.ban_word import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
 from data.archetype_data import AddArchetype
 from data.event_data import GetEventObj, GetEventMeta
+from services.name_services import ConvertName
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from tuple_conversions import ConvertToEvent
 from interaction_data import GetInteractionData
@@ -34,7 +35,7 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
     archetype = f'{inks} - {archetype}'
   
   updater_name = interaction.user.display_name.upper()
-  player_name = player_name.upper()
+  player_name = ConvertName(player_name)
   event = GetAndConvertEvent(store.DiscordId,
                              date_used,
                              game,

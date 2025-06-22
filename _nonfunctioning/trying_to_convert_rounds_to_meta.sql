@@ -47,7 +47,6 @@ FROM
             AND A1.player_name = rd.player1_name
           LEFT JOIN A A2 ON A2.event_id = rd.event_id
             AND A2.player_name = rd.player2_name
-        --WHERE rd.event_id = 55
         ORDER BY
           rd.event_id DESC,
           rd.round_number

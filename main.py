@@ -11,6 +11,7 @@ from services.demonstration_functions import NewDemo
 from services.ban_word import AddBadWord, Offenders
 from services.formats import AddStoreFormatMap, GetFormatOptions
 from services.game_mapper import AddStoreGameMap, GetGameOptions
+from services.name_services import ConvertName
 from interaction_data import GetInteractionData
 from services.level_2_stores import GetLevel2Stores
 from text_modal import SubmitDataModal
@@ -40,6 +41,7 @@ async def on_ready():
   try: 
     sync_global = await bot.tree.sync()
     print(f'Synced {len(sync_global)} commands globally, allegedly')
+    #TODO: I believe that syncing globally and then syncing for each level2guild is causing errors with the commands that aren't for level2guilds
     for guild in level2guilds:
       sync_store = await bot.tree.sync(guild=guild)
       print(f'Syncing {len(sync_store)} commands for {guild.id}')
@@ -163,8 +165,9 @@ async def Feedback(interaction: discord.Interaction):
 @bot.tree.command(name="atest",
                   description="The new thing I want to test",
                   guild=settings.TESTSTOREGUILD)
-async def ATest(interaction: discord.Interaction):
- 
+async def ATest(interaction: discord.Interaction, name:str):
+  ConvertName(name)
+  PrintInfo(interaction.command)
   await interaction.response.send_message(f'Me: {interaction.user.mention}')
 
 @bot.tree.command(name="submitdata",
@@ -599,4 +602,5 @@ async def PersonalMatchupReport(interaction: discord.Interaction,
 async def PersonalMatchupReport_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
-bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)
+if settings.DISCORDTOKEN:
+  bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)
