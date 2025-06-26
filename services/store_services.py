@@ -62,6 +62,20 @@ async def SetPermissions(interaction):
   await interaction.channel.set_permissions(everyone_role,
                                             overwrite=permissions)
 
+async def AssignMTSubmitterRole(bot:discord.Client, user_id, guild_id):
+  guild = bot.get_guild(int(guild_id))
+  if guild is None:
+    raise Exception('Guild not found')
+  user = await guild.fetch_member(int(user_id))
+  if user is None:
+    raise Exception('User not found')
+  mtsubmitter_role = discord.utils.find(lambda r: r.name == 'MTSubmitter',
+                                        guild.roles)
+  if mtsubmitter_role is None:
+    raise Exception('MTSubmitter role not found')
+  await user.add_roles(mtsubmitter_role)
+  return "Role assigned to user"
+
 async def AssignStoreOwnerRoleInBotGuild(bot:discord.Client, interaction):
   bot_guild = bot.get_guild(int(BOTGUILD.id))
   print('Bot guild:', bot_guild)

@@ -11,14 +11,13 @@ from services.demonstration_functions import NewDemo
 from services.ban_word import AddBadWord, Offenders
 from services.formats import AddStoreFormatMap, GetFormatOptions
 from services.game_mapper import AddStoreGameMap, GetGameOptions
-from services.name_services import ConvertName
 from interaction_data import GetInteractionData
 from services.level_2_stores import GetLevel2Stores
 from text_modal import SubmitDataModal
 from services.metagame import GetMyMetagame
 from output_builder import BuildTableOutput
 from services.player_win_record import PlayRecord
-from services.store_services import AssignStoreOwnerRoleInBotGuild, RegisterNewStore, SetPermissions, ApproveMyStore, DisapproveMyStore
+from services.store_services import AssignStoreOwnerRoleInBotGuild, RegisterNewStore, SetPermissions, ApproveMyStore, DisapproveMyStore, AssignMTSubmitterRole
 from services.add_results import SubmitData
 from select_menu_bones import SelectMenu
 from services.store_data_download import GetDataReport
@@ -165,9 +164,11 @@ async def Feedback(interaction: discord.Interaction):
 @bot.tree.command(name="atest",
                   description="The new thing I want to test",
                   guild=settings.TESTSTOREGUILD)
-async def ATest(interaction: discord.Interaction, name:str):
-  ConvertName(name)
-  PrintInfo(interaction.command)
+async def ATest(interaction: discord.Interaction):
+  
+  #ConvertName(name)
+  #PrintInfo(interaction.command)
+  #print('Result:', result)
   await interaction.response.send_message(f'Me: {interaction.user.mention}')
 
 @bot.tree.command(name="submitdata",
@@ -501,7 +502,7 @@ async def DownloadData_error(interaction: discord.Interaction, error):
 async def Claim(interaction: discord.Interaction,
                 player_name: str,
                 archetype: str,
-                date: str = ''):
+                date: str):
   """
   Parameters
   ----------
@@ -602,5 +603,17 @@ async def PersonalMatchupReport(interaction: discord.Interaction,
 async def PersonalMatchupReport_error(interaction: discord.Interaction, error):
   await Error(interaction, error)
 
+@bot.tree.command(name='assignmtsubmitter',
+                  description='Assign the MTSubmitter role to a user',
+                  guild=settings.BOTGUILD)
+async def AssignMTSubmitter(interaction: discord.Interaction, user_id: str, guild_id: str):
+  await interaction.response.defer()
+  output = await AssignMTSubmitterRole(bot, user_id, guild_id)
+  await interaction.followup.send(output)
+
+@AssignMTSubmitter.error
+async def AssignMTSubmitter_error(interaction: discord.Interaction, error):
+  await Error(interaction, error)
+  
 if settings.DISCORDTOKEN:
   bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)

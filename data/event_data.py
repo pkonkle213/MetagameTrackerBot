@@ -4,26 +4,22 @@ import psycopg2
 def GetEventObj(discord_id,
                 date,
                 game,
-                format,
-                player_name = ''):
+                format):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      e.id,
-      e.discord_id,
-      e.event_date,
-      e.game_id,
-      e.format_id,
-      e.last_update
+      id,
+      discord_id,
+      event_date,
+      game_id,
+      format_id,
+      last_update
     FROM events e
-      LEFT JOIN participants p ON e.id = p.event_id
-      LEFT JOIN rounddetails rd ON e.id = rd.event_id
     WHERE e.discord_id = {discord_id}
       AND e.game_id = {game.ID}
-      {f'AND e.format_id = {format.ID}' if format else ''}
-      {f"AND e.event_date = '{date}'" if date else "AND e.event_date BETWEEN current_date - 14 AND current_date"}
-      {f"AND (p.player_name = '{player_name}' OR rd.player1_name = '{player_name}' OR rd.player2_name = '{player_name}')" if player_name != '' else ''}
+      AND e.format_id = {format.ID}
+      AND e.event_date = '{date}'
     ORDER BY event_date DESC
     LIMIT 1
     '''

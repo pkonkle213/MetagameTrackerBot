@@ -1,24 +1,22 @@
 from checks import isSubmitter
 from custom_errors import KnownError
+from data.claim_data import GetEventAndPlayerName
 from services.date_functions import ConvertToDate, GetToday, DateDifference
 from select_menu_bones import SelectMenu
 from services.ban_word import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
 from data.archetype_data import AddArchetype
-from data.event_data import GetEventObj, GetEventMeta
+from data.event_data import GetEventMeta
 from services.name_services import ConvertName
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
-from tuple_conversions import ConvertToEvent
+from tuple_conversions import ConvertToEvent, Event
 from interaction_data import GetInteractionData
 
 async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, date:str):
-  date_used = '' if date == '' else ConvertToDate(date)
+  date_used = ConvertToDate(date)
   date_today = GetToday()
-  if date_used != '' and not isSubmitter:
-    if DateDifference(date_today, date_used) > 14:
-      raise KnownError('You can only claim archetypes for events within the last 14 days. Please contact your store owner to have them submit the archetype.')
-  else:
-    date_used = None
+  if not isSubmitter and DateDifference(date_today, date_used) > 14:
+    raise KnownError('You can only claim archetypes for events within the last 14 days. Please contact your store owner to have them submit the archetype.')
 
   game, format, store, userId = GetInteractionData(interaction,
                                                    game=True,
@@ -34,17 +32,28 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
     inks = await LorcanaInkMenu(interaction)
     archetype = f'{inks} - {archetype}'
   
-  updater_name = interaction.user.display_name.upper()
   player_name = ConvertName(player_name)
-  event = GetAndConvertEvent(store.DiscordId,
-                             date_used,
-                             game,
-                             format,
-                             player_name)
-  if event is None:
-    raise KnownError('Event not found. Please ensure all parameters are correct, especially your name (as it appears in Companion)')
+  (event_id,
+   discord_id,
+   event_date,
+   game_id,
+   format_id,
+   last_update,
+   player_name) = GetEventAndPlayerName(store.DiscordId, date, game, format, player_name)
+  
+  if event_id is None:
+    raise KnownError('Event not found. Please check the date provided.')
+  if player_name is None:
+    raise KnownError('Player not found. Please check the name provided.')
+  event = Event(event_id,
+                discord_id,
+                event_date, 
+                game_id,   
+                format_id,  
+                last_update)
 
-  archetype_added = AddArchetype(event.ID,
+  updater_name = interaction.user.display_name.upper()
+  archetype_added = AddArchetype(event_id,
                         player_name,
                         archetype,
                         userId,
@@ -75,12 +84,6 @@ def OneEvent(event):
   headers = ['Archetype', 'Wins']
   data = event_meta
   return title, headers, data
-
-def GetAndConvertEvent(guild_id, event_date, game, format, player_name):
-  event_obj = GetEventObj(guild_id, event_date, game, format, player_name=player_name)
-  if event_obj is None:
-    return None
-  return ConvertToEvent(event_obj)
 
 async def LorcanaInkMenu(interaction):
   ink_colors = [(1, 'Amber'),

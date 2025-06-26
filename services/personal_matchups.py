@@ -10,5 +10,5 @@ def PersonalMatchups(interaction, start_date, end_date):
   start_date, end_date = BuildDateRange(start_date, end_date, format)
   data = GetPersonalMatchups(store.DiscordId, game, format, start_date, end_date, user_id)
   title = f'{store.StoreName.title()} {game.Name.title()} {format.FormatName.title()} Personal Matchups'
-  headers = ['Opponent Archetype', 'Wins', 'Draws', 'Losses', 'Matches', 'Win %']
+  headers = ['Opponent Archetype', 'Wins', 'Losses', 'Draws', 'Matches', 'Win %']
   return data, title, headers
