@@ -21,7 +21,7 @@ def GetMetagame(game,
         COUNT(*) * 1.0 / SUM(count(*)) OVER () AS Metagame_Percent
       FROM
         fullparticipants fp
-        LEFT JOIN uniquearchetype ua ON fp.event_id = ua.event_id AND fp.player_name = ua.player_name
+        LEFT JOIN uniquearchetypes ua ON fp.event_id = ua.event_id AND fp.player_name = ua.player_name
         INNER JOIN events e ON fp.event_id = e.id
         INNER JOIN stores s ON s.discord_id = e.discord_id
       WHERE
@@ -37,6 +37,8 @@ def GetMetagame(game,
     ORDER BY
     4 DESC
     '''
+
+    print('Command:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows

@@ -73,7 +73,6 @@ def CheckEventPercentage(event):
     if event.LastUpdate + 1 < 4:
       followup = (f'Congratulations! The {str_date} event is now {percent_reported:.0%} reported!', False)
     else:
-      #TODO: If the event is complete, I would like to update my data guild automatically with the metagame and attendance data
       followup = (f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!', True)
     return followup
   return None

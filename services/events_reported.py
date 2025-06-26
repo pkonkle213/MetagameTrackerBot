@@ -6,5 +6,7 @@ def GetMyEventsReported(interaction, discord_id):
   headers = ['Event Date',
              'Store Name',
              'Format',
-             'Percent Reported']
+             'Reported',
+             'Attended',
+             'Percent']
   return data, title, headers

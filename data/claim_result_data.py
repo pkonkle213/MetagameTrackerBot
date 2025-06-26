@@ -1,39 +1,6 @@
 import os
 import psycopg2
 
-#TODO: This needs to inject player_name as it's a string input
-def AddArchetype(event_id,
-                 player_name,
-                 archetype_played,
-                 submitter_id,
-                 submitter_name):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'''
-    INSERT INTO ArchetypeSubmissions
-    (event_id,
-    player_name,
-    archetype_played,
-    date_submitted,
-    submitter_id,
-    submitter_username,
-    reported)
-    VALUES
-    ({event_id},
-    '{player_name}',
-    '{archetype_played}',
-    NOW(),
-    {submitter_id},
-    '{submitter_name}',
-    {False})
-    RETURNING *
-    '''
-    
-    cur.execute(command)
-    conn.commit()
-    row = cur.fetchone()
-    return row
-
 def GetEventReportedPercentage(event_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:

@@ -1,12 +1,12 @@
 import os
 import psycopg2
 
-#TODO: This needs to inject player_name as it's a string input
 def AddArchetype(event_id,
   player_name,
   archetype_played,
   submitter_id,
   submitter_name):
+  criteria = [player_name, archetype_played]
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
@@ -20,8 +20,8 @@ def AddArchetype(event_id,
     reported)
     VALUES
     ({event_id},
-    '{player_name}',
-    '{archetype_played}',
+    '%s',
+    '%s',
     NOW(),
     {submitter_id},
     '{submitter_name}',
@@ -29,7 +29,7 @@ def AddArchetype(event_id,
     RETURNING *
     '''
 
-    cur.execute(command)
+    cur.execute(command, criteria)
     conn.commit()
     row = cur.fetchone()
     return row

@@ -1,5 +1,6 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
+import datetime
 import settings
 import logging
 from services.store_attendance import GetStoreAttendance
@@ -12,6 +13,7 @@ from services.ban_word import AddBadWord, Offenders
 from services.formats import AddStoreFormatMap, GetFormatOptions
 from services.game_mapper import AddStoreGameMap, GetGameOptions
 from interaction_data import GetInteractionData
+from timedposts.automated_updates import UpdateDataGuild
 from services.level_2_stores import GetLevel2Stores
 from text_modal import SubmitDataModal
 from services.metagame import GetMyMetagame
@@ -36,11 +38,11 @@ bot = commands.Bot(command_prefix='?', intents=intents)
 @bot.event
 async def on_ready():
   print(f'Logged on as {format(bot.user)}!')
+  scheduled_post.start()
 
   try: 
     sync_global = await bot.tree.sync()
     print(f'Synced {len(sync_global)} commands globally, allegedly')
-    #TODO: I believe that syncing globally and then syncing for each level2guild is causing errors with the commands that aren't for level2guilds
     for guild in level2guilds:
       sync_store = await bot.tree.sync(guild=guild)
       print(f'Syncing {len(sync_store)} commands for {guild.id}')
@@ -51,22 +53,16 @@ async def on_ready():
   except Exception as error:
     print(f'Error syncing commands: {error}')
 
-def PrintInfo(command):
-  print('Name:', command.name)
-  print('Name Local:', command.name_localizations)
-  print('Description:', command.description)
-  print('Description Local:', command.description_localizations)
-  print('Guild:', command.guild)
-  print('Guild ID:', command.guild_id)
-  print('AllowedContexts:', command.allowed_contexts)
-  print('AllowedInstalls:', command.allowed_installs)
-  print('Application_id:', command.application_id)
-  print('Default member permissions:', command.default_member_permissions)
-  #print('Default permissions:', command.default_permissions)
-  print('Dm_permission:', command.dm_permission)
-  #print('Extras:', command.extras)
-  print('Options:', command.options)
+@tasks.loop(time=datetime.time(hour=13, minute=0, tzinfo=datetime.timezone.utc))
+async def scheduled_post():
+  time_now = datetime.datetime.now(datetime.timezone.utc)
+  if time_now.weekday() == 4:  # Check if it's Friday?
+    await UpdateDataGuild(bot)
 
+@scheduled_post.before_loop
+async def before_scheduled_post():
+  await bot.wait_until_ready()
+    
 def isOwner(interaction: discord.Interaction):
   userid = interaction.user.id
   ownerid = interaction.guild.owner_id if interaction.guild else None
@@ -165,7 +161,6 @@ async def Feedback(interaction: discord.Interaction):
                   description="The new thing I want to test",
                   guild=settings.TESTSTOREGUILD)
 async def ATest(interaction: discord.Interaction):
-  
   #ConvertName(name)
   #PrintInfo(interaction.command)
   #print('Result:', result)

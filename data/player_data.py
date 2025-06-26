@@ -82,7 +82,6 @@ def GetStats(discord_id,
     rows = cur.fetchall()
     return rows
 
-#TODO: This probably needs to be updated to the new fullparticipants view
 def GetTopPlayerData(discord_id,
                      game,
                      format,
