@@ -72,7 +72,6 @@ def GetStore(discord_id, required=True):
       return None
   return tc.ConvertToStore(store_obj[0])
 
-#TODO: All data functions that say 'if store is None' need to be updated to check if the store's guild id is DATAGUILDID
 def FormatInteractionData(data, requirements):
   game = GetGame(data.CategoryId, requirements.Game)
   format = GetFormat(game, data.ChannelId, requirements.Format)

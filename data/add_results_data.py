@@ -33,8 +33,8 @@ def SubmitTable(event_id,
     return row if row else None
 
 def AddResult(event_id,
-  player,
-  submitter_id):
+              player,
+              submitter_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     try:
@@ -44,6 +44,7 @@ def AddResult(event_id,
       VALUES (%s, %s, %s, %s, %s, %s)
       RETURNING *
       '''
+      print('Command:', command)
       cur.execute(command, (event_id,
                       player.PlayerName.upper(),
                       player.Wins,
@@ -56,22 +57,3 @@ def AddResult(event_id,
       return row[0] if row else None
     except psycopg2.errors.UniqueViolation:
       return None
-
-def GetRoundNumber(event_id):
-  criteria = [event_id]
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'''
-    SELECT MAX(round_number)
-    FROM rounddetails
-    WHERE event_id = {event_id}
-    '''
-
-    cur.execute(command, criteria)
-    row = cur.fetchone()
-    if row is None:
-      return 0
-    elif row[0] is None:
-      return 0
-    else:
-      return row[0]

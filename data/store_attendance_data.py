@@ -1,3 +1,4 @@
+import settings
 import os
 import psycopg2
 
@@ -20,7 +21,7 @@ def GetAttendance(store,
     WHERE e.event_date BETWEEN '{start_date}' AND '{end_date}'
       AND e.game_id = {game.ID} 
       AND s.used_for_data = {True}
-      {f'AND e.discord_id = {store.DiscordId}' if store else ''}
+      {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != settings.DATAGUILDID else ''}
       {f'AND e.format_id = {format.ID}' if format else ''}
     GROUP BY e.id
       {', f.name' if not format else ''}

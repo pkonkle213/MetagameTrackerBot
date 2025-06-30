@@ -1,3 +1,4 @@
+import settings
 import os
 import psycopg2
 
@@ -26,7 +27,7 @@ def GetMetagame(game,
         INNER JOIN stores s ON s.discord_id = e.discord_id
       WHERE
         e.event_date BETWEEN '{start_date}' AND '{end_date}'
-        {f'AND e.discord_id = {store.DiscordId}' if store else 'AND s.used_for_data = TRUE'}
+        {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != settings.DATAGUILDID else 'AND s.used_for_data = TRUE'}
         AND e.format_id = {format.ID}
         AND e.game_id = {game.ID}
       GROUP BY
