@@ -39,7 +39,6 @@ def GetMetagame(game,
     4 DESC
     '''
 
-    print('Command:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows

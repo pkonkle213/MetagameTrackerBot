@@ -20,15 +20,15 @@ def AddArchetype(event_id,
     reported)
     VALUES
     ({event_id},
-    '%s',
-    '%s',
+    %s,
+    %s,
     NOW(),
     {submitter_id},
     '{submitter_name}',
     {False})
     RETURNING *
     '''
-
+    
     cur.execute(command, criteria)
     conn.commit()
     row = cur.fetchone()

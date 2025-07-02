@@ -509,6 +509,7 @@ async def Claim(interaction: discord.Interaction,
     Date of event (MM/DD/YYYY)
   """
   await interaction.response.defer(ephemeral=True)
+  #TODO: use name thing to format archetype
   archetype = archetype.strip().encode('ascii', 'ignore').decode('ascii')
   try:
     archetype_submitted, event = await ClaimResult(interaction, player_name, archetype, date)
@@ -531,6 +532,7 @@ async def Claim(interaction: discord.Interaction,
     archetype = {archetype}
     date = {date}
     '''
+    await MessageUser(phil_message, settings.PHILID)
     await Error(interaction, exception, phil_message)
     await interaction.followup.send(exception.message, ephemeral=True)
 
@@ -591,7 +593,6 @@ async def PersonalMatchupReport(interaction: discord.Interaction,
   await interaction.response.defer(ephemeral=True)
   data, title, headers = PersonalMatchups(interaction, start_date, end_date)
   output = BuildTableOutput(title, headers, data)
-  print('Output:', output)
   await interaction.followup.send(output)
 
 @PersonalMatchupReport.error

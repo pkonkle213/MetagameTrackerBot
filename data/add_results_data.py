@@ -44,7 +44,7 @@ def AddResult(event_id,
       VALUES (%s, %s, %s, %s, %s, %s)
       RETURNING *
       '''
-      print('Command:', command)
+      
       cur.execute(command, (event_id,
                       player.PlayerName.upper(),
                       player.Wins,

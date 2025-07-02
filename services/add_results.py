@@ -19,7 +19,6 @@ async def SubmitData(message, data, date_str):
   if event_obj is None:
     event_obj = CreateEvent(date, store.DiscordId, game, format)
   event = ConvertToEvent(event_obj)
-  print('Event:', event)
   if isinstance(data[0],Participant):
     output = AddParticipantResults(event, data, userId)
   elif isinstance(data[0], Round):
@@ -44,8 +43,8 @@ def AddParticipantResults(event, data, submitterId):
 
 def AddRoundResults(event, data, submitterId):
   successes = 0
+  round_number = data[0].Round
   for table in data:
-    
     result = SubmitTable(event.ID,
                          ConvertName(table.P1Name),
                          table.P1Wins,

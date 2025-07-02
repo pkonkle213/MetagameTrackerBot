@@ -22,5 +22,4 @@ async def UpdateDataGuild(bot):
       title = f'{title_name} metagame from {date_start} to {date_end}'
       headers = ['Deck Archetype', 'Meta %', 'Win %', 'Combined %']
       output = BuildTableOutput(title, headers, data)
-      print('Output:', output)
       await channel.send(output)

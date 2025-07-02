@@ -7,7 +7,6 @@ async def SelectMenu(interaction:discord.Interaction,
                      dynamic_options,
                      max_options = 1):
   allowed_options = dynamic_options[:25]
-  print('Allowed options:',allowed_options)
   
   select = Select(
     placeholder=placeholder,
@@ -26,7 +25,6 @@ async def SelectMenu(interaction:discord.Interaction,
   view.add_item(select)
   await interaction.followup.send(message, view=view, ephemeral=True)
   await view.wait()
-  print('Select:', select.values)
   items = FindItems(select.values,
                     allowed_options)
   return items
