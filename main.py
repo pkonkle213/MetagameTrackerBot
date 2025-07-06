@@ -529,6 +529,7 @@ async def Claim(interaction: discord.Interaction,
     phil_message = f'''
     Error in Claim: {exception.message}
     player_name = {player_name}
+    user_name = {interaction.user.display_name}
     archetype = {archetype}
     date = {date}
     '''

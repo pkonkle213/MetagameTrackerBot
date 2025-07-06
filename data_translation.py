@@ -100,7 +100,7 @@ def CompanionRoundByRound(message):
     return None
 
 '''
-TODO:
+TODO: League data
 I would like to receive data meant for leagues and digest it into the database
 What I need to be reported is the match number, the players' names, the players' archetype, and each player's game win count
 ObjReceived(match_number, player1_name, player1_archetype, player1_game_wins, player2_name, player2_archetype, player2_game_wins)
