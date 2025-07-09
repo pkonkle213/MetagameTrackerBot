@@ -39,6 +39,7 @@ def GetStats(discord_id,
               playernames
             WHERE
               submitter_id = {user_id}
+              AND discord_id = {discord_id}
           )
           AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
           AND e.discord_id = {discord_id}
@@ -67,6 +68,7 @@ def GetStats(discord_id,
               playernames
             WHERE
               submitter_id = {user_id}
+              AND discord_id = {discord_id}
           )
           AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
           AND e.discord_id = {discord_id}
@@ -77,7 +79,8 @@ def GetStats(discord_id,
           archetype_played
       )
     '''
-        
+
+    print('Command:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows

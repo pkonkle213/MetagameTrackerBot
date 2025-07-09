@@ -39,7 +39,7 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
    game_id,
    format_id,
    last_update,
-   player_name) = GetEventAndPlayerName(store.DiscordId, date, game, format, player_name)
+   player_name) = GetEventAndPlayerName(store.DiscordId, date_used, game, format, player_name)
   
   if event_id is None:
     raise KnownError('Event not found. Please check the date provided. If date is correct, the event has yet to be submitted. Please alert your store owner.')

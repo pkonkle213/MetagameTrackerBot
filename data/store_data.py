@@ -10,7 +10,7 @@ def RegisterStore(discord_id,
   with conn, conn.cursor() as cur:
     command = f'''
     INSERT INTO Stores (store_name, discord_id, discord_name, owner_id, owner_name, isApproved, used_for_data)
-    VALUES (%s, {discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {False}, {True})
+    VALUES (%s, {discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True}, {True})
     RETURNING *
     '''
     
