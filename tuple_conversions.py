@@ -7,7 +7,7 @@ InteractionDetails = namedtuple("InteractionDetails", ['Game',
                                                        'UserId'])
 
 Format = namedtuple('Format', ['ID',
-                               'FormatName',
+                               'Name',
                                'LastBanUpdate'])
 
 Game = namedtuple('Game', ['ID',

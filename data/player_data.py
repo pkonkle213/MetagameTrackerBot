@@ -80,7 +80,6 @@ def GetStats(discord_id,
       )
     '''
 
-    print('Command:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows

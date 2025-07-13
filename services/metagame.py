@@ -8,7 +8,7 @@ def GetMyMetagame(interaction:Interaction,
   end_date:str):
   game, format, store, userId = GetInteractionData(interaction, game=True, format=True, store=True)  
   date_start, date_end = BuildDateRange(start_date, end_date, format)
-  title_name = format.FormatName.title() if format else game.Name.title()
+  title_name = format.Name.title() if format else game.Name.title()
   data = GetMetagame(game, format, date_start, date_end, store)
   title = f'{title_name} metagame from {date_start} to {date_end}'
   headers = ['Deck Archetype', 'Meta %', 'Win %', 'Combined %']

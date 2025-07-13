@@ -2,9 +2,6 @@ from services.date_functions import GetToday
 import discord
 
 class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
-  #Are these necessary?
-  #data: str = ''
-  #date: str = ''
   is_submitted: bool = False
 
   date_input = discord.ui.TextInput(

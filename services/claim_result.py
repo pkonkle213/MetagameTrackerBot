@@ -32,6 +32,9 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
     inks = await LorcanaInkMenu(interaction)
     archetype = f'{inks} - {archetype}'
   
+  if game.Name.upper() == 'MAGIC' and (format.Name.upper() == 'DRAFT' or format.Name.upper() == 'SEALED'):
+    archetype = await MagicLimited(interaction)
+  
   player_name = ConvertName(player_name)
   (event_id,
    discord_id,
@@ -103,3 +106,19 @@ async def LorcanaInkMenu(interaction):
     return f'{inks[0][1].title()}/{inks[1][1].title()}'
   if len(inks) == 1:
     return f'{inks[0][1].title()}'
+
+async def MagicLimited(interaction):
+  print('Magic Limited')
+  color_selections = [(1,'White','W'),
+                      (2,'Blue','U'),
+                      (3,'Black','B'),
+                      (4,'Red','R'),
+                      (5,'Green','G')]
+  colors = ""
+  drafted_colors = await SelectMenu(interaction, 'Please select the colors you drafted (> 3 cards)', 'Colors Drafted', color_selections, 5)
+  for color in drafted_colors:
+    colors += color[2].upper()
+  splashed_colors = await SelectMenu(interaction, 'Please select the colors you splashed (<= 3 cards)', 'Colors Splashed', color_selections, 5)
+  for color in splashed_colors:
+    colors += color[2].lower()
+  return colors
