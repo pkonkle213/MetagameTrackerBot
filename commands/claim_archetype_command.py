@@ -35,6 +35,7 @@ class ClaimArchetype(commands.Cog):
       if archetype_submitted is None:
         await interaction.followup.send('Unable to submit the archetype. Please try again later.')
       else:
+        #TODO: Send archetype to new channel in bot
         await interaction.followup.send(f"Thank you for submitting the archetype for {event.EventDate.strftime('%B %d')}'s event!",ephemeral=True)
         followup = CheckEventPercentage(event)
         if followup:

@@ -6,7 +6,7 @@ from services.events_reported import GetMyEventsReported
 from output_builder import BuildTableOutput
 from checks import isPhil
 
-TARGET_GUILDS = [settings.TESTSTOREGUILD.id]
+TARGET_GUILDS = [settings.BOTGUILD.id]
 
 class EventsReported(commands.Cog):
   def __init__(self, bot):

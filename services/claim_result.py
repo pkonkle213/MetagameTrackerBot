@@ -9,7 +9,7 @@ from data.archetype_data import AddArchetype
 from data.event_data import GetEventMeta
 from services.name_services import ConvertName
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
-from tuple_conversions import ConvertToEvent, Event
+from tuple_conversions import Event
 from interaction_data import GetInteractionData
 
 async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, date:str):
@@ -115,10 +115,12 @@ async def MagicLimited(interaction):
                       (4,'Red','R'),
                       (5,'Green','G')]
   colors = ""
-  drafted_colors = await SelectMenu(interaction, 'Please select the colors you drafted (> 3 cards)', 'Colors Drafted', color_selections, 5)
+  drafted_colors = await SelectMenu(interaction, 'Please select the main colors of your deck (> 3 cards)', 'Main Colors', color_selections, 5)
   for color in drafted_colors:
     colors += color[2].upper()
   splashed_colors = await SelectMenu(interaction, 'Please select the colors you splashed (<= 3 cards)', 'Colors Splashed', color_selections, 5)
   for color in splashed_colors:
     colors += color[2].lower()
+  if len(colors) > 5:
+    raise KnownError('Too many colors selected, please try again.')
   return colors

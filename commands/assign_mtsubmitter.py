@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
+from custom_errors import KnownError
+from discord_messages import ErrorMessage
 import settings
 from services.store_services import AssignMTSubmitterRole
 
@@ -27,8 +29,12 @@ class AssignMTSubitter(commands.Cog):
       The discord id of the guild to assign the role in
     '''
     await interaction.response.defer()
-    output = await AssignMTSubmitterRole(bot, user_id, guild_id)
-    await interaction.followup.send(output)
+    try:
+      output = await AssignMTSubmitterRole(self.bot, user_id, guild_id)
+      await interaction.followup.send(output)
+    except KnownError as exception:
+      await interaction.followup.send(exception.message)
+      await ErrorMessage(self.bot, exception.message) #TODO: I wonder if this gives me the right message
 
 async def setup(bot):
   await bot.add_cog(AssignMTSubitter(bot))
