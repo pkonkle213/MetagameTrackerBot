@@ -3,7 +3,7 @@ import settings
 from discord.ext import commands
 from discord import app_commands
 from data_translation import ConvertMessageToParticipants, Participant
-from discord_messages import MessageChannel, ErrorMessage
+from discord_messages import MessageChannel, Error, ErrorMessage
 from text_modal import SubmitDataModal
 from services.add_results import SubmitData
 
@@ -29,7 +29,7 @@ class SubmitDataCommand(commands.Cog):
         await ErrorMessage(self.bot, modal.submitted_message)
       else:
         date = modal.submitted_date
-        
+
         message_type = 'participants' if isinstance(data[0], Participant) else 'tables'
   
         await interaction.followup.send(f"Attempting to add {len(data)} {message_type} to event", ephemeral=True)

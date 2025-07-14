@@ -20,17 +20,16 @@ class RegisterStore(commands.Cog):
       The name of the store
     """
     await interaction.response.defer()
-    store = RegisterNewStore(interaction, store_name)
-    if store is None:
-      raise Exception('Unable to register store')
-    await SetPermissions(interaction)
-    await AssignStoreOwnerRoleInBotGuild(self.bot, interaction)
-    await interaction.followup.send(f'Registered {store_name.title()} with discord {store.DiscordName.title()} with owner {interaction.user}')
-
-  @Register.error
-  async def register_error(self, interaction: Interaction, error):
-    await interaction.followup.send('Unable to complete registration for the store. This has been reported.')
-    await Error(interaction, error)
-
+    try:
+      store = RegisterNewStore(interaction, store_name)
+      if store is None:
+        raise Exception('Unable to register store')
+      await SetPermissions(interaction)
+      await AssignStoreOwnerRoleInBotGuild(self.bot, interaction)
+      await interaction.followup.send(f'Registered {store_name.title()} with discord {store.DiscordName.title()} with owner {interaction.user}')
+    except Exception as exception:
+      await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
+      await Error(self.bot, exception)
+  
 async def setup(bot):
   await bot.add_cog(RegisterStore(bot))

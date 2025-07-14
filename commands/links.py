@@ -10,6 +10,7 @@ class Links(commands.Cog):
   @app_commands.command(name="getbot",
     description="Display the url to install the bot")
   @app_commands.guilds(settings.BOTGUILD.id)
+  @app_commands.guild_only()
   async def GetBot(self, interaction: Interaction):
     await interaction.response.send_message(f'Here is the link to install the bot: {settings.MYBOTURL}')
   
@@ -20,8 +21,8 @@ class Links(commands.Cog):
   
   @app_commands.command(name="getsop",
     description="Display the url to get the SOP")
-  @app_commands.guilds(settings.BOTGUILD.id)
   @app_commands.guild_only()
+  @app_commands.guilds(settings.BOTGUILD.id)
   async def GetSOP(self, interaction: Interaction):
     await interaction.response.send_message(f'Here is the link to my living SOP: {settings.SOPURL}')
   

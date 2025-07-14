@@ -29,5 +29,13 @@ async def ErrorMessage(bot, message):
                        settings.BOTGUILD.id,
                        settings.ERRORCHANNELID)
 
-async def Error(interaction: discord.Interaction, error):
-  ...
+async def Error(bot, error:Exception):
+  message =  f"Line number: {error.__traceback__.tb_lineno}"
+  message += f"\nFile: {error.__traceback__.tb_frame.f_code.co_filename}"
+  message += f"\nLine: {error.__traceback__}"
+  message += f"\nError: {error}"
+  message += f"\nError type: {type(error)}"
+  message += f"\nError args: {error.args}"
+  message += f"\nError __cause__: {error.__cause__}"
+
+  await ErrorMessage(bot, message)

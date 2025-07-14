@@ -2,9 +2,10 @@ import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 from custom_errors import KnownError
-from discord_messages import ErrorMessage
+from discord_messages import Error
 import settings
 from services.store_services import AssignMTSubmitterRole
+from checks import isPhil
 
 TARGET_GUILDS = [settings.TESTSTOREGUILD.id]
 
@@ -16,6 +17,7 @@ class AssignMTSubitter(commands.Cog):
   description='Assign the MTSubmitter role to a user')
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   @app_commands.guild_only()
+  @app_commands.check(isPhil)
   async def AssignMTSubmitter(self,
                               interaction: Interaction,
                               user_id: str,
@@ -34,7 +36,9 @@ class AssignMTSubitter(commands.Cog):
       await interaction.followup.send(output)
     except KnownError as exception:
       await interaction.followup.send(exception.message)
-      await ErrorMessage(self.bot, exception.message) #TODO: I wonder if this gives me the right message
+    except Exception as exception:
+      await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
+      await Error(self.bot, exception)
 
 async def setup(bot):
   await bot.add_cog(AssignMTSubitter(bot))

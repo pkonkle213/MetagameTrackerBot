@@ -54,8 +54,9 @@ class ClaimArchetype(commands.Cog):
       date = {date}
       '''
       await MessageUser(self.bot, phil_message, settings.PHILID)
-      await Error(interaction, exception)
-      await interaction.followup.send(exception.message, ephemeral=True)
+    except Exception as exception:  
+      await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
+      await Error(self.bot, exception)
 
 async def setup(bot):
   await bot.add_cog(ClaimArchetype(bot))
