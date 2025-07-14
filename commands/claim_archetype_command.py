@@ -1,5 +1,5 @@
 from discord.ext import commands
-from discord import app_commands, Interaction
+from discord import Message, app_commands, Interaction
 import settings
 from services.claim_result import ClaimResult, CheckEventPercentage, OneEvent
 from custom_errors import KnownError
@@ -36,15 +36,34 @@ class ClaimArchetype(commands.Cog):
         await interaction.followup.send('Unable to submit the archetype. Please try again later.')
       else:
         #TODO: Send archetype to new channel in bot
+        message = f'''
+        Submitter: {interaction.user.display_name}
+        Archetype submitted: {archetype_submitted[3].title()}
+        Player: {archetype_submitted[2].title()}
+        Date: {date}  
+        Store Discord Name: {interaction.guild.name}
+        Format channel name: {interaction.channel.name}
+        Format channel id: {interaction.channel_id}
+        '''
+        await MessageChannel(self.bot,
+                             message,
+                             settings.BOTGUILD.id,
+                             settings.CLAIMCHANNEL)
         await interaction.followup.send(f"Thank you for submitting the archetype for {event.EventDate.strftime('%B %d')}'s event!",ephemeral=True)
         followup = CheckEventPercentage(event)
         if followup:
           if followup[1]:
             title, headers, data = OneEvent(event)
             output = BuildTableOutput(title, headers, data)
-            await MessageChannel(self.bot, output, interaction.guild_id, interaction.channel_id)
+            await MessageChannel(self.bot,
+                                 output,
+                                 interaction.guild_id,
+                                 interaction.channel_id)
           else:
-            await MessageChannel(self.bot, followup[0], interaction.guild_id, interaction.channel_id)
+            await MessageChannel(self.bot,
+                                 followup[0],
+                                 interaction.guild_id,
+                                 interaction.channel_id)
     except KnownError as exception:
       phil_message = f'''
       Error in Claim: {exception.message}
