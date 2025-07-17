@@ -5,7 +5,7 @@ import settings
 from services.demonstration_functions import NewDemo
 from discord_messages import Error
 
-TARGET_GUILDS = [settings.TESTSTOREGUILD.id]
+TARGET_GUILDS = [settings.BOTGUILD.id]
 
 class NewDemoCommand(commands.Cog):
   def __init__(self, bot):

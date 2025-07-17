@@ -56,13 +56,16 @@ def CreateEvent(event_date,
     event = cur.fetchone()
     return event if event else None
 
+#TODO: Update this using the full participants view
 def GetEventMeta(event_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
       archetype_played,
-      wins
+      wins,
+      losses,
+      draws
     FROM
       (
         SELECT
@@ -142,7 +145,7 @@ def GetEventMeta(event_id):
           id DESC
       ) ap ON ap.event_id = x.event_id
       AND ap.player_name = x.player_name
-    ORDER BY wins desc
+    ORDER BY wins DESC, draws DESC
     '''
     
     cur.execute(command)

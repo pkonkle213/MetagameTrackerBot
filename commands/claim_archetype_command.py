@@ -1,5 +1,5 @@
 from discord.ext import commands
-from discord import Message, app_commands, Interaction
+from discord import app_commands, Interaction
 import settings
 from services.claim_result import ClaimResult, CheckEventPercentage, OneEvent
 from custom_errors import KnownError
@@ -35,7 +35,6 @@ class ClaimArchetype(commands.Cog):
       if archetype_submitted is None:
         await interaction.followup.send('Unable to submit the archetype. Please try again later.')
       else:
-        #TODO: Send archetype to new channel in bot
         message = f'''
         Submitter: {interaction.user.display_name}
         Archetype submitted: {archetype_submitted[3].title()}
@@ -64,6 +63,8 @@ class ClaimArchetype(commands.Cog):
                                  followup[0],
                                  interaction.guild_id,
                                  interaction.channel_id)
+    except ValueError:
+      await interaction.followup.send("The date provided doesn't match the MM/DD/YYYY formatting. Please try again", ephemeral=True)
     except KnownError as exception:
       phil_message = f'''
       Error in Claim: {exception.message}
@@ -71,7 +72,10 @@ class ClaimArchetype(commands.Cog):
       user_name = {interaction.user.display_name}
       archetype = {archetype}
       date = {date}
+      Discord guild name = {interaction.guild.name}
+      Discord channel name = {interaction.channel.name}
       '''
+      await interaction.followup.send(exception.message, ephemeral=True)
       await MessageUser(self.bot, phil_message, settings.PHILID)
     except Exception as exception:  
       await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)

@@ -37,7 +37,7 @@ def GetStoreReportedPercentage(discord_id):
       INNER JOIN events e ON x.id = e.id
       INNER JOIN formats f ON f.id = e.format_id
       INNER JOIN stores s ON s.discord_id = e.discord_id
-    {f'WHERE e.discord_id = {discord_id}' if discord_id != 0 else ''}
+    {f'WHERE e.discord_id = {discord_id}' if discord_id != 0 else f'WHERE s.used_for_data = {True}'}
     GROUP BY
       e.event_date,
       s.store_name,

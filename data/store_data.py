@@ -36,6 +36,7 @@ def SetStoreTrackingStatus(approval_status,
     store = cur.fetchone()
     return store
 
+#TODO: Update with fullparticipants view. It needs a second command for fullroundsresults view
 def GetStoreData(store, game, format, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
@@ -83,7 +84,7 @@ def GetStoreData(store, game, format, start_date, end_date):
               rounddetails rd
               INNER JOIN events e ON e.id = rd.event_id
             WHERE
-              e.discord_id = 1210746744602890310
+              e.discord_id = {store.DiscordId}
             UNION ALL
             SELECT
               event_id,
@@ -97,7 +98,7 @@ def GetStoreData(store, game, format, start_date, end_date):
               rounddetails rd
               INNER JOIN events e ON e.id = rd.event_id
             WHERE
-              e.discord_id = 1210746744602890310
+              e.discord_id = {store.DiscordId}
               AND player2_name != 'BYE'
             ORDER BY
               player_name
@@ -116,7 +117,7 @@ def GetStoreData(store, game, format, start_date, end_date):
           participants p
           INNER JOIN events e ON e.id = p.event_id
         WHERE
-          e.discord_id = 1210746744602890310
+          e.discord_id = {store.DiscordId}
       ) p
       INNER JOIN events e ON e.id = p.event_id
       INNER JOIN cardgames c ON c.id = e.game_id

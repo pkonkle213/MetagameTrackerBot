@@ -29,13 +29,16 @@ async def ErrorMessage(bot, message):
                        settings.BOTGUILD.id,
                        settings.ERRORCHANNELID)
 
-async def Error(bot, error:Exception):
+async def Error(bot, error:Exception, criteria = ''):
   message =  f"Line number: {error.__traceback__.tb_lineno}"
+  if len(criteria)>0:
+    message += f"\nCriteria: {criteria}"
   message += f"\nFile: {error.__traceback__.tb_frame.f_code.co_filename}"
   message += f"\nLine: {error.__traceback__}"
   message += f"\nError: {error}"
   message += f"\nError type: {type(error)}"
   message += f"\nError args: {error.args}"
   message += f"\nError __cause__: {error.__cause__}"
+  message += f"\nError __context__: {error.__context__}"
 
   await ErrorMessage(bot, message)

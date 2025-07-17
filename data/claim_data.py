@@ -17,11 +17,11 @@ def GetEventAndPlayerName(discord_id, date, game, format, player_name):
       (
         SELECT
           e.id,
-         e.discord_id,
-         e.event_date,
-     e.game_id,
-     e.format_id,
-     e.last_update
+          e.discord_id,
+          e.event_date,
+          e.game_id,
+          e.format_id,
+          e.last_update
         FROM
           events e
         WHERE

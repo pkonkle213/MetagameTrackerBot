@@ -34,7 +34,8 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
   
   if game.Name.upper() == 'MAGIC' and (format.Name.upper() == 'DRAFT' or format.Name.upper() == 'SEALED'):
     archetype = await MagicLimited(interaction)
-  
+
+  #Overwriting the player_name with the name in the database to confirm if player_name is in the database. Maybe I rename the variables to provided_player_name and confirmed_player_name?
   player_name = ConvertName(player_name)
   (event_id,
    discord_id,
@@ -83,7 +84,7 @@ def CheckEventPercentage(event):
 def OneEvent(event):
   event_meta = GetEventMeta(event.ID)
   title = f"{event.EventDate.strftime('%B %d')} Meta"
-  headers = ['Archetype', 'Wins']
+  headers = ['Archetype', 'Wins', 'Losses', 'Draws']
   data = event_meta
   return title, headers, data
 
