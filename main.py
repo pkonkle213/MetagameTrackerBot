@@ -7,12 +7,9 @@ import logging
 from timedposts.automated_updates import UpdateDataGuild
 from services.level_2_stores import GetLevel2Stores
 
-intents = discord.Intents.default()
-intents.message_content = True
-intents.members = True
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 
-bot = commands.Bot(command_prefix='?', intents=intents)
+bot = commands.Bot(command_prefix='?', intents=discord.Intents.all())
 BASE_DIR = pathlib.Path(__file__).parent
 CMDS_DIR = BASE_DIR / "commands"
 

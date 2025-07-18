@@ -30,13 +30,13 @@ def RegisterNewStore(interaction: discord.Interaction, store_name: str):
     raise Exception('No owner found')
   owner_id = owner.id
   owner_name = owner.display_name.upper()
-  
+
+  #TODO: Name of store and discord name shouldn't have special characters
   storeobj = RegisterStore(discord_id,
                            discord_name,
                            name_of_store,
                            owner_id,
                            owner_name)
-  
   return ConvertToStore(storeobj)
 
 async def SetPermissions(interaction):
@@ -45,13 +45,12 @@ async def SetPermissions(interaction):
                                   interaction.guild.roles)
   mtsubmitter_role = discord.utils.find(lambda r: r.name == 'MTSubmitter',
                                         interaction.guild.roles)
-
   #TODO: This is giving me a "Missing Permissions" error even when manage_roles is true??
   if owner_role is None:
     owner_role = await interaction.guild.create_role(name="Owner",
                                                      permissions=discord.Permissions.all())
   await owner.add_roles(owner_role)
-
+  
   if mtsubmitter_role is None:
     mtsubmitter_role = await interaction.guild.create_role(name="MTSubmitter",
                                                            permissions=discord.Permissions.all())

@@ -3,6 +3,7 @@ from discord.ext import commands
 from checks import isOwner
 from services.store_services import RegisterNewStore, AssignStoreOwnerRoleInBotGuild, SetPermissions
 from discord_messages import Error
+from psycopg2.errors import UniqueViolation
 
 class RegisterStore(commands.Cog):
   def __init__(self, bot):
@@ -27,9 +28,12 @@ class RegisterStore(commands.Cog):
       await SetPermissions(interaction)
       await AssignStoreOwnerRoleInBotGuild(self.bot, interaction)
       await interaction.followup.send(f'Registered {store_name.title()} with discord {store.DiscordName.title()} with owner {interaction.user}')
+    except UniqueViolation as exception:
+      await interaction.followup.send("This store is already registered. If you believe this is an error, please contact the bot owner via the bot's discord.", ephemeral=True)
     except Exception as exception:
       await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
       await Error(self.bot, exception)
+      #TODO: This should also delete the store from the database
   
 async def setup(bot):
   await bot.add_cog(RegisterStore(bot))

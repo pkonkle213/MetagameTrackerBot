@@ -9,8 +9,8 @@ def RegisterStore(discord_id,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
-    INSERT INTO Stores (store_name, discord_id, discord_name, owner_id, owner_name, isApproved, used_for_data)
-    VALUES (%s, {discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True}, {True})
+    INSERT INTO Stores (store_name, discord_id, discord_name, owner_id, owner_name, isApproved, used_for_data, payment_level)
+    VALUES (%s, {discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True}, {True},0)
     RETURNING *
     '''
     
