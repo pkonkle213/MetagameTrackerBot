@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 import settings
-from services.events_reported import GetMyEventsReported
+from services.events_reported_services import GetMyEventsReported
 from output_builder import BuildTableOutput
 from checks import isPhil
 from discord_messages import Error

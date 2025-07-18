@@ -5,7 +5,7 @@ from discord import app_commands
 from data_translation import ConvertMessageToParticipants, Participant
 from discord_messages import MessageChannel, ErrorMessage
 from text_modal import SubmitDataModal
-from services.add_results import SubmitData
+from services.add_results_services import SubmitData
 
 class SubmitDataCommand(commands.Cog):
   def __init__(self, bot):

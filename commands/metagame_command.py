@@ -1,5 +1,5 @@
 from discord import app_commands, Interaction
-from services.metagame import GetMyMetagame
+from services.metagame_services import GetMyMetagame
 from output_builder import BuildTableOutput
 from discord_messages import Error
 

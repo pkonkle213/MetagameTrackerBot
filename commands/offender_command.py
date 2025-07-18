@@ -1,6 +1,6 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
-from services.ban_word import Offenders
+from services.ban_word_services import Offenders
 from output_builder import BuildTableOutput
 from discord_messages import Error
 

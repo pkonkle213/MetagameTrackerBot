@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
 import settings
-from services.claim_result import ClaimResult, CheckEventPercentage, OneEvent
+from services.claim_result_services import ClaimResult, CheckEventPercentage, OneEvent
 from custom_errors import KnownError
 from discord_messages import MessageChannel, MessageUser, Error
 from output_builder import BuildTableOutput

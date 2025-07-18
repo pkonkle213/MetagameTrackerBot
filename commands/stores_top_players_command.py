@@ -1,6 +1,6 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
-from services.top_players import GetTopPlayers
+from services.top_players_services import GetTopPlayers
 from output_builder import BuildTableOutput
 from discord_messages import Error
 

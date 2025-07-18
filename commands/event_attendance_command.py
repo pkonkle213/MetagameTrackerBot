@@ -1,6 +1,6 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
-from services.store_attendance import GetStoreAttendance
+from services.store_attendance_services import GetStoreAttendance
 from output_builder import BuildTableOutput
 from discord_messages import Error
 

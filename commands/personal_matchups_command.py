@@ -1,7 +1,6 @@
-import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
-from services.personal_matchups import PersonalMatchups
+from services.personal_matchups_services import PersonalMatchups
 from output_builder import BuildTableOutput
 from discord_messages import Error
 

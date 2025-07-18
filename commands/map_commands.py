@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
-from services.formats import AddStoreFormatMap, GetFormatOptions
-from services.game_mapper import AddStoreGameMap, GetGameOptions
+from services.formats_services import AddStoreFormatMap, GetFormatOptions
+from services.game_mapper_services import AddStoreGameMap, GetGameOptions
 from select_menu_bones import SelectMenu
 from discord_messages import Error
 

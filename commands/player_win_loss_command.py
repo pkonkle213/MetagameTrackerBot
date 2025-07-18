@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
 from output_builder import BuildTableOutput
-from services.player_win_record import PlayRecord
+from services.player_win_record_services import PlayRecord
 from discord_messages import Error
 
 class PlayerWinRecord(commands.Cog):

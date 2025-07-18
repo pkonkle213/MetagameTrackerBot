@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
 from checks import isOwner
-from services.store_data_download import GetDataReport
+from services.store_data_download_services import GetDataReport
 from discord_messages import MessageUser, Error
 
 class DownloadStoreData(commands.Cog):

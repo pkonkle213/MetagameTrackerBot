@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from custom_errors import KnownError
-from services.ban_word import AddBadWord
+from services.ban_word_services import AddBadWord
 from discord_messages import Error
 
 class BanWord(commands.Cog):

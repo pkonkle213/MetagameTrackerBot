@@ -1,6 +1,6 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
-from services.unknown_archetypes import GetAllUnknown
+from services.unknown_archetypes_services import GetAllUnknown
 from output_builder import BuildTableOutput
 from discord_messages import Error
 
