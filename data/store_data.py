@@ -11,7 +11,7 @@ def RegisterStore(discord_id,
     command = f'''
     INSERT INTO Stores (store_name, discord_id, discord_name, owner_id, owner_name, isApproved, used_for_data, payment_level)
     VALUES (%s, {discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True}, {True},0)
-    RETURNING *
+    RETURNING discord_id, discord_name, store_name, owner_id, owner_name, isApproved, used_for_data, payment_level;
     '''
     
     cur.execute(command, [store_name])

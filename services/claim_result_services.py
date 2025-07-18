@@ -109,7 +109,6 @@ async def LorcanaInkMenu(interaction):
     return f'{inks[0][1].title()}'
 
 async def MagicLimited(interaction):
-  print('Magic Limited')
   color_selections = [(1,'White','W'),
                       (2,'Blue','U'),
                       (3,'Black','B'),

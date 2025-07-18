@@ -16,13 +16,13 @@ def GetFormatByMap(channel_id):
 
 def GetStoreByDiscord(discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  command =  f'''
-  SELECT discord_id, discord_name, store_name, owner_id, owner_name, isApproved, used_for_data, payment_level
-  FROM Stores
-  WHERE discord_id = {discord_id}
-  '''
-
   with conn, conn.cursor() as cur:
+    command =  f'''
+    SELECT discord_id, discord_name, store_name, owner_id, owner_name, isApproved, used_for_data, payment_level
+    FROM Stores
+    WHERE discord_id = {discord_id}
+    '''
+
     cur.execute(command)
     rows = cur.fetchall()
     return rows if rows else None
@@ -36,6 +36,7 @@ def GetGameByMap(category_id:int):
     INNER JOIN gamecategorymaps gc ON g.id = gc.game_id
     WHERE category_id = {category_id}
     '''
+    
     cur.execute(command)
     row = cur.fetchone()
     return row

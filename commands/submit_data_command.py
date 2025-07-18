@@ -11,7 +11,7 @@ class SubmitDataCommand(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
-  #TODO: Fix
+  #TODO: Fix?
   def BuildMessage(self, interaction, message):
     ...
 
@@ -37,7 +37,7 @@ class SubmitDataCommand(commands.Cog):
         Channel id: {interaction.channel.id}
         Author name: {interaction.user.name}
         Author id: {interaction.user.id}
-        Date: {date}
+        Date: {modal.submitted_date}
         Message content:\n{modal.submitted_message}
         """
         await ErrorMessage(self.bot, modal.submitted_message)
@@ -58,9 +58,13 @@ class SubmitDataCommand(commands.Cog):
         Message content:\n{modal.submitted_message}
         """
         await MessageChannel(self.bot, msg, settings.BOTGUILD.id, settings.BOTEVENTINPUTID)
-        output = await SubmitData(interaction, data, date)
-        await interaction.followup.send(output)
-
+        output, event_created = await SubmitData(interaction, data, date)
+        await interaction.followup.send(output, ephemeral=True)
+        if event_created:
+          await MessageChannel(self.bot,
+                               f"New data for {event_created.strftime('%B %d')}'s event have been submitted! Use the `/claim` command to input your archetype!",
+                               interaction.guild_id,
+                               interaction.channel_id)
 
 
 async def setup(bot):

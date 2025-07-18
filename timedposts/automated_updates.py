@@ -4,11 +4,12 @@ from timedposts.automated_updates_data import GetDataChannels
 from interaction_data import GetGame, GetFormat
 from services.date_functions import BuildDateRange
 from data.metagame_data import GetMetagame
+from interaction_data import GetStore
 
 async def UpdateDataGuild(bot):
   data_guild_id = settings.DATAGUILDID
   target_channels = GetDataChannels(data_guild_id)
-  store = None #GetStore(data_guild_id, True) 
+  store = GetStore(data_guild_id)
   for channel in target_channels:
     game = GetGame(channel[1], True)
     format = GetFormat(game, channel[0], True)

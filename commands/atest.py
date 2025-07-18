@@ -4,6 +4,7 @@ from discord import app_commands, Interaction
 from custom_errors import KnownError
 from discord_messages import Error
 import settings
+from timedposts.automated_updates import UpdateDataGuild
 
 #TODO: This is an interesting way to get Level 2 stores, if they exist in the future
 TARGET_GUILDS = [settings.TESTSTOREGUILD.id]
@@ -17,11 +18,7 @@ class ATest(commands.Cog):
   @app_commands.guild_only()
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   async def Testing(self, interaction: Interaction):
-    try:
-      await interaction.response.send_message(f"Hello, {interaction.user.display_name}!")
-      thing = 1/0
-    except Exception as exception:
-      await Error(self.bot, exception)
+    await UpdateDataGuild(self.bot)
   
 async def setup(bot):
   await bot.add_cog(ATest(bot))

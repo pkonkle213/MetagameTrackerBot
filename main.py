@@ -39,8 +39,7 @@ async def on_ready():
   except Exception as error:
     print(f'Error syncing commands: {error}')
 
-#TODO: The automated commands are not working?
-@tasks.loop(time=datetime.time(hour=18, minute=0, tzinfo=datetime.timezone.utc)) #15:00 UTC is 9:00 AM EST
+@tasks.loop(time=datetime.time(hour=14, minute=00, tzinfo=datetime.timezone.utc)) #13:00 UTC is 9:00 AM EST
 async def scheduled_post():
   time_now = datetime.datetime.now(datetime.timezone.utc)
   if time_now.weekday() == 4:  # Check if it's Friday, 0 = Monday
@@ -51,6 +50,7 @@ async def before_scheduled_post():
   await bot.wait_until_ready()
 
 level2guilds = GetLevel2Stores()
+print('Level 2 guilds:', level2guilds)
   
 if settings.DISCORDTOKEN:
   bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)
