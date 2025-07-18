@@ -25,10 +25,9 @@ def GetMetagame(game,
         fullparticipants fp
         LEFT JOIN uniquearchetypes ua ON fp.event_id = ua.event_id AND fp.player_name = ua.player_name
         INNER JOIN events e ON fp.event_id = e.id
-        INNER JOIN stores s ON s.discord_id = e.discord_id
       WHERE
         e.event_date BETWEEN '{start_date}' AND '{end_date}'
-        {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != settings.DATAGUILDID else 'AND s.used_for_data = TRUE'}
+        {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != settings.DATAGUILDID else ''}
         AND e.format_id = {format.ID}
         AND e.game_id = {game.ID}
       GROUP BY
@@ -40,6 +39,7 @@ def GetMetagame(game,
     {sort_order} DESC
     '''
 
+    print('Command: ', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows

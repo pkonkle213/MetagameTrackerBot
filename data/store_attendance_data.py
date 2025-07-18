@@ -23,7 +23,7 @@ def GetAttendance(store,
       fr.event_date BETWEEN '{start_date}' AND '{end_date}'
       AND s.used_for_data = {True}
       AND fr.game_id = {game.ID} 
-      AND fr.format_id = 1
+      AND fr.format_id = {format.ID}
       {f'AND f.discord_id = {store.DiscordId}' if store.DiscordId != DATAGUILDID else ''}
     GROUP BY
       {'fr.format_id,' if not format else ''}
@@ -33,6 +33,32 @@ def GetAttendance(store,
     ORDER BY
       fr.event_date DESC
     '''
+
+    f'''
+    SELECT
+      e.event_date,
+      {'s.store_name,' if store.DiscordId == DATAGUILDID else ''}
+      {'f.name,' if not format else ''}
+      COUNT(*)
+    FROM
+      fullparticipants fp
+      INNER JOIN events e ON e.id = fp.event_id
+      INNER JOIN Stores s ON s.discord_id = e.discord_id
+      INNER JOIN Formats f ON f.id = e.format_id
+    WHERE
+      e.event_date BETWEEN '{start_date}' AND '{end_date}'
+      AND e.game_id = = {game.ID}
+      AND e.format_id = {format.ID}
+      {f'AND f.discord_id = {store.DiscordId}' if store.DiscordId != DATAGUILDID else ''}
+    GROUP BY
+      {'fr.format_id,' if not format else ''}
+      {'s.store_name,' if store.DiscordId == DATAGUILDID else ''}
+      e.event_date,
+      e.game_id
+    ORDER BY
+      e.event_date DESC
+    '''
+    
     
     cur.execute(command)
     rows = cur.fetchall()
