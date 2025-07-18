@@ -94,7 +94,8 @@ def GetAnalysis(discord_id, game_id, format_id, weeks, isMeta, dates):
       WHERE EndingRange >=.02 OR BeginningRange >= .02
       ORDER BY Shift DESC, archetype_played
       """
-    cur.execute(command)
-    rows = cur.fetchall()
-    cur.close()
-    return rows
+    
+      cur.execute(command)
+      rows = cur.fetchall()
+      cur.close()
+      return rows

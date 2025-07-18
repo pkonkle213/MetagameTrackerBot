@@ -1,18 +1,15 @@
-from discord.ext import commands
 from discord import app_commands, Interaction
 from services.metagame import GetMyMetagame
 from output_builder import BuildTableOutput
 from discord_messages import Error
 
-class MetagameCommand(commands.Cog):
-  def __init__(self, bot):
-    self.bot = bot
-
-  @app_commands.command(name="metagame",
-                    description="Get the metagame")
-  async def Metagame(self, interaction: Interaction,
-     start_date: str = '',
-     end_date: str = ''):
+class MetagameGroup(app_commands.Group):
+  @app_commands.command(name="combined",
+                        description="Get the metagame sorted by a combined metric")
+  async def Combined(self,
+                   interaction: Interaction,
+                   start_date: str = '',
+                   end_date: str = ''):
     """
     Parameters
     ----------
@@ -22,17 +19,36 @@ class MetagameCommand(commands.Cog):
       The end date of the metagame (MM/DD/YYYY)
     """
     await interaction.response.defer()
-    try:
-      data, title, headers = GetMyMetagame(interaction, start_date, end_date)
-      output = ''
-      if data is None:
-        output = 'No metagame data found for this store and format'
-      else:
-        output = BuildTableOutput(title, headers, data)
-        await interaction.followup.send(output)
-    except Exception as exception:
-      await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
-      await Error(self.bot, exception)
+    output = await GetTheMetagame(interaction, start_date, end_date, 4)
+    await interaction.followup.send(output)
+  
+  @app_commands.command(name="metashare",
+                        description="Get the metagame sorted by metagame share")
+  async def Metashare(self,
+                     interaction: Interaction,
+                     start_date: str = '',
+                     end_date: str = ''):
+    """
+    Parameters
+    ----------
+    start_date: string
+      The start date of the metagame (MM/DD/YYYY)
+    end_date: string
+      The end date of the metagame (MM/DD/YYYY)
+    """
+    await interaction.response.defer()
+    output = await GetTheMetagame(interaction, start_date, end_date, 2)
+    await interaction.followup.send(output)
+
+async def GetTheMetagame(interaction, start_date, end_date, sort_order):
+  try:
+    data, title, headers = GetMyMetagame(interaction, start_date, end_date, sort_order)
+    if data is None or len(data) == 0:
+      return 'No metagame data found for this store and format'
+    return BuildTableOutput(title, headers, data)
+  except Exception as exception:
+    await Error(interaction, exception)
+    return "Something unexpected went wrong. It's been reported. Please try again in a few hours."
 
 async def setup(bot):
-  await bot.add_cog(MetagameCommand(bot))
+  bot.tree.add_command(MetagameGroup(name='metagame'))
