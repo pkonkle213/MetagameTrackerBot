@@ -2,12 +2,13 @@ from discord import Interaction
 from services.date_functions import BuildDateRange
 from interaction_data import GetInteractionData
 from data.store_attendance_data import GetAttendance
+from settings import DATAGUILDID
 
 def GetStoreAttendance(interaction:Interaction, start_date, end_date):
   game, format, store, userId = GetInteractionData(interaction,
                                                    game=True)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
-
+  
   data = GetAttendance(store,
                        game,
                        format,
@@ -18,7 +19,7 @@ def GetStoreAttendance(interaction:Interaction, start_date, end_date):
   headers = ['Date', 'Players']
   if not format:
     headers.insert(1, 'Format')
-  if not store:
+  if store.DiscordId == DATAGUILDID:
     headers.insert(1, 'Store')
   
   return (data, title, headers)

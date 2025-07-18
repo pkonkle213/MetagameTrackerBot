@@ -3,7 +3,7 @@ from custom_errors import KnownError
 from data.claim_data import GetEventAndPlayerName
 from services.date_functions import ConvertToDate, GetToday, DateDifference
 from select_menu_bones import SelectMenu
-from services.ban_word import CanSubmitArchetypes, ContainsBadWord
+from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
 from data.archetype_data import AddArchetype
 from data.event_data import GetEventMeta
