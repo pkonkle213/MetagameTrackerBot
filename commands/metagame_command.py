@@ -42,10 +42,10 @@ class MetagameGroup(app_commands.Group):
 
 async def GetTheMetagame(interaction, start_date, end_date, sort_order):
   try:
-    data, title, headers = GetMyMetagame(interaction, start_date, end_date, sort_order)
+    data, title, headers, limited_format = GetMyMetagame(interaction, start_date, end_date, sort_order)
     if data is None or len(data) == 0:
       return 'No metagame data found for this store and format'
-    return BuildTableOutput(title, headers, data)
+    return BuildTableOutput(title, headers, data, limited_format)
   except Exception as exception:
     await Error(interaction, exception)
     return "Something unexpected went wrong. It's been reported. Please try again in a few hours."

@@ -11,8 +11,8 @@ class BanWord(commands.Cog):
 
   @app_commands.command(name='addword',
     description='Add a banned word')
-  @app_commands.checks.has_role('MTSubmitter')
   @app_commands.guild_only()
+  @app_commands.checks.has_role('MTSubmitter')
   async def BadWord(self,
                     interaction: discord.Interaction,
                     word:str):

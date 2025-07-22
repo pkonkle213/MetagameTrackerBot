@@ -7,7 +7,7 @@ from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
 from data.archetype_data import AddArchetype
 from data.event_data import GetEventMeta
-from services.name_services import ConvertName
+from services.input_services import ConvertInput
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from tuple_conversions import Event
 from interaction_data import GetInteractionData
@@ -32,11 +32,11 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
     inks = await LorcanaInkMenu(interaction)
     archetype = f'{inks} - {archetype}'
   
-  if game.Name.upper() == 'MAGIC' and (format.Name.upper() == 'DRAFT' or format.Name.upper() == 'SEALED'):
+  if game.Name.upper() == 'MAGIC' and format.IsLimited:
     archetype = await MagicLimited(interaction)
 
   #Overwriting the player_name with the name in the database to confirm if player_name is in the database. Maybe I rename the variables to provided_player_name and confirmed_player_name?
-  player_name = ConvertName(player_name)
+  player_name = ConvertInput(player_name)
   (event_id,
    discord_id,
    event_date,
@@ -118,9 +118,11 @@ async def MagicLimited(interaction):
   drafted_colors = await SelectMenu(interaction, 'Please select the main colors of your deck (> 3 cards)', 'Main Colors', color_selections, 5)
   for color in drafted_colors:
     colors += color[2].upper()
+  print('Colors:', colors)
   splashed_colors = await SelectMenu(interaction, 'Please select the colors you splashed (<= 3 cards)', 'Colors Splashed', color_selections, 5)
   for color in splashed_colors:
     colors += color[2].lower()
+  print('Colors:', colors)
   if len(colors) > 5:
     raise KnownError('Too many colors selected, please try again.')
   return colors

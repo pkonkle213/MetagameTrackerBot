@@ -1,6 +1,6 @@
 from custom_errors import KnownError
 from data.add_results_data import AddResult, SubmitTable
-from services.name_services import ConvertName
+from services.input_services import ConvertInput
 from services.date_functions import ConvertToDate
 from data.event_data import GetEventObj, CreateEvent
 from interaction_data import GetInteractionData
@@ -34,7 +34,7 @@ def AddParticipantResults(event, data, submitterId):
   successes = 0
   for person in data:
     if person.PlayerName != '':
-      person = Participant(ConvertName(person.PlayerName),
+      person = Participant(ConvertInput(person.PlayerName),
                               person.Wins,
                               person.Losses,
                               person.Draws)
@@ -49,9 +49,9 @@ def AddRoundResults(event, data, submitterId):
   round_number = data[0].Round
   for table in data:
     result = SubmitTable(event.ID,
-                         ConvertName(table.P1Name),
+                         ConvertInput(table.P1Name),
                          table.P1Wins,
-                         ConvertName(table.P2Name),
+                         ConvertInput(table.P2Name),
                          table.P2Wins,
                          table.Round,
                          submitterId)

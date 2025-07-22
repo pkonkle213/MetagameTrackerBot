@@ -5,7 +5,7 @@ def GetFormatByMap(channel_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
-    SELECT f.id, f.name, f.last_ban_update
+    SELECT f.id, f.name, f.last_ban_update, f.is_limited
     FROM formatchannelmaps fc
     INNER JOIN formats f ON f.id = fc.format_id
     WHERE channel_id = {channel_id}

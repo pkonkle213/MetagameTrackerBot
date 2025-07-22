@@ -39,7 +39,7 @@ async def on_ready():
   except Exception as error:
     print(f'Error syncing commands: {error}')
 
-@tasks.loop(time=datetime.time(hour=14, minute=00, tzinfo=datetime.timezone.utc)) #13:00 UTC is 9:00 AM EST
+@tasks.loop(time=datetime.time(hour=14, minute=00, tzinfo=datetime.timezone.utc)) #14:00 UTC is 10:00 AM EST
 async def scheduled_post():
   time_now = datetime.datetime.now(datetime.timezone.utc)
   if time_now.weekday() == 4:  # Check if it's Friday, 0 = Monday

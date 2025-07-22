@@ -8,7 +8,8 @@ InteractionDetails = namedtuple("InteractionDetails", ['Game',
 
 Format = namedtuple('Format', ['ID',
                                'Name',
-                               'LastBanUpdate'])
+                               'LastBanUpdate',
+                               'IsLimited'])
 
 Game = namedtuple('Game', ['ID',
                            'Name',
@@ -41,6 +42,7 @@ Round = namedtuple('Round',['P1Name',
                             'P2Wins',
                             'Round'])
 
+#TODO: These should each have a try catch to ensure accuracy
 def ConvertToRound(round_obj):
   return Round(round_obj[0],
                int(round_obj[1]),
@@ -74,4 +76,5 @@ def ConvertToGame(game_obj):
 def ConvertToFormat(format_obj):
   return Format(int(format_obj[0]),
                 format_obj[1],
-                format_obj[2])
+                format_obj[2],
+                format_obj[3])
