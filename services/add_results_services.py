@@ -7,6 +7,7 @@ from interaction_data import GetInteractionData
 from tuple_conversions import ConvertToEvent, Participant, Round
 
 async def SubmitData(message, data, date_str):
+  '''Submits an events data to the database'''
   game, format, store, userId = GetInteractionData(message,
                                                    game=True,
                                                    format=True,
@@ -14,7 +15,7 @@ async def SubmitData(message, data, date_str):
   if store is None or not store.ApprovalStatus:
     raise KnownError('This store is not approved to submit data.')
   
-  date = ConvertToDate(date_str)    
+  date = ConvertToDate(date_str)
   event_obj = GetEventObj(store.DiscordId, date, game, format)
   event_created = False
   if event_obj is None:

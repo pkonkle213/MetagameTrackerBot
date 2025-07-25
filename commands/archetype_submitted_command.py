@@ -26,7 +26,6 @@ class ArchetypeSubmittedCommand(commands.Cog):
         output = BuildTableOutput(title, headers, data)
         await interaction.followup.send(output, ephemeral=True)
     except Exception as exception:
-      print(f'Error in ViewSubmittedArchetypes: {exception}')
       await interaction.followup.send(f'Error: {exception}', ephemeral=True)
 
 

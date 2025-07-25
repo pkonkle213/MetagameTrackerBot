@@ -14,7 +14,6 @@ class CleanUpCommand(commands.Cog):
   async def CleanUp(self, interaction):
     await interaction.response.send_message('Cleaning up the guild...')
     userId = 762427840238321685 #Evil ex-girlfriend
-    print('Waiting for messages...')
     try:
       messages = [msg async for msg in interaction.channel.history(limit=10, oldest_first=False)]
       for message in messages:

@@ -26,7 +26,7 @@ async def on_ready():
     sync_global = await bot.tree.sync()
     print(f'Synced {len(sync_global)} commands globally, allegedly')
     
-    for guild in level2guilds:
+    for guild in GetLevel2Stores():
       sync_store = await bot.tree.sync(guild=guild)
       print(f'Syncing {len(sync_store)} commands for {guild.id}')
       
@@ -48,9 +48,6 @@ async def scheduled_post():
 @scheduled_post.before_loop
 async def before_scheduled_post():
   await bot.wait_until_ready()
-
-level2guilds = GetLevel2Stores()
-print('Level 2 guilds:', level2guilds)
   
 if settings.DISCORDTOKEN:
   bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)

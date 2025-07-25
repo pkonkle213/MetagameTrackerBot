@@ -71,6 +71,7 @@ def MeleeParticipants(message):
     #print('Melee Participants Exception:', exception)
     return None
 
+#TODO: Round by Round data with tabs
 def CompanionRoundByRound(message):
   data = []
   rows = message.split('\n')
@@ -106,5 +107,4 @@ What I need to be reported is the match number, the players' names, the players'
 ObjReceived(match_number, player1_name, player1_archetype, player1_game_wins, player2_name, player2_archetype, player2_game_wins)
 Most likely this will need to go into the rounds table and the archetype table
 Issue is though, how do I link the correct archetype to the correct player, because archetypes are linked to event_id and player_name.
-
 '''

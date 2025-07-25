@@ -60,7 +60,6 @@ def GetFormat(game, channel_id:int, required):
       raise KnownError('Format not found. Please map a format to this channel.')
     else:
       return None
-  print('Format:',format_obj)
   return tc.ConvertToFormat(format_obj)
 
 def GetStore(discord_id, required=True):
@@ -75,12 +74,8 @@ def GetStore(discord_id, required=True):
 
 def FormatInteractionData(data, requirements):
   game = GetGame(data.CategoryId, requirements.Game)
-  print('Game:',game)
-  print('ChannelId:',data.ChannelId)
-  print('Requirements.Format:',requirements.Format)
   format = GetFormat(game, data.ChannelId, requirements.Format)
   store = GetStore(data.DiscordId, requirements.Store)
   
-
   Data = namedtuple("Data",["Game","Format","Store","UserId"])
   return Data(game,format,store,data.UserId)

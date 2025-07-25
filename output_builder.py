@@ -17,7 +17,6 @@ def BuildTableOutput(title,
                      headers,
                      items,
                      limited_format = False):
-  print('Made it to output builder')
   column_widths = MaxLength(headers, items)
   align = ''
   output = f'```{title}\n\n'
@@ -29,7 +28,6 @@ def BuildTableOutput(title,
   output += '\n' + '-' * sum(column_widths) + '\n'
 
   for item in items:
-    print('Item:',item)
     for i in range(len(column_widths)):
       element = str(item[i])
       column_format = '{:' + align + str(column_widths[i]) + 's}'

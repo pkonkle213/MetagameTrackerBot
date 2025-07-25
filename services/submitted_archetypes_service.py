@@ -9,9 +9,12 @@ def SubmittedArchetypesReport(interaction: discord.Interaction, player_name, eve
 
   game, format, store, user_id = GetInteractionData(interaction, game=True, store=True)
   player_name = ConvertInput(player_name)
-  print('SubmittedArchetypesReport:', game, format, store, player_name)
   data = GetSubmittedArchetypes(game, format, store, player_name, date_used)
-  headers = ['Event Date', 'Player Name','Archetype Played','Submitted By', 'Submitted By ID']
+  headers = ['Event Date',
+             'Player Name',
+             'Archetype Played',
+             'Submitted By',
+             'Submitted By ID']
   if format is None:
     headers.insert(1, 'Format')
   title = 'Archetypes Submitted'

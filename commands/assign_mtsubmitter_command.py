@@ -7,7 +7,7 @@ import settings
 from services.store_services import AssignMTSubmitterRole
 from checks import isPhil
 
-TARGET_GUILDS = [settings.TESTSTOREGUILD.id]
+TARGET_GUILDS = [settings.BOTGUILD.id]
 
 class AssignMTSubitter(commands.Cog):
   def __init__(self, bot):
