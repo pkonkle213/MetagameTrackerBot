@@ -5,7 +5,9 @@ from services.claim_result_services import ClaimResult, CheckEventPercentage, On
 from custom_errors import KnownError
 from discord_messages import MessageChannel, MessageUser, Error
 from output_builder import BuildTableOutput
+from services.input_services import ConvertInput
 
+#TODO: As a user, I want to discern from claiming a limited deck and a constructed dec
 class ClaimArchetype(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
@@ -28,8 +30,7 @@ class ClaimArchetype(commands.Cog):
       Date of event (MM/DD/YYYY)
     """
     await interaction.response.defer(ephemeral=True)
-    #TODO: use name thing to format archetype
-    archetype = archetype.strip().encode('ascii', 'ignore').decode('ascii')
+    archetype = ConvertInput(archetype)
     try:
       archetype_submitted, event = await ClaimResult(interaction, player_name, archetype, date)
       if archetype_submitted is None:

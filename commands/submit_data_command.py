@@ -8,6 +8,9 @@ from discord_messages import MessageChannel, ErrorMessage
 from text_modal import SubmitDataModal
 from services.add_results_services import SubmitData
 
+#TODO: As a user, I would like to know why someone wasn't added to database
+#I'd like a report with reasons why and identification of rows/tables failed
+
 class SubmitDataCommand(commands.Cog):
   def __init__(self, bot):
     self.bot = bot

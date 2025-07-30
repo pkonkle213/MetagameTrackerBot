@@ -2,8 +2,9 @@ from discord import app_commands, Interaction
 from discord.ext import commands
 from checks import isOwner
 from services.store_services import RegisterNewStore, AssignStoreOwnerRoleInBotGuild, SetPermissions
-from discord_messages import Error
+from discord_messages import Error, ErrorMessage
 from psycopg2.errors import UniqueViolation
+from data.store_data import DeleteStore
 
 class RegisterStore(commands.Cog):
   def __init__(self, bot):
@@ -26,14 +27,20 @@ class RegisterStore(commands.Cog):
       if store is None:
         raise Exception('Unable to register store')
       await SetPermissions(interaction)
-      await AssignStoreOwnerRoleInBotGuild(self.bot, interaction)
+      try:
+        await AssignStoreOwnerRoleInBotGuild(self.bot, interaction)
+      except Exception as exception:
+        print('Unable to assign this user to the store owner role in bot guild.')
+        print('Exception:', exception)
       await interaction.followup.send(f'Registered {store_name.title()} with discord {store.DiscordName.title()} with owner {interaction.user}')
     except UniqueViolation as exception:
       await interaction.followup.send("This store is already registered. If you believe this is an error, please contact the bot owner via the bot's discord.", ephemeral=True)
     except Exception as exception:
       await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
       await Error(self.bot, exception)
-      #TODO: This should also delete the store from the database
+      success = DeleteStore(interaction.guild_id)
+      if not success:
+        await ErrorMessage(self.bot, f'Unable to delete store {interaction.guild_id} from database')
   
 async def setup(bot):
   await bot.add_cog(RegisterStore(bot))

@@ -48,6 +48,7 @@ async def GetTheMetagame(interaction, start_date, end_date, sort_order):
     return BuildTableOutput(title, headers, data, limited_format)
   except Exception as exception:
     await Error(interaction, exception)
+    print('Error in GetTheMetagame:', exception)
     return "Something unexpected went wrong. It's been reported. Please try again in a few hours."
 
 async def setup(bot):

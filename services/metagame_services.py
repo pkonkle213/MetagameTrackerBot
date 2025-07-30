@@ -8,7 +8,6 @@ def GetMyMetagame(interaction:Interaction,
                   end_date:str,
                   sort_order:int):
   game, format, store, userId = GetInteractionData(interaction, game=True, format=True, store=True)
-  limited_format = format.Name.upper() == 'DRAFT' or format.Name.upper() == 'SEALED'
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   title_name = format.Name.title() if format else game.Name.title()
   data = GetMetagame(game, format, date_start, date_end, store, sort_order)
@@ -17,4 +16,4 @@ def GetMyMetagame(interaction:Interaction,
   if sort_order == 4:
     headers.append('Combined %')
   
-  return (data, title, headers, limited_format)
+  return (data, title, headers, format.IsLimited if format else False)

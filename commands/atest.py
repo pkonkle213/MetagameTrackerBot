@@ -18,7 +18,8 @@ class ATest(commands.Cog):
   @app_commands.guild_only()
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   async def Testing(self, interaction: Interaction):
-    await UpdateDataGuild(self.bot)
+    #await UpdateDataGuild(self.bot)
+    await interaction.response.send_message("Testing!", ephemeral=True)
   
 async def setup(bot):
   await bot.add_cog(ATest(bot))
