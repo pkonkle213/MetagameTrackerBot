@@ -9,8 +9,8 @@ class BanWord(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
-  @app_commands.command(name='addword',
-    description='Add a banned word')
+  @app_commands.command(name='banword',
+                        description='Add a banned word')
   @app_commands.guild_only()
   @app_commands.checks.has_role('MTSubmitter')
   async def BadWord(self,
@@ -22,12 +22,11 @@ class BanWord(commands.Cog):
     word: string
       The inappropriate word or phrase to ban
     """
-    await interaction.response.defer()
+    await interaction.response.defer(ephemeral=True)
     try:
       if len(word) < 3:
-        await interaction.response.send_message('Word must be at least 3 characters long')
+        await interaction.followup.send('Word must be at least 3 characters long')
       else:
-        await interaction.response.defer(ephemeral=True)
         check = AddBadWord(interaction, word)
         if check:
           await interaction.followup.send('Word added and offending archetypes disabled')

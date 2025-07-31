@@ -14,7 +14,7 @@ class EventsReported(commands.Cog):
     self.bot = bot
 
   @app_commands.command(name='eventsreported',
-  description='See how well events are reported')
+                        description='See how well events are reported')
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   @app_commands.check(isPhil)
   async def MyEventsReported(self, interaction: Interaction, discord_id:str = ''):
