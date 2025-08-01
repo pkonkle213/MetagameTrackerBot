@@ -4,11 +4,12 @@ from output_builder import BuildTableOutput
 from services.player_win_record_services import PlayRecord
 from discord_messages import Error
 
+#TODO: This can probably be grouped with the personal matchups command
 class PlayerWinRecord(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
-  @app_commands.command(name="playrecord",
+  @app_commands.command(name="personalrecord",
     description="Look up your win/loss record(s)")
   @app_commands.guild_only()
   async def WLDRecord(self,

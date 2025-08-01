@@ -6,8 +6,7 @@ def GetMetagame(game,
                 format,
                 start_date,
                 end_date,
-                store,
-                sort_order):
+                store):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
@@ -15,7 +14,6 @@ def GetMetagame(game,
       archetype_played,
       ROUND(metagame_percent * 100, 2) AS metagame_percent,
       ROUND(win_percent * 100, 2) AS win_percent
-      {', ROUND(metagame_percent * win_percent * 100, 2) AS Combined' if sort_order == 4 else ''}
     FROM (
       SELECT
         COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,
@@ -38,7 +36,7 @@ def GetMetagame(game,
     WHERE
     metagame_percent >= 0.02
     ORDER BY
-    {sort_order} DESC
+    2 DESC
     '''
 
     cur.execute(command)

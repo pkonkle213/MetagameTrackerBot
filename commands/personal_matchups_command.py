@@ -12,7 +12,7 @@ class PersonalMatchupsCommand(commands.Cog):
     self.bot = bot
 
   @app_commands.command(name='personalmatchups',
-  description='See your matchups against archetypes in this format')
+  description="See your win/loss record based upon archetypes you've played against in this format")
   @app_commands.guild_only()
   #@app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   async def PersonalMatchupReport(self,

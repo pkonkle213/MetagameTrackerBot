@@ -4,6 +4,7 @@ from checks import isOwner
 from services.store_data_download_services import GetDataReport
 from discord_messages import MessageUser, Error
 
+#TODO: As a store owner, I would like to download my round by round data for a date range
 class DownloadStoreData(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
