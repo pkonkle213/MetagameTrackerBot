@@ -1,19 +1,18 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
 from checks import isOwner
-from services.store_data_download_services import GetDataReport
+from services.store_data_download_services import GetParticipantData, GetRoundData
 from discord_messages import MessageUser, Error
 
-#TODO: As a store owner, I would like to download my round by round data for a date range
-class DownloadStoreData(commands.Cog):
+class DownloadDataGroup(commands.GroupCog, name='download'):
   def __init__(self, bot):
     self.bot = bot
 
-  @app_commands.command(name='downloaddata',
-  description='Download the data for a store for a date range')
+  @app_commands.command(name='participants',
+  description='Download the basic data for a store for a date range')
   @app_commands.check(isOwner)
   @app_commands.guild_only()
-  async def DownloadData(self,
+  async def ParticipantData(self,
                          interaction: Interaction,
                          start_date: str = '',
                          end_date: str = ''):
@@ -27,16 +26,46 @@ class DownloadStoreData(commands.Cog):
     """
     await interaction.response.defer(ephemeral=True)
     try:
-      title, file = GetDataReport(interaction, start_date, end_date)
+      title, file = GetParticipantData(interaction, start_date, end_date)
       if file is None:
         await interaction.followup.send('No data found for this store')
-        await MessageUser(title,
-          interaction.user.id,
-          file)
-        await interaction.followup.send('The data for the store will arrive by message')
+      await MessageUser(title,
+        interaction.user.id,
+        file)
+      await interaction.followup.send('The data for the store will arrive by message')
+    except Exception as exception:
+      await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
+      await Error(self.bot, exception)
+
+  @app_commands.command(name='rounds',
+                        description='Download the round by round data for a store for a date range')
+  @app_commands.check(isOwner)
+  @app_commands.guild_only()
+  async def RoundData(self,
+                      interaction: Interaction,
+                      start_date: str = '',
+                     end_date: str = ''):
+    """
+    Parameters
+    ----------
+    start_date: string
+      Beginning of Date Range (MM/DD/YYYY)
+    end_date: string
+      End of Date Range (MM/DD/YYYY)
+    """
+    await interaction.response.defer(ephemeral=True)
+    try:
+      title, file = GetRoundData(interaction, start_date, end_date)
+      if file is None:
+        await interaction.followup.send('No data found for this store')
+      await MessageUser(title,
+        interaction.user.id,
+        file)
+      await interaction.followup.send('The data for the store will arrive by message')
     except Exception as exception:
       await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
       await Error(self.bot, exception)
 
 async def setup(bot):
-  await bot.add_cog(DownloadStoreData(bot))
+  print('Adding download data commands')
+  await bot.add_cog(DownloadDataGroup(bot))

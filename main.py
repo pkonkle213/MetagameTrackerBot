@@ -5,7 +5,6 @@ import datetime
 import settings
 import logging
 from timedposts.automated_updates import UpdateDataGuild
-from services.level_2_stores import GetLevel2Stores
 
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 
@@ -21,20 +20,23 @@ async def on_ready():
     for file in CMDS_DIR.glob("*.py"):
       if file.name != "__init__.py":
         await bot.load_extension(f'commands.{file.name[:-3]}')
-        print(f'Loaded {file.name[:-3]}')
 
     sync_global = await bot.tree.sync()
     print(f'Synced {len(sync_global)} commands globally, allegedly')
     
+    '''No commands need this for now
     for guild in GetLevel2Stores():
       sync_store = await bot.tree.sync(guild=guild)
       print(f'Syncing {len(sync_store)} commands for {guild.id}')
+    '''
       
     sync_my_bot = await bot.tree.sync(guild=settings.BOTGUILD)
     print(f'Synced {len(sync_my_bot)} command(s) to guild My Bot -> {settings.BOTGUILD.id}')
     
+    '''Need a new test store
     sync_test_guild = await bot.tree.sync(guild=settings.TESTSTOREGUILD)
     print(f'Synced {len(sync_test_guild)} command(s) to guild Test Guild -> {settings.TESTSTOREGUILD.id}')
+    '''
     
   except Exception as error:
     print(f'Error syncing commands: {error}')

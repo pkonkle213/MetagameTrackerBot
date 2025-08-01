@@ -58,26 +58,21 @@ def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id)
       INNER JOIN events e ON rd.event_id = e.id
       LEFT JOIN uniquearchetypes asu ON asu.event_id = rd.event_id
       AND rd.opponent_name = asu.player_name
+      INNER JOIN playernames pn ON pn.discord_id = e.discord_id
+      AND pn.player_name = rd.player_name
     WHERE
-      rd.player_name = (
-        SELECT
-          player_name
-        FROM
-          playernames
-        WHERE
-          submitter_id = {user_id}
-      )
-      AND opponent_name != 'BYE'
+      opponent_name != 'BYE'
       AND e.discord_id = {discord_id}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
       AND e.format_id = {format.ID}
       AND e.game_id = {game.ID}
+      AND pn.submitter_id = {user_id}
     GROUP BY
       asu.archetype_played
     ORDER BY
-      asu.archetype_played
-            
+      asu.archetype_played            
     '''
+    
     cur.execute(command)
     rows = cur.fetchall()
     return rows

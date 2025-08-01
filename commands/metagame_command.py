@@ -5,8 +5,8 @@ from output_builder import BuildTableOutput
 from discord_messages import Error
 
 class MetagameCommand(commands.Cog):
-  @app_commands.command(name="combined",
-                        description="Get the metagame sorted by a combined metric")
+  @app_commands.command(name="metagame",
+                        description="Get the metagame for this format")
   async def ViewMetagame(self,
                    interaction: Interaction,
                    start_date: str = '',

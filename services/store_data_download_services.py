@@ -1,16 +1,27 @@
 from discord import File
 from io import BytesIO
 from services.date_functions import BuildDateRange
-from data.store_data import GetStoreData
+from data.store_data import GetStoreParticipantData, GetStoreRoundData
 from interaction_data import GetInteractionData
 
-def GetDataReport(interaction, start_date, end_date):
+def GetParticipantData(interaction, start_date, end_date):
   game, format, store, user_id = GetInteractionData(interaction, store=True, game=True)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
-  data = GetStoreData(store, game, format, date_start, date_end)
+  data = GetStoreParticipantData(store, game, format, date_start, date_end)
   if len(data) == 0:
     return None, None
   header = 'GAME,FORMAT,DATE,PLAYER_NAME,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS'
+  file = ConvertRowsToFile(data, 'MyStoreData', header)
+  message = f'Here is the data for {store.StoreName.title()}'
+  return message, file
+
+def GetRoundData(interaction, start_date, end_date):
+  game, format, store, user_id = GetInteractionData(interaction, store=True, game=True)
+  date_start, date_end = BuildDateRange(start_date, end_date, format)
+  data = GetStoreRoundData(store, game, format, date_start, date_end)
+  if len(data) == 0:
+    return None, None
+  header = 'GAME,FORMAT,DATE,ROUND,PLAYER_NAME,ARCHETYPE_PLAYED,OPPONENT_NAME,OPPONENT_ARCHETYPE,RESULT'
   file = ConvertRowsToFile(data, 'MyStoreData', header)
   message = f'Here is the data for {store.StoreName.title()}'
   return message, file
