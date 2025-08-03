@@ -1,6 +1,7 @@
 from tuple_conversions import Participant, Round
+from data_conversions.lorcana_official import LorcanaOfficialRound, LorcanaOfficialParticipant
 
-def ConvertMessageToParticipants(message):
+def ConvertMessageToData(message):
   data = CompanionParticipants(message)
   if data is None:
     data = MeleeParticipants(message)
@@ -8,6 +9,12 @@ def ConvertMessageToParticipants(message):
     data = CompanionRoundByRound(message)
   if data is None:
     data = CompanionParticipantsWithTabs(message)
+  '''Cannot determine what round this is
+  if data is None:
+    data = LorcanaOfficialRound(message)
+  '''
+  if data is None:
+    data = LorcanaOfficialParticipant(message)
   return data
 
 def CompanionParticipants(message):
@@ -32,7 +39,6 @@ def CompanionParticipants(message):
     return None
 
 def CompanionParticipantsWithTabs(message):
-  data = []
   data = []
   rows = message.split('\n')
   try:

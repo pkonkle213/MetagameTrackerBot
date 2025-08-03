@@ -3,7 +3,7 @@ from custom_errors import KnownError
 import settings
 from discord.ext import commands
 from discord import app_commands
-from data_translation import ConvertMessageToParticipants, Participant
+from data_translation import ConvertMessageToData, Participant
 from discord_messages import MessageChannel, ErrorMessage
 from text_modal import SubmitDataModal
 from services.add_results_services import SubmitData
@@ -28,7 +28,7 @@ class SubmitDataCommand(commands.Cog):
       if not modal.is_submitted:
         await interaction.followup.send("SubmitData modal was dismissed or timed out. Please try again", ephemeral=True)
       else:
-        data = ConvertMessageToParticipants(modal.submitted_message)
+        data = ConvertMessageToData(modal.submitted_message)
         if data is None:
           await interaction.followup.send("Unable to submit due to not recognizing the form data. Please try again", ephemeral=True)
           message = f"""

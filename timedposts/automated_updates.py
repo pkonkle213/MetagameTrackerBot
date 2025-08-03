@@ -16,7 +16,7 @@ async def UpdateDataGuild(bot):
     channel = bot.get_channel(channel[0])
     date_start, date_end = BuildDateRange('', '', format)
     title_name = format.Name.title() if format else game.Name.title()
-    data = GetMetagame(game, format, date_start, date_end, store, 4)
+    data = GetMetagame(game, format, date_start, date_end, store)
     if data is None or len(data) == 0:
       await channel.send('No metagame data found for this format')
     else:

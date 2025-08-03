@@ -24,7 +24,8 @@ async def on_ready():
     sync_global = await bot.tree.sync()
     print(f'Synced {len(sync_global)} commands globally, allegedly')
     
-    '''No commands need this for now
+    '''
+    No commands need this for now
     for guild in GetLevel2Stores():
       sync_store = await bot.tree.sync(guild=guild)
       print(f'Syncing {len(sync_store)} commands for {guild.id}')
@@ -33,10 +34,9 @@ async def on_ready():
     sync_my_bot = await bot.tree.sync(guild=settings.BOTGUILD)
     print(f'Synced {len(sync_my_bot)} command(s) to guild My Bot -> {settings.BOTGUILD.id}')
     
-    '''Need a new test store
     sync_test_guild = await bot.tree.sync(guild=settings.TESTSTOREGUILD)
     print(f'Synced {len(sync_test_guild)} command(s) to guild Test Guild -> {settings.TESTSTOREGUILD.id}')
-    '''
+    
     
   except Exception as error:
     print(f'Error syncing commands: {error}')

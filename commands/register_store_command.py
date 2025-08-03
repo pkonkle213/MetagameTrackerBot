@@ -32,9 +32,9 @@ class RegisterStore(commands.Cog):
       except Exception as exception:
         print('Unable to assign this user to the store owner role in bot guild.')
         print('Exception:', exception)
-      await interaction.followup.send(f'Registered {store_name.title()} with discord {store.DiscordName.title()} with owner {interaction.user}')
+      await interaction.followup.send(f'Registered {store_name.title()} with discord {store.DiscordName.title()} with owner {interaction.user}', ephemeral=True)
     except UniqueViolation as exception:
-      await interaction.followup.send("This store is already registered. If you believe this is an error, please contact the bot owner via the bot's discord.", ephemeral=True)
+      await interaction.followup.send("This store is already registered. If you believe this is an error, please contact the bot owner via the bot's discord.")
     except Exception as exception:
       await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
       await Error(self.bot, exception)
