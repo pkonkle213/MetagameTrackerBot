@@ -38,6 +38,7 @@ FROM
       AND e.game_id = 1
       AND e.format_id = 1
       AND e.discord_id = 1210746744602890310
+  AND e.event_date BETWEEN '2023-01-01' AND '2023-12-31'
     GROUP BY
       frr.player_archetype,
       frr.opponent_archetype
