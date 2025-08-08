@@ -6,7 +6,7 @@ from data.player_data import GetTopPlayerData
 def GetTopPlayers(interaction:Interaction, start_date, end_date):
   game, format, store, user_id = GetInteractionData(interaction, game=True, format=True, store=True)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
-  data = GetTopPlayerData(store.DiscordId, game, format, date_start, date_end)
+  data = GetTopPlayerData(store, game, format, date_start, date_end)
   title = f'Top Players from {date_start} to {date_end}'
-  headers = ['Name', 'Attendance %', 'Win %', 'Combined %']
+  headers = ['Name', 'Attendance %', 'Win %']
   return data, title, headers

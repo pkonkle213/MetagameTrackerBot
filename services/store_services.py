@@ -1,5 +1,6 @@
 import discord
 from data.store_data import RegisterStore, SetStoreTrackingStatus
+from services.input_services import ConvertInput
 from settings import BOTGUILD
 from tuple_conversions import ConvertToStore
 
@@ -17,21 +18,20 @@ def SetApproval(discord_id, approval_status):
   return store
 
 def RegisterNewStore(interaction: discord.Interaction, store_name: str):
-  name_of_store = store_name.upper()
+  name_of_store = ConvertInput(store_name)
 
   guild = interaction.guild
   if guild is None:
     raise Exception('No guild found')
   discord_id = guild.id
-  discord_name = guild.name.upper()
+  discord_name = ConvertInput(guild.name)
   
   owner = guild.owner
   if owner is None:
     raise Exception('No owner found')
   owner_id = owner.id
-  owner_name = owner.display_name.upper()
+  owner_name = ConvertInput(owner.name)
 
-  #TODO: Name of store and discord name shouldn't have special characters
   storeobj = RegisterStore(discord_id,
                            discord_name,
                            name_of_store,

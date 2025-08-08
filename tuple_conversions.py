@@ -42,7 +42,6 @@ Round = namedtuple('Round',['P1Name',
                             'P2Wins',
                             'Round'])
 
-#TODO: These should each have a try catch to ensure accuracy
 def ConvertToRound(round_obj):
   return Round(round_obj[0],
                int(round_obj[1]),

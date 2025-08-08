@@ -1,5 +1,6 @@
 import os
 import psycopg2
+from settings import BOTGUILD
 
 def GetStats(discord_id,
              game,
@@ -9,6 +10,7 @@ def GetStats(discord_id,
              end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
+    #TODO: Update this command with playernames view
     command = f'''
     SELECT
       {'format_name,' if not format else ''}
@@ -84,7 +86,7 @@ def GetStats(discord_id,
     rows = cur.fetchall()
     return rows
 
-def GetTopPlayerData(discord_id,
+def GetTopPlayerData(store,
                      game,
                      format,
                      start_date,
@@ -94,40 +96,66 @@ def GetTopPlayerData(discord_id,
     command = f"""
     SELECT
       player_name,
-      round(eventpercent * 100, 2) AS eventpercent,
-      round(winpercent * 100, 2) AS winpercent,
-      round(eventpercent * winpercent * 100, 2) AS Combined
+      attendance_percentage,
+      win_percentage,
     FROM
       (
         SELECT
-          fp.player_name,
-          COUNT(*) * 1.0 / (
+          ROW_NUMBER() OVER (
+            ORDER BY
+              Combined DESC
+          ) AS player_rank,
+          player_name,
+          round(attendance_percentage * 100, 2) AS attendance_percentage,
+          round(win_percentage * 100, 2) AS win_percentage,
+          round(attendance_percentage * win_percentage * 100, 2) AS Combined
+        FROM
+          (
             SELECT
-              COUNT(*)
+              player_name,
+              attendance_percentage,
+              win_percentage,
+              attendance_percentage * win_percentage AS Combined
             FROM
-              events
+              (
+                SELECT
+                  player_name,
+                  sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percentage,
+                  1.0 * count(*) / count(*) OVER () AS attendance_percentage
+                FROM
+                  events e
+                  INNER JOIN fullparticipants fp ON fp.event_id = e.id
+                WHERE
+                  event_date BETWEEN '{start_date}' AND '{end_date}'
+                  {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILD.id else ''}
+                  AND game_id = {game.ID}
+                  {f'AND format_id = {format.ID}' if format else ''}
+                GROUP BY
+                  player_name
+              )
+          )
+      )
+    WHERE
+      player_rank < .5 * (
+        SELECT
+          AVG(participants) AS average_participants
+        FROM
+          (
+            SELECT
+              count(*) AS participants
+            FROM
+              events e
+              LEFT JOIN fullparticipants fp ON fp.event_id = e.id
             WHERE
               event_date BETWEEN '{start_date}' AND '{end_date}'
-              AND discord_id = {discord_id}
+              {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILD.id else ''}
               AND game_id = {game.ID}
-              AND format_id = {format.ID}
-          ) AS eventpercent,
-          sum(fp.wins) * 1.0 / (sum(fp.wins) + sum(fp.losses) + sum(fp.draws)) AS winpercent
-        FROM
-          events e
-          INNER JOIN fullparticipants fp ON e.id = fp.event_id
-        WHERE
-          event_date BETWEEN '{start_date}' AND '{end_date}'
-          AND discord_id = {discord_id}
-          AND game_id = {game.ID}
-          AND format_id = {format.ID}
-        GROUP BY
-          fp.player_name
+              {f'AND format_id = {format.ID}' if format else ''}
+            GROUP BY
+              e.id
+          )
       )
-    ORDER BY
-      combined DESC
-    LIMIT
-      10
+      ORDER BY player_rank
     """
 
     cur.execute(command)

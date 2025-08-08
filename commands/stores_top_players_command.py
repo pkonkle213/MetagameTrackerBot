@@ -8,9 +8,9 @@ class StoreTopPlayers(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
-  @app_commands.command(name="topplayers",
+  @app_commands.command(name="leaderboard",
                         description="Get the top players of the format")
-  @app_commands.checks.has_role("MTSubmitter")
+  #@app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
   async def TopPlayers(self,
                        interaction: Interaction,
