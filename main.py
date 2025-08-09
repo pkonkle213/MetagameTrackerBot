@@ -23,13 +23,6 @@ async def on_ready():
 
     sync_global = await bot.tree.sync()
     print(f'Synced {len(sync_global)} commands globally, allegedly')
-    
-    '''
-    No commands need this for now
-    for guild in GetLevel2Stores():
-      sync_store = await bot.tree.sync(guild=guild)
-      print(f'Syncing {len(sync_store)} commands for {guild.id}')
-    '''
       
     sync_my_bot = await bot.tree.sync(guild=settings.BOTGUILD)
     print(f'Synced {len(sync_my_bot)} command(s) to guild My Bot -> {settings.BOTGUILD.id}')
