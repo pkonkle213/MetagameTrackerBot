@@ -116,11 +116,19 @@ async def MagicLimited(interaction):
                       (5,'Green','G')]
   colors = ""
   drafted_colors = await SelectMenu(interaction, 'Please select the main colors of your deck (> 3 cards)', 'Main Colors', color_selections, 5)
+  print('Drafted Colors:', drafted_colors)
   for color in drafted_colors:
-    colors += color[2].upper()
-  splashed_colors = await SelectMenu(interaction, 'Please select the colors you splashed (<= 3 cards)', 'Colors Splashed', color_selections, 5)
+    colors += color[2]
+  print('Colors:', colors)
+  splashed_colors = await SelectMenu(interaction, 'Please select the colors you splashed (<= 3 cards)', 'Colors Splashed', [(0,'None','N')] + color_selections, 5)
+  print('Splashed Colors:', splashed_colors)
   for color in splashed_colors:
+    if color[0] == 0:
+      return colors
+    if color[2] in colors:
+      raise KnownError('You cannot splash a color you drafted. Please try again.')
     colors += color[2].lower()
+  print('Colors:', colors)
   if len(colors) > 5:
     raise KnownError('Too many colors selected, please try again.')
   return colors

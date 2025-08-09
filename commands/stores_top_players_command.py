@@ -24,7 +24,7 @@ class StoreTopPlayers(commands.Cog):
     end_date: string
       End of Date Range (MM/DD/YYYY)
     """
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer()
     try:
       data, title, headers = GetTopPlayers(interaction,
                              start_date,

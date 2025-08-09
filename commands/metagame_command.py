@@ -21,10 +21,10 @@ class MetagameCommand(commands.Cog):
     """
     await interaction.response.defer()
     try:
-      data, title, headers, limited_format = GetMyMetagame(interaction, start_date, end_date)
+      data, title, headers, archetype_column = GetMyMetagame(interaction, start_date, end_date)
       if data is None or len(data) == 0:
         await interaction.followup.send('No metagame data found for this store and format')
-      output = BuildTableOutput(title, headers, data, limited_format)
+      output = BuildTableOutput(title, headers, data, archetype_column)
       await interaction.followup.send(output)
     except Exception as exception:
       await Error(interaction, exception)

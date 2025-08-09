@@ -97,7 +97,7 @@ def GetTopPlayerData(store,
     SELECT
       player_name,
       attendance_percentage,
-      win_percentage,
+      win_percentage
     FROM
       (
         SELECT
@@ -158,6 +158,7 @@ def GetTopPlayerData(store,
       ORDER BY player_rank
     """
 
+    print('sql command:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows

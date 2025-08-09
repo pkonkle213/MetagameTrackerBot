@@ -17,13 +17,13 @@ class ArchetypeSubmittedCommand(commands.Cog):
                                     event_date: str = ''):
     await interaction.response.defer(ephemeral=True)
     try:
-      data, headers, title = SubmittedArchetypesReport(interaction,
+      data, headers, title, archetype_column = SubmittedArchetypesReport(interaction,
                                                        player_name,
                                                        event_date)
       if data is None or len(data) == 0:
         await interaction.followup.send('No archetypes submitted for this store or format')
       else:
-        output = BuildTableOutput(title, headers, data)
+        output = BuildTableOutput(title, headers, data, archetype_column)
         await interaction.followup.send(output, ephemeral=True)
     except Exception as exception:
       await interaction.followup.send(f'Error: {exception}', ephemeral=True)

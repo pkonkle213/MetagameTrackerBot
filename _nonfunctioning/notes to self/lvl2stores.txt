@@ -1,0 +1,3 @@
+what if I made level 2 stores dependant on the reported events?
+if more than 50% of your events are 100% reported?
+75% with 75% reported?
