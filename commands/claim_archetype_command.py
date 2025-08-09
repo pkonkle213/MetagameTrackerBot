@@ -65,21 +65,27 @@ async def AddTheArchetype(bot, interaction, player_name, date, archetype=''):
       message_parts += f'Format channel id: {interaction.channel_id}'
       message = '\n'.join(message_parts)
       #TODO: As a store, I'd like to utilize a channel to see the stream of claims coming in
+      await MessageStoreFeed(bot, message, interaction)
       await MessageChannel(bot,
                            message,
                            settings.BOTGUILD.id,
                            settings.CLAIMCHANNEL)
       await interaction.followup.send(f"Thank you for submitting the archetype for {event.EventDate.strftime('%B %d')}'s event!",
                                       ephemeral=True)
+      #TODO: This should return a tuple of a message, a boolean to indicate if a follow up message should be sent to the channel, and a boolean to indicate if the event is fully reported and a snapshot of the event should be sent
       followup = CheckEventPercentage(event)
       if followup:
         if followup[1]:
           title, headers, data = OneEvent(event)
           output = BuildTableOutput(title, headers, data)
-          await MessageChannel(bot, output, interaction.guild_id,
+          await MessageChannel(bot,
+                               output,
+                               interaction.guild_id,
                                interaction.channel_id)
         else:
-          await MessageChannel(bot, followup[0], interaction.guild_id,
+          await MessageChannel(bot,
+                               followup[0],
+                               interaction.guild_id,
                                interaction.channel_id)
   except ValueError:
     await interaction.followup.send("The date provided doesn't match the MM/DD/YYYY formatting. Please try again",
@@ -100,6 +106,12 @@ async def AddTheArchetype(bot, interaction, player_name, date, archetype=''):
     await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.",
                                     ephemeral=True)
     await Error(bot, exception)
+
+async def MessageStoreFeed(bot, message, interaction):
+  try:
+    ...
+  except Exception:
+    ...
 
 async def setup(bot):
   await bot.add_cog(ClaimArchetype(bot))

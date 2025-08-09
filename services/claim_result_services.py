@@ -68,7 +68,6 @@ def CheckEventPercentage(event):
   percent_reported = GetEventReportedPercentage(event.ID)
   if percent_reported is None:
     raise Exception('Unable to find event by ID: ' + event.ID)
-
   if percent_reported >= (event.LastUpdate + 1) / 4:
     check = UpdateEvent(event.ID)
     if check is None:

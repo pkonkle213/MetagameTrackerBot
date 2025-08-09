@@ -1,10 +1,12 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
+from custom_errors import KnownError
 from services.formats_services import AddStoreFormatMap, GetFormatOptions
 from services.game_mapper_services import AddStoreGameMap, GetGameOptions
 from select_menu_bones import SelectMenu
 from discord_messages import Error
 
+#TODO: This should be a true group command
 class MappingCommands(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
@@ -22,6 +24,8 @@ class MappingCommands(commands.Cog):
       result = await SelectMenu(interaction, message, placeholder, dynamic_options)
       output = AddStoreGameMap(interaction, result[0])
       await interaction.followup.send(output, ephemeral=True)
+    except KnownError as exception:
+      await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
       await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
       await Error(self.bot, exception)
@@ -42,6 +46,8 @@ class MappingCommands(commands.Cog):
         result = await SelectMenu(interaction, message, placeholder, dynamic_options)
         output = AddStoreFormatMap(interaction, result[0])
         await interaction.followup.send(output, ephemeral=True)
+    except KnownError as exception:
+      await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
       await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
       await Error(self.bot, exception)

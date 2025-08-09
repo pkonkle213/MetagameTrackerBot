@@ -48,3 +48,20 @@ def SetStoreTrackingStatus(approval_status,
     conn.commit()
     store = cur.fetchone()
     return store
+
+def GetClaimFeed(store, game):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    SELECT
+      channel_id
+    FROM
+      claimreportchannels
+    WHERE
+      discord_id = {store.DiscordId}
+      AND game_id = {game.ID}
+    '''
+    
+    cur.execute(command)
+    row = cur.fetchone()
+    return row[0] if row else None

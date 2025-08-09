@@ -12,7 +12,7 @@ class StoreTopPlayers(commands.Cog):
                         description="Get the top players of the format")
   #@app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
-  async def TopPlayers(self,
+  async def Leaderboard(self,
                        interaction: Interaction,
                        start_date: str = '',
                        end_date: str = ''):
