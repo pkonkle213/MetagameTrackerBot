@@ -158,7 +158,6 @@ def GetTopPlayerData(store,
       ORDER BY player_rank
     """
 
-    print('sql command:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows

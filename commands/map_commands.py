@@ -1,3 +1,4 @@
+from os import name
 from discord.ext import commands
 from discord import app_commands, Interaction
 from custom_errors import KnownError
@@ -5,13 +6,30 @@ from services.formats_services import AddStoreFormatMap, GetFormatOptions
 from services.game_mapper_services import AddStoreGameMap, GetGameOptions
 from select_menu_bones import SelectMenu
 from discord_messages import Error
+from services.map_claim_feed import MapClaimFeed
 
 #TODO: This should be a true group command
-class MappingCommands(commands.Cog):
+#TODO: As a store, I would like to map a channel as the claim feed for a game
+class MappingCommands(commands.GroupCog, name='map'):
   def __init__(self, bot):
     self.bot = bot
 
-  @app_commands.command(name='mapgame',
+  @app_commands.command(name='claimfeed',
+                        description='Map your channel as a claim feed for a game')
+  @app_commands.checks.has_role("MTSubmitter")
+  @app_commands.guild_only()
+  async def AddClaimFeedMap(self, interaction: Interaction):
+    await interaction.response.defer(ephemeral=True)
+    try:
+      output = MapClaimFeed(interaction)
+      await interaction.followup.send(output, ephemeral=True)
+    except KnownError as exception:
+      await interaction.followup.send(exception.message, ephemeral=True)
+    except Exception as exception:
+      await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
+      await Error(self.bot, exception)
+  
+  @app_commands.command(name='game',
                         description='Map your category to a game')
   @app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
@@ -30,7 +48,7 @@ class MappingCommands(commands.Cog):
       await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
       await Error(self.bot, exception)
 
-  @app_commands.command(name='mapformat',
+  @app_commands.command(name='format',
                     description='Map your channel to a format')
   @app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
@@ -53,4 +71,5 @@ class MappingCommands(commands.Cog):
       await Error(self.bot, exception)
     
 async def setup(bot):
+  print('MappingCommands loaded')
   await bot.add_cog(MappingCommands(bot))

@@ -2,6 +2,7 @@ from discord import Interaction, TextChannel
 from interaction_data import GetInteractionData
 from data.games_data import AddGameMap, GetAllGames
 
+#TODO: Should these be KnownErrors?
 def AddStoreGameMap(interaction:Interaction, chosen_game):
   game, format, store, user_id = GetInteractionData(interaction,
                                                     store=True)

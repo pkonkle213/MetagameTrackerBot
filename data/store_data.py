@@ -49,19 +49,21 @@ def SetStoreTrackingStatus(approval_status,
     store = cur.fetchone()
     return store
 
-def GetClaimFeed(store, game):
+def GetClaimFeed(discord_id, category_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
       channel_id
     FROM
-      claimreportchannels
+      claimreportchannels crc
+      INNER JOIN gamecategorymaps gcm ON crc.discord_id = gcm.discord_id
+      AND crc.game_id = gcm.game_id
     WHERE
-      discord_id = {store.DiscordId}
-      AND game_id = {game.ID}
+      crc.discord_id = {discord_id}
+      AND gcm.category_id = {category_id}
     '''
-    
+
     cur.execute(command)
     row = cur.fetchone()
     return row[0] if row else None

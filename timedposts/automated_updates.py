@@ -1,6 +1,6 @@
 import settings
 from output_builder import BuildTableOutput
-from timedposts.automated_updates_data import GetDataChannels
+from data.automated_updates_data import GetDataChannels
 from interaction_data import GetGame, GetFormat
 from services.date_functions import BuildDateRange
 from data.metagame_data import GetMetagame

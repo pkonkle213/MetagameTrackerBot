@@ -1,5 +1,6 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
+from data.store_data import GetClaimFeed
 import settings
 from services.claim_result_services import ClaimResult, CheckEventPercentage, OneEvent
 from custom_errors import KnownError
@@ -14,7 +15,9 @@ class ClaimArchetype(commands.GroupCog, name='claim'):
   @app_commands.command(name='limited',
                         description='Enter the deck archetype for a player and their last played limited event')
   @app_commands.guild_only()
-  async def ClaimLimited(self, interaction: Interaction, player_name: str,
+  async def ClaimLimited(self,
+                         interaction: Interaction,
+                         player_name: str,
                          date: str):
     """
       Parameters
@@ -30,8 +33,11 @@ class ClaimArchetype(commands.GroupCog, name='claim'):
   @app_commands.command(name='constructed',
                         description='Enter the deck archetype for a player and their last played constructed event')
   @app_commands.guild_only()
-  async def ClaimConstructed(self, interaction: Interaction, player_name: str,
-                             archetype: str, date: str):
+  async def ClaimConstructed(self,
+                             interaction: Interaction,
+                             player_name: str,
+                             archetype: str,
+                             date: str):
     """
     Parameters
     ----------
@@ -54,17 +60,10 @@ async def AddTheArchetype(bot, interaction, player_name, date, archetype=''):
                                                    archetype,
                                                    date)
     if archetype_submitted is None:
+      #This would be due to a connection error with the database
       await interaction.followup.send('Unable to submit the archetype. Please try again later.')
     else:
-      message_parts =  f'Submitter: {interaction.user.display_name}'
-      message_parts += f'Archetype submitted: {archetype_submitted[3]}'
-      message_parts += f'Player: {archetype_submitted[2].title()}'
-      message_parts += f'Date: {date}'
-      message_parts += f'Store Discord Name: {interaction.guild.name}'
-      message_parts += f'Format channel name: {interaction.channel.name}'
-      message_parts += f'Format channel id: {interaction.channel_id}'
-      message = '\n'.join(message_parts)
-      #TODO: As a store, I'd like to utilize a channel to see the stream of claims coming in
+      message = BuildMessage(interaction, date, archetype_submitted)
       await MessageStoreFeed(bot, message, interaction)
       await MessageChannel(bot,
                            message,
@@ -91,27 +90,37 @@ async def AddTheArchetype(bot, interaction, player_name, date, archetype=''):
     await interaction.followup.send("The date provided doesn't match the MM/DD/YYYY formatting. Please try again",
                                     ephemeral=True)
   except KnownError as exception:
-    phil_message_parts =  f'Error in Claim: {exception.message}'
-    phil_message_parts += f'player_name = {player_name}'
-    phil_message_parts += f'user_name = {interaction.user.display_name}'
-    phil_message_parts += f'archetype = {archetype}'
-    phil_message_parts += f'date = {date}'
-    phil_message_parts += f'Discord guild name = {interaction.guild.name}'
-    phil_message_parts += f'Discord channel name = {interaction.channel.name}'
-    
-    phil_message = '\n'.join(phil_message_parts)
     await interaction.followup.send(exception.message, ephemeral=True)
-    await MessageUser(bot, phil_message, settings.PHILID)
+    message = BuildMessage(interaction, date, None, exception.message, player_name, archetype)
+    await MessageStoreFeed(bot, message, interaction)      
   except Exception as exception:
     await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.",
                                     ephemeral=True)
     await Error(bot, exception)
 
+def BuildMessage(interaction, date, archetype_submitted=None, error_message=None, player_name='', archetype=''):
+  message_parts = []
+  message_parts.append(f'Submitter: {interaction.user.display_name}')
+  if not archetype_submitted:
+    message_parts.append(f'Ran into an error: {error_message}')
+  message_parts.append(f'Archetype submitted: {archetype_submitted.Archetype if archetype_submitted else archetype}')
+  message_parts.append(f'For player name: {player_name if not archetype_submitted else archetype_submitted.PlayerName}')
+  message_parts.append(f'For date: {date}')
+  message_parts.append(f'For channel name: {interaction.channel.name}')
+  return '\n'.join(message_parts)  
+
 async def MessageStoreFeed(bot, message, interaction):
   try:
-    ...
+    #Message the store feed channel
+    channel_id = GetClaimFeed(interaction.guild_id,
+                              interaction.channel.category.id)
+    await MessageChannel(bot,
+                         message,
+                         interaction.guild_id,
+                         channel_id)
   except Exception:
-    ...
-
+    #If none listed or found, message the bot guild
+    await MessageChannel(bot,message, settings.BOTGUILD.id, settings.CLAIMCHANNEL)
+  
 async def setup(bot):
   await bot.add_cog(ClaimArchetype(bot))

@@ -6,6 +6,7 @@ from data.event_data import GetEventObj, CreateEvent
 from interaction_data import GetInteractionData
 from tuple_conversions import ConvertToEvent, Participant, Round
 
+#TODO: As a store, I would like to know why an error in my submission happened
 async def SubmitData(message, data, date_str):
   '''Submits an events data to the database'''
   game, format, store, userId = GetInteractionData(message,

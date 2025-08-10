@@ -9,10 +9,13 @@ from data.archetype_data import AddArchetype
 from data.event_data import GetEventMeta
 from services.input_services import ConvertInput
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
-from tuple_conversions import Event
+from tuple_conversions import ConvertToArchetype, Event
 from interaction_data import GetInteractionData
 
-async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, date:str):
+async def ClaimResult(interaction:Interaction,
+                      player_name:str,
+                      archetype:str,
+                      date:str):
   date_used = ConvertToDate(date)
   date_today = GetToday()
   if not isSubmitter and DateDifference(date_today, date_used) > 14:
@@ -28,14 +31,6 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
   if not CanSubmitArchetypes(store.DiscordId, userId):
     raise KnownError('You have submitted too many bad archetypes. Please contact your store owner to have them submit the archetype.')
 
-  if game.Name.upper() == 'LORCANA':
-    inks = await LorcanaInkMenu(interaction)
-    archetype = f'{inks} - {archetype}'
-  
-  if game.Name.upper() == 'MAGIC' and format.IsLimited:
-    archetype = await MagicLimited(interaction)
-
-  #Overwriting the player_name with the name in the database to confirm if player_name is in the database. Maybe I rename the variables to provided_player_name and confirmed_player_name?
   player_name = ConvertInput(player_name)
   (event_id,
    discord_id,
@@ -49,6 +44,17 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
     raise KnownError('Event not found. Please check the date provided. If date is correct, the event has yet to be submitted. Please alert your store owner.')
   if player_name is None:
     raise KnownError('Player not found. Please check the name provided.')
+  
+  if game.Name.upper() == 'LORCANA':
+    inks = await LorcanaInkMenu(interaction)
+    if format.IsLimited:
+      archetype = f'{inks}'
+    else:
+      archetype = f'{inks} - {archetype}'
+  
+  if game.Name.upper() == 'MAGIC' and format.IsLimited:
+    archetype = await MagicLimited(interaction)
+
   event = Event(event_id,
                 discord_id,
                 event_date, 
@@ -62,7 +68,8 @@ async def ClaimResult(interaction:Interaction, player_name:str, archetype:str, d
                         archetype,
                         userId,
                         updater_name)
-  return archetype_added, event
+  print('Archetype Added:', archetype_added)
+  return ConvertToArchetype(archetype_added), event
 
 def CheckEventPercentage(event):
   percent_reported = GetEventReportedPercentage(event.ID)

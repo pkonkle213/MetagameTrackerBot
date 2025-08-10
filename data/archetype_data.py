@@ -26,7 +26,11 @@ def AddArchetype(event_id,
     {submitter_id},
     '{submitter_name}',
     {False})
-    RETURNING *
+    RETURNING event_id,
+    player_name,
+    archetype_played,
+    submitter_id,
+    submitter_username
     '''
     
     cur.execute(command, criteria)
