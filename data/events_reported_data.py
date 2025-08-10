@@ -73,6 +73,7 @@ def EventsAboveThreshold(percent, num_expected):
       ) >= {num_expected}
     '''
 
+    print('Events Above Threshold Command:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows

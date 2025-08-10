@@ -1,6 +1,5 @@
-#from array import array
 from data.events_reported_data import EventsAboveThreshold
-import numpy as np
+import settings
 
 def Level1StoreIds():
   print('Level 1 Store IDs')
@@ -32,11 +31,13 @@ def GetStoreIds(percent, num_expected):
   return total_list
 
 def AddExceptions(idList):
+  print('Id list:', idList)
   five6 = 1210746744602890310
+  #test_guild = settings.TESTSTOREGUILD.ID
   full_list = []
   full_list.append(five6)
-  for i in idList[0]:
-    if i not in full_list:
-      full_list.append(i)
+  for i in idList:
+    if i[0] not in full_list:
+      full_list.append(i[0])
   print('Full List:', full_list)
   return full_list

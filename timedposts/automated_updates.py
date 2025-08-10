@@ -7,9 +7,8 @@ from data.metagame_data import GetMetagame
 from interaction_data import GetStore
 
 async def UpdateDataGuild(bot):
-  data_guild_id = settings.DATAGUILDID
-  target_channels = GetDataChannels(data_guild_id)
-  store = GetStore(data_guild_id)
+  target_channels = GetDataChannels(settings.DATAGUILDID)
+  store = GetStore(settings.DATAGUILDID)
   for channel in target_channels:
     game = GetGame(channel[1], True)
     format = GetFormat(game, channel[0], True)

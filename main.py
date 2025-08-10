@@ -19,11 +19,19 @@ async def on_ready():
   scheduled_post.start()
   await SyncCommands(bot, CMDS_DIR)
 
+@tasks.loop(time=datetime.time(hour=10, minute=00, tzinfo=datetime.timezone.utc))
+async def update_store_levels():
+  await SyncCommands(bot, CMDS_DIR)
+  #TODO: As a store owner, I'd like to know when my store level changes
+
 @tasks.loop(time=datetime.time(hour=14, minute=00, tzinfo=datetime.timezone.utc)) #14:00 UTC is 10:00 AM EST
 async def scheduled_post():
   time_now = datetime.datetime.now(datetime.timezone.utc)
   if time_now.weekday() == 4:  # Check if it's Friday, 0 = Monday
-    await UpdateDataGuild(bot)
+    try:
+      await UpdateDataGuild(bot)
+    except Exception as error:
+      print(f'Error updating data guild: {error}')
 
 @scheduled_post.before_loop
 async def before_scheduled_post():
