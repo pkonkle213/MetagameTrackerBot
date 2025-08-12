@@ -18,7 +18,7 @@ async def ClaimResult(interaction:Interaction,
                       date:str):
   date_used = ConvertToDate(date)
   date_today = GetToday()
-  if not isSubmitter and DateDifference(date_today, date_used) > 14:
+  if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter') and DateDifference(date_today, date_used) > 14:
     raise KnownError('You can only claim archetypes for events within the last 14 days. Please contact your store owner to have them submit the archetype.')
 
   game, format, store, userId = GetInteractionData(interaction,

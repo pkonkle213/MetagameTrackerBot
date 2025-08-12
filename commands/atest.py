@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
+from checks import isSubmitter
 from commands.claim_archetype_command import MessageStoreFeed
 import settings
 
@@ -16,7 +17,6 @@ class ATest(commands.Cog):
   @app_commands.guild_only()
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   async def Testing(self, interaction: Interaction):
-    await MessageStoreFeed(self.bot, 'Testing', interaction)
     await interaction.followup.send("Testing!")
     
 async def setup(bot):

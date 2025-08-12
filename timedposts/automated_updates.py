@@ -16,10 +16,8 @@ async def UpdateDataGuild(bot):
     date_start, date_end = BuildDateRange('', '', format)
     title_name = format.Name.title() if format else game.Name.title()
     data = GetMetagame(game, format, date_start, date_end, store)
-    if data is None or len(data) == 0:
-      await channel.send('No metagame data found for this format')
-    else:
+    if data is not None and len(data) > 0:
       title = f'{title_name} metagame from {date_start} to {date_end}'
-      headers = ['Deck Archetype', 'Meta %', 'Win %', 'Combined %']
-      output = BuildTableOutput(title, headers, data)
+      headers = ['Deck Archetype', 'Meta %', 'Win %']
+      output = BuildTableOutput(title, headers, data, 0 if format.IsLimited else None)
       await channel.send(output)
