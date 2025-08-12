@@ -8,8 +8,6 @@ from select_menu_bones import SelectMenu
 from discord_messages import Error
 from services.map_claim_feed import MapClaimFeed
 
-#TODO: This should be a true group command
-#TODO: As a store, I would like to map a channel as the claim feed for a game
 class MappingCommands(commands.GroupCog, name='map'):
   def __init__(self, bot):
     self.bot = bot

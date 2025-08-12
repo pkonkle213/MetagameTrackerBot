@@ -12,14 +12,3 @@ def isOwner(interaction: Interaction):
 
 def isPhil(interaction: Interaction):
   return interaction.user.id == PHILID
-
-#TODO: How do I define different levels of stores?
-#TODO: A store should be able to use a command to see its level
-def isLvl1Store(interaction: Interaction):
-  ...
-  
-def isLvl2Store(interaction: Interaction):
-  ...
-
-def isLvl3Store(interaction: Interaction):
-  ...
