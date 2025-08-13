@@ -66,10 +66,6 @@ async def AddTheArchetype(bot, interaction, player_name, date, archetype=''):
     else:
       message = BuildMessage(interaction, date, archetype_submitted)
       await MessageStoreFeed(bot, message, interaction)
-      await MessageChannel(bot,
-                           message,
-                           settings.BOTGUILD.id,
-                           settings.CLAIMCHANNEL)
       await interaction.followup.send(f"Thank you for submitting the archetype for {event.EventDate.strftime('%B %d')}'s event!",
                                       ephemeral=True)
       #TODO: This should return a tuple of a message, a boolean to indicate if a follow up message should be sent to the channel, and a boolean to indicate if the event is fully reported and a snapshot of the event should be sent
@@ -120,9 +116,12 @@ async def MessageStoreFeed(bot, message, interaction):
                          interaction.guild_id,
                          channel_id)
   except Exception as exception:
+    #await MessageUser(bot, exception, settings.PHILID)
     #If none listed or found, message the bot guild
-    await MessageUser(bot, exception, settings.PHILID)
-    await MessageChannel(bot,message, settings.BOTGUILD.id, settings.CLAIMCHANNEL)
+    await MessageChannel(bot,
+                         message,
+                         settings.BOTGUILD.id,
+                         settings.CLAIMCHANNEL)
   
 async def setup(bot):
   await bot.add_cog(ClaimArchetype(bot))

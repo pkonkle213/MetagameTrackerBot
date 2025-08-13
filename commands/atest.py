@@ -5,8 +5,7 @@ from checks import isSubmitter
 from commands.claim_archetype_command import MessageStoreFeed
 import settings
 
-#TODO: This is an interesting way to get Level 2 stores, if they exist in the future
-TARGET_GUILDS = [settings.TESTSTOREGUILD.id]
+TARGET_GUILDS = [settings.TESTSTOREGUILD.id, 1210746744602890310]
 
 class ATest(commands.Cog):
   def __init__(self, bot):
