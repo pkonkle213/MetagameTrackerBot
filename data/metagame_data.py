@@ -36,7 +36,8 @@ def GetMetagame(game,
     WHERE
     metagame_percent >= 0.02
     ORDER BY
-    2 DESC
+    2 DESC,
+    3 DESC
     '''
 
     cur.execute(command)

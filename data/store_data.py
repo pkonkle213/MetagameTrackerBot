@@ -49,6 +49,18 @@ def SetStoreTrackingStatus(approval_status,
     store = cur.fetchone()
     return store
 
+def GetAllStores():
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = '''
+    SELECT discord_id
+    FROM Stores
+    WHERE isApproved = True
+    '''
+    cur.execute(command)
+    rows = cur.fetchall()
+    return rows
+
 def GetClaimFeed(discord_id, category_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:

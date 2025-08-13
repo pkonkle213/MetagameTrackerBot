@@ -8,6 +8,7 @@ from discord_messages import MessageChannel, MessageUser, Error
 from output_builder import BuildTableOutput
 from services.input_services import ConvertInput
 
+#TODO: I think the AddTheArchetype function should be moved to the services folder
 class ClaimArchetype(commands.GroupCog, name='claim'):
   def __init__(self, bot):
     self.bot = bot
@@ -94,7 +95,7 @@ async def AddTheArchetype(bot, interaction, player_name, date, archetype=''):
     message = BuildMessage(interaction, date, None, exception.message, player_name, archetype)
     await MessageStoreFeed(bot, message, interaction)      
   except Exception as exception:
-    await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.",
+    await  interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.",
                                     ephemeral=True)
     await Error(bot, exception)
 
@@ -118,8 +119,9 @@ async def MessageStoreFeed(bot, message, interaction):
                          message,
                          interaction.guild_id,
                          channel_id)
-  except Exception:
+  except Exception as exception:
     #If none listed or found, message the bot guild
+    await MessageUser(bot, exception, settings.PHILID)
     await MessageChannel(bot,message, settings.BOTGUILD.id, settings.CLAIMCHANNEL)
   
 async def setup(bot):
