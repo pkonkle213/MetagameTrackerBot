@@ -1,0 +1,9 @@
+from interaction_data import GetStore
+from data.check_level_data import CheckLevel
+
+def CheckMyStoreLevel(interaction):
+  store = GetStore(interaction.guild.id, True)
+  data = CheckLevel(store)
+  title = "Your store's last 40 days of events"
+  headers = ['Event Date', 'Game', 'Format', 'Reported', 'Total Attended', 'Reported %']
+  return data, title, headers

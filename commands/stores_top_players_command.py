@@ -3,6 +3,10 @@ from discord import app_commands, Interaction
 from services.top_players_services import GetTopPlayers
 from output_builder import BuildTableOutput
 from discord_messages import Error
+import discord
+from services.store_level_service import Level1StoreIds
+
+TARGET_GUILDS = [Level1StoreIds()]
 
 class StoreTopPlayers(commands.Cog):
   def __init__(self, bot):
@@ -12,6 +16,7 @@ class StoreTopPlayers(commands.Cog):
                         description="Get the top players of the format")
   #@app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
+  @app_commands.guilds(*[discord.Object(id=guild_id[0]) for guild_id in TARGET_GUILDS])
   async def Leaderboard(self,
                        interaction: Interaction,
                        start_date: str = '',

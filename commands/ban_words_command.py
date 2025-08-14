@@ -4,6 +4,9 @@ from discord import app_commands
 from custom_errors import KnownError
 from services.ban_word_services import AddBadWord
 from discord_messages import Error
+from services.store_level_service import Level1StoreIds
+
+TARGET_GUILDS = [Level1StoreIds()]
 
 class BanWord(commands.Cog):
   def __init__(self, bot):
@@ -12,6 +15,7 @@ class BanWord(commands.Cog):
   @app_commands.command(name='banword',
                         description='Add a banned word')
   @app_commands.guild_only()
+  @app_commands.guilds(*[discord.Object(id=guild_id[0]) for guild_id in TARGET_GUILDS])
   @app_commands.checks.has_role('MTSubmitter')
   async def BadWord(self,
                     interaction: discord.Interaction,

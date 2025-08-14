@@ -3,6 +3,10 @@ from discord import app_commands, Interaction
 from services.store_attendance_services import GetStoreAttendance
 from output_builder import BuildTableOutput
 from discord_messages import Error
+import discord
+from services.store_level_service import Level1StoreIds
+
+TARGET_GUILDS = [Level1StoreIds()]
 
 class EventAttendance(commands.Cog):
   def __init__(self, bot):
@@ -11,6 +15,7 @@ class EventAttendance(commands.Cog):
   @app_commands.command(name="attendance",
                         description="Get the attendance for a date range")
   @app_commands.guild_only()
+  @app_commands.guilds(*[discord.Object(id=guild_id[0]) for guild_id in TARGET_GUILDS])
   async def Attendance(self, interaction: Interaction,
      start_date: str = '',
      end_date: str = ''):

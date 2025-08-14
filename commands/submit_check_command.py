@@ -19,8 +19,6 @@ class SubmitDataChecker(commands.Cog):
       game, format, store, userId = GetInteractionData(interaction)
       if not store:
         issues.append('- Store not registered')
-      if not store.ApprovalStatus:
-        issues.append('- Store not approved for data submission')
       if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter'):
         issues.append("- You don't have the MTSubmitter role.")
       if not game:

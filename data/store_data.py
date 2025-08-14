@@ -22,9 +22,9 @@ def RegisterStore(discord_id,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
-    INSERT INTO Stores (store_name, discord_id, discord_name, owner_id, owner_name, isApproved, used_for_data, payment_level)
-    VALUES (%s, {discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True}, {True},0)
-    RETURNING discord_id, discord_name, store_name, owner_id, owner_name, isApproved, used_for_data, payment_level;
+    INSERT INTO Stores (store_name, discord_id, discord_name, owner_id, owner_name, used_for_data)
+    VALUES (%s, {discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True})
+    RETURNING discord_id, discord_name, store_name, owner_id, owner_name, used_for_data, isPaid
     '''
     
     cur.execute(command, [store_name])
@@ -32,30 +32,12 @@ def RegisterStore(discord_id,
     row = cur.fetchone()
     return row
 
-def SetStoreTrackingStatus(approval_status,
-   store_discord_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'''
-    UPDATE Stores
-    SET isApproved = {approval_status}
-    WHERE discord_id = {store_discord_id}
-    RETURNING *
-    '''
-    
-    criteria = (approval_status, store_discord_id)
-    cur.execute(command, criteria)
-    conn.commit()
-    store = cur.fetchone()
-    return store
-
 def GetAllStores():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = '''
     SELECT discord_id
     FROM Stores
-    WHERE isApproved = True
     '''
     cur.execute(command)
     rows = cur.fetchall()

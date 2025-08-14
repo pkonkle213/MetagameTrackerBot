@@ -19,10 +19,15 @@ async def on_ready():
   scheduled_post.start()
   await SyncCommands(bot, CMDS_DIR)
 
-@tasks.loop(time=datetime.time(hour=10, minute=00, tzinfo=datetime.timezone.utc))
+@tasks.loop(time=datetime.time(hour=8, minute=00, tzinfo=datetime.timezone.utc))
 async def update_store_levels():
+  print('Resyncing commands')
   await SyncCommands(bot, CMDS_DIR)
   #TODO: As a store owner, I'd like to know when my store level changes
+
+@update_store_levels.before_loop
+async def before_update_store_levels():
+  await bot.wait_until_ready()
 
 @tasks.loop(time=datetime.time(hour=14, minute=00, tzinfo=datetime.timezone.utc)) #14:00 UTC is 10:00 AM EST
 async def scheduled_post():

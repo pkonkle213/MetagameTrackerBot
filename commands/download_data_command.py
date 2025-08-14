@@ -3,6 +3,10 @@ from discord import app_commands, Interaction
 from checks import isOwner
 from services.download_data_services import GetParticipantData, GetRoundData, GetPlayersRoundData, GetPlayersParticipantData
 from discord_messages import MessageUser, Error
+import discord
+from services.store_level_service import LevelInfStoreIds
+
+TARGET_GUILDS = [LevelInfStoreIds()]
 
 class DownloadDataGroup(commands.GroupCog, name='download'):
   def __init__(self, bot):
@@ -11,6 +15,7 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
   @app_commands.command(name='participants',
   description='Download the basic data for a store for a date range')
   @app_commands.check(isOwner)
+  @app_commands.guilds(*[discord.Object(id=guild_id[0]) for guild_id in TARGET_GUILDS])
   @app_commands.guild_only()
   async def ParticipantData(self,
                          interaction: Interaction,
@@ -41,6 +46,7 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
                         description='Download the round by round data for a store for a date range')
   @app_commands.check(isOwner)
   @app_commands.guild_only()
+  @app_commands.guilds(*[discord.Object(id=guild_id[0]) for guild_id in TARGET_GUILDS])
   async def RoundData(self,
                       interaction: Interaction,
                       start_date: str = '',
@@ -69,6 +75,7 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
   @app_commands.command(name='myrounds',
                         description='Download the round by round data for a player for a date range')
   @app_commands.guild_only()
+  @app_commands.guilds(*[discord.Object(id=guild_id[0]) for guild_id in TARGET_GUILDS])
   async def MyRoundData(self,
                         interaction: Interaction,
                         start_date: str = '',
@@ -97,6 +104,7 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
   @app_commands.command(name='myresults',
                         description='Download the basic data for a player for a date range')
   @app_commands.guild_only()
+  @app_commands.guilds(*[discord.Object(id=guild_id[0]) for guild_id in TARGET_GUILDS])
   async def MyParticipantData(self,
                               interaction: Interaction,
                               start_date: str = '',

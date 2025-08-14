@@ -4,6 +4,10 @@ from services.personal_matchups_services import PersonalMatchups
 from services.player_win_record_services import PlayRecord
 from output_builder import BuildTableOutput
 from discord_messages import Error
+import discord
+from services.store_level_service import Level3StoreIds
+
+TARGET_GUILDS = [Level3StoreIds()]
 
 class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
   def __init__(self, bot):
@@ -12,6 +16,7 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
   @app_commands.command(name='matchups',
                         description="See your win/loss record based upon archetypes you've played against in this format")
   @app_commands.guild_only()
+  @app_commands.guilds(*[discord.Object(id=guild_id[0]) for guild_id in TARGET_GUILDS])
   async def PersonalMatchupReport(self,
                                   interaction: Interaction,
                 start_date: str = '',

@@ -38,9 +38,8 @@ Store = namedtuple('Store', ['DiscordId',
                              'StoreName',
                              'OwnerId',
                              'OwnerName',
-                             'ApprovalStatus',
                              'UsedForData',
-                             'PaymentLevel'])
+                             'IsPaid'])
 
 def ConvertToStore(store):
   return Store(int(store[0]),
@@ -49,8 +48,7 @@ def ConvertToStore(store):
                int(store[3]),
                store[4],
                store[5],
-               store[6],
-               int(store[7]))
+               store[6])
 
 Event = namedtuple('Event', ['ID',
                              'StoreDiscordID',

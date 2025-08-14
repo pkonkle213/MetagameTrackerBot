@@ -1,4 +1,3 @@
-import numpy
 import os
 import psycopg2
 
@@ -61,8 +60,10 @@ def EventsAboveThreshold(percent, num_expected):
     FROM
       events_reported er
       INNER JOIN events e ON e.id = er.id
+      INNER JOIN stores s ON er.discord_id = s.discord_id
     WHERE
       e.event_date BETWEEN CURRENT_DATE - 40 AND CURRENT_DATE
+      AND s.last_payment > CURRENT_DATE - INTERVAL '1 month'
     GROUP BY
       er.discord_id
     HAVING

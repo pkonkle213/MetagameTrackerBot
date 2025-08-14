@@ -29,7 +29,7 @@ def GetMetagame(game,
         {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != settings.DATAGUILDID else ''}
         AND e.format_id = {format.ID}
         AND e.game_id = {game.ID}
-        AND s.isapproved = {True}
+        AND s.used_for_data = {True}
       GROUP BY
         archetype_played
       )

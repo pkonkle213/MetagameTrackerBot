@@ -18,9 +18,21 @@ def GetStoreByDiscord(discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command =  f'''
-    SELECT discord_id, discord_name, store_name, owner_id, owner_name, isApproved, used_for_data, payment_level
-    FROM Stores
-    WHERE discord_id = {discord_id}
+    SELECT
+      discord_id,
+      discord_name,
+      store_name,
+      owner_id,
+      owner_name,
+      used_for_data,
+      CASE
+        WHEN last_payment >= CURRENT_DATE - INTERVAL '1 month' THEN TRUE
+        ELSE FALSE
+      END AS isPaid
+    FROM
+      Stores
+    WHERE
+      discord_id = {discord_id}
     '''
 
     cur.execute(command)
