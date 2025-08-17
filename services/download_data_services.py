@@ -44,7 +44,7 @@ def GetPlayerData(interaction, start_date, end_date):
   else:
     print('Participant data found')
     header = 'GAME,FORMAT,DATE,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS'
-    files.append(ConvertRowsToFile(participant_data, 'MyStoreData', header))
+    files.append(ConvertRowsToFile(participant_data, 'MyStoreParticipantData', header))
 
   print('Getting round data')
   round_data = GetPlayerRoundData(store, game, format, date_start, date_end, user_id)
