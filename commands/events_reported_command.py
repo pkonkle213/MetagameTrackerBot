@@ -5,7 +5,7 @@ import settings
 from services.events_reported_services import GetMyEventsReported
 from output_builder import BuildTableOutput
 from checks import isPhil
-from discord_messages import Error
+from services.command_error_service import Error
 
 TARGET_GUILDS = [settings.BOTGUILD.id]
 
@@ -34,7 +34,7 @@ class EventsReported(commands.Cog):
       await interaction.followup.send(output)
     except Exception as exception:
       await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
-      await Error(self.bot, exception)
+      await Error(self.bot, interaction, exception)
 
 async def setup(bot):
   await bot.add_cog(EventsReported(bot))

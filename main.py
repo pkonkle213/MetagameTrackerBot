@@ -6,6 +6,7 @@ import settings
 import logging
 from timedposts.automated_updates import UpdateDataGuild
 from services.sync_service import SyncCommands
+from discord_messages import MessageUser
 
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 
@@ -23,6 +24,7 @@ async def on_ready():
 async def update_store_levels():
   print('Resyncing commands')
   await SyncCommands(bot, CMDS_DIR)
+  await MessageUser(bot, 'Resyncing commands', settings.PHILID)
   #TODO: As a store owner, I'd like to know when my store level changes
 
 @update_store_levels.before_loop
@@ -41,6 +43,6 @@ async def scheduled_post():
 @scheduled_post.before_loop
 async def before_scheduled_post():
   await bot.wait_until_ready()
-  
+
 if settings.DISCORDTOKEN:
   bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)

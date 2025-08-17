@@ -70,7 +70,7 @@ def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id)
     GROUP BY
       asu.archetype_played
     ORDER BY
-      asu.archetype_played            
+      asu.archetype_played
     '''
     
     cur.execute(command)

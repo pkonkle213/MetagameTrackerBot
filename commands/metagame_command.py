@@ -2,9 +2,12 @@ from discord import app_commands, Interaction
 from discord.ext import commands
 from services.metagame_services import GetMyMetagame
 from output_builder import BuildTableOutput
-from discord_messages import Error
+from services.command_error_service import Error
 
 class MetagameCommand(commands.Cog):
+  def __init__(self, bot):
+    self.bot = bot
+
   @app_commands.command(name="metagame",
                         description="Get the metagame for this format")
   async def ViewMetagame(self,
@@ -27,7 +30,7 @@ class MetagameCommand(commands.Cog):
       output = BuildTableOutput(title, headers, data, archetype_column)
       await interaction.followup.send(output)
     except Exception as exception:
-      await Error(interaction, exception)
+      await Error(self.bot, interaction, exception)
       print('Error in GetTheMetagame:', exception)
       await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.")
 

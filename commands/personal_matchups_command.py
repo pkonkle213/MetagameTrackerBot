@@ -3,20 +3,19 @@ from discord import app_commands, Interaction
 from services.personal_matchups_services import PersonalMatchups
 from services.player_win_record_services import PlayRecord
 from output_builder import BuildTableOutput
-from discord_messages import Error
+from services.command_error_service import Error
 import discord
-from services.store_level_service import Level3StoreIds
-
-TARGET_GUILDS = [Level3StoreIds()]
+from services.store_level_service import LEVEL3STORES
 
 class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
   def __init__(self, bot):
     self.bot = bot
 
+  #TODO: Not sure I like this command
   @app_commands.command(name='matchups',
                         description="See your win/loss record based upon archetypes you've played against in this format")
   @app_commands.guild_only()
-  @app_commands.guilds(*[discord.Object(id=guild_id[0]) for guild_id in TARGET_GUILDS])
+  @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL3STORES])
   async def PersonalMatchupReport(self,
                                   interaction: Interaction,
                 start_date: str = '',
@@ -27,12 +26,12 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
       output = BuildTableOutput(title, headers, data)
       await interaction.followup.send(output)
     except Exception as exception:
-      await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
-      await Error(self.bot, exception)
+      await Error(self.bot, interaction, exception)
 
   @app_commands.command(name="wlrecord",
     description="Look up your win/loss record(s)")
   @app_commands.guild_only()
+  @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL3STORES])
   async def WLDRecord(self,
                       interaction: Interaction,
                       start_date: str = '',

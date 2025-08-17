@@ -4,9 +4,10 @@ from data.store_data import GetClaimFeed
 import settings
 from services.claim_result_services import ClaimResult, CheckEventPercentage, OneEvent
 from custom_errors import KnownError
-from discord_messages import MessageChannel, MessageUser, Error
+from discord_messages import MessageChannel
 from output_builder import BuildTableOutput
 from services.input_services import ConvertInput
+from services.command_error_service import Error
 
 #TODO: I think the AddTheArchetype function should be moved to the services folder
 class ClaimArchetype(commands.GroupCog, name='claim'):
@@ -93,7 +94,7 @@ async def AddTheArchetype(bot, interaction, player_name, date, archetype=''):
   except Exception as exception:
     await  interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.",
                                     ephemeral=True)
-    await Error(bot, exception)
+    await Error(bot, interaction, exception)
 
 def BuildMessage(interaction, date, archetype_submitted=None, error_message=None, player_name='', archetype=''):
   message_parts = []

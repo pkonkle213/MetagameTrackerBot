@@ -2,11 +2,9 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 from services.store_attendance_services import GetStoreAttendance
 from output_builder import BuildTableOutput
-from discord_messages import Error
+from services.command_error_service import Error
 import discord
-from services.store_level_service import Level1StoreIds
-
-TARGET_GUILDS = [Level1StoreIds()]
+from services.store_level_service import LEVEL1STORES
 
 class EventAttendance(commands.Cog):
   def __init__(self, bot):
@@ -15,7 +13,7 @@ class EventAttendance(commands.Cog):
   @app_commands.command(name="attendance",
                         description="Get the attendance for a date range")
   @app_commands.guild_only()
-  @app_commands.guilds(*[discord.Object(id=guild_id[0]) for guild_id in TARGET_GUILDS])
+  @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL1STORES])
   async def Attendance(self, interaction: Interaction,
      start_date: str = '',
      end_date: str = ''):
@@ -38,8 +36,7 @@ class EventAttendance(commands.Cog):
                     data)
         await interaction.followup.send(output)
     except Exception as exception:
-      await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
-      await Error(self.bot, exception)
+      await Error(self.bot, interaction, exception)
 
 async def setup(bot):
   await bot.add_cog(EventAttendance(bot))

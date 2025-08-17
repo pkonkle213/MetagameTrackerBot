@@ -36,8 +36,14 @@ def GetStoreIds(percent, num_expected):
 
 def AddExceptions(idList):
   full_list = []
+  full_list.append(settings.TESTSTOREGUILD.id)
   full_list.append(settings.FIVE6STOREID)
   for i in idList:
     if i[0] not in full_list:
       full_list.append(i[0])
   return full_list
+
+LEVEL1STORES = Level1StoreIds()
+LEVEL2STORES = Level2StoreIds()
+LEVEL3STORES = Level3StoreIds()
+LEVELINFSTORES = LevelInfStoreIds()

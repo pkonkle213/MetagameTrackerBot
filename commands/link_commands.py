@@ -4,6 +4,7 @@ from discord.ext import commands
 from discord import app_commands
 
 class Links(commands.Cog):
+  """A group of commands for getting links"""
   def __init__(self, bot):
     self.bot = bot
 

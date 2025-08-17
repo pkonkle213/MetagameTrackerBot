@@ -1,14 +1,16 @@
-from os import name
 from discord.ext import commands
 from discord import app_commands, Interaction
 from custom_errors import KnownError
 from services.formats_services import AddStoreFormatMap, GetFormatOptions
 from services.game_mapper_services import AddStoreGameMap, GetGameOptions
 from select_menu_bones import SelectMenu
-from discord_messages import Error
+from services.command_error_service import Error
 from services.map_claim_feed import MapClaimFeed
 
 class MappingCommands(commands.GroupCog, name='map'):
+  """
+  A group of commands for mapping channels to games, formats, and claim feeds
+  """
   def __init__(self, bot):
     self.bot = bot
 
@@ -24,8 +26,7 @@ class MappingCommands(commands.GroupCog, name='map'):
     except KnownError as exception:
       await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
-      await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
-      await Error(self.bot, exception)
+      await Error(self.bot, interaction, exception)
   
   @app_commands.command(name='game',
                         description='Map your category to a game')
@@ -43,8 +44,7 @@ class MappingCommands(commands.GroupCog, name='map'):
     except KnownError as exception:
       await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
-      await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
-      await Error(self.bot, exception)
+      await Error(self.bot, interaction, exception)
 
   @app_commands.command(name='format',
                     description='Map your channel to a format')
@@ -65,9 +65,7 @@ class MappingCommands(commands.GroupCog, name='map'):
     except KnownError as exception:
       await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
-      await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
-      await Error(self.bot, exception)
+      await Error(self.bot, interaction, exception)
     
 async def setup(bot):
-  print('MappingCommands loaded')
   await bot.add_cog(MappingCommands(bot))
