@@ -109,6 +109,7 @@ def GetPlayerRoundData(store, game, format, start_date, end_date, user_id):
       round_number
     '''
 
+    print('Player participant:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows
@@ -149,6 +150,7 @@ def GetPlayerParticipantData(store, game, format, start_date, end_date, user_id)
       draws desc
     '''
 
+    print('Player round:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows

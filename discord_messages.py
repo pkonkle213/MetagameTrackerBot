@@ -1,11 +1,11 @@
 import discord
 
-async def MessageUser(bot, msg, userId, file=None):
+async def MessageUser(bot, msg, userId, files=None):
   user = await bot.fetch_user(userId)
-  if file is None:
+  if files is None:
     await user.send(f'{msg}')
   else:
-    await user.send(f'{msg}', file=file)
+    await user.send(f'{msg}', files=files)
 
 async def MessageChannel(bot, msg, guildId, channelId):
   server = bot.get_guild(int(guildId))
