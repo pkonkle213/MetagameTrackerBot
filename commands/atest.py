@@ -3,8 +3,13 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 import settings
 from checks import isPhil
+import pathlib
+from services.sync_service import SyncCommands
+from discord_messages import MessageUser
 
-TARGET_GUILDS = [settings.TESTSTOREGUILD.id, 1210746744602890310]
+TARGET_GUILDS = [settings.TESTGUILDID, 1210746744602890310]
+BASE_DIR = pathlib.Path(__file__).parent
+CMDS_DIR = BASE_DIR / "commands"
 
 class ATest(commands.Cog):
   def __init__(self, bot):

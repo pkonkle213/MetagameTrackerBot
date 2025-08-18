@@ -23,7 +23,7 @@ def GetAnalysis(interaction, weeks):
 
   #Uncomment to fake data
   #Comment to use true data
-  discord_id = settings.TESTSTOREGUILD.id
+  discord_id = settings.TESTGUILDID
   game = tuple_conversions.ConvertToGame((1, "Magic", True))
   format = tuple_conversions.ConvertToFormat((1, "Pauper"))
 

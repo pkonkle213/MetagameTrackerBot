@@ -5,7 +5,7 @@ import settings
 from services.demonstration_functions import NewDemo
 from services.command_error_service import Error
 
-TARGET_GUILDS = [settings.BOTGUILD.id]
+TARGET_GUILDS = [settings.BOTGUILDID]
 
 class NewDemoCommand(commands.Cog):
   def __init__(self, bot):

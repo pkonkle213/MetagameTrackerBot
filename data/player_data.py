@@ -1,6 +1,6 @@
 import os
 import psycopg2
-from settings import BOTGUILD
+from settings import BOTGUILDID
 
 def GetStats(discord_id,
              game,
@@ -129,7 +129,7 @@ def GetTopPlayerData(store,
                       events
                     WHERE
                       event_date BETWEEN '{start_date}' AND '{end_date}'
-                      {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILD.id else ''}
+                      {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILDID else ''}
                       AND game_id = {game.ID}
                       {f'AND format_id = {format.ID}' if format else ''}
                   ) AS attendance_percentage
@@ -138,7 +138,7 @@ def GetTopPlayerData(store,
                   INNER JOIN fullparticipants fp ON fp.event_id = e.id
                 WHERE
                   event_date BETWEEN '{start_date}' AND '{end_date}'
-                  {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILD.id else ''}
+                  {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILDID else ''}
                   AND game_id = {game.ID}
                   {f'AND format_id = {format.ID}' if format else ''}
                 GROUP BY
@@ -159,7 +159,7 @@ def GetTopPlayerData(store,
               LEFT JOIN fullparticipants fp ON fp.event_id = e.id
             WHERE
               event_date BETWEEN '{start_date}' AND '{end_date}'
-              {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILD.id else ''}
+              {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILDID else ''}
               AND game_id = {game.ID}
               {f'AND format_id = {format.ID}' if format else ''}
             GROUP BY

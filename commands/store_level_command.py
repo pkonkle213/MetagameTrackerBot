@@ -6,7 +6,7 @@ from output_builder import BuildTableOutput
 import settings
 import discord
 
-TARGET_GUILDS = [settings.TESTSTOREGUILD.id]
+TARGET_GUILDS = [settings.TESTGUILDID]
 
 class CheckStoreLevel(commands.GroupCog, name='level'):
   """Group of commands to check the level of your store"""

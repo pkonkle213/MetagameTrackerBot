@@ -1,26 +1,21 @@
 import os
-import discord
-from dotenv.main import load_dotenv
 
-load_dotenv()
+DISCORDTOKEN = os.environ['DISCORD_TOKEN']
 
-DISCORDTOKEN = os.getenv('DISCORDTOKEN')
+BOTGUILDID = int(os.environ['BOT_GUILD_ID'])
+TESTGUILDID = int(os.environ['TEST_GUILD_ID'])
+DATAGUILDID = int(os.environ['DATA_GUILD_ID'])
+FIVE6STOREID = int(os.environ['FIVE6_GUILD_ID'])
 
-DATAGUILDID = int(os.getenv('DATAGUILDID'))
+ERRORCHANNELID = int(os.environ['BOT_ERROR_ID'])
+CLAIMCHANNEL = int(os.environ['BOT_CLAIMSTREAM_ID'])
+BOTEVENTINPUTID = int(os.environ['BOT_NEWEVENT_ID'])
 
-APPROVALCHANNELID = int(os.getenv('BOTAPPROVALCHANNELID'))
-ERRORCHANNELID = int(os.getenv('BOTERRORCHANNELID'))
-CLAIMCHANNEL = int(os.getenv('CLAIMCHANNELID'))
-BOTEVENTINPUTID = int(os.getenv('BOTEVENTINPUTID'))
-FIVE6STOREID = int(os.getenv('FIVE6STOREID'))
 
-MYBOTURL = os.getenv('MYBOTURL')
-SOPURL = os.getenv('SOPURL')
-FEEDBACKURL = os.getenv('FEEDBACKURL')
-MYBOTGUILDURL = os.getenv('MYBOTGUILDURL')
-DATAHUBINVITE = os.getenv('DATAHUBINVITE')
+MYBOTURL = os.environ['BOT_URL_INSTALL']
+SOPURL = os.environ['BOT_URL_SOP']
+FEEDBACKURL = os.environ['BOT_URL_FEEDBACK']
+MYBOTGUILDURL = os.environ['BOT_URL_GUILDINVITE']
+DATAHUBINVITE = os.environ['DATAHUB_URL_INVITE']
 
-PHILID = int(os.getenv('PHILID'))
-
-BOTGUILD = discord.Object(id=int(os.getenv('BOTGUILDID')))
-TESTSTOREGUILD = discord.Object(id=int(os.getenv('TESTGUILDID')))
+PHILID = int(os.environ['PHIL_USERID'])

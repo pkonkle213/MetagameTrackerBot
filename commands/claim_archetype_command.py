@@ -121,7 +121,7 @@ async def MessageStoreFeed(bot, message, interaction):
     #If none listed or found, message the bot guild
     await MessageChannel(bot,
                          message,
-                         settings.BOTGUILD.id,
+                         settings.BOTGUILDID,
                          settings.CLAIMCHANNEL)
   
 async def setup(bot):

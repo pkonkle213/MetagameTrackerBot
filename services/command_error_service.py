@@ -12,5 +12,5 @@ async def Error(bot, interaction, error):
   await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
   await MessageChannel(bot,
                        error,
-                       settings.BOTGUILD.id,
+                       settings.BOTGUILDID,
                        settings.ERRORCHANNELID)

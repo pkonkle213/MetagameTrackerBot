@@ -103,7 +103,7 @@ def GetOffenders(game, format, store):
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT 
-      asu.date_submitted,
+      CAST(asu.date_submitted AS DATE) as date_submitted,
       asu.submitter_username,
       asu.submitter_id,
       e.event_date,

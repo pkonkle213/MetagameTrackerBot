@@ -1,7 +1,7 @@
 import discord
 from data.store_data import RegisterStore
 from services.input_services import ConvertInput
-from settings import BOTGUILD
+from settings import BOTGUILDID
 from tuple_conversions import ConvertToStore
 
 def RegisterNewStore(interaction: discord.Interaction, store_name: str):
@@ -63,7 +63,7 @@ async def AssignMTSubmitterRole(bot:discord.Client, user_id, guild_id):
   return "Role assigned to user"
 
 async def AssignStoreOwnerRoleInBotGuild(bot:discord.Client, interaction):
-  bot_guild = bot.get_guild(int(BOTGUILD.id))
+  bot_guild = bot.get_guild(BOTGUILDID)
   if bot_guild is None:
     raise Exception('Bot guild not found')
   user = await bot_guild.fetch_member(interaction.user.id)

@@ -18,14 +18,14 @@ CMDS_DIR = BASE_DIR / "commands"
 async def on_ready():
   print(f'Logged on as {format(bot.user)}!')
   scheduled_post.start()
+  update_store_levels.start()
   await SyncCommands(bot, CMDS_DIR)
 
+#This should start at 08:00 UTC, which is 4:00 AM EST
 @tasks.loop(time=datetime.time(hour=8, minute=00, tzinfo=datetime.timezone.utc))
 async def update_store_levels():
-  print('Resyncing commands')
   await SyncCommands(bot, CMDS_DIR)
   await MessageUser(bot, 'Resyncing commands', settings.PHILID)
-  #TODO: As a store owner, I'd like to know when my store level changes
 
 @update_store_levels.before_loop
 async def before_update_store_levels():
@@ -44,5 +44,4 @@ async def scheduled_post():
 async def before_scheduled_post():
   await bot.wait_until_ready()
 
-if settings.DISCORDTOKEN:
-  bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)
+bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)

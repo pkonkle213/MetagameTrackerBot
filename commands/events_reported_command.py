@@ -7,7 +7,7 @@ from output_builder import BuildTableOutput
 from checks import isPhil
 from services.command_error_service import Error
 
-TARGET_GUILDS = [settings.BOTGUILD.id]
+TARGET_GUILDS = [settings.BOTGUILDID]
 
 class EventsReported(commands.Cog):
   def __init__(self, bot):

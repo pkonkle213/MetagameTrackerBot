@@ -21,7 +21,9 @@ def GetSubmittedArchetypes(game, format, store, player_name, date):
       {f'AND e.format_id = {format.ID}' if format is not None else ''}
       {f"AND e.event_date = '{date}'" if date is not None else ''}
       {f"AND ua.player_name = '{player_name}'" if player_name != '' else ''}
-    ORDER BY e.event_date desc
+    ORDER BY
+      e.event_date desc,
+      ua.player_name
     LIMIT 15
     '''
 

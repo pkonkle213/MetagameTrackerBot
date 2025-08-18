@@ -3,7 +3,7 @@ from discord.ext import commands
 import settings
 from timedposts.automated_updates import UpdateDataGuild
 
-TARGET_GUILDS = [settings.BOTGUILD.id]
+TARGET_GUILDS = [settings.BOTGUILDID]
 
 class ForceDataGuildUpdate(commands.Cog):
   def __init__(self, bot):

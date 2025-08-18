@@ -32,8 +32,11 @@ class StoreTopPlayers(commands.Cog):
       data, title, headers = GetTopPlayers(interaction,
                              start_date,
                              end_date)
-      output = BuildTableOutput(title, headers, data)
-      await interaction.followup.send(output)
+      if data is None or len(data) == 0:
+        await interaction.followup.send('No players found for this game or format')
+      else:
+        output = BuildTableOutput(title, headers, data)
+        await interaction.followup.send(output)
     except Exception as exception:
       await Error(self.bot, interaction, exception)
 

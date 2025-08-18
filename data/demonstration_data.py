@@ -1,6 +1,6 @@
 import os
 import psycopg2
-from settings import TESTSTOREGUILD
+from settings import TESTGUILDID
 
 def UpdateDemo(event_id, event_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -17,6 +17,6 @@ def UpdateDemo(event_id, event_date):
 def DeleteDemo():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command = f'DELETE FROM Events WHERE discord_id = {TESTSTOREGUILD.id} and id > 12;'
+    command = f'DELETE FROM Events WHERE discord_id = {TESTGUILDID} and id > 12;'
     cur.execute(command)
     conn.commit()

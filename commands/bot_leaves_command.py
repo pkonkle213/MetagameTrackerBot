@@ -3,7 +3,7 @@ from discord.ext import commands
 import discord
 import settings
 
-TARGET_GUILDS = [settings.BOTGUILD.id]
+TARGET_GUILDS = [settings.BOTGUILDID]
 
 class LeaveAGuild(commands.Cog):
   def __init__(self, bot):
