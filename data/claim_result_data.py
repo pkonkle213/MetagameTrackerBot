@@ -12,44 +12,11 @@ def GetEventReportedPercentage(event_id):
         END
       ) / SUM(count(*)) OVER () AS percentage
     FROM
-      (
-        SELECT
-          event_id,
-          player_name
-        FROM
-          participants p
-        UNION
-        SELECT
-          event_id,
-          player1_name AS player_name
-        FROM
-          rounddetails rd
-        UNION
-        SELECT
-          event_id,
-          player2_name AS player_name
-        FROM
-          rounddetails rd
-        WHERE
-          player2_name != 'BYE'
-      ) p
-      LEFT OUTER JOIN (
-        SELECT DISTINCT
-          ON (event_id, player_name) event_id,
-          player_name,
-          archetype_played
-        FROM
-          ArchetypeSubmissions
-        WHERE
-          reported = FALSE
-        ORDER BY
-          event_id,
-          player_name,
-          id DESC
-      ) X ON X.event_id = p.event_id
-      AND X.player_name = p.player_name
+      fullparticipants fp
+      LEFT OUTER JOIN uniquearchetypes ua ON ua.event_id = fp.event_id
+      AND ua.player_name = fp.player_name
     WHERE
-      p.event_id = {event_id}    
+      fp.event_id = {event_id}
     """
     
     cur.execute(command)

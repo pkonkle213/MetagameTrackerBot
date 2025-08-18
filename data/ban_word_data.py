@@ -91,7 +91,7 @@ def GetWordsForDiscord(discord_id):
     command = f'''
     SELECT b.badword
     FROM BadWords b
-      INNER JOIN badwords_stores bs ON b.id = bs.badword_id
+    INNER JOIN badwords_stores bs ON b.id = bs.badword_id
     WHERE bs.discord_id = {discord_id}
     '''
     cur.execute(command)

@@ -62,90 +62,19 @@ def GetEventMeta(event_id):
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      archetype_played,
+      COALESCE(archetype_played, 'UNKNOWN') AS archetype_played,
       wins,
       losses,
       draws
     FROM
-      (
-        SELECT
-          event_id,
-          p.player_name,
-          COUNT(
-            CASE
-              WHEN match_result = 'WIN' THEN 1
-            END
-          ) AS wins,
-          COUNT(
-            CASE
-              WHEN match_result = 'LOSS' THEN 1
-            END
-          ) AS losses,
-          COUNT(
-            CASE
-              WHEN match_result = 'DRAW' THEN 1
-            END
-          ) AS draws
-        FROM
-          (
-            SELECT
-              event_id,
-              player1_name AS player_name,
-              CASE
-                WHEN player1_game_wins > player2_game_wins THEN 'WIN'
-                WHEN player1_game_wins = player2_game_wins THEN 'DRAW'
-                ELSE 'LOSS'
-              END AS match_result
-            FROM
-              rounddetails
-            WHERE
-              event_id = {event_id}
-            UNION ALL
-            SELECT
-              event_id,
-              player2_name AS player_name,
-              CASE
-                WHEN player2_game_wins > player1_game_wins THEN 'WIN'
-                WHEN player2_game_wins = player1_game_wins THEN 'DRAW'
-                ELSE 'LOSS'
-              END AS match_result
-            FROM
-              rounddetails
-            WHERE
-              player2_name != 'BYE'
-              AND event_id = {event_id}
-            ORDER BY
-              player_name
-          ) p
-        GROUP BY
-          event_id,
-          p.player_name
-        UNION ALL
-        SELECT
-          event_id,
-          player_name,
-          wins,
-          losses,
-          draws
-        FROM
-          participants
-        WHERE
-          event_id = {event_id}
-      ) x
-      LEFT JOIN (
-        SELECT DISTINCT
-          ON (event_id, player_name) event_id,
-          player_name,
-          archetype_played
-        FROM
-          ArchetypeSubmissions
-        ORDER BY
-          event_id,
-          player_name,
-          id DESC
-      ) ap ON ap.event_id = x.event_id
-      AND ap.player_name = x.player_name
-    ORDER BY wins DESC, draws DESC
+      fullparticipants fp
+      LEFT JOIN uniquearchetypes ua ON ua.event_id = fp.event_id
+      AND ua.player_name = fp.player_name
+    WHERE
+      fp.event_id = {event_id}
+    ORDER BY
+      wins DESC,
+      draws DESC
     '''
     
     cur.execute(command)
