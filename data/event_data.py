@@ -56,7 +56,6 @@ def CreateEvent(event_date,
     event = cur.fetchone()
     return event if event else None
 
-#TODO: Update this using the full participants view
 def GetEventMeta(event_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
@@ -80,3 +79,4 @@ def GetEventMeta(event_id):
     cur.execute(command)
     rows = cur.fetchall()
     return rows
+    

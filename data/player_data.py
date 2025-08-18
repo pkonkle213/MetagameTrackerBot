@@ -86,6 +86,7 @@ def GetStats(discord_id,
     rows = cur.fetchall()
     return rows
 
+#TODO: I feel like there's a cleaner way to represent this and not have the same where statements repeated
 def GetTopPlayerData(store,
                      game,
                      format,
@@ -121,7 +122,17 @@ def GetTopPlayerData(store,
                 SELECT
                   player_name,
                   sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percentage,
-                  1.0 * count(*) / count(*) OVER () AS attendance_percentage
+                  1.0 * count(*) / (
+                    SELECT
+                      COUNT(*)
+                    FROM
+                      events
+                    WHERE
+                      event_date BETWEEN '{start_date}' AND '{end_date}'
+                      {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILD.id else ''}
+                      AND game_id = {game.ID}
+                      {f'AND format_id = {format.ID}' if format else ''}
+                  ) AS attendance_percentage
                 FROM
                   events e
                   INNER JOIN fullparticipants fp ON fp.event_id = e.id
@@ -155,9 +166,11 @@ def GetTopPlayerData(store,
               e.id
           )
       )
-      ORDER BY player_rank
+    ORDER BY
+      player_rank
     """
 
+    print('Leaderboard command:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows

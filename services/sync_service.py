@@ -10,7 +10,7 @@ async def SyncCommands(bot, commands_directory):
 
     for guild_id in GetAllStores():
       sync_store = await bot.tree.sync(guild=discord.Object(id=guild_id[0]))
-      print(f'Synced {len(sync_store)} command(s) to guild {guild_id}')
+      print(f'Synced {len(sync_store)} command(s) to guild {guild_id[0]}')
 
     sync_global = await bot.tree.sync()
     print(f'Synced {len(sync_global)} commands globally, allegedly')

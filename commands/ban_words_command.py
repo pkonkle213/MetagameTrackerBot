@@ -7,7 +7,7 @@ from services.command_error_service import Error
 from services.store_level_service import LEVEL1STORES, LEVEL2STORES
 from output_builder import BuildTableOutput
 
-class BannedWordCommands(commands.Cog, name='bannedwords'):
+class BannedWordCommands(commands.GroupCog, name='bannedwords'):
   """A group of commands for managing banned words"""
   def __init__(self, bot):
     self.bot = bot
