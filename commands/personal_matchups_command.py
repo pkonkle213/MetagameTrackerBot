@@ -51,7 +51,7 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
       await interaction.followup.send(output)
     except Exception as exception:
       await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
-      await Error(self.bot, exception)
+      await Error(self.bot, interaction, exception)
 
 async def setup(bot):
   await bot.add_cog(PersonalStatisticsGroup(bot))
