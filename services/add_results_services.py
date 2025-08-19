@@ -13,8 +13,6 @@ async def SubmitData(message, data, date_str):
                                                    game=True,
                                                    format=True,
                                                    store=True)
-  if store is None or not store.ApprovalStatus:
-    raise KnownError('This store is not approved to submit data.')
   
   date = ConvertToDate(date_str)
   event_obj = GetEventObj(store.DiscordId, date, game, format)

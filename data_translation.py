@@ -1,64 +1,38 @@
-from tuple_conversions import Participant, Round
-from data_conversions.lorcana_official import LorcanaOfficialRound, LorcanaOfficialParticipant
+from discord import Interaction
+from incoming_message_conversions.magic_companion import CompanionParticipants, CompanionRoundByRound, CompanionParticipantsWithTabs
+from incoming_message_conversions.lorcana_official import LorcanaOfficialRound, LorcanaOfficialParticipant
+from interaction_data import GetInteractionData
 
-def ConvertMessageToData(message):
-  data = CompanionParticipants(message)
+def ConvertMessageToData(interaction:Interaction, message:str):
+  game = GetInteractionData(interaction, game=True).Game
+
+  data = None
+  errors = []
+  if game is not None and game.Name == 'MAGIC':
+    if data is None:
+      data, errors = CompanionParticipants(message)
+        
+    if data is None:
+      data, errors = CompanionParticipantsWithTabs(message)
+    
+    if data is None:
+      data, errors = CompanionRoundByRound(message)
+
+  '''
+  if game is not None and game.Name == 'Lorcana':
+    #Cannot determine what round this is
+    if data is None:
+      data = LorcanaOfficialRound(message)
+    if data is None:
+      data = LorcanaOfficialParticipant(message)
+  '''
+  return data, game, errors
+
+
+"""
   if data is None:
     data = MeleeParticipants(message)
-  if data is None:
-    data = CompanionRoundByRound(message)
-  if data is None:
-    data = CompanionParticipantsWithTabs(message)
-  '''Cannot determine what round this is
-  if data is None:
-    data = LorcanaOfficialRound(message)
-  '''
-  if data is None:
-    data = LorcanaOfficialParticipant(message)
-  return data
-
-def CompanionParticipants(message):
-  data = []
-  rows = message.split('\n')
-  try:
-    for row in rows:
-      row_list = row.split('    ')
-      int(row_list[0]) #Standing
-      int(row_list[2]) #Points obtained
-      record = row_list[3].split('/')
-      player_name = row_list[1]
-      participant = Participant(player_name,
-                                int(record[0]),
-                                int(record[1]),
-                                int(record[2]))
-      data.append(participant)
-    return data
-  except Exception as exception:
-    #print('Rows:', rows)
-    #print('Companion Participants Exception:', exception)
-    return None
-
-def CompanionParticipantsWithTabs(message):
-  data = []
-  rows = message.split('\n')
-  try:
-    for row in rows:
-      row_list = row.split('\t')
-      int(row_list[0]) #Standing
-      int(row_list[2]) #Points obtained
-      record = row_list[3].split('/')
-      player_name = row_list[1]
-      participant = Participant(player_name,
-                                int(record[0]),
-                                int(record[1]),
-                                int(record[2]))
-      data.append(participant)
-    return data
-  except Exception as exception:
-    print('Rows:', rows)
-    print('Companion Participants With Tabs Exception:', exception)
-    return None
-
+    
 def MeleeParticipants(message):
   data = []
   rows = message.split('\n')
@@ -76,34 +50,7 @@ def MeleeParticipants(message):
     print('Rows:', rows)
     print('Melee Participants Exception:', exception)
     return None
-
-def CompanionRoundByRound(message):
-  data = []
-  rows = message.split('\n')
-  try:
-    for i in range(0, len(rows), 6):
-      row = rows[i:i + 6]
-      if row[3] != 'Bye':
-        p1name = row[1]
-        p1gw = row[3][0]
-        p2gw = row[3][1]
-        p2name = row[4]
-        roundnumber = int(row[2][0])+ int(row[2][2])+int(row[2][4])
-        result = Round(p1name, p1gw, p2name, p2gw, roundnumber)
-        data.append(result)
-      else:
-        p1name = row[0]
-        p1gw = 2
-        p2name = 'Bye'
-        p2gw = 0
-        roundnumber = int(row[1][0])+int(row[1][2])+int(row[1][4])
-        result = Round(p1name, p1gw, p2name, p2gw, roundnumber)
-        data.append(result)
-    return data
-  except Exception as exception:
-    print('Rows:', rows)
-    print('Companion Round Exception:', exception)
-    return None
+"""
 
 '''
 TODO: League data

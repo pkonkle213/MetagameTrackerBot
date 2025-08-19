@@ -1,8 +1,8 @@
-import discord
 import settings
 from checks import isSubmitter
 from custom_errors import KnownError
-from data_translation import ConvertMessageToData, Participant
+from data_translation import ConvertMessageToData
+from tuple_conversions import Participant
 from discord import app_commands, Interaction
 from discord.ext import commands
 from discord_messages import MessageChannel
@@ -41,11 +41,12 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     except Exception as exception:
       await Error(self.bot, interaction, exception)
 
+  #TODO: Can I impove upon this method any? It seems overly complicated
   @app_commands.command(name="data",
                         description="Submitting your event's data")
   @commands.has_role('MTSubmitter')
   @app_commands.guild_only()
-  async def SubmitDataCommand(self, interaction: discord.Interaction):
+  async def SubmitDataCommand(self, interaction: Interaction):
     try:
       modal = SubmitDataModal()
       await interaction.response.send_modal(modal)
@@ -54,7 +55,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       if not modal.is_submitted:
         await interaction.followup.send("SubmitData modal was dismissed or timed out. Please try again", ephemeral=True)
       else:
-        data = ConvertMessageToData(modal.submitted_message)
+        data, game, errors = ConvertMessageToData(interaction, modal.submitted_message)
         if data is None:
           await interaction.followup.send("Unable to submit due to not recognizing the form data. Please try again", ephemeral=True)
           await AddDataMessage(self.bot, modal, interaction, settings.ERRORCHANNELID)
@@ -62,6 +63,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
           message_type = 'participants' if isinstance(data[0], Participant) else 'tables'
 
           await interaction.followup.send(f"Attempting to add {len(data)} {message_type} to event", ephemeral=True)
+          if len(errors) > 0:
+            await interaction.followup.send('Errors:\n' + '\n'.join(errors), ephemeral=True)
           await AddDataMessage(self.bot, modal, interaction, settings.BOTEVENTINPUTID)
           output, event_created = await SubmitData(interaction, data, modal.submitted_date)
           await interaction.followup.send(output, ephemeral=True)
