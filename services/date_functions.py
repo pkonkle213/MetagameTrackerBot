@@ -1,13 +1,6 @@
 from datetime import datetime, timedelta
 import pytz
 
-def GetAnalysisDates(weeks):
-  EREnd = GetToday()
-  ERStart = GetWeeksAgo(EREnd, weeks)
-  BREnd = GetDaysAgo(ERStart, 1)
-  BRStart = GetWeeksAgo(BREnd, weeks)
-  return (EREnd, ERStart, BREnd, BRStart)
-
 def BuildDateRange(start_date, end_date, format, weeks=8):
   date_end = GetToday() if end_date == '' else ConvertToDate(end_date)
   date_start = GetStartDate(date_end, weeks)
