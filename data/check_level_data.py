@@ -38,8 +38,9 @@ def CheckLevel(store):
       X
     WHERE
       reported_percent >= {level.Percent}
+    UNION
     """
-    level_definitions.append(level_command + 'UNION')
+    level_definitions.append(level_command)
   criteria = ''.join(level_definitions)[:-5]
   
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -81,6 +82,7 @@ def CheckLevel(store):
       1
       '''
 
+    print('Level check command: ', command)
     cur.execute(command)
     row = cur.fetchone()
-    return row if row else (0,0)
+    return row[0] if row else 0

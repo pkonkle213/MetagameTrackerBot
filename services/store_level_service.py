@@ -43,7 +43,8 @@ def AddExceptions(idList):
       full_list.append(i[0])
   return full_list
 
+#TODO: See note to self about store levels
 LEVEL1STORES = Level1StoreIds()
-LEVEL2STORES = Level2StoreIds()
-LEVEL3STORES = Level3StoreIds()
-LEVELINFSTORES = LevelInfStoreIds()
+LEVEL2STORES = Level2StoreIds() #+ LEVEL1STORES
+LEVEL3STORES = Level3StoreIds() #+ LEVEL2STORES
+LEVELINFSTORES = LevelInfStoreIds() #+ LEVEL3STORES

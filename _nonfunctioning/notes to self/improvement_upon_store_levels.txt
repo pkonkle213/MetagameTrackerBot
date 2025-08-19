@@ -1,0 +1,2 @@
+I think instead of getting all stores at each level, I should determine which level all of my stores are at. That way I can store them in a separate table and determine if they've changed.
+I can also determine if they've changed by running a comparison sql script starting "yesterday - 40" and ending "yesterday". Is that easier? harder?

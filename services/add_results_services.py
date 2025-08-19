@@ -6,9 +6,9 @@ from data.event_data import GetEventObj, CreateEvent
 from interaction_data import GetInteractionData
 from tuple_conversions import ConvertToEvent, Participant, Round
 
-#TODO: As a store, I would like to know why an error in my submission happened
+#TODO: This does too much. It should be broken up into smaller functions
 async def SubmitData(message, data, date_str):
-  '''Submits an events data to the database'''
+  """Submits an events data to the database"""
   game, format, store, userId = GetInteractionData(message,
                                                    game=True,
                                                    format=True,
@@ -19,6 +19,8 @@ async def SubmitData(message, data, date_str):
   event_created = False
   if event_obj is None:
     event_obj = CreateEvent(date, store.DiscordId, game, format)
+    if event_obj is None:
+      raise KnownError('Unable to create event')
     event_created = True
   event = ConvertToEvent(event_obj)
   message = ''

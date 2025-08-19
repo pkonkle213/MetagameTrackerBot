@@ -11,7 +11,6 @@ from services.add_results_services import SubmitData
 from services.command_error_service import Error
 from text_modal import SubmitDataModal
 
-#TODO: Instead of this, I'd like to make error reporting better when submitting data
 class SubmitDataChecker(commands.GroupCog, name='submit'):
   def __init__(self, bot):
     self.bot = bot

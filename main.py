@@ -25,7 +25,7 @@ async def on_ready():
 @tasks.loop(time=datetime.time(hour=8, minute=00, tzinfo=datetime.timezone.utc))
 async def update_store_levels():
   await SyncCommands(bot, CMDS_DIR)
-  await MessageUser(bot, 'Resyncing commands', settings.PHILID)
+  #TODO: As a store owner, id like to know when my level changes
 
 @update_store_levels.before_loop
 async def before_update_store_levels():

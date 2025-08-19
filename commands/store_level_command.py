@@ -13,7 +13,7 @@ class CheckStoreLevel(commands.GroupCog, name='level'):
   def __init__(self, bot):
     self.bot = bot
 
-  @app_commands.command(name="level",
+  @app_commands.command(name="check",
                         description="Check the level of your store")
   @app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
@@ -22,7 +22,7 @@ class CheckStoreLevel(commands.GroupCog, name='level'):
     await interaction.response.defer(ephemeral=True)
     try:
       level = CheckMyStoreLevel(interaction)
-      await interaction.followup.send(f"As of tomorrow, your store is level {level[0]}", ephemeral=True)
+      await interaction.followup.send(f"As of tomorrow, your store is level {level}", ephemeral=True)
     except Exception as exception:
       await interaction.followup.send(f"Something went wrong: {exception}", ephemeral=True)
 

@@ -10,7 +10,6 @@ def GetStats(discord_id,
              end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    #TODO: Update this command with playernames view
     command = f'''
     SELECT
       {'format_name,' if not format else ''}
@@ -33,16 +32,9 @@ def GetStats(discord_id,
           fullparticipants fp
           INNER JOIN events e ON e.id = fp.event_id
           INNER JOIN formats f ON e.format_id = f.id
+          INNER JOIN playernames pn ON e.discord_id = pn.discord_id AND fp.player_name = pn.player_name
         WHERE
-          fp.player_name = (
-            SELECT
-              player_name
-            FROM
-              playernames
-            WHERE
-              submitter_id = {user_id}
-              AND discord_id = {discord_id}
-          )
+          pn.submitter_id = {user_id}
           AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
           AND e.discord_id = {discord_id}
           AND e.game_id = {game.ID}
@@ -62,16 +54,9 @@ def GetStats(discord_id,
           AND ua.player_name = fp.player_name
           INNER JOIN events e ON e.id = fp.event_id
           INNER JOIN formats f ON e.format_id = f.id
+          INNER JOIN playernames pn ON e.discord_id = pn.discord_id AND fp.player_name = pn.player_name
         WHERE
-          fp.player_name = (
-            SELECT
-              player_name
-            FROM
-              playernames
-            WHERE
-              submitter_id = {user_id}
-              AND discord_id = {discord_id}
-          )
+          pn.submitter_id = {user_id}
           AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
           AND e.discord_id = {discord_id}
           AND e.game_id = {game.ID}
@@ -87,6 +72,7 @@ def GetStats(discord_id,
     return rows
 
 #TODO: I feel like there's a cleaner way to represent this and not have the same where statements repeated
+#Perhaps COUNT(*) OVER (PARTITION BY e.id) AS total_events
 def GetTopPlayerData(store,
                      game,
                      format,
