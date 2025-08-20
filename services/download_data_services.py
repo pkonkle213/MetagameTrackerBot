@@ -5,7 +5,7 @@ from data.download_data import GetStoreParticipantData, GetStoreRoundData, GetPl
 from interaction_data import GetInteractionData
 
 def GetStoreData(interaction, start_date, end_date):
-  game, format, store, user_id = GetInteractionData(interaction, store=True, game=True)
+  game, format, store, user_id = GetInteractionData(interaction, store=True)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
 
   message = f'Here is the data for {store.StoreName.title()}:'

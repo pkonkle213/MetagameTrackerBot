@@ -7,9 +7,9 @@ def GetStoreParticipantData(store, game, format, start_date, end_date):
     command =  f'''
     SELECT
       g.name AS Game_Name,
-      f.name AS Format_name,
-      e.event_date,
-      fp.player_name,
+      f.name AS Format_Name,
+      DATE(e.event_date) as Event_Date,
+      fp.Player_Name,
       COALESCE(ua.archetype_played, 'UNKNOWN') AS archetype_played,
       fp.wins,
       fp.losses,

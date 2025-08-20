@@ -68,7 +68,8 @@ async def ClaimResult(interaction:Interaction,
                         archetype,
                         userId,
                         updater_name)
-  print('Archetype Added:', archetype_added)
+  if archetype_added is None:
+    raise KnownError('Unable to submit the archetype. Please try again later.')
   return ConvertToArchetype(archetype_added), event
 
 def CheckEventPercentage(event):
@@ -83,6 +84,7 @@ def CheckEventPercentage(event):
     if event.LastUpdate + 1 < 4:
       followup = (f'Congratulations! The {str_date} event is now {percent_reported:.0%} reported!', False)
     else:
+      #TODO: This doesn't work and needs to
       followup = (f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!', True)
     return followup
   return None

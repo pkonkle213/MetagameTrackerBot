@@ -54,7 +54,6 @@ class ClaimArchetype(commands.GroupCog, name='claim'):
     archetype = ConvertInput(archetype)
     await AddTheArchetype(self.bot, interaction, player_name, date, archetype)
 
-
 async def AddTheArchetype(bot, interaction, player_name, date, archetype=''):
   try:
     archetype_submitted, event = await ClaimResult(interaction,
