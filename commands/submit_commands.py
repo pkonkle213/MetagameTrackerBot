@@ -64,8 +64,13 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
           await interaction.followup.send(f"Attempting to add {len(data)} {message_type} to event", ephemeral=True)
           if len(errors) > 0:
             await interaction.followup.send('Errors:\n' + '\n'.join(errors), ephemeral=True)
-          await AddDataMessage(self.bot, modal, interaction, settings.BOTEVENTINPUTID)
-          output, event_created = await SubmitData(interaction, data, modal.submitted_date)
+          await AddDataMessage(self.bot,
+                               modal,
+                               interaction,
+                               settings.BOTEVENTINPUTID)
+          output, event_created = await SubmitData(interaction,
+                                                   data,
+                                                   modal.submitted_date)
           await interaction.followup.send(output, ephemeral=True)
           if event_created:
             await MessageChannel(self.bot,
@@ -88,7 +93,7 @@ async def AddDataMessage(bot, modal, interaction, channel_id):
     Date: {modal.submitted_date}
     Message content:\n{modal.submitted_message}
     """
-  await MessageChannel(bot, message, settings.BOTGUILDID, settings.ERRORCHANNELID)
+  await MessageChannel(bot, message, settings.BOTGUILDID, channel_id)
 
 async def setup(bot):
   await bot.add_cog(SubmitDataChecker(bot))

@@ -99,6 +99,7 @@ async def AddTheArchetype(bot, interaction, player_name, date, archetype=''):
 def BuildMessage(interaction, date, archetype_submitted=None, error_message=None, player_name='', archetype=''):
   message_parts = []
   message_parts.append(f'Submitter: {interaction.user.display_name}')
+  message_parts.append(f'Submitter id: {interaction.user.id}')
   if not archetype_submitted:
     message_parts.append(f'Ran into an error: {error_message}')
   message_parts.append(f'Archetype submitted: {archetype_submitted.Archetype if archetype_submitted else archetype}')
