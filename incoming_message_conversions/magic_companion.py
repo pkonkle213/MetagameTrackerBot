@@ -5,14 +5,14 @@ from collections import namedtuple
 Result = namedtuple('Result', ['Data', 'Errors'])
 
 
-def CompanionParticipants(message):
+def CompanionParticipants(message, seperator):
   data = []
   errors = []
   rows = message.split('\n')
 
   for i in range(0, len(rows)):
     try:
-      row_list = rows[i].split('    ')
+      row_list = rows[i].split(seperator)
 
       player_name = row_list[1]
 
@@ -37,40 +37,6 @@ def CompanionParticipants(message):
       errors.append(f'Unable to parse row {i+1}: {rows[i]}')
 
   return Result(data if len(data) > 0 else None, errors)
-
-
-def CompanionParticipantsWithTabs(message):
-  data = []
-  errors = []
-  rows = message.split('\n')
-  for i in range(0, len(rows)):
-    try:
-      row_list = rows[i].split('\t')
-
-      player_name = row_list[1]
-
-      record = row_list[3].split('/')
-      wins = int(record[0])
-      if wins < 0:
-        raise KnownError(f'Wins cannot be negative for row {i+1}: {rows[i]}')
-      losses = int(record[1])
-      if losses < 0:
-        raise KnownError(f'Losses cannot be negative for row {i+1}: {rows[i]}')
-      draws = int(record[2])
-      if draws < 0:
-        raise KnownError(f'Draws cannot be negative for row {i+1}: {rows[i]}')
-
-      participant = Participant(player_name, wins, losses, draws)
-      data.append(participant)
-    except ValueError:
-      errors.append(f'Unable to parse the record for row {i+1}: {rows[i]}')
-    except KnownError as exception:
-      errors.append(exception.message)
-    except Exception:
-      errors.append(f'Unable to parse row {i+1}: {rows[i]}')
-
-  return Result(data if len(data) > 0 else None, errors)
-
 
 def CompanionRoundByRound(message):
   data = []

@@ -1,5 +1,5 @@
 from discord import Interaction
-from incoming_message_conversions.magic_companion import CompanionParticipants, CompanionRoundByRound, CompanionParticipantsWithTabs
+from incoming_message_conversions.magic_companion import CompanionParticipants, CompanionRoundByRound
 from incoming_message_conversions.lorcana_official import LorcanaOfficialRound, LorcanaOfficialParticipant
 from interaction_data import GetInteractionData
 
@@ -8,12 +8,12 @@ def ConvertMessageToData(interaction:Interaction, message:str):
 
   data = None
   errors = []
-  if game is not None and game.Name == 'MAGIC':
+  if game.Name == 'MAGIC':
     if data is None:
-      data, errors = CompanionParticipants(message)
+      data, errors = CompanionParticipants(message, "    ")
         
     if data is None:
-      data, errors = CompanionParticipantsWithTabs(message)
+      data, errors = CompanionParticipants(message, "\t")
     
     if data is None:
       data, errors = CompanionRoundByRound(message)
