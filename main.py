@@ -6,11 +6,14 @@ import settings
 import logging
 from timedposts.automated_updates import UpdateDataGuild
 from services.sync_service import SyncCommands
-from discord_messages import MessageUser
 
 handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 
-bot = commands.Bot(command_prefix='?', intents=discord.Intents.all())
+intents = discord.Intents.all()
+intents.message_content = True
+intents.members = True
+intents.guilds = True
+bot = commands.Bot(command_prefix='?', intents=intents)
 BASE_DIR = pathlib.Path(__file__).parent
 CMDS_DIR = BASE_DIR / "commands"
 

@@ -60,7 +60,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
           await AddDataMessage(self.bot, modal, interaction, settings.ERRORCHANNELID)
         else:
           message_type = 'participants' if isinstance(data[0], Participant) else 'tables'
-
+          print(f'Data: {data}')
+          print('Length:', len(data))
           await interaction.followup.send(f"Attempting to add {len(data)} {message_type} to event", ephemeral=True)
           if len(errors) > 0:
             await interaction.followup.send('Errors:\n' + '\n'.join(errors), ephemeral=True)

@@ -1,4 +1,5 @@
 import discord
+from custom_errors import KnownError
 from data.store_data import RegisterStore
 from services.input_services import ConvertInput
 from settings import BOTGUILDID
@@ -9,13 +10,13 @@ def RegisterNewStore(interaction: discord.Interaction, store_name: str):
 
   guild = interaction.guild
   if guild is None:
-    raise Exception('No guild found')
+    raise KnownError('No guild found')
   discord_id = guild.id
   discord_name = ConvertInput(guild.name)
   
   owner = guild.owner
   if owner is None:
-    raise Exception('No owner found')
+    raise KnownError('No owner found')
   owner_id = owner.id
   owner_name = ConvertInput(owner.name)
 
@@ -24,29 +25,23 @@ def RegisterNewStore(interaction: discord.Interaction, store_name: str):
                            name_of_store,
                            owner_id,
                            owner_name)
+  if storeobj is None:
+    raise KnownError('Unable to register store')
   return ConvertToStore(storeobj)
 
-async def SetPermissions(interaction):
+async def CreateMTSubmitterRole(interaction):
   owner = interaction.guild.owner
-  owner_role = discord.utils.find(lambda r: r.name == 'Owner',
-                                  interaction.guild.roles)
   mtsubmitter_role = discord.utils.find(lambda r: r.name == 'MTSubmitter',
-                                        interaction.guild.roles)
-  #TODO: This is giving me a "Missing Permissions" error even when manage_roles is true??
-  if owner_role is None:
-    owner_role = await interaction.guild.create_role(name="Owner",
-                                                     permissions=discord.Permissions.all())
-  await owner.add_roles(owner_role)
+                                        interaction.guild.roles)  
   
   if mtsubmitter_role is None:
-    mtsubmitter_role = await interaction.guild.create_role(name="MTSubmitter",
-                                                           permissions=discord.Permissions.all())
-  await owner.add_roles(mtsubmitter_role)
-
-  permissions = discord.PermissionOverwrite(send_messages=False)
-  everyone_role = interaction.guild.default_role
-  await interaction.channel.set_permissions(everyone_role,
-                                            overwrite=permissions)
+    try:
+      #TODO: This is giving me a "Missing Permissions" error even when manage_roles is true??  
+      mtsubmitter_role = await interaction.guild.create_role(name="MTSubmitter",
+                                                             permissions=discord.Permissions.all())
+      await owner.add_roles(mtsubmitter_role)
+    except Exception:
+      await interaction.followup.send('Unable to create MTSubmitter role. Please create and assign manually.', ephemeral=True)
 
 async def AssignMTSubmitterRole(bot:discord.Client, user_id, guild_id):
   guild = bot.get_guild(int(guild_id))

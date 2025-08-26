@@ -26,10 +26,9 @@ def GetMetagame(game,
         INNER JOIN stores s ON e.discord_id = s.discord_id
       WHERE
         e.event_date BETWEEN '{start_date}' AND '{end_date}'
-        {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != settings.DATAGUILDID else ''}
+        {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != settings.DATAGUILDID else f'AND s.used_for_data = {True}'}
         AND e.format_id = {format.ID}
         AND e.game_id = {game.ID}
-        AND s.used_for_data = {True}
       GROUP BY
         archetype_played
       )

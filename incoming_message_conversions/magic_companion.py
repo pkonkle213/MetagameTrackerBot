@@ -61,6 +61,8 @@ def CompanionRoundByRound(message):
         data.append(result)
       else:
         p1name = row[0]
+        if p1name == '':
+          raise KnownError(f'Names cannot be blank (row {i + 1}, please resubmit rows {i + 1} - {i + 4})')
         p1gw = 2
         p2name = 'Bye'
         p2gw = 0
@@ -72,6 +74,6 @@ def CompanionRoundByRound(message):
     except KnownError as exception:
       errors.append(exception.message)
     except Exception:
-      errors.append(f'Unable to parse result (rows {i + 1} - {i + 7})')
+      errors.append(f'Unable to parse result (rows {i + 1} - {i + 6})')
 
   return Result(data if len(data) > 0 else None, errors)

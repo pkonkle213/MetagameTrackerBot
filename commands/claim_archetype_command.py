@@ -11,6 +11,7 @@ from services.command_error_service import Error
 
 #TODO: I think the AddTheArchetype function should be moved to the services folder
 class ClaimArchetype(commands.GroupCog, name='claim'):
+  """A group of commands to claim the archetype for a player"""
   def __init__(self, bot):
     self.bot = bot
 
