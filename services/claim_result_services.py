@@ -82,12 +82,13 @@ def CheckEventPercentage(event):
       raise Exception('Unable to update event: ' + event.ID)
     str_date = event.EventDate.strftime('%B %d')
     if event.LastUpdate + 1 < 4:
-      followup = (f'Congratulations! The {str_date} event is now {percent_reported:.0%} reported!', False)
+      followup = f'Congratulations! The {str_date} event is now {percent_reported:.0%} reported!'
+      final = False
     else:
-      #TODO: This doesn't work and needs to
-      followup = (f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!', True)
-    return followup
-  return None
+      followup = f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!'
+      final = True
+    return followup, final
+  return None, None
 
 def OneEvent(event):
   event_meta = GetEventMeta(event.ID)

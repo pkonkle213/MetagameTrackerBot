@@ -69,19 +69,17 @@ async def AddTheArchetype(bot, interaction, player_name, date, archetype=''):
       await MessageStoreFeed(bot, message, interaction)
       await interaction.followup.send(f"Thank you for submitting the archetype for {event.EventDate.strftime('%B %d')}'s event!",
                                       ephemeral=True)
-      #TODO: This should return a tuple of a message, a boolean to indicate if a follow up message should be sent to the channel, and a boolean to indicate if the event is fully reported and a snapshot of the event should be sent
-      followup = CheckEventPercentage(event)
+      followup, final = CheckEventPercentage(event)
       if followup:
-        if followup[1]:
+        await MessageChannel(bot,
+                               followup,
+                               interaction.guild_id,
+                               interaction.channel_id)
+        if final:
           title, headers, data = OneEvent(event)
           output = BuildTableOutput(title, headers, data)
           await MessageChannel(bot,
                                output,
-                               interaction.guild_id,
-                               interaction.channel_id)
-        else:
-          await MessageChannel(bot,
-                               followup[0],
                                interaction.guild_id,
                                interaction.channel_id)
   except ValueError:

@@ -6,7 +6,6 @@ from services.command_error_service import Error
 from services.submitted_archetypes_service import SubmittedArchetypesReport
 from services.store_level_service import LEVEL2STORES
 
-#TODO: Rename file to better name
 class ArchetypeSubmittedCommand(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
