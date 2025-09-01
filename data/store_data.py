@@ -14,6 +14,25 @@ def DeleteStore(discord_id):
     success = cur.fetchone()
     return success
 
+def AddStore(discord_id,
+  discord_name,
+  owner_id,
+  owner_name):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    INSERT INTO Stores (discord_id, discord_name, owner_id, owner_name, used_for_data)
+    VALUES ({discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True})
+    RETURNING discord_id, discord_name, 'NONE', owner_id, owner_name, used_for_data, FALSE
+    '''
+
+    cur.execute(command)
+    conn.commit()
+    row = cur.fetchone()
+    return row
+
+#This needs to update the store profile
+#Store name, store address, lpayout style
 def RegisterStore(discord_id,
   discord_name,
   store_name,

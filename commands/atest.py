@@ -3,14 +3,10 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 import settings
 from checks import isPhil
-import pathlib
-from services.sync_service import SyncCommands
-from discord_messages import MessageUser
+from services.store_services import NewStoreRegistration
 
-TARGET_GUILDS = [settings.TESTGUILDID, 1210746744602890310]
-BASE_DIR = pathlib.Path(__file__).parent
-CMDS_DIR = BASE_DIR / "commands"
-
+TARGET_GUILDS = [settings.TESTGUILDID]
+                 
 class ATest(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
@@ -18,10 +14,15 @@ class ATest(commands.Cog):
   @app_commands.command(name="atest",
                         description="Tests something stupid!")
   @app_commands.guild_only()
-  @app_commands.check(isPhil)
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   async def Testing(self, interaction: Interaction):
-    await interaction.followup.send("Testing!")
+    print('Testing!')
+    if interaction.guild is None:
+      await interaction.response.send_message("This command can only be used in a guild.", ephemeral=True)
+    else:
+      NewStoreRegistration(interaction.guild)
+      await interaction.followup.send("Testing!")
     
 async def setup(bot):
+  print('Adding ATest')
   await bot.add_cog(ATest(bot))

@@ -1,9 +1,74 @@
 import discord
 from custom_errors import KnownError
 from data.store_data import RegisterStore
+from services.game_mapper_services import GetGameOptions
 from services.input_services import ConvertInput
 from settings import BOTGUILDID
-from tuple_conversions import ConvertToStore
+from tuple_conversions import ConvertToFormat, ConvertToGame, ConvertToStore
+
+def NewStoreRegistration(guild: discord.Guild):
+  #Starting to register new store
+  if guild is None:
+    raise KnownError('No guild found')
+  #I know this works
+  #store = AddStoreToDatabase(guild)
+  #print('Store:', store)
+  MapCategoriesAndChannels(guild)
+  """
+  MessageOwnerMappings()
+  CreateAndAssignMTSubmitterRoleInGuild()
+  AssignStoreOwnerRoleInBotGuild()
+  """
+  
+def AddStoreToDatabase(guild: discord.Guild):
+  """Adds the store to the database"""
+  owner = guild.owner
+  if owner is None:
+    raise KnownError('No owner found')
+  store_obj = RegisterStore(guild.id,
+                            guild.name,
+                            '',
+                            owner.id,
+                            owner.name)
+  if store_obj is None:
+    raise KnownError('Unable to register store')
+  return ConvertToStore(store_obj)
+
+def MatchGame(category_name, games):
+  """Matches the category name to a game"""
+  for game in games:
+    if game[1].lower() in category_name.lower():
+      return ConvertToGame(game)
+
+def MatchFormat(formats, channel_name):
+  """Matches the channel name to a format"""
+  for format in formats:
+    if format[1].lower() in channel_name.lower():
+      return ConvertToFormat(format)
+
+def MapCategoriesAndChannels(guild: discord.Guild):
+  """Sequentially maps the categories and channels in the guild"""
+  print('Mapping categories and channels')
+  output = "Category and Channel Names:\n"
+  games = GetGameOptions()
+
+  for category in guild.categories:
+    game = MatchGame(category.name, games)
+    print('Game:', game, 'Category:', category.name, category.id)
+    if game is not None:
+      formats = GetFormatsByGameId(game.ID, category.name)
+    
+      for channel in category.channels:
+        format = MatchFormat(formats, channel.name)
+        if format is not None:
+          print('Format:', format, 'Channel:', channel.name, channel.id)
+
+  if len(output) > 2000: # Discord message limit
+    # If the output is too long, send it in chunks or a file
+    print("Output too long to display directly. Check console or consider saving to file.")
+    print(output) # Print to console for full output
+  else:
+    print(f"```\n{output}\n```")
 
 def RegisterNewStore(interaction: discord.Interaction, store_name: str):
   name_of_store = ConvertInput(store_name)

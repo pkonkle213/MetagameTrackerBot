@@ -11,7 +11,7 @@ async def SelectMenu(interaction:discord.Interaction,
   select = Select(
     placeholder=placeholder,
     options=[
-      discord.SelectOption(label=option[1].title(),value=option[0]) for option in allowed_options
+      discord.SelectOption(label=option[1].title(), value=option[0]) for option in allowed_options
     ],
     min_values=1,
     max_values=max_options)
