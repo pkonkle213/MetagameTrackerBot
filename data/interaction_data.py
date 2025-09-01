@@ -1,5 +1,6 @@
 import os
 import psycopg2
+from tuple_conversions import ConvertToGame, ConvertToFormat, ConvertToStore
 
 def GetFormatByMap(channel_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -12,7 +13,7 @@ def GetFormatByMap(channel_id):
     '''
     cur.execute(command)
     row = cur.fetchone()
-    return row
+    return ConvertToFormat(row) if row else None
 
 def GetStoreByDiscord(discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -36,8 +37,8 @@ def GetStoreByDiscord(discord_id):
     '''
 
     cur.execute(command)
-    rows = cur.fetchall()
-    return rows if rows else None
+    row = cur.fetchone()
+    return ConvertToStore(row) if row else None
 
 def GetGameByMap(category_id:int):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -51,4 +52,4 @@ def GetGameByMap(category_id:int):
     
     cur.execute(command)
     row = cur.fetchone()
-    return row
+    return ConvertToGame(row) if row else None

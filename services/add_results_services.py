@@ -2,7 +2,7 @@ from custom_errors import KnownError
 from data.add_results_data import AddResult, SubmitTable
 from services.input_services import ConvertInput
 from services.date_functions import ConvertToDate
-from data.event_data import GetEventObj, CreateEvent
+from data.event_data import GetEvent, CreateEvent
 from interaction_data import GetInteractionData
 from tuple_conversions import ConvertToEvent, Participant, Round
 
@@ -15,14 +15,13 @@ async def SubmitData(message, data, date_str):
                                                    store=True)
   
   date = ConvertToDate(date_str)
-  event_obj = GetEventObj(store.DiscordId, date, game, format)
+  event = GetEvent(store.DiscordId, date, game, format)
   event_created = False
-  if event_obj is None:
-    event_obj = CreateEvent(date, store.DiscordId, game, format)
-    if event_obj is None:
+  if event is None:
+    event = CreateEvent(date, store.DiscordId, game, format)
+    if event is None:
       raise KnownError('Unable to create event')
     event_created = True
-  event = ConvertToEvent(event_obj)
   message = ''
   if isinstance(data[0],Participant):
     message = AddParticipantResults(event, data, userId)

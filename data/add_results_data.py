@@ -1,6 +1,7 @@
 import os
 import psycopg2
 
+#TODO: Player names should be injected to prevent SQL injection attacks
 def SubmitTable(event_id,
                 p1name,
                 p1wins,
@@ -58,12 +59,14 @@ def AddResult(event_id,
       RETURNING *
       '''
       
-      cur.execute(command, (event_id,
-                      player.PlayerName.upper(),
-                      player.Wins,
-                      player.Losses,
-                      player.Draws,
-                      submitter_id))
+      cur.execute(command,
+                  (event_id,
+                   player.PlayerName.upper(),
+                   player.Wins,
+                   player.Losses,
+                   player.Draws,
+                   submitter_id)
+                 )
       
       conn.commit()
       row = cur.fetchone()

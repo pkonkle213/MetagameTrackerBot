@@ -1,6 +1,8 @@
 import os
 import psycopg2
 
+from tuple_conversions import ConvertToStore
+
 def DeleteStore(discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
@@ -29,7 +31,7 @@ def AddStore(discord_id,
     cur.execute(command)
     conn.commit()
     row = cur.fetchone()
-    return row
+    return ConvertToStore(row) if row else None
 
 #This needs to update the store profile
 #Store name, store address, lpayout style
@@ -49,7 +51,7 @@ def RegisterStore(discord_id,
     cur.execute(command, [store_name])
     conn.commit()
     row = cur.fetchone()
-    return row
+    return ConvertToStore(row) if row else None
 
 def GetAllStores():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -60,7 +62,7 @@ def GetAllStores():
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    return rows
+    return [ConvertToStore(row) for row in rows] if rows else None
 
 def GetClaimFeed(discord_id, category_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])

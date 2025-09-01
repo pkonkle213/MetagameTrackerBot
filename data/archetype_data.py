@@ -1,6 +1,8 @@
 import os
 import psycopg2
 
+from tuple_conversions import ConvertToArchetype
+
 def AddArchetype(event_id,
   player_name,
   archetype_played,
@@ -36,7 +38,7 @@ def AddArchetype(event_id,
     cur.execute(command, criteria)
     conn.commit()
     row = cur.fetchone()
-    return row
+    return ConvertToArchetype(row) if row else None
 
 def GetUnknownArchetypes(discord_id, game_id, format_id, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])

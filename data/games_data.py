@@ -1,6 +1,7 @@
 import os
 import psycopg2
 from tuple_conversions import ConvertToGame
+
 def AddGameMap(discord_id:int,
    game_id:int,
    category_id:int):

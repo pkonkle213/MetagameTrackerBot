@@ -70,7 +70,7 @@ async def ClaimResult(interaction:Interaction,
                         updater_name)
   if archetype_added is None:
     raise KnownError('Unable to submit the archetype. Please try again later.')
-  return ConvertToArchetype(archetype_added), event
+  return archetype_added, event
 
 def CheckEventPercentage(event):
   percent_reported = GetEventReportedPercentage(event.ID)

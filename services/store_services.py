@@ -2,9 +2,9 @@ import discord
 from custom_errors import KnownError
 from data.store_data import RegisterStore
 from services.game_mapper_services import GetGameOptions
+from data.formats_data import GetFormatsByGameId
 from services.input_services import ConvertInput
 from settings import BOTGUILDID
-from tuple_conversions import ConvertToFormat, ConvertToGame, ConvertToStore
 
 def NewStoreRegistration(guild: discord.Guild):
   #Starting to register new store
@@ -25,26 +25,26 @@ def AddStoreToDatabase(guild: discord.Guild):
   owner = guild.owner
   if owner is None:
     raise KnownError('No owner found')
-  store_obj = RegisterStore(guild.id,
+  store = RegisterStore(guild.id,
                             guild.name,
                             '',
                             owner.id,
                             owner.name)
-  if store_obj is None:
+  if store is None:
     raise KnownError('Unable to register store')
-  return ConvertToStore(store_obj)
+  return store
 
 def MatchGame(category_name, games):
   """Matches the category name to a game"""
   for game in games:
-    if game[1].lower() in category_name.lower():
-      return ConvertToGame(game)
+    if game.Name.lower() in category_name.lower():
+      return game
 
 def MatchFormat(formats, channel_name):
   """Matches the channel name to a format"""
   for format in formats:
-    if format[1].lower() in channel_name.lower():
-      return ConvertToFormat(format)
+    if format.Name.lower() in channel_name.lower():
+      return format
 
 def MapCategoriesAndChannels(guild: discord.Guild):
   """Sequentially maps the categories and channels in the guild"""
@@ -56,7 +56,7 @@ def MapCategoriesAndChannels(guild: discord.Guild):
     game = MatchGame(category.name, games)
     print('Game:', game, 'Category:', category.name, category.id)
     if game is not None:
-      formats = GetFormatsByGameId(game.ID, category.name)
+      formats = GetFormatsByGameId(game.ID)
     
       for channel in category.channels:
         format = MatchFormat(formats, channel.name)
@@ -85,14 +85,14 @@ def RegisterNewStore(interaction: discord.Interaction, store_name: str):
   owner_id = owner.id
   owner_name = ConvertInput(owner.name)
 
-  storeobj = RegisterStore(discord_id,
+  store = RegisterStore(discord_id,
                            discord_name,
                            name_of_store,
                            owner_id,
                            owner_name)
-  if storeobj is None:
+  if store is None:
     raise KnownError('Unable to register store')
-  return ConvertToStore(storeobj)
+  return store
 
 async def CreateMTSubmitterRole(interaction):
   owner = interaction.guild.owner

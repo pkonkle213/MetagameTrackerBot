@@ -1,7 +1,9 @@
 import os
 import psycopg2
 
-def GetEventObj(discord_id,
+from tuple_conversions import ConvertToEvent
+
+def GetEvent(discord_id,
                 date,
                 game,
                 format):
@@ -26,7 +28,7 @@ def GetEventObj(discord_id,
     
     cur.execute(command)
     row = cur.fetchone()
-    return row if row else None
+    return ConvertToEvent(row) if row else None
 
 def CreateEvent(event_date,
   discord_id,
@@ -54,7 +56,7 @@ def CreateEvent(event_date,
     cur.execute(command)
     conn.commit()
     event = cur.fetchone()
-    return event if event else None
+    return ConvertToEvent(event) if event else None
 
 def GetEventMeta(event_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
