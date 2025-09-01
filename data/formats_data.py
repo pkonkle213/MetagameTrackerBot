@@ -1,6 +1,8 @@
 import os
 import psycopg2
 
+from tuple_conversions import ConvertToFormat
+
 def AddFormatMap(discord_id:int,
    format_id:int,
    channel_id:int):
@@ -29,11 +31,11 @@ def GetFormatsByGameId(game_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
-    SELECT id, name
+    SELECT id, name, last_ban_update, is_limited
     FROM formats
     WHERE game_id = {game_id}
     ORDER BY name
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    return rows
+    return [ConvertToFormat(row) for row in rows] if rows else None

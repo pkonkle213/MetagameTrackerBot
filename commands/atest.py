@@ -17,11 +17,12 @@ class ATest(commands.Cog):
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   async def Testing(self, interaction: Interaction):
     print('Testing!')
-    if interaction.guild is None:
-      await interaction.response.send_message("This command can only be used in a guild.", ephemeral=True)
-    else:
-      NewStoreRegistration(interaction.guild)
-      await interaction.followup.send("Testing!")
+    guild = interaction.guild
+    if guild is None:
+      await interaction.followup.send("No guild found!")
+      return
+    await NewStoreRegistration(guild)
+    await interaction.followup.send("Tested!")
     
 async def setup(bot):
   print('Adding ATest')

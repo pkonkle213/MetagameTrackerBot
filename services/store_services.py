@@ -1,25 +1,36 @@
 import discord
 from custom_errors import KnownError
+from data.games_data import AddGameMap
 from data.store_data import RegisterStore
 from services.game_mapper_services import GetGameOptions
-from data.formats_data import GetFormatsByGameId
+from data.formats_data import AddFormatMap, GetFormatsByGameId
+from tuple_conversions import Format, Game
 from services.input_services import ConvertInput
 from settings import BOTGUILDID
 
-def NewStoreRegistration(guild: discord.Guild):
+async def NewStoreRegistration(guild: discord.Guild):
   #Starting to register new store
   if guild is None:
     raise KnownError('No guild found')
   #I know this works
   #store = AddStoreToDatabase(guild)
-  #print('Store:', store)
-  MapCategoriesAndChannels(guild)
+  output, mappings = MapCategoriesAndChannels(guild)
+  await MessageOwnerMappings(guild, output, mappings)
   """
-  MessageOwnerMappings()
   CreateAndAssignMTSubmitterRoleInGuild()
   AssignStoreOwnerRoleInBotGuild()
   """
-  
+
+async def MessageOwnerMappings(guild: discord.Guild, output: str, mappings: bool):
+  """Messages the owner of the guild with the mappings that were performed"""
+  owner = guild.owner
+  if owner is None:
+    raise KnownError('No owner found')
+  if mappings:
+    await owner.send(f"Your store has been auto registered!\n\nHere's what was also automapped:\n{output}If you'd like to change these mappings, please use the /map commands.")
+  else:
+    await owner.send("Your store has been auto registered! However, categories or channels weren't automapped. Please map your categories and channels manually.")
+
 def AddStoreToDatabase(guild: discord.Guild):
   """Adds the store to the database"""
   owner = guild.owner
@@ -34,13 +45,13 @@ def AddStoreToDatabase(guild: discord.Guild):
     raise KnownError('Unable to register store')
   return store
 
-def MatchGame(category_name, games):
+def MatchGame(category_name: str, games: list[Game]):
   """Matches the category name to a game"""
   for game in games:
     if game.Name.lower() in category_name.lower():
       return game
 
-def MatchFormat(formats, channel_name):
+def MatchFormat(channel_name: str, formats: list[Format]):
   """Matches the channel name to a format"""
   for format in formats:
     if format.Name.lower() in channel_name.lower():
@@ -48,27 +59,32 @@ def MatchFormat(formats, channel_name):
 
 def MapCategoriesAndChannels(guild: discord.Guild):
   """Sequentially maps the categories and channels in the guild"""
-  print('Mapping categories and channels')
-  output = "Category and Channel Names:\n"
+  output = ''
+  mapping = False
   games = GetGameOptions()
+  if games is None:
+    raise KnownError('No games found')
 
   for category in guild.categories:
     game = MatchGame(category.name, games)
-    print('Game:', game, 'Category:', category.name, category.id)
-    if game is not None:
-      formats = GetFormatsByGameId(game.ID)
+    if game:
+      result = AddGameMap(guild.id, game.ID, category.id)
+      mapping = True
+      if result:
+        output += f'Game: {game.Name.title()}, Category: {category.name} ({category.id})\n'
     
-      for channel in category.channels:
-        format = MatchFormat(formats, channel.name)
-        if format is not None:
-          print('Format:', format, 'Channel:', channel.name, channel.id)
+      formats = GetFormatsByGameId(game.ID)
+      if formats:
+        for channel in category.channels:
+          format = MatchFormat(channel.name, formats)
+          if format:
+            result = AddFormatMap(guild.id, format.ID, channel.id)
+            if result:
+              output += f'Format: {format.Name.title()}, Channel: {channel.name} ({channel.id})\n'
 
-  if len(output) > 2000: # Discord message limit
-    # If the output is too long, send it in chunks or a file
-    print("Output too long to display directly. Check console or consider saving to file.")
-    print(output) # Print to console for full output
-  else:
-    print(f"```\n{output}\n```")
+      output += '\n'
+
+  return output, mapping
 
 def RegisterNewStore(interaction: discord.Interaction, store_name: str):
   name_of_store = ConvertInput(store_name)

@@ -53,7 +53,7 @@ def RegisterStore(discord_id,
     row = cur.fetchone()
     return ConvertToStore(row) if row else None
 
-def GetAllStores():
+def GetAllStoreDiscordIds():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = '''
@@ -62,7 +62,7 @@ def GetAllStores():
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    return [ConvertToStore(row) for row in rows] if rows else None
+    return [row[0] for row in rows]
 
 def GetClaimFeed(discord_id, category_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
