@@ -24,6 +24,13 @@ async def on_ready():
   update_store_levels.start()
   await SyncCommands(bot, CMDS_DIR)
 
+@bot.event
+async def on_guild_join(guild):
+  """
+  This event triggers when the bot joins a new guild (server).
+  """
+  ...
+
 #This should start at 08:00 UTC, which is 4:00 AM EST
 @tasks.loop(time=datetime.time(hour=8, minute=00, tzinfo=datetime.timezone.utc))
 async def update_store_levels():

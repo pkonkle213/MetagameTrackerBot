@@ -5,21 +5,21 @@ from data.store_data import RegisterStore
 from services.game_mapper_services import GetGameOptions
 from data.formats_data import AddFormatMap, GetFormatsByGameId
 from tuple_conversions import Format, Game
-from services.input_services import ConvertInput
 from settings import BOTGUILDID
 
-async def NewStoreRegistration(guild: discord.Guild):
-  #Starting to register new store
+async def NewStoreRegistration(bot:discord.Client, guild: discord.Guild):
+  """Goes through the steps to register a new store and automap categories and channels"""
   if guild is None:
     raise KnownError('No guild found')
-  #I know this works
-  #store = AddStoreToDatabase(guild)
-  output, mappings = MapCategoriesAndChannels(guild)
-  await MessageOwnerMappings(guild, output, mappings)
-  """
-  CreateAndAssignMTSubmitterRoleInGuild()
-  AssignStoreOwnerRoleInBotGuild()
-  """
+  AddStoreToDatabase(guild)
+  message, mappings = MapCategoriesAndChannels(guild)
+  await MessageOwnerMappings(guild, message, mappings)
+  output = CreateMTSubmitterRole(guild)
+  owner = guild.owner
+  if owner is None:
+    raise KnownError('No owner found')
+  await AssignStoreOwnerRoleInBotGuild(bot, owner.id)
+  return output
 
 async def MessageOwnerMappings(guild: discord.Guild, output: str, mappings: bool):
   """Messages the owner of the guild with the mappings that were performed"""
@@ -37,10 +37,10 @@ def AddStoreToDatabase(guild: discord.Guild):
   if owner is None:
     raise KnownError('No owner found')
   store = RegisterStore(guild.id,
-                            guild.name,
-                            '',
-                            owner.id,
-                            owner.name)
+                        guild.name,
+                        '',
+                        owner.id,
+                        owner.name)
   if store is None:
     raise KnownError('Unable to register store')
   return store
@@ -86,63 +86,30 @@ def MapCategoriesAndChannels(guild: discord.Guild):
 
   return output, mapping
 
-def RegisterNewStore(interaction: discord.Interaction, store_name: str):
-  name_of_store = ConvertInput(store_name)
-
-  guild = interaction.guild
-  if guild is None:
-    raise KnownError('No guild found')
-  discord_id = guild.id
-  discord_name = ConvertInput(guild.name)
-  
+async def CreateMTSubmitterRole(guild:discord.Guild):
+  """Creates the MTSubmitter role and assigns it to the owner"""
   owner = guild.owner
   if owner is None:
     raise KnownError('No owner found')
-  owner_id = owner.id
-  owner_name = ConvertInput(owner.name)
-
-  store = RegisterStore(discord_id,
-                           discord_name,
-                           name_of_store,
-                           owner_id,
-                           owner_name)
-  if store is None:
-    raise KnownError('Unable to register store')
-  return store
-
-async def CreateMTSubmitterRole(interaction):
-  owner = interaction.guild.owner
   mtsubmitter_role = discord.utils.find(lambda r: r.name == 'MTSubmitter',
-                                        interaction.guild.roles)  
+                                        guild.roles)  
   
   if mtsubmitter_role is None:
     try:
       #TODO: This is giving me a "Missing Permissions" error even when manage_roles is true??  
-      mtsubmitter_role = await interaction.guild.create_role(name="MTSubmitter",
-                                                             permissions=discord.Permissions.all())
+      mtsubmitter_role = await guild.create_role(name="MTSubmitter",
+                                                 permissions=discord.Permissions.all())
       await owner.add_roles(mtsubmitter_role)
+      return 'MTSubmitter role created and assigned to owner.'
     except Exception:
-      await interaction.followup.send('Unable to create MTSubmitter role. Please create and assign manually.', ephemeral=True)
+      return 'Unable to create MTSubmitter role. Please create and assign manually.'
 
-async def AssignMTSubmitterRole(bot:discord.Client, user_id, guild_id):
-  guild = bot.get_guild(int(guild_id))
-  if guild is None:
-    raise Exception('Guild not found')
-  user = await guild.fetch_member(int(user_id))
-  if user is None:
-    raise Exception('User not found')
-  mtsubmitter_role = discord.utils.find(lambda r: r.name == 'MTSubmitter',
-                                        guild.roles)
-  if mtsubmitter_role is None:
-    raise Exception('MTSubmitter role not found')
-  await user.add_roles(mtsubmitter_role)
-  return "Role assigned to user"
-
-async def AssignStoreOwnerRoleInBotGuild(bot:discord.Client, interaction):
+async def AssignStoreOwnerRoleInBotGuild(bot:discord.Client, owner_id: int):
+  """Assigns the Store Owner role to the owner in the bot guild"""
   bot_guild = bot.get_guild(BOTGUILDID)
   if bot_guild is None:
     raise Exception('Bot guild not found')
-  user = await bot_guild.fetch_member(interaction.user.id)
+  user = await bot_guild.fetch_member(owner_id)
 
   if user is None:
     raise Exception('User not found')
