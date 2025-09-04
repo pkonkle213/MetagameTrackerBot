@@ -1,0 +1,2 @@
+as a player, I want a history bound by dates relative to the game and format
+it should give an event date, (game), (event format), archetype played, wld record

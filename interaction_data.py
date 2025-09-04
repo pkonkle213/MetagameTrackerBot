@@ -80,5 +80,6 @@ def FormatInteractionData(data, requirements):
   format = GetFormat(game, data.ChannelId, requirements.Format)
   store = GetStore(data.DiscordId, requirements.Store)
 
+  #TODO: This doesn't bind objects to their type, it should do that
   Data = namedtuple("Data", ["Game", "Format", "Store", "UserId"])
   return Data(game, format, store, data.UserId)

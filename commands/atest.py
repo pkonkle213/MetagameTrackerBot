@@ -25,5 +25,4 @@ class ATest(commands.Cog):
     await interaction.followup.send("Tested!")
     
 async def setup(bot):
-  print('Adding ATest')
   await bot.add_cog(ATest(bot))

@@ -1,11 +1,13 @@
+
 from discord import app_commands, Interaction
 from discord.ext import commands
 from checks import isOwner
-from services.store_services import RegisterNewStore, AssignStoreOwnerRoleInBotGuild, CreateMTSubmitterRole
+from services.store_services import AssignStoreOwnerRoleInBotGuild, CreateMTSubmitterRole
 from services.command_error_service import Error
 from psycopg2.errors import UniqueViolation
 from data.store_data import DeleteStore
 
+#TODO: This needs to move to being an "Update Store Profile" command with the new way to register stores
 class RegisterStore(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
@@ -21,6 +23,7 @@ class RegisterStore(commands.Cog):
     store_name: string
       The name of the store
     """
+  """
     await interaction.response.defer()
     try:
       store = RegisterNewStore(interaction, store_name)
@@ -36,6 +39,8 @@ class RegisterStore(commands.Cog):
     except Exception as exception:
       await Error(self.bot, interaction, exception)
       DeleteStore(interaction.guild_id)
-      
+
+
 async def setup(bot):
   await bot.add_cog(RegisterStore(bot))
+"""
