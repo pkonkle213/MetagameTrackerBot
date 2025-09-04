@@ -1,4 +1,4 @@
-from interaction_data import GetStore
+from interaction_objects import GetStore
 from data.check_level_data import CheckLevel, EventReportedDetails
 
 def CheckMyStoreLevel(interaction):

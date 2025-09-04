@@ -6,7 +6,7 @@ from tuple_conversions import Participant
 from discord import app_commands, Interaction
 from discord.ext import commands
 from discord_messages import MessageChannel
-from interaction_data import GetInteractionData
+from interaction_objects import GetObjectsFromInteraction
 from services.add_results_services import SubmitData
 from services.command_error_service import Error
 from text_modal import SubmitDataModal
@@ -23,14 +23,17 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     await interaction.response.defer(ephemeral=True)
     try:
       issues = ['Issues I detect:']
-      game, format, store, userId = GetInteractionData(interaction)
+      interactionData = GetObjectsFromInteraction(interaction)
+      game = interactionData.Game
+      format = interactionData.Format
+      store = interactionData.Store
       if not store:
         issues.append('- Store not registered')
       if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter'):
         issues.append("- You don't have the MTSubmitter role.")
       if not game:
         issues.append('- Category not mapped to a game')
-      if not format:
+      if not game.HasFormats and not format:
         issues.append('- Channel not mapped to a format')
       
       if len(issues) == 1:

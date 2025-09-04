@@ -7,7 +7,8 @@ from data.formats_data import AddFormatMap, GetFormatsByGameId
 from tuple_conversions import Format, Game
 from settings import BOTGUILDID
 
-async def NewStoreRegistration(bot:discord.Client, guild: discord.Guild):
+async def NewStoreRegistration(bot:discord.Client,
+                               guild: discord.Guild):
   """Goes through the steps to register a new store and automap categories and channels"""
   if guild is None:
     raise KnownError('No guild found')
@@ -21,7 +22,9 @@ async def NewStoreRegistration(bot:discord.Client, guild: discord.Guild):
   await AssignStoreOwnerRoleInBotGuild(bot, owner.id)
   return output
 
-async def MessageOwnerMappings(guild: discord.Guild, output: str, mappings: bool):
+async def MessageOwnerMappings(guild: discord.Guild,
+                               output: str,
+                               mappings: bool):
   """Messages the owner of the guild with the mappings that were performed"""
   owner = guild.owner
   if owner is None:

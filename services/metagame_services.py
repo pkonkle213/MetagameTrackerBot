@@ -1,12 +1,12 @@
 from discord import Interaction
 from data.metagame_data import GetMetagame
-from interaction_data import GetInteractionData
+from interaction_objects import GetObjectsFromInteraction
 from services.date_functions import BuildDateRange
 
 def GetMyMetagame(interaction:Interaction,
   start_date:str,
   end_date:str):
-  game, format, store, userId = GetInteractionData(interaction, game=True, format=True, store=True)
+  game, format, store, userId = GetObjectsFromInteraction(interaction, game=True, format=True, store=True)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   title_name = format.Name.title() if format else game.Name.title()
   data = GetMetagame(game, format, date_start, date_end, store)

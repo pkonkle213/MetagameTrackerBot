@@ -1,5 +1,5 @@
 from collections import namedtuple
-from interaction_data import GetInteractionData
+from interaction_objects import GetObjectsFromInteraction
 from data.ban_word_data import AddWord, GetWord, MatchDisabledArchetypes, DisableMatchingWords, AddBadWordBridge, GetWordsForDiscord, GetOffenders
 from discord import Interaction
 
@@ -34,7 +34,7 @@ def CanSubmitArchetypes(discord_id, user_id):
   return len(offenses) < 3
 
 def Offenders(interaction:Interaction):
-  game, format, store, user_id = GetInteractionData(interaction, game=True, store=True)
+  game, format, store, user_id = GetObjectsFromInteraction(interaction, game=True, store=True)
   offenders = GetOffenders(game, format, store)
   headers = ['Date Submitted', 'Submitter', 'Submitter ID', 'Event Date', 'Player Name', 'Archetype Played']
   if not format:

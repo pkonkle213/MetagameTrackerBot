@@ -10,7 +10,7 @@ from data.event_data import GetEventMeta
 from services.input_services import ConvertInput
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from tuple_conversions import ConvertToArchetype, Event
-from interaction_data import GetInteractionData
+from interaction_objects import GetObjectsFromInteraction
 
 async def ClaimResult(interaction:Interaction,
                       player_name:str,
@@ -21,7 +21,7 @@ async def ClaimResult(interaction:Interaction,
   if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter') and DateDifference(date_today, date_used) > 14:
     raise KnownError('You can only claim archetypes for events within the last 14 days. Please contact your store owner to have them submit the archetype.')
 
-  game, format, store, userId = GetInteractionData(interaction,
+  game, format, store, userId = GetObjectsFromInteraction(interaction,
                                                    game=True,
                                                    format=True,
                                                    store=True)

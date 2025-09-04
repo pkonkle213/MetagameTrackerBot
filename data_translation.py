@@ -1,10 +1,11 @@
 from discord import Interaction
 from incoming_message_conversions.magic_companion import CompanionParticipants, CompanionRoundByRound
 from incoming_message_conversions.lorcana_official import LorcanaOfficialRound, LorcanaOfficialParticipant
-from interaction_data import GetInteractionData
+from interaction_objects import GetObjectsFromInteraction
 
 def ConvertMessageToData(interaction:Interaction, message:str):
-  game = GetInteractionData(interaction, game=True).Game
+  interactionData = GetObjectsFromInteraction(interaction, game=True)
+  game = interactionData.Game
 
   data = None
   errors = []

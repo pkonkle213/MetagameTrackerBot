@@ -1,13 +1,13 @@
 import discord
 from data.submitted_archetypes_data import GetSubmittedArchetypes
-from interaction_data import GetInteractionData
+from interaction_objects import GetObjectsFromInteraction
 from services.date_functions import ConvertToDate
 from services.input_services import ConvertInput
 
 def SubmittedArchetypesReport(interaction: discord.Interaction, player_name, event_date):
   date_used = ConvertToDate(event_date) if event_date != '' else None
 
-  game, format, store, user_id = GetInteractionData(interaction, game=True, store=True)
+  game, format, store, user_id = GetObjectsFromInteraction(interaction, game=True, store=True)
   player_name = ConvertInput(player_name)
   data = GetSubmittedArchetypes(game, format, store, player_name, date_used)
   headers = ['Event Date',

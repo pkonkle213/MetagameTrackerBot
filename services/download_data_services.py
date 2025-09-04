@@ -2,10 +2,14 @@ from discord import File
 from io import BytesIO
 from services.date_functions import BuildDateRange
 from data.download_data import GetStoreParticipantData, GetStoreRoundData, GetPlayerRoundData, GetPlayerParticipantData
-from interaction_data import GetInteractionData
+from interaction_objects import GetObjectsFromInteraction
 
 def GetStoreData(interaction, start_date, end_date):
-  game, format, store, user_id = GetInteractionData(interaction, store=True)
+  interactionData = GetObjectsFromInteraction(interaction, store=True)
+  store = interactionData.Store
+  game = interactionData.Game
+  format = interactionData.Format
+  
   date_start, date_end = BuildDateRange(start_date, end_date, format)
 
   message = f'Here is the data for {store.StoreName.title()}:'
@@ -30,7 +34,7 @@ def GetStoreData(interaction, start_date, end_date):
   return message, files
 
 def GetPlayerData(interaction, start_date, end_date):
-  game, format, store, user_id = GetInteractionData(interaction, store=True, game=True)
+  game, format, store, user_id = GetObjectsFromInteraction(interaction, store=True, game=True)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   
   message = f'Here is your data for {store.StoreName.title()}:'

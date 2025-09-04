@@ -1,5 +1,5 @@
 from discord import Interaction
-from interaction_data import GetInteractionData, SplitInteractionData
+from interaction_objects import GetObjectsFromInteraction, SplitInteractionData
 from data.formats_data import AddFormatMap, GetFormatsByGameId
 
 def AddStoreFormatMap(interaction:Interaction, chosen_format):
@@ -11,7 +11,7 @@ def AddStoreFormatMap(interaction:Interaction, chosen_format):
   return f'Success! This channel ({channel_id}) is now mapped to {chosen_format[1].title()}'
 
 def GetFormatOptions(interaction:Interaction):
-  game, format, store, user_id = GetInteractionData(interaction,
+  game, format, store, user_id = GetObjectsFromInteraction(interaction,
                                                     store=True,
                                                     game=True)
   return GetFormatsByGameId(game.ID)

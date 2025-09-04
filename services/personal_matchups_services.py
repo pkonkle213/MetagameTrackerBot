@@ -1,9 +1,9 @@
 from data.personal_matchup_data import GetPersonalMatchups
-from interaction_data import GetInteractionData
+from interaction_objects import GetObjectsFromInteraction
 from services.date_functions import BuildDateRange
 
 def PersonalMatchups(interaction, start_date, end_date):
-  game, format, store, user_id = GetInteractionData(interaction,
+  game, format, store, user_id = GetObjectsFromInteraction(interaction,
                                                     game=True,
                                                     format=True,
                                                     store=True)

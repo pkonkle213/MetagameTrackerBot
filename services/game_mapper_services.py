@@ -1,11 +1,11 @@
 from discord import Interaction, TextChannel
 from custom_errors import KnownError
-from interaction_data import GetInteractionData
+from interaction_objects import GetObjectsFromInteraction
 from data.games_data import AddGameMap, GetAllGames
 from tuple_conversions import Game
 
 def AddStoreGameMap(interaction:Interaction, chosen_game: Game):
-  game, format, store, user_id = GetInteractionData(interaction,
+  game, format, store, user_id = GetObjectsFromInteraction(interaction,
                                                     store=True)
   channel = interaction.channel
   if not isinstance(channel, TextChannel):

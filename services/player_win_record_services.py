@@ -1,12 +1,12 @@
 from discord import Interaction
 from data.player_data import GetStats
 from services.date_functions import BuildDateRange
-from interaction_data import GetInteractionData
+from interaction_objects import GetObjectsFromInteraction
 
 def PlayRecord(interaction:Interaction,
                start_date:str,
                end_date:str):
-  game, format, store, user_id = GetInteractionData(interaction,
+  game, format, store, user_id = GetObjectsFromInteraction(interaction,
                                                     game=True,
                                                     store=True)
   date_start, date_end = BuildDateRange(start_date,

@@ -1,8 +1,8 @@
 from data.map_claim_feed_data import AddClaimFeedMap
-from interaction_data import GetInteractionData
+from interaction_objects import GetObjectsFromInteraction
 
 def MapClaimFeed(interaction):
-  game, format, store, userId = GetInteractionData(interaction, game=True, store=True)
+  game, format, store, userId = GetObjectsFromInteraction(interaction, game=True, store=True)
   claim_map = AddClaimFeedMap(interaction.guild_id,
                               interaction.channel_id,
                               game.ID)
