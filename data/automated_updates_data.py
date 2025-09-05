@@ -11,7 +11,7 @@ def GetDataChannels(data_guild_id):
     FROM
       formatchannelmaps fcm
       INNER JOIN formats f ON fcm.format_id = f.id
-      INNER JOIN cardgames g ON g.id = f.game_id
+      INNER JOIN Games g ON g.id = f.game_id
       INNER JOIN gamecategorymaps gcm ON (
         gcm.game_id = g.id
         AND gcm.discord_id = fcm.discord_id

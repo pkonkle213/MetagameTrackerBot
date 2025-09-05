@@ -2,6 +2,7 @@ import pathlib
 import discord
 from discord.ext import commands, tasks
 import datetime
+from services.store_services import NewStoreRegistration
 import settings
 import logging
 from timedposts.automated_updates import UpdateDataGuild
@@ -25,11 +26,11 @@ async def on_ready():
   await SyncCommands(bot, CMDS_DIR)
 
 @bot.event
-async def on_guild_join(guild):
+async def on_guild_join(guild:discord.Guild):
   """
   This event triggers when the bot joins a new guild (server).
   """
-  ...
+  await NewStoreRegistration(bot, guild)
 
 #This should start at 08:00 UTC, which is 4:00 AM EST
 @tasks.loop(time=datetime.time(hour=8, minute=00, tzinfo=datetime.timezone.utc))

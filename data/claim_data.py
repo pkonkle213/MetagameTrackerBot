@@ -35,7 +35,7 @@ def GetEventAndPlayerName(discord_id, date, game, format, player_name):
           event_id,
           player_name
         FROM
-          fullparticipants
+          full_standings
         WHERE
           player_name = '{player_name}'
       ) fp ON fp.event_id = e.id

@@ -113,7 +113,7 @@ def GetOffenders(game, format, store):
       asu.archetype_played
     FROM ArchetypeSubmissions asu
       INNER JOIN Events e on e.id = asu.event_id
-      INNER JOIN CardGames c on c.id = e.game_id
+      INNER JOIN Games c on c.id = e.game_id
       INNER JOIN Formats f on f.id = e.format_id
     WHERE asu.reported = {True}
       AND e.discord_id = {store.DiscordId}

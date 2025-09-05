@@ -18,13 +18,13 @@ def GetPersonalHistory(user_id: int, game: Game, format: Format,
       losses,
       draws
     FROM
-      fullparticipants fp
+      full_standings fp
       INNER JOIN events e ON e.id = fp.event_id
-      INNER JOIN cardgames cg ON cg.id = e.game_id
+      INNER JOIN Games cg ON cg.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
-      INNER JOIN playernames pn ON pn.discord_id = e.discord_id
+      INNER JOIN player_names pn ON pn.discord_id = e.discord_id
       AND pn.player_name = fp.player_name
-      INNER JOIN uniquearchetypes uar ON uar.event_id = e.id
+      INNER JOIN unique_archetypes uar ON uar.event_id = e.id
       AND uar.player_name = pn.player_name
     WHERE
       pn.submitter_id = {user_id}

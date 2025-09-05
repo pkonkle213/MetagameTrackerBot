@@ -68,8 +68,8 @@ def GetEventMeta(event_id):
       losses,
       draws
     FROM
-      fullparticipants fp
-      LEFT JOIN uniquearchetypes ua ON ua.event_id = fp.event_id
+      full_standings fp
+      LEFT JOIN unique_archetypes ua ON ua.event_id = fp.event_id
       AND ua.player_name = fp.player_name
     WHERE
       fp.event_id = {event_id}

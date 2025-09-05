@@ -36,7 +36,7 @@ SELECT
     )
   ) AS win_percentage
 FROM
-  fullroundresults frr
+  full_pairings frr
   INNER JOIN events e ON frr.event_id = e.id
 WHERE
   opponent_name != 'BYE'

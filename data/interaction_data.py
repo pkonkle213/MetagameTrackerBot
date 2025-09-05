@@ -45,7 +45,7 @@ def GetGameByMap(category_id:int):
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT id, name, hasformats
-    FROM cardgames g
+    FROM Games g
     INNER JOIN gamecategorymaps gc ON g.id = gc.game_id
     WHERE category_id = {category_id}
     '''

@@ -24,7 +24,9 @@ def AddStore(discord_id,
   with conn, conn.cursor() as cur:
     command = f'''
     INSERT INTO Stores (discord_id, discord_name, owner_id, owner_name, used_for_data)
-    VALUES ({discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True})
+    VALUES ({discord_id}, '{discord_name.upper()}', {owner_id}, '{owner_name.upper()}', {True})
+    ON CONFLICT (discord_id) DO UPDATE
+    SET discord_name = '{discord_name}', owner_id = {owner_id}, owner_name = '{owner_name}'
     RETURNING discord_id, discord_name, 'NONE', owner_id, owner_name, used_for_data, FALSE
     '''
 
@@ -71,11 +73,11 @@ def GetClaimFeed(discord_id, category_id):
     SELECT
       channel_id
     FROM
-      claimreportchannels crc
-      INNER JOIN gamecategorymaps gcm ON crc.discord_id = gcm.discord_id
-      AND crc.game_id = gcm.game_id
+      claimchannels cc
+      INNER JOIN gamecategorymaps gcm ON cc.discord_id = gcm.discord_id
+      AND cc.game_id = gcm.game_id
     WHERE
-      crc.discord_id = {discord_id}
+      cc.discord_id = {discord_id}
       AND gcm.category_id = {category_id}
     '''
 

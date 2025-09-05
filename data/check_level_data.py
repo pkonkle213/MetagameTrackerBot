@@ -14,7 +14,7 @@ def EventReportedDetails(store):
       ROUND(reported_percent * 100, 2) as reported_percent
     FROM events_reported er
     INNER JOIN events e ON er.id = e.id
-    INNER JOIN cardgames g ON g.id = e.game_id
+    INNER JOIN Games g ON g.id = e.game_id
     INNER JOIN formats f ON f.id = e.format_id
     WHERE er.discord_id = {store.DiscordId}
     AND e.event_date >= (CURRENT_DATE - 40)
@@ -62,7 +62,7 @@ def CheckLevel(store):
             FROM
               events_reported er
               INNER JOIN events e ON er.id = e.id
-              INNER JOIN cardgames g ON g.id = e.game_id
+              INNER JOIN Games g ON g.id = e.game_id
               INNER JOIN formats f ON f.id = e.format_id
             WHERE
               er.discord_id = 1210746744602890310

@@ -29,10 +29,10 @@ def GetStats(discord_id,
           sum(draws) AS draws,
           1.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)) AS win_percentage
         FROM
-          fullparticipants fp
+          full_standings fp
           INNER JOIN events e ON e.id = fp.event_id
           INNER JOIN formats f ON e.format_id = f.id
-          INNER JOIN playernames pn ON e.discord_id = pn.discord_id AND fp.player_name = pn.player_name
+          INNER JOIN player_names pn ON e.discord_id = pn.discord_id AND fp.player_name = pn.player_name
         WHERE
           pn.submitter_id = {user_id}
           AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
@@ -49,12 +49,12 @@ def GetStats(discord_id,
           SUM(draws) AS draws,
           1.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)) AS win_percentage
         FROM
-          fullparticipants fp
-          LEFT JOIN uniquearchetypes ua ON ua.event_id = fp.event_id
+          full_standings fp
+          LEFT JOIN unique_archetypes ua ON ua.event_id = fp.event_id
           AND ua.player_name = fp.player_name
           INNER JOIN events e ON e.id = fp.event_id
           INNER JOIN formats f ON e.format_id = f.id
-          INNER JOIN playernames pn ON e.discord_id = pn.discord_id AND fp.player_name = pn.player_name
+          INNER JOIN player_names pn ON e.discord_id = pn.discord_id AND fp.player_name = pn.player_name
         WHERE
           pn.submitter_id = {user_id}
           AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
@@ -121,7 +121,7 @@ def GetTopPlayerData(store,
                   ) AS attendance_percentage
                 FROM
                   events e
-                  INNER JOIN fullparticipants fp ON fp.event_id = e.id
+                  INNER JOIN full_standings fp ON fp.event_id = e.id
                 WHERE
                   event_date BETWEEN '{start_date}' AND '{end_date}'
                   {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILDID else ''}
@@ -142,7 +142,7 @@ def GetTopPlayerData(store,
               count(*) AS participants
             FROM
               events e
-              LEFT JOIN fullparticipants fp ON fp.event_id = e.id
+              LEFT JOIN full_standings fp ON fp.event_id = e.id
             WHERE
               event_date BETWEEN '{start_date}' AND '{end_date}'
               {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILDID else ''}

@@ -4,8 +4,8 @@ SELECT DISTINCT ON (frr1.player_archetype, frr2.player_archetype)
   COALESCE(data.matches, 0) AS matches_observed,
   ROUND(COALESCE(data.win_percentage, .5) * 100, 2) AS p1winpercentage
 FROM
-  fullroundresults frr1
-  CROSS JOIN fullroundresults frr2
+  full_pairings frr1
+  CROSS JOIN full_pairings frr2
   LEFT JOIN (
     SELECT
       frr.player_archetype,
@@ -31,7 +31,7 @@ FROM
         )
       ) AS win_percentage
     FROM
-      fullroundresults frr
+      full_pairings frr
       INNER JOIN events e ON frr.event_id = e.id
     WHERE
       frr.opponent_name != 'BYE'

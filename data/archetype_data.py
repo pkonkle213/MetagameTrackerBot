@@ -47,7 +47,7 @@ def GetUnknownArchetypes(discord_id, game_id, format_id, start_date, end_date):
     SELECT
       event_date,
       player_name
-    FROM unknownarchetypes
+    FROM unknown_archetypes
     WHERE
       event_date BETWEEN '{start_date}' AND '{end_date}'
       AND game_id = {game_id}

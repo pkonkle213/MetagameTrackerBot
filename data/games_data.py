@@ -31,7 +31,7 @@ def GetAllGames():
   with conn, conn.cursor() as cur:
     command = '''
     SELECT id, name, hasFormats
-    FROM CardGames
+    FROM Games
     ORDER BY name
     '''
     cur.execute(command)

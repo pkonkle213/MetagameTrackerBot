@@ -60,7 +60,7 @@ FROM
         SELECT DISTINCT
           archetype_played
         FROM
-          uniquearchetypes
+          unique_archetypes
         WHERE
           event_id IN (
             SELECT
@@ -79,8 +79,8 @@ FROM
           ua.archetype_played,
           COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () AS StatBR
         FROM
-          fullparticipants fp
-        INNER JOIN uniquearchetypes ua ON fp.event_id = ua.event_id AND fp.player_name = ua.player_name
+          full_standings fp
+        INNER JOIN unique_archetypes ua ON fp.event_id = ua.event_id AND fp.player_name = ua.player_name
           INNER JOIN events e ON fp.event_id = e.id
         WHERE
           e.event_date BETWEEN '2025-05-01' AND '2025-07-23'
@@ -95,8 +95,8 @@ FROM
         ua.archetype_played,
           COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () AS StatER
         FROM
-          fullparticipants fp
-        INNER JOIN uniquearchetypes ua ON fp.event_id = ua.event_id AND fp.player_name = ua.player_name
+          full_standings fp
+        INNER JOIN unique_archetypes ua ON fp.event_id = ua.event_id AND fp.player_name = ua.player_name
           INNER JOIN events e ON fp.event_id = e.id
         WHERE
           e.event_date BETWEEN '2025-01-01' AND '2025-07-23'
@@ -125,7 +125,7 @@ FROM
     SELECT DISTINCT
       player_archetype
     FROM
-      fullroundresults
+      full_pairings
     ORDER BY
       player_archetype
   ) AS Archetypes
@@ -135,7 +135,7 @@ FROM
       opponent_archetype,
       count(*) AS total_matches
     FROM
-      fullroundresults
+      full_pairings
     GROUP BY
       player_archetype,
       opponent_archetype

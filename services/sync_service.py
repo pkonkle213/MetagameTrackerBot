@@ -13,8 +13,11 @@ async def SyncCommands(bot, commands_directory):
     if stores is None:
       raise KnownError("No stores found?")
     for guild_id in stores:
-      sync_store = await bot.tree.sync(guild=discord.Object(id=guild_id))
-      print(f'Synced {len(sync_store)} command(s) to guild {guild_id}')
+      try:
+        sync_store = await bot.tree.sync(guild=discord.Object(id=guild_id))
+        print(f'Synced {len(sync_store)} command(s) to guild {guild_id}')
+      except Exception as error:
+        print(f'Error syncing commands to guild {guild_id}: {error}')
 
     sync_global = await bot.tree.sync()
     print(f'Synced {len(sync_global)} commands globally, allegedly')

@@ -11,7 +11,6 @@ ERRORCHANNELID = int(os.environ['BOT_ERROR_ID'])
 CLAIMCHANNEL = int(os.environ['BOT_CLAIMSTREAM_ID'])
 BOTEVENTINPUTID = int(os.environ['BOT_NEWEVENT_ID'])
 
-
 MYBOTURL = os.environ['BOT_URL_INSTALL']
 SOPURL = os.environ['BOT_URL_SOP']
 FEEDBACKURL = os.environ['BOT_URL_FEEDBACK']

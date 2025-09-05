@@ -15,12 +15,12 @@ def GetStoreParticipantData(store, game, format, start_date, end_date):
       fp.losses,
       fp.draws
     FROM
-      fullparticipants fp
-      LEFT JOIN uniquearchetypes ua ON fp.event_id = ua.event_id
+      full_standings fp
+      LEFT JOIN unique_archetypes ua ON fp.event_id = ua.event_id
       AND fp.player_name = ua.player_name
       INNER JOIN events e ON e.id = fp.event_id
       INNER JOIN stores s ON s.discord_id = e.discord_id
-      INNER JOIN cardgames g ON g.id = e.game_id
+      INNER JOIN Games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
     WHERE
       e.discord_id = {store.DiscordId}
@@ -54,10 +54,10 @@ def GetStoreRoundData(store, game, format, start_date, end_date):
       frr.opponent_archetype,
       frr.result
     FROM
-      fullroundresults frr
+      full_pairings frr
       INNER JOIN events e ON e.id = frr.event_id
       INNER JOIN stores s ON s.discord_id = e.discord_id
-      INNER JOIN cardgames g ON g.id = e.game_id
+      INNER JOIN Games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
     WHERE
       s.discord_id = {store.DiscordId}  
@@ -89,12 +89,12 @@ def GetPlayerRoundData(store, game, format, start_date, end_date, user_id):
       frr.opponent_archetype as opponents_archetype,
       frr.result
     FROM
-      fullroundresults frr
+      full_pairings frr
       INNER JOIN events e ON e.id = frr.event_id
       INNER JOIN stores s ON s.discord_id = e.discord_id
-      INNER JOIN cardgames g ON g.id = e.game_id
+      INNER JOIN Games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
-      INNER JOIN playernames pn ON pn.discord_id = e.discord_id
+      INNER JOIN player_names pn ON pn.discord_id = e.discord_id
       AND pn.player_name = frr.player_name
     WHERE
       s.discord_id = {store.DiscordId}
@@ -127,14 +127,14 @@ def GetPlayerParticipantData(store, game, format, start_date, end_date, user_id)
       fp.losses,
       fp.draws
     FROM
-      fullparticipants fp
-      LEFT JOIN uniquearchetypes ua ON fp.event_id = ua.event_id
+      full_standings fp
+      LEFT JOIN unique_archetypes ua ON fp.event_id = ua.event_id
       AND fp.player_name = ua.player_name
       INNER JOIN events e ON e.id = fp.event_id
       INNER JOIN stores s ON s.discord_id = e.discord_id
-      INNER JOIN cardgames g ON g.id = e.game_id
+      INNER JOIN Games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
-      INNER JOIN playernames pn ON pn.discord_id = e.discord_id
+      INNER JOIN player_names pn ON pn.discord_id = e.discord_id
       AND pn.player_name = fp.player_name
     WHERE
       e.discord_id = {store.DiscordId}

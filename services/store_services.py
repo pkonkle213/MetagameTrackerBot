@@ -1,7 +1,7 @@
 import discord
 from custom_errors import KnownError
 from data.games_data import AddGameMap
-from data.store_data import RegisterStore
+from data.store_data import AddStore
 from services.game_mapper_services import GetGameOptions
 from data.formats_data import AddFormatMap, GetFormatsByGameId
 from tuple_conversions import Format, Game
@@ -9,18 +9,25 @@ from settings import BOTGUILDID
 
 async def NewStoreRegistration(bot:discord.Client,
                                guild: discord.Guild):
-  """Goes through the steps to register a new store and automap categories and channels"""
-  if guild is None:
-    raise KnownError('No guild found')
-  AddStoreToDatabase(guild)
-  message, mappings = MapCategoriesAndChannels(guild)
-  await MessageOwnerMappings(guild, message, mappings)
-  output = CreateMTSubmitterRole(guild)
-  owner = guild.owner
-  if owner is None:
-    raise KnownError('No owner found')
-  await AssignStoreOwnerRoleInBotGuild(bot, owner.id)
-  return output
+  """
+  Goes through the steps to register a new store and automap categories and channels
+  """
+  try:
+    if guild is None:
+      raise KnownError('No guild found')
+    AddStoreToDatabase(guild)
+    message, mappings = MapCategoriesAndChannels(guild)
+    await MessageOwnerMappings(guild, message, mappings)
+    output = await CreateMTSubmitterRole(guild)
+    owner = guild.owner
+    if owner is None:
+      raise KnownError('No owner found')
+    await AssignStoreOwnerRoleInBotGuild(bot, owner.id)
+    return output
+  except KnownError as error:
+    print(f'KnownError registering store: {error}')
+  except Exception as error:
+    print(f'Error registering store: {error}')
 
 async def MessageOwnerMappings(guild: discord.Guild,
                                output: str,
@@ -39,9 +46,8 @@ def AddStoreToDatabase(guild: discord.Guild):
   owner = guild.owner
   if owner is None:
     raise KnownError('No owner found')
-  store = RegisterStore(guild.id,
+  store = AddStore(guild.id,
                         guild.name,
-                        '',
                         owner.id,
                         owner.name)
   if store is None:

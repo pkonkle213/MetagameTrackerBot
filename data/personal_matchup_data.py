@@ -46,9 +46,9 @@ def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id)
         2
       ) AS win_percentage
     FROM
-      fullroundresults frr
+      full_pairings frr
       INNER JOIN events e ON e.id = frr.event_id
-      INNER JOIN playernames pn ON pn.player_name = frr.player_name
+      INNER JOIN player_names pn ON pn.player_name = frr.player_name
       AND pn.discord_id = e.discord_id
     WHERE
       pn.submitter_id = {user_id}

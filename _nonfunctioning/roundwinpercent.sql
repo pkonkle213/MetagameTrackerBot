@@ -8,8 +8,8 @@ FROM
       frr2.player_archetype AS p2archetype,
       COALESCE(data.win_percentage, .5) * Metagame.Metagame_Percent AS metawinpercent
     FROM
-      fullroundresults frr1
-      CROSS JOIN fullroundresults frr2
+      full_pairings frr1
+      CROSS JOIN full_pairings frr2
       LEFT JOIN (
         SELECT
           frr.player_archetype,
@@ -34,7 +34,7 @@ FROM
             )
           ) AS win_percentage
         FROM
-          fullroundresults frr
+          full_pairings frr
           INNER JOIN events e ON frr.event_id = e.id
         WHERE
           frr.opponent_name != 'BYE'
@@ -52,8 +52,8 @@ FROM
           COALESCE(ua.archetype_played, 'UNKNOWN') AS archetype_played,
           COUNT(*) * 1.0 / SUM(count(*)) OVER () AS Metagame_Percent
         FROM
-          fullparticipants fp
-          LEFT JOIN uniquearchetypes ua ON fp.event_id = ua.event_id
+          full_standings fp
+          LEFT JOIN unique_archetypes ua ON fp.event_id = ua.event_id
           AND fp.player_name = ua.player_name
           INNER JOIN events e ON fp.event_id = e.id
         WHERE

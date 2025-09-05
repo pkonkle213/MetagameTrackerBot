@@ -28,8 +28,8 @@ def GetStoreReportedPercentage(discord_id):
           asu.archetype_played
         FROM
           Events e
-          INNER JOIN fullparticipants fp ON fp.event_id = e.id
-          LEFT JOIN uniquearchetypes asu ON asu.event_id = e.id
+          INNER JOIN full_standings fp ON fp.event_id = e.id
+          LEFT JOIN unique_archetypes asu ON asu.event_id = e.id
           AND asu.player_name = fp.player_name
         ORDER BY
           e.id DESC

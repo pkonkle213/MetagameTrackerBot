@@ -12,7 +12,7 @@ def GetSubmittedArchetypes(game, format, store, player_name, date):
       ua.archetype_played,
       ua.submitter_username,
       ua.submitter_id
-    FROM uniquearchetypes ua
+    FROM unique_archetypes ua
       INNER JOIN events e on ua.event_id = e.id
       INNER JOIN formats f on f.id = e.format_id
     WHERE ua.reported = FALSE

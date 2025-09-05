@@ -16,7 +16,7 @@ def GetAttendance(store,
       {'f.name,' if not format else ''}
       COUNT(*)
     FROM
-      fullparticipants fp
+      full_standings fp
       INNER JOIN events e ON e.id = fp.event_id
       INNER JOIN Stores s ON s.discord_id = e.discord_id
       INNER JOIN Formats f ON f.id = e.format_id

@@ -51,7 +51,7 @@ def BadWordsStoresBridge():
     rows = cur.fetchall()
     return rows
 
-def CardGames():
+def Games():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = '''
@@ -59,7 +59,7 @@ def CardGames():
       id,
       name,
       has_formats
-    FROM CardGames
+    FROM Games
     ORDER BY id
     '''
     
@@ -75,7 +75,7 @@ def ClaimReportChannels():
       discord_id,
       channel_id,
       game_id
-    FROM ClaimReportChannels
+    FROM ClaimChannels
     '''
     cur.execute(command)
     rows = cur.fetchall()

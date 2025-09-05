@@ -43,7 +43,10 @@ def AddParticipantResults(event, data, submitterId):
       if output:
         successes += 1
 
-  return f"{successes} entries were added for {event.EventDate.strftime('%B %d')}'s event. {len(data)-successes} were skipped."
+  output = f"{successes} entries were added for {event.EventDate.strftime('%B %d')}'s event."
+  if len(data)-successes > 0:
+    output += f"{len(data)-successes} were skipped."
+  return 
 
 def AddRoundResults(event, data, submitterId):
   successes = 0

@@ -11,6 +11,7 @@ from services.add_results_services import SubmitData
 from services.command_error_service import Error
 from text_modal import SubmitDataModal
 
+#TODO: Check if the channel is mapped to a format or category to a game BEFORE allowing the submit command to be used
 class SubmitDataChecker(commands.GroupCog, name='submit'):
   def __init__(self, bot):
     self.bot = bot
@@ -63,8 +64,6 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
           await AddDataMessage(self.bot, modal, interaction, settings.ERRORCHANNELID)
         else:
           message_type = 'participants' if isinstance(data[0], Participant) else 'tables'
-          print(f'Data: {data}')
-          print('Length:', len(data))
           await interaction.followup.send(f"Attempting to add {len(data)} {message_type} to event", ephemeral=True)
           if len(errors) > 0:
             await interaction.followup.send('Errors:\n' + '\n'.join(errors), ephemeral=True)

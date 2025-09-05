@@ -12,8 +12,8 @@ def GetEventReportedPercentage(event_id):
         END
       ) / SUM(count(*)) OVER () AS percentage
     FROM
-      fullparticipants fp
-      LEFT OUTER JOIN uniquearchetypes ua ON ua.event_id = fp.event_id
+      full_standings fp
+      LEFT OUTER JOIN unique_archetypes ua ON ua.event_id = fp.event_id
       AND ua.player_name = fp.player_name
     WHERE
       fp.event_id = {event_id}

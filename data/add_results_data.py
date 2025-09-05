@@ -12,7 +12,7 @@ def SubmitTable(event_id,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
-    INSERT INTO RoundDetails
+    INSERT INTO pairings
     (event_id,
     round_number,
     player1_game_wins,
@@ -42,7 +42,7 @@ def AddResult(event_id,
     try:
       #I'm choosing to inject these values due to player_name technically being a string of user input
       command = '''
-      INSERT INTO Participants
+      INSERT INTO standings
       (event_id,
       player_name,
       wins,
