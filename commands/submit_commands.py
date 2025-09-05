@@ -11,7 +11,6 @@ from services.add_results_services import SubmitData
 from services.command_error_service import Error
 from text_modal import SubmitDataModal
 
-#TODO: Check if the channel is mapped to a format or category to a game BEFORE allowing the submit command to be used
 class SubmitDataChecker(commands.GroupCog, name='submit'):
   def __init__(self, bot):
     self.bot = bot
@@ -44,7 +43,6 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     except Exception as exception:
       await Error(self.bot, interaction, exception)
 
-  #TODO: Can I impove upon this method any? It seems overly complicated
   @app_commands.command(name="data",
                         description="Submitting your event's data")
   @commands.has_role('MTSubmitter')

@@ -4,9 +4,8 @@ from services.input_services import ConvertInput
 from services.date_functions import ConvertToDate
 from data.event_data import GetEvent, CreateEvent
 from interaction_objects import GetObjectsFromInteraction
-from tuple_conversions import ConvertToEvent, Participant, Round
+from tuple_conversions import Participant, Round
 
-#TODO: This does too much. It should be broken up into smaller functions
 async def SubmitData(message, data, date_str):
   """Submits an events data to the database"""
   game, format, store, userId = GetObjectsFromInteraction(message,

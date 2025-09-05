@@ -8,13 +8,12 @@ import logging
 from timedposts.automated_updates import UpdateDataGuild
 from services.sync_service import SyncCommands
 
-handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-
 intents = discord.Intents.all()
 intents.message_content = True
 intents.members = True
 intents.guilds = True
 bot = commands.Bot(command_prefix='?', intents=intents)
+
 BASE_DIR = pathlib.Path(__file__).parent
 CMDS_DIR = BASE_DIR / "commands"
 
@@ -36,13 +35,13 @@ async def on_guild_join(guild:discord.Guild):
 @tasks.loop(time=datetime.time(hour=8, minute=00, tzinfo=datetime.timezone.utc))
 async def update_store_levels():
   await SyncCommands(bot, CMDS_DIR)
-  #TODO: As a store owner, id like to know when my level changes
 
 @update_store_levels.before_loop
 async def before_update_store_levels():
   await bot.wait_until_ready()
 
-@tasks.loop(time=datetime.time(hour=14, minute=00, tzinfo=datetime.timezone.utc)) #14:00 UTC is 10:00 AM EST
+#This should start at #14:00 UTC, which is 10:00 AM EST
+@tasks.loop(time=datetime.time(hour=14, minute=00, tzinfo=datetime.timezone.utc)) 
 async def scheduled_post():
   time_now = datetime.datetime.now(datetime.timezone.utc)
   if time_now.weekday() == 4:  # Check if it's Friday, 0 = Monday
@@ -55,4 +54,4 @@ async def scheduled_post():
 async def before_scheduled_post():
   await bot.wait_until_ready()
 
-bot.run(settings.DISCORDTOKEN, log_handler=handler, log_level=logging.DEBUG)
+bot.run(settings.DISCORDTOKEN)

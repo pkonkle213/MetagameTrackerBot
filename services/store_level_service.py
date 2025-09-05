@@ -5,28 +5,28 @@ def Level1StoreIds():
   percent = 50/100.0
   num_expected = 2
   list = GetStoreIds(percent, num_expected)
-  print('Level 1 Store Ids: ', list)
+  print('Level 1 Store Ids:', list)
   return list
   
 def Level2StoreIds():
   percent = 80/100.0
   num_expected = 3
   list = GetStoreIds(percent, num_expected)
-  print('Level 2 Store Ids: ', list)
+  print('Level 2 Store Ids:', list)
   return list
 
 def Level3StoreIds():
   percent = 95/100.0
   num_expected = 4
   list = GetStoreIds(percent, num_expected)
-  print('Level 3 Store Ids: ', list)
+  print('Level 3 Store Ids:', list)
   return list
   
 def LevelInfStoreIds():
   percent = 100/100.0
   num_expected = 4
   list = GetStoreIds(percent, num_expected)
-  print('Level Inf Store Ids: ', list)
+  print('Level Inf Store Ids:', list)
   return list
   
 def GetStoreIds(percent, num_expected):
@@ -43,8 +43,7 @@ def AddExceptions(idList):
       full_list.append(i[0])
   return full_list
 
-#TODO: See note to self about store levels
 LEVEL1STORES = Level1StoreIds()
-LEVEL2STORES = Level2StoreIds() #+ LEVEL1STORES
-LEVEL3STORES = Level3StoreIds() #+ LEVEL2STORES
-LEVELINFSTORES = LevelInfStoreIds() #+ LEVEL3STORES
+LEVEL2STORES = Level2StoreIds()
+LEVEL3STORES = Level3StoreIds()
+LEVELINFSTORES = LevelInfStoreIds()

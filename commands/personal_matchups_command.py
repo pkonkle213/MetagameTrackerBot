@@ -11,7 +11,6 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
   def __init__(self, bot):
     self.bot = bot
 
-  #TODO: Not sure I like this command
   @app_commands.command(name='matchups',
                         description="See your win/loss record based upon archetypes you've played against in this format")
   @app_commands.guild_only()

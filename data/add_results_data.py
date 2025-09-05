@@ -1,7 +1,6 @@
 import os
 import psycopg2
 
-#TODO: Player names should be injected to prevent SQL injection attacks
 def SubmitTable(event_id,
                 p1name,
                 p1wins,

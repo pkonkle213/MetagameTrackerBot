@@ -71,8 +71,6 @@ def GetStats(discord_id,
     rows = cur.fetchall()
     return rows
 
-#TODO: I feel like there's a cleaner way to represent this and not have the same where statements repeated
-#Perhaps COUNT(*) OVER (PARTITION BY e.id) AS total_events
 def GetTopPlayerData(store,
                      game,
                      format,

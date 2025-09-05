@@ -5,7 +5,7 @@ from collections import namedtuple
 Result = namedtuple('Result', ['Data', 'Errors'])
 
 
-def CompanionParticipants(message, seperator):
+def CompanionStandings(message, seperator):
   data = []
   errors = []
   rows = message.split('\n')
@@ -38,7 +38,7 @@ def CompanionParticipants(message, seperator):
 
   return Result(data if len(data) > 0 else None, errors)
 
-def CompanionRoundByRound(message):
+def CompanionPairings(message):
   data = []
   errors = []
   rows = message.split('\n')

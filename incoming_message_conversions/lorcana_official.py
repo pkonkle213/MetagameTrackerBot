@@ -15,7 +15,7 @@ def LorcanaOfficialRound(message):
       colon = row[7].index(':')
       p1gw = row[7][colon + 2]
       p2gw = row[7][colon + 4]
-      result = Round(p1name, p1gw, p2name, p2gw, 0) #TODO: How do I figure out what round it is?
+      result = Round(p1name, p1gw, p2name, p2gw, 0)
       data.append(result)
     return data
   except Exception as exception:

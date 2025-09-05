@@ -42,7 +42,6 @@ class ArchetypeSubmittedCommand(commands.Cog):
     except Exception as exception:
       await Error(self.bot, interaction, exception)
 
-  #TODO: This doesn't seem to be catching the error I need it to. Dunno why
   @ViewSubmittedArchetypes.error
   async def ViewSubmittedArchetypes_error(self,
                              interaction: discord.Interaction,
