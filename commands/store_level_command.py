@@ -17,6 +17,7 @@ class CheckStoreLevel(commands.GroupCog, name='level'):
                         description="Check the level of your store")
   @app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   async def CheckStoreLevel(self, interaction: Interaction):
     await interaction.response.defer(ephemeral=True)
@@ -30,6 +31,7 @@ class CheckStoreLevel(commands.GroupCog, name='level'):
     description="Check the information about your store's events")
   @app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   async def LevelDetails(self, interaction: Interaction):
     try:

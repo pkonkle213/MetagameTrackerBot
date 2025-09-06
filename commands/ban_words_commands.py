@@ -45,6 +45,7 @@ class BannedWordCommands(commands.GroupCog, name='bannedwords'):
                         description='See who has been flagged for bad words/phrases')
   @app_commands.checks.has_role('MTSubmitter')
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL2STORES])
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def StoreOffenders(self, interaction: Interaction):
     await interaction.response.defer(ephemeral=True)
     try:

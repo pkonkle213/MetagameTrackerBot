@@ -17,6 +17,7 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
   @app_commands.check(isOwner)
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVELINFSTORES])
   @app_commands.guild_only()
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def StoreDownload(self,
                           interaction: Interaction,
                           start_date: str = '',
@@ -47,6 +48,7 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
                         description="Download the player's data for a store for a date range")
   @app_commands.guild_only()
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVELINFSTORES])
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def PlayerDownload(self,
                            interaction: Interaction,
                            start_date: str = '',
