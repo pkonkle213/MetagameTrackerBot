@@ -1,5 +1,5 @@
 from custom_errors import KnownError
-from tuple_conversions import Participant, Round
+from tuple_conversions import Standing, Pairing
 from collections import namedtuple
 
 Result = namedtuple('Result', ['Data', 'Errors'])
@@ -27,8 +27,8 @@ def CompanionStandings(message, seperator):
       if draws < 0:
         raise KnownError(f'Draws cannot be negative for row {i+1}: {rows[i]}')
 
-      participant = Participant(player_name, wins, losses, draws)
-      data.append(participant)
+      player = Standing(player_name, wins, losses, draws)
+      data.append(player)
     except ValueError:
       errors.append(f'Unable to parse the record for row {i+1}: {rows[i]}')
     except KnownError as exception:
@@ -57,7 +57,7 @@ def CompanionPairings(message):
         if p2name == '':
           raise KnownError(f'Names cannot be blank (row {i + 5}, please resubmit rows {i + 1} - {i + 6})')
         roundnumber = int(row[2][0]) + int(row[2][2]) + int(row[2][4])
-        result = Round(p1name, p1gw, p2name, p2gw, roundnumber)
+        result = Pairing(p1name, p1gw, p2name, p2gw, roundnumber)
         data.append(result)
       else:
         p1name = row[0]
@@ -67,7 +67,7 @@ def CompanionPairings(message):
         p2name = 'Bye'
         p2gw = 0
         roundnumber = int(row[1][0]) + int(row[1][2]) + int(row[1][4])
-        result = Round(p1name, p1gw, p2name, p2gw, roundnumber)
+        result = Pairing(p1name, p1gw, p2name, p2gw, roundnumber)
         data.append(result)
     except ValueError:
       errors.append(f'Unable to parse the record for rows {i+4}: {rows[i+3]}')

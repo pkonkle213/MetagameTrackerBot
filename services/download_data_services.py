@@ -1,7 +1,7 @@
 from discord import File
 from io import BytesIO
 from services.date_functions import BuildDateRange
-from data.download_data import GetStoreParticipantData, GetStoreRoundData, GetPlayerRoundData, GetPlayerParticipantData
+from data.download_data import GetStoreStandingData, GetStorePairingData, GetPlayerPairingData, GetPlayerStandingData
 from interaction_objects import GetObjectsFromInteraction
 
 def GetStoreData(interaction, start_date, end_date):
@@ -15,7 +15,7 @@ def GetStoreData(interaction, start_date, end_date):
   message = f'Here is the data for {store.StoreName.title()}:'
   files = []
   
-  participant_data = GetStoreParticipantData(store, game, format, date_start, date_end)
+  participant_data = GetStoreStandingData(store, game, format, date_start, date_end)
   if len(participant_data) == 0:
     message += 'No participant data found for this store.'
   else:  
@@ -23,7 +23,7 @@ def GetStoreData(interaction, start_date, end_date):
     files.append(ConvertRowsToFile(participant_data, 'MyStoreParticipantData', header))
     message += ' Participant data is attached.'
 
-  round_data = GetStoreRoundData(store, game, format, date_start, date_end)
+  round_data = GetStorePairingData(store, game, format, date_start, date_end)
   if len(round_data) == 0:
     message += 'No round by round data found for this store.'
   else:
@@ -41,7 +41,7 @@ def GetPlayerData(interaction, start_date, end_date):
   files = []
 
   print('Getting participant data')
-  participant_data = GetPlayerParticipantData(store, game, format, date_start, date_end, user_id)
+  participant_data = GetPlayerStandingData(store, game, format, date_start, date_end, user_id)
   if len(participant_data) == 0:
     print('No participant data found')
     message += 'No participant data found for this player.'
@@ -51,7 +51,7 @@ def GetPlayerData(interaction, start_date, end_date):
     files.append(ConvertRowsToFile(participant_data, 'MyStoreParticipantData', header))
 
   print('Getting round data')
-  round_data = GetPlayerRoundData(store, game, format, date_start, date_end, user_id)
+  round_data = GetPlayerPairingData(store, game, format, date_start, date_end, user_id)
   if len(round_data) == 0:
     print('No round data found')
     message += 'No round by round data found for this player.'
