@@ -12,6 +12,7 @@ class UnknownArchetypes(commands.Cog):
   @app_commands.command(name='unknown',
   description='See what archetypes still need submitted for a date range')
   @app_commands.guild_only()
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL1STORES])
   async def IntoTheUnknown(self, interaction: Interaction,
          start_date: str = '',

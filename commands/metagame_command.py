@@ -10,6 +10,7 @@ class MetagameCommand(commands.Cog):
 
   @app_commands.command(name="metagame",
                         description="Get the metagame for this format")
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def ViewMetagame(self,
                    interaction: Interaction,
                    start_date: str = '',

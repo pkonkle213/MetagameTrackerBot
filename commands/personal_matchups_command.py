@@ -14,6 +14,7 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
   @app_commands.command(name='matchups',
                         description="See your win/loss record based upon archetypes you've played against in this format")
   @app_commands.guild_only()
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL3STORES])
   async def PersonalMatchupReport(self,
                                   interaction: Interaction,
@@ -30,6 +31,7 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
   @app_commands.command(name="wlrecord",
     description="Look up your win/loss record(s)")
   @app_commands.guild_only()
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL3STORES])
   async def WLDRecord(self,
                       interaction: Interaction,

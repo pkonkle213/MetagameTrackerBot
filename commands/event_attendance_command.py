@@ -13,6 +13,7 @@ class EventAttendance(commands.Cog):
   @app_commands.command(name="attendance",
                         description="Get the attendance for a date range")
   @app_commands.guild_only()
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL1STORES])
   async def Attendance(self, interaction: Interaction,
      start_date: str = '',

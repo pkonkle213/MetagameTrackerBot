@@ -18,6 +18,7 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
   @app_commands.command(name='standings', description='Your history according to standings')
   @app_commands.guild_only()
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVELINFSTORES])
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def GetPersonalStandingsHistory(self,
                                         interaction:discord.Interaction,
                                         start_date: str = '',
@@ -43,6 +44,7 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
   @app_commands.command(name='pairings', description='Your history according to pairings')
   @app_commands.guild_only()
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVELINFSTORES])
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def GetPersonalPairingsHistory(self,
                                         interaction:discord.Interaction,
                                         start_date: str = '',
@@ -64,10 +66,6 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
       await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
       await Error(self.bot, interaction, exception)
-      
-    
-      
-  
 
 async def setup(bot):
   await bot.add_cog(PersonalHistoryCommands(bot))
