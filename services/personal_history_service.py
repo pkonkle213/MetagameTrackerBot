@@ -1,6 +1,6 @@
 import discord
 from interaction_objects import GetObjectsFromInteraction
-from data.personal_history_data import GetPersonalHistory
+from data.personal_history_data import GetStandingsHistory
 from output_builder import BuildTableOutput
 from services.date_functions import BuildDateRange
 
@@ -8,7 +8,7 @@ def GetPersonalStandingsHistory(interaction: discord.Interaction, start_date: st
   """Gets the personal standings history for the user"""
   game, format, store, user_id = GetObjectsFromInteraction(interaction, store=True)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
-  data = GetPersonalHistory(user_id, game, format, date_start, date_end, store)
+  data = GetStandingsHistory(user_id, game, format, date_start, date_end, store)
   if data is None:
     return None
   title = f'Personal History for {store.StoreName.title()}'
