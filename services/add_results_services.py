@@ -1,17 +1,28 @@
+from typing import List
+import discord
 from custom_errors import KnownError
 from data.add_results_data import AddResult, SubmitTable
 from services.input_services import ConvertInput
 from services.date_functions import ConvertToDate
-from data.event_data import GetEvent, CreateEvent
+from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
 from interaction_objects import GetObjectsFromInteraction
-from tuple_conversions import Participant, Round
+from tuple_conversions import Data, Standing, Pairing
 
-async def SubmitData(message, data, date_str):
+def SubmitCheck(interaction:discord.Interaction):
+  """Checks if the user can submit data in this channel"""
+  return GetObjectsFromInteraction(interaction,
+                                   game=True,
+                                   format=True,
+                                   store=True)
+
+def SubmitData(interaction_objects:Data,
+               data: List[Standing] | List[Pairing],
+               date_str:str):
   """Submits an events data to the database"""
-  game, format, store, userId = GetObjectsFromInteraction(message,
-                                                   game=True,
-                                                   format=True,
-                                                   store=True)
+  store = interaction_objects.Store
+  game = interaction_objects.Game
+  format = interaction_objects.Format
+  userId = interaction_objects.UserId
   
   date = ConvertToDate(date_str)
   event = GetEvent(store.DiscordId, date, game, format)
@@ -21,20 +32,32 @@ async def SubmitData(message, data, date_str):
     if event is None:
       raise KnownError('Unable to create event')
     event_created = True
-  message = ''
-  if isinstance(data[0],Participant):
-    message = AddParticipantResults(event, data, userId)
-  elif isinstance(data[0], Round):
-    message = AddRoundResults(event, data, userId)
+
+  """
+  If standings data comes in, but pairings data already exists, throw an error
+  If pairings data comes in, but standings data already exists, erase the standings data and add pairings
+  """  
+
+  #Add the data to the database depending on the type of data
+  results = ''
+  if isinstance(data[0], Standing):
+    if event.EventType != 'STANDINGS':
+      raise KnownError('This event already has pairings submitted')
+    results = AddStandingResults(event, data, userId)
+  elif isinstance(data[0], Pairing):
+    if event.EventType != 'PAIRINGS':
+      #Delete the standings data
+      DeleteStandingsFromEvent(event.ID)
+    results = AddPairingResults(event, data, userId)
   else:
     raise Exception("Congratulations, you've reached the impossible to reach area.")
-  return (message, event.EventDate if event_created else None)
+  return results, event.EventDate if event_created else None
 
-def AddParticipantResults(event, data, submitterId):
+def AddStandingResults(event, data, submitterId):
   successes = 0
   for person in data:
     if person.PlayerName != '':
-      person = Participant(ConvertInput(person.PlayerName),
+      person = Standing(ConvertInput(person.PlayerName),
                               person.Wins,
                               person.Losses,
                               person.Draws)
@@ -47,7 +70,7 @@ def AddParticipantResults(event, data, submitterId):
     output += f"{len(data)-successes} were skipped."
   return 
 
-def AddRoundResults(event, data, submitterId):
+def AddPairingResults(event, data, submitterId):
   successes = 0
   round_number = data[0].Round
   for table in data:

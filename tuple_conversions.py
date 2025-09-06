@@ -65,26 +65,34 @@ Event = namedtuple('Event',
                     'EventDate',
                     'GameID',
                     'FormatID',
-                    'LastUpdate'])
+                    'LastUpdate',
+                    'EventType'])
 
-def ConvertToEvent(event_obj: tuple[Any, Any, Any, Any, Any, Any]):
+def ConvertToEvent(event_obj: tuple[Any, Any, Any, Any, Any, Any, Any]):
   """Converts a tuple to an Event object."""
   return Event(int(event_obj[0]),
                int(event_obj[1]),
                event_obj[2],
                int(event_obj[3]),
                int(event_obj[4]) if event_obj[4] else None,
-               int(event_obj[5]))
+               int(event_obj[5]),
+               event_obj[6])
 
-Round = namedtuple('Round',
-                   ['P1Name',
-                    'P1Wins',
-                    'P2Name',
-                    'P2Wins',
-                    'Round'])
+Pairing = namedtuple('Pairing',
+                     ['P1Name',
+                      'P1Wins',
+                      'P2Name',
+                      'P2Wins',
+                      'Round'])
 
-Participant = namedtuple('Participant',
-                         ['PlayerName',
-                          'Wins',
-                          'Losses',
-                          'Draws'])
+Standing = namedtuple('Standing',
+                      ['PlayerName',
+                       'Wins',
+                       'Losses',
+                       'Draws'])
+
+Data = namedtuple("Data",
+                  ["Game",
+                   "Format",
+                   "Store",
+                   "UserId"])

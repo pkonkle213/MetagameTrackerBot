@@ -1,12 +1,12 @@
-from tuple_conversions import Round, Participant
+from tuple_conversions import Pairing, Standing
 
-def LorcanaOfficialRound(message):
+def LorcanaOfficialPairing(message):
   data = []
   rows = message.split('\n')
   try:
     start = 0
     if rows[7].upper() == 'BYE':
-      data.append(Round(rows[1].upper(), 2, 'BYE', 0, 0))
+      data.append(Pairing(rows[1].upper(), 2, 'BYE', 0, 0))
       start = 8
     for i in range(start, len(rows), 9):
       row = rows[i:i + 9]
@@ -15,15 +15,15 @@ def LorcanaOfficialRound(message):
       colon = row[7].index(':')
       p1gw = row[7][colon + 2]
       p2gw = row[7][colon + 4]
-      result = Round(p1name, p1gw, p2name, p2gw, 0)
+      result = Pairing(p1name, p1gw, p2name, p2gw, 0)
       data.append(result)
     return data
   except Exception as exception:
-    print('Lorcana Official Round Rows:', rows)
-    print('Lorcana Official Round Exception:', exception)
+    print('Lorcana Official Pairing Rows:', rows)
+    print('Lorcana Official Pairing Exception:', exception)
     return None
 
-def LorcanaOfficialParticipant(message):
+def LorcanaOfficialStanding(message):
   data = []
   rows = message.split('\n')
   try:
@@ -34,7 +34,7 @@ def LorcanaOfficialParticipant(message):
       wins = details[2][0]
       losses = details[2][2]
       draws = details[2][4]
-      participant = Participant(name,
+      participant = Standing(name,
                                 wins,
                                 losses,
                                 draws)
@@ -42,5 +42,5 @@ def LorcanaOfficialParticipant(message):
       data.append(participant)
     return data
   except Exception as exception:
-    print('Lorcana Official Participant Rows:', rows)
-    print('Lorcana Official Participant Exception:', exception)
+    print('Lorcana Official Standing Rows:', rows)
+    print('Lorcana Official Standing Exception:', exception)

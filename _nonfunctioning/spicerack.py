@@ -69,6 +69,6 @@ def ConvertEventToPlayers(event):
     wins = player['matches_won']
     losses = player['matches_lost']
     draws = player['matches_drawn']
-    players.append(tuple_conversions.Participant(player_name, wins, losses, draws))
+    players.append(tuple_conversions.Standing(player_name, wins, losses, draws))
 
   return players

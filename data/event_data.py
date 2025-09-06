@@ -11,19 +11,31 @@ def GetEvent(discord_id,
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      id,
-      discord_id,
-      event_date,
-      game_id,
-      format_id,
-      last_update
-    FROM events e
-    WHERE e.discord_id = {discord_id}
+      e.id,
+      e.discord_id,
+      e.event_date,
+      e.game_id,
+      e.format_id,
+      e.last_update,
+      CASE
+        WHEN COUNT(round_number) > 0 THEN 'PAIRINGS'
+        WHEN COUNT(player_name) > 0 THEN 'STANDINGS'
+      END AS event_type
+    FROM
+      events e
+      LEFT JOIN pairings p ON p.event_id = e.id
+      LEFT JOIN standings s ON s.event_id = e.id
+    WHERE
+      e.discord_id = {discord_id}
       AND e.game_id = {game.ID}
       AND e.format_id = {format.ID}
       AND e.event_date = '{date}'
-    ORDER BY event_date DESC
-    LIMIT 1
+    GROUP BY
+      e.id
+    ORDER BY
+      e.event_date DESC
+    LIMIT
+      1
     '''
     
     cur.execute(command)
@@ -81,4 +93,16 @@ def GetEventMeta(event_id):
     cur.execute(command)
     rows = cur.fetchall()
     return rows
-    
+
+def DeleteStandingsFromEvent(event_id):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    DELETE FROM standings
+    WHERE event_id = {event_id}
+    '''
+
+    cur.execute(command)
+    conn.commit()
+    return True
+  

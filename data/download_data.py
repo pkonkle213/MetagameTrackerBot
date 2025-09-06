@@ -1,7 +1,7 @@
 import os
 import psycopg2
 
-def GetStoreParticipantData(store, game, format, start_date, end_date):
+def GetStoreStandingData(store, game, format, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command =  f'''
@@ -39,7 +39,7 @@ def GetStoreParticipantData(store, game, format, start_date, end_date):
     rows = cur.fetchall()
     return rows
 
-def GetStoreRoundData(store, game, format, start_date, end_date):
+def GetStorePairingData(store, game, format, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
@@ -76,7 +76,7 @@ def GetStoreRoundData(store, game, format, start_date, end_date):
     rows = cur.fetchall()
     return rows
 
-def GetPlayerRoundData(store, game, format, start_date, end_date, user_id):
+def GetPlayerPairingData(store, game, format, start_date, end_date, user_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
@@ -109,12 +109,11 @@ def GetPlayerRoundData(store, game, format, start_date, end_date, user_id):
       round_number
     '''
 
-    print('Player participant:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows
 
-def GetPlayerParticipantData(store, game, format, start_date, end_date, user_id):
+def GetPlayerStandingData(store, game, format, start_date, end_date, user_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command =  f'''

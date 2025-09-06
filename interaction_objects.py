@@ -2,7 +2,7 @@ from collections import namedtuple
 from custom_errors import KnownError
 import discord
 import data.interaction_data as db
-from tuple_conversions import Game
+from tuple_conversions import Game, Data
 
 
 def GetObjectsFromInteraction(interaction: discord.Interaction,
@@ -101,5 +101,4 @@ def FormatInteractionData(data, requirements):
   format = GetFormat(game, data.ChannelId, requirements.Format)
   store = GetStore(data.DiscordId, requirements.Store)
 
-  Data = namedtuple("Data", ["Game", "Format", "Store", "UserId"])
   return Data(game, format, store, data.UserId)

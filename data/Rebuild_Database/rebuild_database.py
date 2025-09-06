@@ -1,0 +1,3 @@
+def RebuildDatabase():
+  ...
+  #Think out process then implement

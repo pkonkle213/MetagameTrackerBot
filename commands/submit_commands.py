@@ -2,12 +2,12 @@ import settings
 from checks import isSubmitter
 from custom_errors import KnownError
 from data_translation import ConvertMessageToData
-from tuple_conversions import Participant
+from tuple_conversions import Standing
 from discord import app_commands, Interaction
 from discord.ext import commands
 from discord_messages import MessageChannel
 from interaction_objects import GetObjectsFromInteraction
-from services.add_results_services import SubmitData
+from services.add_results_services import SubmitCheck, SubmitData
 from services.command_error_service import Error
 from text_modal import SubmitDataModal
 
@@ -49,42 +49,60 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
   @app_commands.guild_only()
   async def SubmitDataCommand(self, interaction: Interaction):
     try:
+      #Checks to ensure data can be submitted in the current channel
+      interaction_objects = SubmitCheck(interaction)
+
+      #Get the data from the user
       modal = SubmitDataModal()
       await interaction.response.send_modal(modal)
       await modal.wait()
 
       if not modal.is_submitted:
-        await interaction.followup.send("SubmitData modal was dismissed or timed out. Please try again", ephemeral=True)
-      else:
-        data, game, errors = ConvertMessageToData(interaction, modal.submitted_message)
-        if data is None:
-          await interaction.followup.send("Unable to submit due to not recognizing the form data. Please try again", ephemeral=True)
-          await AddDataMessage(self.bot, modal, interaction, settings.ERRORCHANNELID)
-        else:
-          message_type = 'participants' if isinstance(data[0], Participant) else 'tables'
-          await interaction.followup.send(f"Attempting to add {len(data)} {message_type} to event", ephemeral=True)
-          if len(errors) > 0:
-            await interaction.followup.send('Errors:\n' + '\n'.join(errors), ephemeral=True)
-          await AddDataMessage(self.bot,
-                               modal,
-                               interaction,
-                               settings.BOTEVENTINPUTID)
-          output, event_created = await SubmitData(interaction,
-                                                   data,
-                                                   modal.submitted_date)
-          await interaction.followup.send(output, ephemeral=True)
-          if event_created:
-            await MessageChannel(self.bot,
-                                 f"New data for {event_created.strftime('%B %d')}'s event have been submitted! Use the `/claim` command to input your archetype!",
-                                 interaction.guild_id,
-                                 interaction.channel_id)
+        raise KnownError("SubmitData modal was dismissed or timed out. Please try again.")
+
+      #Convert the data to the appropriate format
+      data, errors = ConvertMessageToData(interaction, modal.submitted_message, interaction_objects.Game)
+      if data is None:
+        await AddDataMessage(self.bot,
+                             modal,
+                             interaction,
+                             settings.ERRORCHANNELID,
+                             True)
+        raise KnownError("Unable to submit due to not recognizing the form data. Please try again.")
+
+      #Advise user of submission process starting
+      message_type = 'standings' if isinstance(data[0], Standing) else 'pairings'
+      await interaction.followup.send(f"Attempting to add {len(data)} {message_type} to event", ephemeral=True)
+      
+      #Inform user of any errors in submitted data
+      if len(errors) > 0:
+        await interaction.followup.send('Errors:\n' + '\n'.join(errors), ephemeral=True)
+      
+      #Inform me of the new event being added
+      await AddDataMessage(self.bot,
+                           modal,
+                           interaction,
+                           settings.BOTEVENTINPUTID,
+                           False)
+
+      #Submit the data to the database. Returning event for an announcement
+      output, event_created = SubmitData(interaction_objects,
+                                         data,
+                                         modal.submitted_date)
+      await interaction.followup.send(output, ephemeral=True)
+      if event_created:
+        await MessageChannel(self.bot,
+                             f"New data for {event_created.strftime('%B %d')}'s event have been submitted! Use the `/claim` command to input your archetype!",
+                             interaction.guild_id,
+                             interaction.channel_id)
     except KnownError as exception:
       await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
       await Error(self.bot, interaction, exception)
 
-async def AddDataMessage(bot, modal, interaction, channel_id):
+async def AddDataMessage(bot, modal, interaction, channel_id, isError):
   message = f"""
+  {'Could not submit data due to error' if isError else 'Submitted data'}
     Guild name: {interaction.guild.name}
     Guild id: {interaction.guild.id}
     Channel name: {interaction.channel.name}
