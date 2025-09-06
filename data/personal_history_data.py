@@ -36,7 +36,7 @@ def GetPairingsHistory(user_id: int, game: Game, format: Format,
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     ORDER BY
       e.event_date DESC,
-      fp.round_number DESC
+      fp.round_number
     '''
 
     cur.execute(command)
