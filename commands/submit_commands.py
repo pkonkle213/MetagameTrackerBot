@@ -40,6 +40,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
         await interaction.followup.send('Everything looks good. Please reach out to Phil to test your data')
       else:
         await interaction.followup.send('\n'.join(issues))
+    except KnownError as exception:
+      await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
       await Error(self.bot, interaction, exception)
 
@@ -89,6 +91,9 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       output, event_created = SubmitData(interaction_objects,
                                          data,
                                          modal.submitted_date)
+      if output is None:
+        raise KnownError("Unable to submit data. Please try again.")
+        
       await interaction.followup.send(output, ephemeral=True)
       if event_created:
         await MessageChannel(self.bot,

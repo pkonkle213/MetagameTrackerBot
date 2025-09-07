@@ -1,4 +1,5 @@
-from services.command_error_service import MissingRoleError
+from custom_errors import KnownError
+from services.command_error_service import Error, MissingRoleError
 from discord.ext import commands
 from discord import app_commands, Interaction
 from services.store_level_check_service import CheckMyStoreLevel, GetLevelDetails
@@ -24,8 +25,10 @@ class CheckStoreLevel(commands.GroupCog, name='level'):
     try:
       level = CheckMyStoreLevel(interaction)
       await interaction.followup.send(f"As of tomorrow, your store is level {level}", ephemeral=True)
+    except KnownError as exception:
+      await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
-      await interaction.followup.send(f"Something went wrong: {exception}", ephemeral=True)
+      await Error(self.bot, interaction, exception)
 
   @app_commands.command(name="details",
     description="Check the information about your store's events")

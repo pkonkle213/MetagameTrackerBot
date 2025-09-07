@@ -1,3 +1,4 @@
+from custom_errors import KnownError
 from discord.ext import commands
 from discord import app_commands, Interaction
 from services.top_players_services import GetTopPlayers
@@ -38,6 +39,8 @@ class StoreTopPlayers(commands.Cog):
       else:
         output = BuildTableOutput(title, headers, data)
         await interaction.followup.send(output)
+    except KnownError as exception:
+      await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
       await Error(self.bot, interaction, exception)
 

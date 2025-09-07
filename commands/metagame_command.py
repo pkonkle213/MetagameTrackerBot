@@ -1,3 +1,4 @@
+from custom_errors import KnownError
 from discord import app_commands, Interaction
 from discord.ext import commands
 from services.metagame_services import GetMyMetagame
@@ -31,10 +32,10 @@ class MetagameCommand(commands.Cog):
       else:
         output = BuildTableOutput(title, headers, data, archetype_column)
         await interaction.followup.send(output)
+    except KnownError as exception:
+      await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
       await Error(self.bot, interaction, exception)
-      print('Error in GetTheMetagame:', exception)
-      await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.")
 
 async def setup(bot):
   await bot.add_cog(MetagameCommand(bot))
