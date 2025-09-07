@@ -6,6 +6,7 @@ from discord_messages import MessageUser
 from services.command_error_service import Error
 import discord
 from services.store_level_service import LEVELINFSTORES
+from custom_errors import KnownError
 
 class DownloadDataGroup(commands.GroupCog, name='download'):
   """A group of commands for downloading data"""
@@ -41,6 +42,8 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
                           interaction.user.id,
                           files)
         await interaction.followup.send('The data for the store will arrive by message')
+    except KnownError as exception:
+      await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
       await Error(self.bot, interaction, exception)
 
@@ -72,6 +75,8 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
                           interaction.user.id,
                           files)
         await interaction.followup.send('Your data will arrive by message')
+    except KnownError as exception:
+      await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
       await Error(self.bot, interaction, exception)
 

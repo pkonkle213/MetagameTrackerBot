@@ -4,6 +4,7 @@ from discord import app_commands, Interaction
 import settings
 from services.demonstration_functions import NewDemo
 from services.command_error_service import Error
+from custom_errors import KnownError
 
 TARGET_GUILDS = [settings.BOTGUILDID]
 
@@ -19,6 +20,8 @@ class NewDemoCommand(commands.Cog):
       await interaction.response.defer()
       NewDemo()
       await interaction.followup.send('All set up!')
+    except KnownError as exception:
+      await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
       await Error(self.bot, interaction, exception)
 
