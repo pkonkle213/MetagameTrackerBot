@@ -12,7 +12,8 @@ def GetEventAndPlayerName(discord_id, date, game, format, player_name):
       game_id,
       format_id,
       last_update,
-      player_name
+      player_name,
+      event_type
     FROM
       (
         SELECT
@@ -21,7 +22,11 @@ def GetEventAndPlayerName(discord_id, date, game, format, player_name):
           e.event_date,
           e.game_id,
           e.format_id,
-          e.last_update
+          e.last_update,
+          CASE
+            WHEN COUNT(e.round_number) > 0 THEN 'PAIRINGS'
+            WHEN COUNT(e.player_name) > 0 THEN 'STANDINGS'
+          END AS event_type
         FROM
           events e
         WHERE
@@ -43,6 +48,7 @@ def GetEventAndPlayerName(discord_id, date, game, format, player_name):
     cur.execute(command)
     row = cur.fetchone()
     return row if row else (None,
+                            None,
                             None,
                             None,
                             None,

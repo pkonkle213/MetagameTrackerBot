@@ -21,15 +21,16 @@ def AddBadWord(interaction:Interaction, bad_word):
     raise Exception('No archetypes found to disable')
   return (word, archetypes)
   
-def ContainsBadWord(interaction:Interaction, bad_word):
-  bad_words = GetWordsForDiscord(interaction.guild_id)
+def ContainsBadWord(discord_id:int, archetype:str):
+  #TODO: This be made easier by utlizing LIKE %~% in the SQL query
+  bad_words = GetWordsForDiscord(discord_id)
   for word in bad_words:
-    if word[0] in bad_word.upper():
+    if word.upper() in archetype.upper():
       return True
 
   return False
 
-def CanSubmitArchetypes(discord_id, user_id):
+def CanSubmitArchetypes(discord_id:int, user_id:int):
   offenses = MatchDisabledArchetypes(discord_id, user_id)
   return len(offenses) < 3
 

@@ -9,16 +9,42 @@ from data.archetype_data import AddArchetype
 from data.event_data import GetEventMeta
 from services.input_services import ConvertInput
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
-from tuple_conversions import ConvertToArchetype, Event
+from tuple_conversions import Event
 from interaction_objects import GetObjectsFromInteraction
+from output_builder import BuildTableOutput
+
+async def AddTheArchetype(bot, interaction, player_name, date, archetype=''):
+  archetype_submitted, event = await ClaimResult(interaction,
+                                                 player_name,
+                                                 archetype,
+                                                 date)
+  if archetype_submitted is None:
+    raise KnownError('Unable to submit the archetype. Please try again later.')
+  else:
+    message = BuildMessage(interaction, date, archetype_submitted)
+    feed_output = message
+    private_output = f"Thank you for submitting the archetype for {event.EventDate.strftime('%B %d')}'s event!"
+    public_output, event_full = CheckEventPercentage(event)
+    return private_output, feed_output, public_output, event_full
+
+def BuildMessage(interaction, date, archetype_submitted=None, error_message=None, player_name='', archetype=''):
+  message_parts = []
+  message_parts.append(f'Submitter: {interaction.user.display_name}')
+  message_parts.append(f'Submitter id: {interaction.user.id}')
+  if not archetype_submitted:
+    message_parts.append(f'Ran into an error: {error_message}')
+  message_parts.append(f'Archetype submitted: {archetype_submitted.Archetype if archetype_submitted else archetype}')
+  message_parts.append(f'For player name: {player_name if not archetype_submitted else archetype_submitted.PlayerName}')
+  message_parts.append(f'For date: {date}')
+  message_parts.append(f'For channel name: {interaction.channel.name}')
+  return '\n'.join(message_parts)  
 
 async def ClaimResult(interaction:Interaction,
                       player_name:str,
                       archetype:str,
                       date:str):
   date_used = ConvertToDate(date)
-  date_today = GetToday()
-  if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter') and DateDifference(date_today, date_used) > 14:
+  if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter') and DateDifference(GetToday(), date_used) > 14:
     raise KnownError('You can only claim archetypes for events within the last 14 days. Please contact your store owner to have them submit the archetype.')
 
   game, format, store, userId = GetObjectsFromInteraction(interaction,
@@ -26,18 +52,21 @@ async def ClaimResult(interaction:Interaction,
                                                    format=True,
                                                    store=True)
   archetype = archetype.upper()
-  if ContainsBadWord(interaction, archetype):
+  
+  if ContainsBadWord(store.DiscordId, archetype):
     raise KnownError('Archetype contains a banned word')
   if not CanSubmitArchetypes(store.DiscordId, userId):
     raise KnownError('You have submitted too many bad archetypes. Please contact your store owner to have them submit the archetype.')
 
   player_name = ConvertInput(player_name)
+  
   (event_id,
    discord_id,
    event_date,
    game_id,
    format_id,
    last_update,
+   event_type,
    player_name) = GetEventAndPlayerName(store.DiscordId, date_used, game, format, player_name)
   
   if event_id is None:
@@ -60,14 +89,15 @@ async def ClaimResult(interaction:Interaction,
                 event_date, 
                 game_id,   
                 format_id,  
-                last_update)
+                last_update,
+                event_type)
 
   updater_name = interaction.user.display_name.upper()
   archetype_added = AddArchetype(event_id,
-                        player_name,
-                        archetype,
-                        userId,
-                        updater_name)
+                                 player_name,
+                                 archetype,
+                                 userId,
+                                 updater_name)
   if archetype_added is None:
     raise KnownError('Unable to submit the archetype. Please try again later.')
   return archetype_added, event
@@ -83,10 +113,11 @@ def CheckEventPercentage(event):
     str_date = event.EventDate.strftime('%B %d')
     if event.LastUpdate + 1 < 4:
       followup = f'Congratulations! The {str_date} event is now {percent_reported:.0%} reported!'
-      final = False
+      final = None
     else:
       followup = f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!'
-      final = True
+      title, headers, data = OneEvent(event)
+      final = BuildTableOutput(title, headers, data)
     return followup, final
   return None, None
 

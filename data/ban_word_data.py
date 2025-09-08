@@ -96,7 +96,7 @@ def GetWordsForDiscord(discord_id):
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    return rows
+    return [row[0] for row in rows]
 
 def GetOffenders(game, format, store):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
