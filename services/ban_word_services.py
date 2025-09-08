@@ -1,8 +1,9 @@
 from collections import namedtuple
 from interaction_objects import GetObjectsFromInteraction
-from data.ban_word_data import AddWord, GetWord, MatchDisabledArchetypes, DisableMatchingWords, AddBadWordBridge, GetWordsForDiscord, GetOffenders
+from data.ban_word_data import AddWord, GetWord, MatchDisabledArchetypes, DisableMatchingWords, AddBadWordBridge, CheckStoreBannedWords, GetOffenders
 from discord import Interaction
 
+#TODO: English, please?
 def AddBadWord(interaction:Interaction, bad_word):
   Word = namedtuple("Word", ["ID", "word"])
   word_obj = GetWord(bad_word.upper())
@@ -22,13 +23,8 @@ def AddBadWord(interaction:Interaction, bad_word):
   return (word, archetypes)
   
 def ContainsBadWord(discord_id:int, archetype:str):
-  #TODO: This be made easier by utlizing LIKE %~% in the SQL query
-  bad_words = GetWordsForDiscord(discord_id)
-  for word in bad_words:
-    if word.upper() in archetype.upper():
-      return True
-
-  return False
+  words = CheckStoreBannedWords(discord_id, archetype)
+  return True if words else False
 
 def CanSubmitArchetypes(discord_id:int, user_id:int):
   offenses = MatchDisabledArchetypes(discord_id, user_id)
