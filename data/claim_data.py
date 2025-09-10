@@ -57,5 +57,5 @@ def GetEventAndPlayerName(discord_id, date, game, format, player_name):
                             None,
                             None,
                             None,
-                            None,
-                            '')
+                            '',
+                            None)
