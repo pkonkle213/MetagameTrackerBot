@@ -69,7 +69,6 @@ m grafton
     user_id = 1
 
     date = ConvertToDate(date_obj)
-    event = 
     
     await interaction.followup.send("Tested!")
 """
