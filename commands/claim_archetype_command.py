@@ -1,4 +1,3 @@
-from datetime import date
 from discord.ext import commands
 from discord import app_commands, Interaction
 from data.store_data import GetClaimFeed
@@ -20,7 +19,7 @@ class ClaimArchetype(commands.GroupCog, name='claim'):
   async def ClaimLimited(self,
                          interaction: Interaction,
                          player_name: str,
-                         date: date):
+                         date: str):
     """
       Parameters
       ----------
