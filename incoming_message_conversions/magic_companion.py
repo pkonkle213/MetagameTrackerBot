@@ -70,7 +70,7 @@ def CompanionPairings(message):
         result = Pairing(p1name, p1gw, p2name, p2gw, roundnumber)
         data.append(result)
     except ValueError:
-      errors.append(f'Unable to parse the record for rows {i+4}: {rows[i+3]}')
+      errors.append(f'Unable to parse the record for row {i + 4}: {rows[i + 3]}')
     except KnownError as exception:
       errors.append(exception.message)
     except Exception:

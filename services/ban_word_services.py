@@ -1,13 +1,14 @@
 from collections import namedtuple
 from interaction_objects import GetObjectsFromInteraction
-from data.ban_word_data import AddWord, GetWord, MatchDisabledArchetypes, DisableMatchingWords, AddBadWordBridge, GetWordsForDiscord, GetOffenders
+from data.ban_word_data import AddWord, GetWord, MatchDisabledArchetypes, DisableMatchingWords, AddBadWordBridge, CheckStoreBannedWords, GetOffenders
 from discord import Interaction
 
+#TODO: English, please?
 def AddBadWord(interaction:Interaction, bad_word):
   Word = namedtuple("Word", ["ID", "word"])
-  word_obj = GetWord(bad_word.upper())
+  word_obj = GetWord(bad_word)
   if word_obj is None or len(word_obj) == 0:
-    word_obj = AddWord(bad_word.upper())
+    word_obj = AddWord(bad_word)
     if word_obj is None:
       raise Exception('Unable to add word')
   word = Word(word_obj[0][0], word_obj[0][1])
@@ -21,15 +22,11 @@ def AddBadWord(interaction:Interaction, bad_word):
     raise Exception('No archetypes found to disable')
   return (word, archetypes)
   
-def ContainsBadWord(interaction:Interaction, bad_word):
-  bad_words = GetWordsForDiscord(interaction.guild_id)
-  for word in bad_words:
-    if word[0] in bad_word.upper():
-      return True
+def ContainsBadWord(discord_id:int, archetype:str):
+  words = CheckStoreBannedWords(discord_id, archetype)
+  return True if words else False
 
-  return False
-
-def CanSubmitArchetypes(discord_id, user_id):
+def CanSubmitArchetypes(discord_id:int, user_id:int):
   offenses = MatchDisabledArchetypes(discord_id, user_id)
   return len(offenses) < 3
 

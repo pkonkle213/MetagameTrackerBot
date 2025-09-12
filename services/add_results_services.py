@@ -33,11 +33,6 @@ def SubmitData(interaction_objects:Data,
       raise KnownError('Unable to create event')
     event_created = True
 
-  """
-  If standings data comes in, but pairings data already exists, throw an error
-  If pairings data comes in, but standings data already exists, erase the standings data and add pairings
-  """  
-
   #Add the data to the database depending on the type of data
   results = ''
   if isinstance(data[0], Standing):

@@ -22,6 +22,7 @@ async def on_ready():
   data_guild_update.start()
   update_store_levels.start()
   await SyncCommands(bot, CMDS_DIR)
+  print('Synced commands. Good to go')
 
 @bot.event
 async def on_guild_join(guild:discord.Guild):

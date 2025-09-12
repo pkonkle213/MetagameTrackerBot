@@ -12,23 +12,32 @@ def GetEventAndPlayerName(discord_id, date, game, format, player_name):
       game_id,
       format_id,
       last_update,
-      player_name
+      player_name,
+      event_type
     FROM
       (
-        SELECT
+       SELECT
           e.id,
           e.discord_id,
           e.event_date,
           e.game_id,
           e.format_id,
-          e.last_update
+          e.last_update,
+          CASE
+            WHEN COUNT(round_number) > 0 THEN 'PAIRINGS'
+            WHEN COUNT(player_name) > 0 THEN 'STANDINGS'
+          END AS event_type
         FROM
           events e
+          LEFT JOIN pairings p ON p.event_id = e.id
+          LEFT JOIN standings s ON s.event_id = e.id
         WHERE
           e.discord_id = {discord_id}
           AND e.game_id = {game.ID}
           AND e.format_id = {format.ID}
           AND e.event_date = '{date}'
+        GROUP BY
+          e.id
       ) e
       LEFT JOIN (
         SELECT
@@ -48,4 +57,5 @@ def GetEventAndPlayerName(discord_id, date, game, format, player_name):
                             None,
                             None,
                             None,
-                            '')
+                            '',
+                            None)

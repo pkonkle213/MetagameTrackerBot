@@ -2,12 +2,11 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 from data.store_data import GetClaimFeed
 import settings
-from services.claim_result_services import ClaimResult, CheckEventPercentage, OneEvent
 from custom_errors import KnownError
 from discord_messages import MessageChannel
-from output_builder import BuildTableOutput
 from services.input_services import ConvertInput
 from services.command_error_service import Error
+from services.claim_result_services import AddTheArchetype
 
 class ClaimArchetype(commands.GroupCog, name='claim'):
   """A group of commands to claim the archetype for a player"""
@@ -30,7 +29,24 @@ class ClaimArchetype(commands.GroupCog, name='claim'):
         Date of event (MM/DD/YYYY)
       """
     await interaction.response.defer(ephemeral=True)
-    await AddTheArchetype(self.bot, interaction, player_name, date)
+    try:
+      private_output, feed_output, public_output, full_event = await AddTheArchetype(self.bot, interaction, player_name, date)
+      await interaction.followup.send(private_output, ephemeral=True)
+      await MessageStoreFeed(self.bot, feed_output, interaction)
+      if public_output:
+        await MessageChannel(self.bot,
+                            public_output,
+                            interaction.guild_id,
+                            interaction.channel_id)
+      if full_event:
+        await MessageChannel(self.bot,
+                             full_event,
+                             interaction.guild_id,
+                             interaction.channel_id)
+    except KnownError as exception:
+      await interaction.followup.send(exception.message, ephemeral=True)
+    except Exception as exception:
+      await Error(self.bot, interaction, exception)
 
   @app_commands.command(name='constructed',
                         description='Enter the deck archetype for a player and their last played constructed event')
@@ -51,76 +67,43 @@ class ClaimArchetype(commands.GroupCog, name='claim'):
       Date of event (MM/DD/YYYY)
     """
     await interaction.response.defer(ephemeral=True)
-    archetype = ConvertInput(archetype)
-    await AddTheArchetype(self.bot, interaction, player_name, date, archetype)
-
-async def AddTheArchetype(bot, interaction, player_name, date, archetype=''):
-  try:
-    archetype_submitted, event = await ClaimResult(interaction,
-                                                   player_name,
-                                                   archetype,
-                                                   date)
-    if archetype_submitted is None:
-      #This would be due to a connection error with the database
-      await interaction.followup.send('Unable to submit the archetype. Please try again later.')
-    else:
-      message = BuildMessage(interaction, date, archetype_submitted)
-      await MessageStoreFeed(bot, message, interaction)
-      await interaction.followup.send(f"Thank you for submitting the archetype for {event.EventDate.strftime('%B %d')}'s event!",
-                                      ephemeral=True)
-      followup, final = CheckEventPercentage(event)
-      if followup:
-        await MessageChannel(bot,
-                               followup,
-                               interaction.guild_id,
-                               interaction.channel_id)
-        if final:
-          title, headers, data = OneEvent(event)
-          output = BuildTableOutput(title, headers, data)
-          await MessageChannel(bot,
-                               output,
-                               interaction.guild_id,
-                               interaction.channel_id)
-  except ValueError:
-    await interaction.followup.send("The date provided doesn't match the MM/DD/YYYY formatting. Please try again",
-                                    ephemeral=True)
-  except KnownError as exception:
-    await interaction.followup.send(exception.message, ephemeral=True)
-    message = BuildMessage(interaction, date, None, exception.message, player_name, archetype)
-    await MessageStoreFeed(bot, message, interaction)      
-  except Exception as exception:
-    await  interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.",
-                                    ephemeral=True)
-    await Error(bot, interaction, exception)
-
-def BuildMessage(interaction, date, archetype_submitted=None, error_message=None, player_name='', archetype=''):
-  message_parts = []
-  message_parts.append(f'Submitter: {interaction.user.display_name}')
-  message_parts.append(f'Submitter id: {interaction.user.id}')
-  if not archetype_submitted:
-    message_parts.append(f'Ran into an error: {error_message}')
-  message_parts.append(f'Archetype submitted: {archetype_submitted.Archetype if archetype_submitted else archetype}')
-  message_parts.append(f'For player name: {player_name if not archetype_submitted else archetype_submitted.PlayerName}')
-  message_parts.append(f'For date: {date}')
-  message_parts.append(f'For channel name: {interaction.channel.name}')
-  return '\n'.join(message_parts)  
+    try:
+      archetype = ConvertInput(archetype)
+      private_output, feed_output, public_output, full_event = await AddTheArchetype(self.bot, interaction, player_name, date, archetype)
+      await interaction.followup.send(private_output, ephemeral=True)
+      await MessageStoreFeed(self.bot, feed_output, interaction)
+      if public_output:
+        await MessageChannel(self.bot,
+                            public_output,
+                            interaction.guild_id,
+                            interaction.channel_id)
+      if full_event:
+        await MessageChannel(self.bot,
+                             full_event,
+                             interaction.guild_id,
+                             interaction.channel_id)
+    except ValueError:
+      await interaction.followup.send("The date provided doesn't match the MM/DD/YYYY formatting. Please try again", ephemeral=True)
+    except KnownError as exception:
+      await interaction.followup.send(exception.message, ephemeral=True)
+    except Exception as exception:
+      await Error(self.bot, interaction, exception)
 
 async def MessageStoreFeed(bot, message, interaction):
   try:
-    #Message the store feed channel
+    #Message the store feed channel specific to the game
     channel_id = GetClaimFeed(interaction.guild_id,
                               interaction.channel.category.id)
     await MessageChannel(bot,
                          message,
                          interaction.guild_id,
                          channel_id)
-  except Exception as exception:
-    #await MessageUser(bot, exception, settings.PHILID)
+  except Exception:
     #If none listed or found, message the bot guild
     await MessageChannel(bot,
                          message,
                          settings.BOTGUILDID,
                          settings.CLAIMCHANNEL)
-  
+
 async def setup(bot):
   await bot.add_cog(ClaimArchetype(bot))

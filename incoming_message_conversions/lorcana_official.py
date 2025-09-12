@@ -6,7 +6,7 @@ def LorcanaOfficialPairing(message):
   try:
     start = 0
     if rows[7].upper() == 'BYE':
-      data.append(Pairing(rows[1].upper(), 2, 'BYE', 0, 0))
+      data.append(Pairing(rows[1], 2, 'BYE', 0, 0))
       start = 8
     for i in range(start, len(rows), 9):
       row = rows[i:i + 9]
