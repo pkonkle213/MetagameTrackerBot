@@ -6,9 +6,9 @@ from discord import Interaction
 #TODO: English, please?
 def AddBadWord(interaction:Interaction, bad_word):
   Word = namedtuple("Word", ["ID", "word"])
-  word_obj = GetWord(bad_word.upper())
+  word_obj = GetWord(bad_word)
   if word_obj is None or len(word_obj) == 0:
-    word_obj = AddWord(bad_word.upper())
+    word_obj = AddWord(bad_word)
     if word_obj is None:
       raise Exception('Unable to add word')
   word = Word(word_obj[0][0], word_obj[0][1])

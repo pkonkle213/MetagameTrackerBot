@@ -30,7 +30,7 @@ def GetMetagame(game,
         AND e.format_id = {format.ID}
         AND e.game_id = {game.ID}
       GROUP BY
-        archetype_played
+        UPPER(archetype_played)
       )
     WHERE
     metagame_percent >= 0.02

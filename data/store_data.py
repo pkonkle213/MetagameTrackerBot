@@ -24,7 +24,7 @@ def AddStore(discord_id,
   with conn, conn.cursor() as cur:
     command = f'''
     INSERT INTO Stores (discord_id, discord_name, owner_id, owner_name, used_for_data)
-    VALUES ({discord_id}, '{discord_name.upper()}', {owner_id}, '{owner_name.upper()}', {True})
+    VALUES ({discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True})
     ON CONFLICT (discord_id) DO UPDATE
     SET discord_name = '{discord_name}', owner_id = {owner_id}, owner_name = '{owner_name}'
     RETURNING discord_id, discord_name, 'NONE', owner_id, owner_name, used_for_data, FALSE

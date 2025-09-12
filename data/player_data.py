@@ -63,7 +63,7 @@ def GetStats(discord_id,
           {f'AND e.format_id = {format.ID}' if format else ''}
         GROUP BY
           {'f.name,' if not format else ''}
-          archetype_played
+          UPPER(archetype_played)
       )
     '''
 
@@ -126,7 +126,7 @@ def GetTopPlayerData(store,
                   AND game_id = {game.ID}
                   {f'AND format_id = {format.ID}' if format else ''}
                 GROUP BY
-                  player_name
+                  UPPER(player_name)
               )
           )
       )

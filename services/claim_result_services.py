@@ -51,7 +51,6 @@ async def ClaimResult(interaction:Interaction,
                                                    game=True,
                                                    format=True,
                                                    store=True)
-  archetype = archetype.upper()
   
   if ContainsBadWord(store.DiscordId, archetype):
     raise KnownError('Archetype contains a banned word')
@@ -92,7 +91,7 @@ async def ClaimResult(interaction:Interaction,
                 last_update,
                 event_type)
 
-  updater_name = interaction.user.display_name.upper()
+  updater_name = interaction.user.display_name
   archetype_added = AddArchetype(event_id,
                                  player_name,
                                  archetype,
