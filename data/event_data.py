@@ -63,8 +63,10 @@ def CreateEvent(event_date,
     0
     {f' , {format.ID}' if game.HasFormats else ''}
     )
-    RETURNING *
+    RETURNING
+    (id, discord_id, event_date, game_id, format_id, 0, '{None}')
     '''
+    
     cur.execute(command)
     conn.commit()
     event = cur.fetchone()

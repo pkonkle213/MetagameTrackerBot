@@ -66,7 +66,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       data, errors = ConvertMessageToData(interaction, modal.submitted_message, interaction_objects.Game)
       if data is None:
         await AddDataMessage(self.bot,
-                             modal,
+                              modal.submitted_date,
+                              modal.submitted_message,
                              interaction,
                              settings.ERRORCHANNELID,
                              True)
@@ -82,15 +83,22 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       
       #Inform me of the new event being added
       await AddDataMessage(self.bot,
-                           modal,
+                           modal.submitted_date,
+                           modal.submitted_message,
                            interaction,
                            settings.BOTEVENTINPUTID,
                            False)
 
+      print('Submitting')
+      print('Data:', data)
+      print('Date:', modal.submitted_date)
+      print('Interaction objects:', interaction_objects)
       #Submit the data to the database. Returning event for an announcement
       output, event_created = SubmitData(interaction_objects,
                                          data,
                                          modal.submitted_date)
+      print('Output:', output)
+      print('Event created:', event_created)
       if output is None:
         raise KnownError("Unable to submit data. Please try again.")
         
@@ -105,7 +113,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     except Exception as exception:
       await Error(self.bot, interaction, exception)
 
-async def AddDataMessage(bot, modal, interaction, channel_id, isError):
+async def AddDataMessage(bot, date, message, interaction, channel_id, isError):
   message = f"""
   {'Could not submit data due to error' if isError else 'Submitted data'}
     Guild name: {interaction.guild.name}
@@ -114,8 +122,8 @@ async def AddDataMessage(bot, modal, interaction, channel_id, isError):
     Channel id: {interaction.channel.id}
     Author name: {interaction.user.name}
     Author id: {interaction.user.id}
-    Date: {modal.submitted_date}
-    Message content:\n{modal.submitted_message}
+    Date: {date}
+    Message content:\n{message}
     """
   await MessageChannel(bot, message, settings.BOTGUILDID, channel_id)
 
