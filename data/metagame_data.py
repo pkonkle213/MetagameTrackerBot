@@ -16,7 +16,7 @@ def GetMetagame(game,
       ROUND(win_percent * 100, 2) AS win_percent
     FROM (
       SELECT
-        COALESCE(ua.archetype_played, 'UNKNOWN') AS archetype_played,
+        COALESCE(UPPER(ua.archetype_played), 'UNKNOWN') AS archetype_played,
         1.0 * sum(fp.wins) / (sum(fp.wins) + sum(fp.losses) + sum(fp.draws)) AS win_percent,
         COUNT(*) * 1.0 / SUM(count(*)) OVER () AS Metagame_Percent
       FROM
@@ -30,7 +30,7 @@ def GetMetagame(game,
         AND e.format_id = {format.ID}
         AND e.game_id = {game.ID}
       GROUP BY
-        UPPER(archetype_played)
+        UPPER(ua.archetype_played)
       )
     WHERE
     metagame_percent >= 0.02
