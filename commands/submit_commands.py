@@ -89,16 +89,10 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
                            settings.BOTEVENTINPUTID,
                            False)
 
-      print('Submitting')
-      print('Data:', data)
-      print('Date:', modal.submitted_date)
-      print('Interaction objects:', interaction_objects)
       #Submit the data to the database. Returning event for an announcement
       output, event_created = SubmitData(interaction_objects,
                                          data,
                                          modal.submitted_date)
-      print('Output:', output)
-      print('Event created:', event_created)
       if output is None:
         raise KnownError("Unable to submit data. Please try again.")
         

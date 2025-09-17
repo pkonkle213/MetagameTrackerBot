@@ -19,7 +19,6 @@ def SubmitData(interaction_objects:Data,
                data: List[Standing] | List[Pairing],
                date_str:str):
   """Submits an events data to the database"""
-  print('Welcome to SubmitData')
   store = interaction_objects.Store
   game = interaction_objects.Game
   format = interaction_objects.Format
@@ -27,7 +26,6 @@ def SubmitData(interaction_objects:Data,
   
   date = ConvertToDate(date_str)
   event = GetEvent(store.DiscordId, date, game, format)
-  print('Event First Check:', event)
   event_created = False
   if event is None:
     event = CreateEvent(date, store.DiscordId, game, format)
@@ -35,19 +33,13 @@ def SubmitData(interaction_objects:Data,
       raise KnownError('Unable to create event')
     event_created = True
 
-  print('Event:', event)
-  print('Data:', data)
-  print('First thing:', data[0])
-  print('Type:', type(data[0]))
   #Add the data to the database depending on the type of data
   results = ''
   if isinstance(data[0], Standing):
-    print('Standing data')
     if event.EventType != 'STANDINGS':
       raise KnownError('This event already has pairings submitted')
     results = AddStandingResults(event, data, userId)
   elif isinstance(data[0], Pairing):
-    print('Pairing data')
     if event.EventType != 'PAIRINGS':
       #Delete the standings data
       DeleteStandingsFromEvent(event.ID)
