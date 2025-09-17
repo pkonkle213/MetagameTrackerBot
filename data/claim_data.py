@@ -46,7 +46,7 @@ def GetEventAndPlayerName(discord_id, date, game, format, player_name):
         FROM
           full_standings
         WHERE
-          player_name = '{player_name}'
+          UPPER(player_name) = UPPER('{player_name}')
       ) fp ON fp.event_id = e.id
     '''
     cur.execute(command)
