@@ -6,7 +6,7 @@ def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      COALESCE(frr.opponent_archetype, 'UNKNOWN') AS opponent_archetype,
+      UPPER(COALESCE(frr.opponent_archetype, 'UNKNOWN')) AS opponent_archetype,
       COUNT(
         CASE
           WHEN result = 'WIN' THEN 1
