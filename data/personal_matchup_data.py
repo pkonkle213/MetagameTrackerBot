@@ -11,7 +11,7 @@ def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id)
       COUNT(CASE WHEN result = 'LOSS' THEN 1 END) as losses,
       COUNT(CASE WHEN result = 'DRAW' THEN 1 END) as draws,
       COUNT(*) as total_matches,
-      , 1.0 * COUNT(CASE WHEN result = 'WIN' THEN 1 END) / (COUNT(CASE WHEN result = 'WIN' THEN 1 END) + COUNT(CASE WHEN result = 'LOSS' THEN 1 END) + COUNT(CASE WHEN result = 'DRAW' THEN 1 END)) as win_percent
+      1.0 * COUNT(CASE WHEN result = 'WIN' THEN 1 END) / (COUNT(CASE WHEN result = 'WIN' THEN 1 END) + COUNT(CASE WHEN result = 'LOSS' THEN 1 END) + COUNT(CASE WHEN result = 'DRAW' THEN 1 END)) as win_percent
     FROM
       full_pairings fp
       INNER JOIN events e ON fp.event_id = e.id
