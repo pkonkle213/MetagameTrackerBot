@@ -6,59 +6,28 @@ def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      UPPER(COALESCE(frr.opponent_archetype, 'UNKNOWN')) AS opponent_archetype,
-      COUNT(
-        CASE
-          WHEN result = 'WIN' THEN 1
-        END
-      ) AS wins,
-      COUNT(
-        CASE
-          WHEN result = 'LOSS' THEN 1
-        END
-      ) AS losses,
-      COUNT(
-        CASE
-          WHEN result = 'DRAW' THEN 1
-        END
-      ) AS draws,
-      COUNT(*) AS total_matches,
-      ROUND(
-        1.0 * COUNT(
-          CASE
-            WHEN result = 'WIN' THEN 1
-          END
-        ) / (
-          COUNT(
-            CASE
-              WHEN result = 'WIN' THEN 1
-            END
-          ) + COUNT(
-            CASE
-              WHEN result = 'LOSS' THEN 1
-            END
-          ) + COUNT(
-            CASE
-              WHEN result = 'DRAW' THEN 1
-            END
-          )
-        ) * 100,
-        2
-      ) AS win_percentage
+      COALESCE(UPPER(ua.archetype_played), 'UNKNOWN') AS archetype_played,
+      COUNT(CASE WHEN result = 'WIN' THEN 1 END) as wins,
+      COUNT(CASE WHEN result = 'LOSS' THEN 1 END) as losses,
+      COUNT(CASE WHEN result = 'DRAW' THEN 1 END) as draws
+      , 1.0 * COUNT(CASE WHEN result = 'WIN' THEN 1 END) / (COUNT(CASE WHEN result = 'WIN' THEN 1 END) + COUNT(CASE WHEN result = 'LOSS' THEN 1 END) + COUNT(CASE WHEN result = 'DRAW' THEN 1 END)) as win_percent
     FROM
-      full_pairings frr
-      INNER JOIN events e ON e.id = frr.event_id
-      INNER JOIN player_names pn ON pn.player_name = frr.player_name
-      AND pn.discord_id = e.discord_id
+      full_pairings fp
+      INNER JOIN events e ON fp.event_id = e.id
+      LEFT JOIN unique_archetypes ua ON fp.opponent_name = ua.player_name
+      AND ua.event_id = fp.event_id
     WHERE
-      pn.submitter_id = {user_id}
+      UPPER(fp.player_name) IN (
+        SELECT player_name
+        FROM player_names
+        WHERE discord_id = {discord_id}
+        AND submitter_id = {user_id})
+      AND UPPER(fp.opponent_name) != 'BYE'
       AND e.discord_id = {discord_id}
-      AND UPPER(frr.opponent_name) != 'BYE'
       AND e.game_id = {game.ID}
       AND e.format_id = {format.ID}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-    GROUP BY
-      UPPER(frr.opponent_archetype)
+    GROUP BY UPPER(ua.archetype_played)
     '''
     
     cur.execute(command)
