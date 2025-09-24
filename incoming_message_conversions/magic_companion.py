@@ -45,7 +45,7 @@ def CompanionPairings(message):
   for i in range(0, len(rows), 6):
     row = rows[i:i + 6]
     try:
-      if row[3] != 'Bye':
+      if row[3].upper() != 'Bye'.upper():
         p1name = row[1]
         if p1name == '':
           raise KnownError(f'Names cannot be blank (row {i + 2}, please resubmit rows {i + 1} - {i + 6})')

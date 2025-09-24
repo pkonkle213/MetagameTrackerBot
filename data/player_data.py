@@ -104,7 +104,7 @@ def GetTopPlayerData(store,
             FROM
               (
                 SELECT
-                  player_name,
+                  UPPER(player_name) as player_name,
                   sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percentage,
                   1.0 * count(*) / (
                     SELECT

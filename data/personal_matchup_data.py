@@ -53,7 +53,7 @@ def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id)
     WHERE
       pn.submitter_id = {user_id}
       AND e.discord_id = {discord_id}
-      AND frr.opponent_name != 'BYE'
+      AND UPPER(frr.opponent_name) != 'BYE'
       AND e.game_id = {game.ID}
       AND e.format_id = {format.ID}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
