@@ -17,53 +17,64 @@ def GetStats(discord_id,
       wins,
       losses,
       draws,
-      ROUND(100 * win_percentage, 2) AS win_percentage
+      ROUND(win_percentage * 100, 2) AS win_percentage
     FROM
       (
+        WITH
+          X AS (
+            SELECT
+              fs.event_id,
+              f.name AS format_name,
+              UPPER(fs.player_name) AS player_name,
+              archetype_played,
+              wins,
+              losses,
+              draws
+            FROM
+              full_standings fs
+              LEFT JOIN unique_archetypes ua ON UPPER(ua.player_name) = fs.player_name
+              AND ua.event_id = fs.event_id
+              LEFT JOIN events e ON e.id = fs.event_id
+              LEFT JOIN formats f ON e.format_id = f.id
+            WHERE
+              UPPER(fs.player_name) IN (
+                SELECT
+                  player_name
+                FROM
+                  player_names
+                WHERE
+                  discord_id = {discord_id}
+                  AND submitter_id = {user_id}
+              )
+              {f'AND e.format_id = {format.ID}' if format else ''}
+              AND e.game_id = {game.ID}
+              AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+              AND e.discord_id = {discord_id}
+          )
         SELECT
-          1 AS rank,
-          {"' ' AS format_name," if not format else ''}
+          '1' AS rank,
+          ' ' AS format_name,
           'OVERALL' AS archetype_played,
-          sum(wins) AS wins,
-          sum(losses) AS losses,
-          sum(draws) AS draws,
+          SUM(wins) AS wins,
+          SUM(losses) AS losses,
+          SUM(draws) AS draws,
           1.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)) AS win_percentage
         FROM
-          full_standings fp
-          INNER JOIN events e ON e.id = fp.event_id
-          INNER JOIN formats f ON e.format_id = f.id
-          INNER JOIN player_names pn ON e.discord_id = pn.discord_id AND fp.player_name = pn.player_name
-        WHERE
-          pn.submitter_id = {user_id}
-          AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-          AND e.discord_id = {discord_id}
-          AND e.game_id = {game.ID}
-          {f'AND e.format_id = {format.ID}' if format else ''}
+          X
         UNION
         SELECT
-          2 AS rank,
-          {'f.name AS format_name,' if not format else ''}
+          '2' AS rank,
+          format_name,
           COALESCE(UPPER(archetype_played), 'UNKNOWN') AS archetype_played,
           SUM(wins) AS wins,
           SUM(losses) AS losses,
           SUM(draws) AS draws,
           1.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)) AS win_percentage
         FROM
-          full_standings fp
-          LEFT JOIN unique_archetypes ua ON ua.event_id = fp.event_id
-          AND ua.player_name = fp.player_name
-          INNER JOIN events e ON e.id = fp.event_id
-          INNER JOIN formats f ON e.format_id = f.id
-          INNER JOIN player_names pn ON e.discord_id = pn.discord_id AND fp.player_name = pn.player_name
-        WHERE
-          pn.submitter_id = {user_id}
-          AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-          AND e.discord_id = {discord_id}
-          AND e.game_id = {game.ID}
-          {f'AND e.format_id = {format.ID}' if format else ''}
+          X
         GROUP BY
-          {'f.name,' if not format else ''}
-          UPPER(archetype_played)
+          UPPER(archetype_played),
+          X.format_name
       )
     '''
 
