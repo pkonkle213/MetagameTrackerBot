@@ -58,5 +58,11 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
     except Exception as exception:
       await Error(self.bot, interaction, exception)
 
+  @WLDRecord.error
+  async def on_test_error(interaction: Interaction, error: app_commands.AppCommandError):
+      if isinstance(error, app_commands.CommandOnCooldown):
+          await interaction.response.send_message(str(error), ephemeral=True)
+  
+
 async def setup(bot):
   await bot.add_cog(PersonalStatisticsGroup(bot))
