@@ -43,7 +43,7 @@ def GetStats(discord_id,
         SELECT
           2 AS rank,
           {'f.name AS format_name,' if not format else ''}
-          UPPER(COALESCE(archetype_played, 'UNKNOWN')) AS archetype_played,
+          COALESCE(UPPER(archetype_played), 'UNKNOWN') AS archetype_played,
           SUM(wins) AS wins,
           SUM(losses) AS losses,
           SUM(draws) AS draws,
