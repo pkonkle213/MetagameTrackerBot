@@ -9,7 +9,8 @@ def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id)
       COALESCE(UPPER(ua.archetype_played), 'UNKNOWN') AS archetype_played,
       COUNT(CASE WHEN result = 'WIN' THEN 1 END) as wins,
       COUNT(CASE WHEN result = 'LOSS' THEN 1 END) as losses,
-      COUNT(CASE WHEN result = 'DRAW' THEN 1 END) as draws
+      COUNT(CASE WHEN result = 'DRAW' THEN 1 END) as draws,
+      COUNT(*) as total_matches,
       , 1.0 * COUNT(CASE WHEN result = 'WIN' THEN 1 END) / (COUNT(CASE WHEN result = 'WIN' THEN 1 END) + COUNT(CASE WHEN result = 'LOSS' THEN 1 END) + COUNT(CASE WHEN result = 'DRAW' THEN 1 END)) as win_percent
     FROM
       full_pairings fp
