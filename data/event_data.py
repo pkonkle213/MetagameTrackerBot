@@ -64,12 +64,13 @@ def CreateEvent(event_date,
     {f' , {format.ID}' if game.HasFormats else ''}
     )
     RETURNING
-    (id, discord_id, event_date, game_id, format_id, 0, '{None}')
+    id, discord_id, event_date, game_id, format_id, 0, '{None}'
     '''
     
     cur.execute(command)
     conn.commit()
     event = cur.fetchone()
+    print('Created event:', event)
     return ConvertToEvent(event) if event else None
 
 def GetEventMeta(event_id):
