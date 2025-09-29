@@ -12,6 +12,7 @@ from services.command_error_service import Error
 from text_modal import SubmitDataModal
 
 class SubmitDataChecker(commands.GroupCog, name='submit'):
+  """A group of commands to submit data"""
   def __init__(self, bot):
     self.bot = bot
 

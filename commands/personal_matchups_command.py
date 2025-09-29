@@ -9,6 +9,7 @@ import discord
 from services.store_level_service import LEVEL3STORES
 
 class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
+  """A group of commands to get personal statistics"""
   def __init__(self, bot):
     self.bot = bot
 
