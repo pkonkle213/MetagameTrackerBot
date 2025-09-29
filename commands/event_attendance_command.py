@@ -16,9 +16,10 @@ class EventAttendance(commands.Cog):
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL1STORES])
-  async def Attendance(self, interaction: Interaction,
-     start_date: str = '',
-     end_date: str = ''):
+  async def Attendance(self,
+                       interaction: Interaction,
+                       start_date: str = '',
+                       end_date: str = ''):
     """
     Parameters
     ----------
@@ -44,3 +45,4 @@ class EventAttendance(commands.Cog):
 
 async def setup(bot):
   await bot.add_cog(EventAttendance(bot))
+

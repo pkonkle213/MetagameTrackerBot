@@ -3,6 +3,20 @@ import psycopg2
 
 from tuple_conversions import ConvertToStore
 
+def UpdateStore(discord_id, store_name, owner_name):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    UPDATE Stores
+    SET store_name = %s, owner_name = %s
+    WHERE discord_id = {discord_id}
+    RETURNING discord_id, discord_name, store_name, owner_id, owner_name, used_for_data, FALSE
+    '''
+    cur.execute(command, [store_name, owner_name])
+    conn.commit()
+    row = cur.fetchone()
+    return ConvertToStore(row) if row else None
+
 def DeleteStore(discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:

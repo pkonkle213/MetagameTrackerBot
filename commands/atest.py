@@ -13,7 +13,13 @@ TARGET_GUILDS = [settings.TESTGUILDID]
 class ATest(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
-  
+
+    self.user_info_context_menu = app_commands.ContextMenu(
+      name='Get User Info',  # This is the name displayed in Discord
+      callback=self.Testing # The function to call when the command is used
+    )
+    # Add the context menu to the bot's command tree
+    self.bot.tree.add_command(self.user_info_context_menu)
   """
   @commands.Cog.listener()
   async def TestingError(self, interaction:Interaction, error:app_commands.AppCommandError):
@@ -22,55 +28,18 @@ class ATest(commands.Cog):
     else:
       await interaction.followup.send("2nd attempt to catch the error")
   """
-  @app_commands.command(name="atest",
+  """@app_commands.command(name="atest",
                         description="Tests something stupid!")
   @app_commands.guild_only()
-  @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
+  @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])"""
   #@app_commands.checks.has_role('MTSubmitter')
-  async def Testing(self, interaction: Interaction):
-    await interaction.response.defer(ephemeral=True)
-    message = """1
-Tobin Rainey
-1–0–0
-20
-James Bell
-0–1–0
-2
-Phillip Konkle
-0–1–0
-02
-Eric Satre
-1–0–0
-3
-Adrian Dorogov
-1–0–0
-21
-Collin Greter
-0–1–0
-4
-Joe Weber
-0–1–0
-02
-m grafton
-1–0–0"""
-    print('Message:', message)
-    date_obj = "9/9/2025"
-    game = Game(1, 'MAGIC', True)
-    data, errors = ConvertMessageToData(interaction, message, game)
-    print('Data:', data)
-    print('Errors:', errors)
-    if data is None:
-      print('Freaking out, data is None')
-    else:
-      print('Data type:', type(data[0]))
-
-    format = Format(1, 'PAUPER', ConvertToDate('1/1/2025'), False)
-    store = Store(0,'Hi','Hi',1,'Phil',True,True)
-    user_id = 1
-
-    date = ConvertToDate(date_obj)
+  async def Testing(self, interaction: Interaction, member: discord.Member):
+    """Callback for the 'Get User Info' context menu command."""
+    await interaction.response.send_message(
+        f"User: {member.display_name}\nID: {member.id}\nJoined Discord: {member.created_at.strftime('%Y-%m-%d')}",
+        ephemeral=True # Makes the message only visible to the user who invoked it
+    )
     
-    await interaction.followup.send("Tested!")
 """
   @Testing.error
   async def OtherError(self, interaction:Interaction, error:app_commands.AppCommandError):

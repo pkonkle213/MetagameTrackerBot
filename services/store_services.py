@@ -1,11 +1,21 @@
 import discord
 from custom_errors import KnownError
 from data.games_data import AddGameMap
-from data.store_data import AddStore
+from data.store_data import AddStore, UpdateStore
 from services.game_mapper_services import GetGameOptions
 from data.formats_data import AddFormatMap, GetFormatsByGameId
 from tuple_conversions import Format, Game
 from settings import BOTGUILDID
+from interaction_objects import GetStore
+
+async def UpdateStoreDetails(interaction: discord.Interaction,
+                            store_name: str,
+                            owner_name: str):
+  """Updates the store details in the database"""
+  store = GetStore(interaction.guild.id, True)
+  if not store:
+    raise KnownError('Store not found')
+  return UpdateStore(store.DiscordId, store_name, owner_name)
 
 async def NewStoreRegistration(bot:discord.Client,
                                guild: discord.Guild):
