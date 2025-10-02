@@ -1,0 +1,6 @@
+async def EventCheck(bot):
+  ...
+  #Find events that aren't completely reported and over 3 days old
+  events = db.session.query(Event).filter(Event.Reported != 1, Event.Date < date.today() - timedelta(days=3)).all()
+  for event in events:
+    ...
