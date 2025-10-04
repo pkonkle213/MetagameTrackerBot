@@ -6,7 +6,7 @@ from select_menu_bones import SelectMenu
 from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
 from data.archetype_data import AddArchetype
-from data.event_data import GetEventMeta
+from data.event_data import EventIsPosted, GetEventMeta
 from services.input_services import ConvertInput
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from tuple_conversions import Event
@@ -58,17 +58,10 @@ async def ClaimResult(interaction:Interaction,
     raise KnownError('You have submitted too many bad archetypes. Please contact your store owner to have them submit the archetype.')
 
   player_name = ConvertInput(player_name)
+
+  (event, player_name) = GetEventAndPlayerName(store.DiscordId, date_used, game, format, player_name)
   
-  (event_id,
-   discord_id,
-   event_date,
-   game_id,
-   format_id,
-   last_update,
-   player_name,
-   event_type) = GetEventAndPlayerName(store.DiscordId, date_used, game, format, player_name)
-  
-  if event_id is None:
+  if event is None:
     raise KnownError('Event not found. Please check the date provided. If date is correct, the event has yet to be submitted. Please alert your store owner.')
   if player_name is None:
     raise KnownError('Player not found. Please check the name provided.')
@@ -83,16 +76,8 @@ async def ClaimResult(interaction:Interaction,
   if game.Name.upper() == 'MAGIC' and format.IsLimited:
     archetype = await MagicLimited(interaction)
 
-  event = Event(event_id,
-                discord_id,
-                event_date, 
-                game_id,   
-                format_id,  
-                last_update,
-                event_type)
-
   updater_name = interaction.user.display_name
-  archetype_added = AddArchetype(event_id,
+  archetype_added = AddArchetype(event.ID,
                                  player_name,
                                  archetype,
                                  userId,
@@ -117,6 +102,7 @@ def CheckEventPercentage(event):
       followup = f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!'
       title, headers, data = OneEvent(event)
       final = BuildTableOutput(title, headers, data)
+      EventIsPosted(event.ID)
     return followup, final
   return None, None
 

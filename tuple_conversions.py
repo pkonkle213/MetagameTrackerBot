@@ -66,9 +66,11 @@ Event = namedtuple('Event',
                     'GameID',
                     'FormatID',
                     'LastUpdate',
-                    'EventType'])
+                    'EventType',
+                    'IsPosted',
+                    'IsComplete'])
 
-def ConvertToEvent(event_obj: tuple[Any, Any, Any, Any, Any, Any, Any]):
+def ConvertToEvent(event_obj: tuple[Any, Any, Any, Any, Any, Any, Any, Any, Any]):
   """Converts a tuple to an Event object."""
   return Event(int(event_obj[0]),
                int(event_obj[1]),
@@ -76,7 +78,9 @@ def ConvertToEvent(event_obj: tuple[Any, Any, Any, Any, Any, Any, Any]):
                int(event_obj[3]),
                int(event_obj[4]) if event_obj[4] else None,
                int(event_obj[5]),
-               event_obj[6])
+               event_obj[6],
+               event_obj[7],
+               event_obj[8])
 
 Pairing = namedtuple('Pairing',
                      ['P1Name',

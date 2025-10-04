@@ -5,6 +5,7 @@ from discord import Interaction
 
 #TODO: English, please?
 def AddBadWord(interaction:Interaction, bad_word):
+  #TODO: Conversion should be in the data layer
   Word = namedtuple("Word", ["ID", "word"])
   word_obj = GetWord(bad_word)
   if word_obj is None or len(word_obj) == 0:

@@ -1,5 +1,6 @@
 import os
 import psycopg2
+from tuple_conversions import ConvertToEvent
 
 def GetEventAndPlayerName(discord_id, date, game, format, player_name):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -12,33 +13,12 @@ def GetEventAndPlayerName(discord_id, date, game, format, player_name):
       game_id,
       format_id,
       last_update,
-      player_name,
-      event_type
+      event_type,
+      is_posted,
+      is_complete,
+      player_name
     FROM
-      (
-       SELECT
-          e.id,
-          e.discord_id,
-          e.event_date,
-          e.game_id,
-          e.format_id,
-          e.last_update,
-          CASE
-            WHEN COUNT(round_number) > 0 THEN 'PAIRINGS'
-            WHEN COUNT(player_name) > 0 THEN 'STANDINGS'
-          END AS event_type
-        FROM
-          events e
-          LEFT JOIN pairings p ON p.event_id = e.id
-          LEFT JOIN standings s ON s.event_id = e.id
-        WHERE
-          e.discord_id = {discord_id}
-          AND e.game_id = {game.ID}
-          AND e.format_id = {format.ID}
-          AND e.event_date = '{date}'
-        GROUP BY
-          e.id
-      ) e
+      events_view
       LEFT JOIN (
         SELECT
           event_id,
@@ -47,15 +27,14 @@ def GetEventAndPlayerName(discord_id, date, game, format, player_name):
           full_standings
         WHERE
           UPPER(player_name) = UPPER('{player_name}')
-      ) fp ON fp.event_id = e.id
+      ) fp ON fp.event_id = id
+    WHERE
+      discord_id = {discord_id}
+      AND game_id = {game.ID}
+      AND format_id = {format.ID}
+      AND event_date = '{date}'
     '''
+    
     cur.execute(command)
     row = cur.fetchone()
-    return row if row else (None,
-                            None,
-                            None,
-                            None,
-                            None,
-                            None,
-                            '',
-                            None)
+    return (ConvertToEvent(row[0:9]), row[9]) if row else (None, '')

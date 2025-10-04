@@ -3,6 +3,34 @@ import psycopg2
 
 from tuple_conversions import ConvertToEvent
 
+def EventIsComplete(event_id):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    UPDATE events
+    SET is_complete = TRUE
+    WHERE id = {event_id}
+    RETURNING *
+    '''
+    cur.execute(command)
+    conn.commit()
+    row = cur.fetchone()
+    return row
+
+def EventIsPosted(event_id):
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = f'''
+    UPDATE events
+    SET is_posted = TRUE
+    WHERE id = {event_id}
+    RETURNING *
+    '''
+    cur.execute(command)
+    conn.commit()
+    row = cur.fetchone()
+    return row
+    
 def GetEvent(discord_id,
                 date,
                 game,
@@ -11,29 +39,24 @@ def GetEvent(discord_id,
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      e.id,
-      e.discord_id,
-      e.event_date,
-      e.game_id,
-      e.format_id,
-      e.last_update,
-      CASE
-        WHEN COUNT(round_number) > 0 THEN 'PAIRINGS'
-        WHEN COUNT(player_name) > 0 THEN 'STANDINGS'
-      END AS event_type
+      id,
+      discord_id,
+      event_date,
+      game_id,
+      format_id,
+      last_update,
+      event_type,
+      is_posted,
+      is_complete
     FROM
-      events e
-      LEFT JOIN pairings p ON p.event_id = e.id
-      LEFT JOIN standings s ON s.event_id = e.id
+      events_view
     WHERE
-      e.discord_id = {discord_id}
-      AND e.game_id = {game.ID}
-      AND e.format_id = {format.ID}
-      AND e.event_date = '{date}'
-    GROUP BY
-      e.id
+      discord_id = {discord_id}
+      AND game_id = {game.ID}
+      AND format_id = {format.ID}
+      AND event_date = '{date}'
     ORDER BY
-      e.event_date DESC
+      event_date DESC
     LIMIT
       1
     '''
@@ -52,19 +75,17 @@ def CreateEvent(event_date,
     INSERT INTO Events
     (event_date,
     discord_id,
-    game_id,
-    last_update
+    game_id
     {', format_id' if game.HasFormats else ''}
     )
     VALUES
     ('{event_date}',
     {discord_id},
-    {game.ID},
-    0
+    {game.ID}
     {f' , {format.ID}' if game.HasFormats else ''}
     )
     RETURNING
-    id, discord_id, event_date, game_id, format_id, 0, '{None}'
+    id, discord_id, event_date, game_id, format_id, 0, '{None}', {False}, {False}
     '''
     
     cur.execute(command)

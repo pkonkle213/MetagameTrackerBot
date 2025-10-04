@@ -21,7 +21,7 @@ def GetMetagame(game,
         COUNT(*) * 1.0 / SUM(count(*)) OVER () AS Metagame_Percent
       FROM
         full_standings fp
-        LEFT JOIN unique_archetypes ua ON fp.event_id = ua.event_id AND fp.player_name = ua.player_name
+        LEFT JOIN unique_archetypes ua ON fp.event_id = ua.event_id AND UPPER(fp.player_name) = UPPER(ua.player_name)
         INNER JOIN events e ON fp.event_id = e.id
         INNER JOIN stores s ON e.discord_id = s.discord_id
       WHERE
