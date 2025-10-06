@@ -65,6 +65,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
 
       #Convert the data to the appropriate format
       data, errors = ConvertMessageToData(interaction, modal.submitted_message, interaction_objects.Game)
+      
       if data is None:
         await AddDataMessage(self.bot,
                               modal.submitted_date,
@@ -93,7 +94,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       #Submit the data to the database. Returning event for an announcement
       output, event_created = SubmitData(interaction_objects,
                                          data,
-                                         modal.submitted_date)
+                                         modal.submitted_date,
+                                        modal.submitted_is_event_complete)
       if output is None:
         raise KnownError("Unable to submit data. Please try again.")
         

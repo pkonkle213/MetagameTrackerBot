@@ -17,7 +17,8 @@ def SubmitCheck(interaction:discord.Interaction):
 
 def SubmitData(interaction_objects:Data,
                data: List[Standing] | List[Pairing],
-               date_str:str):
+               date_str:str,
+               is_complete: bool):
   """Submits an events data to the database"""
   store = interaction_objects.Store
   game = interaction_objects.Game
@@ -34,6 +35,7 @@ def SubmitData(interaction_objects:Data,
     event_created = True
 
   #Add the data to the database depending on the type of data
+  #TODO: is_complete needs to be added to the database
   results = ''
   if isinstance(data[0], Standing):
     if event.EventType != 'STANDINGS':
