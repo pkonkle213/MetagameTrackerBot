@@ -95,7 +95,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       output, event_created = SubmitData(interaction_objects,
                                          data,
                                          modal.submitted_date,
-                                        modal.submitted_is_event_complete)
+                                         False) #modal.submitted_is_event_complete)
       if output is None:
         raise KnownError("Unable to submit data. Please try again.")
         

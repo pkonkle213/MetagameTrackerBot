@@ -19,6 +19,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
     self.add_item(self.date_input)
 
     #TODO: This needs to be tested
+    """
     self.is_event_complete = discord.ui.Select(
       options=[
         discord.SelectOption(label='Yes', value='True'),
@@ -29,6 +30,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
       max_values=1
     )
     self.add_item(self.is_event_complete)
+    """
   
     self.message_input = discord.ui.TextInput(
       label='Event Data',
@@ -42,7 +44,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
   async def on_submit(self, interaction: discord.Interaction):
     self.submitted_message = self.message_input.value
     self.submitted_date = self.date_input.value
-    self.submitted_is_event_complete = self.is_event_complete.values[0]
+    #self.submitted_is_event_complete = self.is_event_complete.values[0]
     self.is_submitted = True
     await interaction.response.defer()
 
