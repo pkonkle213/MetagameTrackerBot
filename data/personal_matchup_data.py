@@ -27,7 +27,8 @@ def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id)
       AND e.format_id = {format.ID}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     GROUP BY UPPER(ua.archetype_played)
-    ORDER BY COUNT(*) DESC, ua.archetype_played
+    ORDER BY COUNT(*) DESC, 
+      UPPER(ua.archetype_played)
     '''
     
     cur.execute(command)
