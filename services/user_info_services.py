@@ -33,7 +33,7 @@ def GetUserName(guild_id: int,
   player_name = GetPlayerName(member_id,
                              guild_id)
   if player_name is None:
-    raise KnownError('This person has not claimed a player name')
+    raise KnownError('This person has not claimed any data')
   return player_name.title()
 
 def GetWinPercent(member_id: int,

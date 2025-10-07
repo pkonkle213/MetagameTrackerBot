@@ -18,19 +18,21 @@ class ATest(commands.Cog):
  
   @app_commands.command(name="atest",
                         description="Tests something stupid!")
-  @app_commands.guild_only()
+  #@app_commands.guild_only()
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
-  #@app_commands.checks.has_role('MTSubmitter')
+  @app_commands.checks.has_role('MTSubmitter') #TODO: Find a way to check the role
   async def Testing(self, interaction: Interaction):
-    await interaction.response.send_message("Hi! Testing!")
+    await interaction.response.send_message("Hi? Testing!")
     
-"""
-  @Testing.error
-  async def OtherError(self, interaction:Interaction, error:app_commands.AppCommandError):
+  async def on_tree_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
     if isinstance(error, app_commands.MissingRole):
-      await interaction.followup.send("3rd attempt to catch the error")
+        role_name = error.missing_role
+        await interaction.response.send_message(
+            f"You are missing the '{role_name}' role and cannot use this command.",
+            ephemeral=True
+        )
     else:
-      await interaction.followup.send("4th attempt to catch the error")
-    """
+        await interaction.response.send_message("An unexpected error occurred.", ephemeral=True)
+
 async def setup(bot):
   await bot.add_cog(ATest(bot))
