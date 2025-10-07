@@ -59,8 +59,8 @@ def GetLastPlayed(member_id: int,
                                  format)
 
   if last_played is None:
-    raise KnownError('This person has not played any games in this format')
-  return last_played.title()
+    raise KnownError('This person has not played any games in this format')  
+  return last_played
 
 def GetTopDecks(member_id: int,
                 store: Store,

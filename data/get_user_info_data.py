@@ -56,6 +56,7 @@ def GetLastArchetype(user_id: int,
   with conn, conn.cursor() as cur:
     command = f"""
     SELECT
+      e.event_date,
       archetype_played
     FROM
       full_standings fs
@@ -73,7 +74,7 @@ def GetLastArchetype(user_id: int,
     
     cur.execute(command)
     row = cur.fetchone()
-    return row[0] if row else None
+    return row if row else None
 
 TopDeck = namedtuple('TopDecks',['Archetype','WinPercentage','ChancePlayed'])
 
