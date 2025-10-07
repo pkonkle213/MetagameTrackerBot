@@ -25,7 +25,7 @@ class UserInfoCommand(commands.Cog):
        last_played,
        top_decks) = GetUserData(interaction, member)
 
-      output = f"Player Name: {player_name}\nWin %: {win_percent}\nLast Played: {last_played[1].title()} ({last_played[0].strftime('%-m/%-d/%Y')})\nMost Played Decks:\n"
+      output = f"Player Name: {player_name}\nWin %: {win_percent}\nLast Played: {last_played.Archetype} ({last_played.Date.strftime('%-m/%-d/%Y')})\nMost Played Decks:\n"
       for deck in top_decks:
         output += f"\t{deck[0]} - {deck[2]}%\n"
       await interaction.followup.send(output, ephemeral=True)

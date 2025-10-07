@@ -48,6 +48,8 @@ def GetWinPercentage(user_id: int,
     row = cur.fetchone()
     return row[0] if row else None
 
+LastArchetype = namedtuple('LastArchetype',['Date','Archetype'])
+
 def GetLastArchetype(user_id: int,
                   store: Store,
                   game: Game,
@@ -74,7 +76,7 @@ def GetLastArchetype(user_id: int,
     
     cur.execute(command)
     row = cur.fetchone()
-    return row if row else None
+    return LastArchetype(row[0], row[1].title()) if row else None
 
 TopDeck = namedtuple('TopDecks',['Archetype','WinPercentage','ChancePlayed'])
 
