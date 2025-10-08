@@ -3,7 +3,7 @@ modules = ["python-3.11", "postgresql-16", "python3"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["cacert"]
+packages = ["cacert", "glibcLocales"]
 
 [unitTest]
 language = "python3"

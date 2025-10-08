@@ -1,3 +1,6 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
@@ -22,7 +25,12 @@ class ATest(commands.Cog):
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   @app_commands.checks.has_role('MTSubmitter') #TODO: Find a way to check the role
   async def Testing(self, interaction: Interaction):
-    await interaction.response.send_message("Hi? Testing!")
+    await interaction.response.defer()
+    data = np.arange(10)
+    plt.plot(data)
+    thing = plt.plot(data)
+    await interaction.followup.send("Hi? Testing!")
+    await interaction.followup.send(file=discord.File(thing))
     
   async def on_tree_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
     if isinstance(error, app_commands.MissingRole):
