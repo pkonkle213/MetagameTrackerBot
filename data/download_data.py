@@ -85,14 +85,16 @@ def GetPlayerPairingData(store, game, format, start_date, end_date, user_id):
       f.name AS Format_name,
       e.event_date,
       frr.round_number,
-      frr.player_archetype as your_archetype,
-      frr.opponent_archetype as opponents_archetype,
+      ua1.archetype_played as your_archetype,
+      ua2.archetype_played as opponents_archetype,
       frr.result
     FROM
       full_pairings frr
       INNER JOIN events e ON e.id = frr.event_id
+      LEFT JOIN unique_archetypes ua1 ON e.id = ua1.event_id AND frr.player_name = ua1.player_name
+      LEFT JOIN unique_archetypes ua2 ON e.id = ua2.event_id AND frr.opponent_name = ua2.player_name
       INNER JOIN stores s ON s.discord_id = e.discord_id
-      INNER JOIN Games g ON g.id = e.game_id
+      INNER JOIN games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
       INNER JOIN player_names pn ON pn.discord_id = e.discord_id
       AND pn.player_name = frr.player_name
