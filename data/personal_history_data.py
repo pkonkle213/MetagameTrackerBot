@@ -22,10 +22,8 @@ def GetPairingsHistory(user_id: int, game: Game, format: Format,
       full_pairings fp
       INNER JOIN events e ON e.id = fp.event_id
       INNER JOIN stores s ON s.discord_id = e.discord_id
-      INNER JOIN player_names pn ON pn.player_name = fp.player_name
-      AND pn.discord_id = s.discord_id
-      LEFT JOIN unique_archetypes ua ON ua.event_id = e.id
-      AND ua.player_name = fp.opponent_name
+      INNER JOIN player_names pn ON UPPER(pn.player_name) = UPPER(fp.player_name) AND pn.discord_id = s.discord_id
+      LEFT JOIN unique_archetypes ua ON ua.event_id = e.id AND UPPER(ua.player_name) = UPPER(fp.opponent_name)
       INNER JOIN games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
     WHERE
@@ -63,10 +61,8 @@ def GetStandingsHistory(user_id: int, game: Game, format: Format,
       INNER JOIN events e ON e.id = fp.event_id
       INNER JOIN games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
-      INNER JOIN player_names pn ON pn.discord_id = e.discord_id
-      AND pn.player_name = fp.player_name
-      INNER JOIN unique_archetypes uar ON uar.event_id = e.id
-      AND uar.player_name = pn.player_name
+      INNER JOIN player_names pn ON pn.discord_id = e.discord_id AND UPPER(pn.player_name) = UPPER(fp.player_name)
+      INNER JOIN unique_archetypes uar ON uar.event_id = e.id AND UPPER(uar.player_name) = UPPER(pn.player_name)
     WHERE
       pn.submitter_id = {user_id}
       {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != DATAGUILDID else ''}
