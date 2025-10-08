@@ -13,12 +13,15 @@ class StoreProfile(commands.Cog):
     description="Updates the store profile")
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-  @app_commands.check(isOwner)
+  #@app_commands.check(isOwner)
+  @app_commands.checks.has_role('MTSubmitter')
   async def UpdateProfile(self,
                           interaction: Interaction,
                           store_name: str = '',
                           owner_name: str = ''):
     """
+    Updates the store name and owner's name in the database
+    
     Parameters
     ----------
 

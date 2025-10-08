@@ -9,8 +9,8 @@ from settings import BOTGUILDID
 from interaction_objects import GetStore
 
 async def UpdateStoreDetails(interaction: discord.Interaction,
-                            store_name: str,
-                            owner_name: str):
+                             store_name: str,
+                             owner_name: str):
   """Updates the store details in the database"""
   store = GetStore(interaction.guild.id, True)
   if not store:
