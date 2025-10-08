@@ -17,8 +17,8 @@ class StoreProfile(commands.Cog):
   @app_commands.checks.has_role('MTSubmitter')
   async def UpdateProfile(self,
                           interaction: Interaction,
-                          store_name: str = '',
-                          owner_name: str = ''):
+                          store_name: str,
+                          owner_name: str):
     """
     Updates the store name and owner's name in the database
     
