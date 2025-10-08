@@ -65,6 +65,7 @@ def GetEvent(discord_id,
     row = cur.fetchone()
     return ConvertToEvent(row) if row else None
 
+#TODO: DOES THIS WORK YET?!
 def CreateEvent(event_date,
   discord_id,
   game,
