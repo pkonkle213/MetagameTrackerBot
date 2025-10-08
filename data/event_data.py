@@ -46,8 +46,8 @@ def GetEvent(discord_id,
       format_id,
       last_update,
       event_type,
-      is_posted,
-      is_complete
+      COALESCE(is_posted, {False}) as is_posted,
+      COALESCE(is_complete, {False}) as is_complete
     FROM
       events_view
     WHERE
@@ -77,12 +77,18 @@ def CreateEvent(event_date,
     discord_id,
     game_id
     {', format_id' if game.HasFormats else ''}
+    , last_update
+    , is_posted
+    , is_complete
     )
     VALUES
     ('{event_date}',
     {discord_id},
     {game.ID}
     {f' , {format.ID}' if game.HasFormats else ''}
+    , 0
+    , {False}
+    , {False}
     )
     RETURNING
     id, discord_id, event_date, game_id, format_id, 0, '{None}', {False}, {False}
