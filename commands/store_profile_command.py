@@ -33,7 +33,7 @@ class StoreProfile(commands.Cog):
     await interaction.response.defer(ephemeral=True)
     try:
       #TODO: Implement this
-      result = UpdateStoreDetails(interaction, store_name, owner_name)
+      result = await UpdateStoreDetails(interaction, store_name, owner_name)
       if result:
         await interaction.followup.send('Store profile updated')
       else:
