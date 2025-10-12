@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.tesseract
     pkgs.tk
     pkgs.tcl
     pkgs.qhull

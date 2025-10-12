@@ -67,6 +67,7 @@ def GetLastArchetype(user_id: int,
       INNER JOIN unique_archetypes ua ON e.id = ua.event_id AND UPPER(ua.player_name) = UPPER(fs.player_name)
     WHERE
       e.discord_id = {store.DiscordId}
+      AND e.event_date < CURRENT_DATE
       AND pn.submitter_id = {user_id}
       AND e.format_id = {format.ID}
       AND e.game_id = {game.ID}

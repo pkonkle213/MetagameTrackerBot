@@ -1,0 +1,28 @@
+DOES THIS WORK!? This should convert an image to text
+
+import discord
+from discord.ext import commands
+from PIL import Image
+import requests
+from io import BytesIO
+
+# ... (your bot setup)
+
+@bot.command()
+async def ocr(ctx):
+    if not ctx.message.attachments:
+        await ctx.send("Please attach an image to convert to text.")
+        return
+
+    attachment = ctx.message.attachments[0] # Get the first attachment
+    if not attachment.content_type.startswith('image/'):
+        await ctx.send("The attached file is not an image.")
+        return
+
+    try:
+        response = requests.get(attachment.url)
+        img = Image.open(BytesIO(response.content))
+        text = pytesseract.image_to_string(img)
+        await ctx.send(f"Extracted text:\n```\n{text}\n```")
+    except Exception as e:
+        await ctx.send(f"An error occurred during OCR: {e}")
