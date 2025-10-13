@@ -19,6 +19,8 @@ def ConvertMessageToData(interaction:Interaction,
     if data is None:
       data, errors = CompanionPairings(message)
 
+  #TODO: Test with bye rounds and standings results
+  """
   if data is None:
     print('Attempting to parse Melee Standings Data')
     data, errors = MeleeStandings(message)
@@ -26,6 +28,7 @@ def ConvertMessageToData(interaction:Interaction,
   if data is None:
     print('Attempting to parse Melee Pairings Data')
     data, errors = MeleePairings(message)
+  """
 
   '''
   if game is not None and game.Name == 'Lorcana':
