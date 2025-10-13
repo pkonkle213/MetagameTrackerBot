@@ -108,9 +108,9 @@ def CheckEventPercentage(event):
 
 def OneEvent(event):
   event_meta = GetEventMeta(event.ID)
-  title = f"{event.EventDate.strftime('%B %d')} Meta"
-  headers = ['Archetype', 'Wins', 'Losses', 'Draws']
   data = event_meta
+  title = f"{event.EventDate.strftime('%B %d')} Meta ({len(data)} attended)"
+  headers = ['Archetype', 'Wins', 'Losses', 'Draws']
   return title, headers, data
 
 async def LorcanaInkMenu(interaction):

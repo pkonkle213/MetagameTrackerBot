@@ -18,7 +18,7 @@ def AddStoreGameMap(interaction:Interaction, chosen_game: Game):
   rows = AddGameMap(store.DiscordId, chosen_game[0], category_id)
   if rows is None:
     return 'Unable to add game map'
-  return f'Success! This category ({category.name.title()}) is now mapped to {chosen_game[1].title()}'
+  return f'Success! This category ({category.name}) is now mapped to {chosen_game[1].title()}'
 
 def GetGameOptions():
   return GetAllGames()

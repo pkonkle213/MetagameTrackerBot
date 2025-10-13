@@ -98,6 +98,7 @@ def CreateEvent(event_date,
     cur.execute(command)
     conn.commit()
     event = cur.fetchone()
+    #TODO: An event gets created even though no data was found? Uh oh
     print('Created event:', event)
     return ConvertToEvent(event) if event else None
 

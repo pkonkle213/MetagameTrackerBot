@@ -18,7 +18,16 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
     )
     self.add_item(self.date_input)
 
-    #TODO: This needs to be tested
+    self.round_input = discord.ui.TextInput(
+      label='Round',
+      style=discord.TextStyle.short,
+      placeholder='Round Number',
+      required=False,
+      max_length=3
+    )
+    self.add_item(self.round_input)
+    
+    #TODO: This needs to be tested, as it was supposed to come out a while ago
     """
     self.is_event_complete = discord.ui.Select(
       options=[
@@ -44,6 +53,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
   async def on_submit(self, interaction: discord.Interaction):
     self.submitted_message = self.message_input.value
     self.submitted_date = self.date_input.value
+    self.submitted_round = self.round_input.value
     #self.submitted_is_event_complete = self.is_event_complete.values[0]
     self.is_submitted = True
     await interaction.response.defer()

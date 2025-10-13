@@ -1,9 +1,5 @@
 from custom_errors import KnownError
-from tuple_conversions import Standing, Pairing
-from collections import namedtuple
-
-Result = namedtuple('Result', ['Data', 'Errors'])
-
+from tuple_conversions import Standing, Pairing, Result
 
 def CompanionStandings(message, seperator):
   data = []
@@ -57,6 +53,7 @@ def CompanionPairings(message):
         if p2name == '':
           raise KnownError(f'Names cannot be blank (row {i + 5}, please resubmit rows {i + 1} - {i + 6})')
         roundnumber = int(row[2][0]) + int(row[2][2]) + int(row[2][4])
+        #TODO: Why is this commented out?
         #result = Pairing(p1name, p1gw, p2name, p2gw, roundnumber)
         #data.append(result)
       else:

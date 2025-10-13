@@ -39,6 +39,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       
       if len(issues) == 1:
         await interaction.followup.send('Everything looks good. Please reach out to Phil to test your data')
+        #TODO: If everything looks good, then send a message to alert Phil to the issue
       else:
         await interaction.followup.send('\n'.join(issues))
     except KnownError as exception:
@@ -48,7 +49,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
 
   @app_commands.command(name="data",
                         description="Submitting your event's data")
-  @commands.has_role('MTSubmitter')
+  @app_commands.checks.has_role('MTSubmitter')
   @app_commands.guild_only()
   async def SubmitDataCommand(self, interaction: Interaction):
     try:
