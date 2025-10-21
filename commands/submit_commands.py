@@ -2,7 +2,7 @@ import settings
 from checks import isSubmitter
 from custom_errors import KnownError
 from data_translation import ConvertMessageToData
-from tuple_conversions import Standing
+from tuple_conversions import Standing, Event
 from discord import app_commands, Interaction
 from discord.ext import commands
 from discord_messages import MessageChannel
@@ -39,7 +39,6 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       
       if len(issues) == 1:
         await interaction.followup.send('Everything looks good. Please reach out to Phil to test your data')
-        #TODO: If everything looks good, then send a message to alert Phil to the issue
       else:
         await interaction.followup.send('\n'.join(issues))
     except KnownError as exception:
@@ -65,12 +64,15 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
         raise KnownError("SubmitData modal was dismissed or timed out. Please try again.")
 
       #Convert the data to the appropriate format
-      data, errors = ConvertMessageToData(interaction, modal.submitted_message, interaction_objects.Game)
-      
+      data, errors = ConvertMessageToData(interaction,
+                                          modal.submitted_message,
+                                          interaction_objects.Game)
+
       if data is None:
         await AddDataMessage(self.bot,
-                              modal.submitted_date,
-                              modal.submitted_message,
+                             modal.submitted_date,
+                             modal.submitted_message,
+                             modal.submitted_round,
                              interaction,
                              settings.ERRORCHANNELID,
                              True)
@@ -88,6 +90,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       await AddDataMessage(self.bot,
                            modal.submitted_date,
                            modal.submitted_message,
+                           modal.submitted_round,
                            interaction,
                            settings.BOTEVENTINPUTID,
                            False)
@@ -96,15 +99,13 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       output, event_created = SubmitData(interaction_objects,
                                          data,
                                          modal.submitted_date,
+                                         modal.submitted_round,
                                          False) #modal.submitted_is_event_complete)
       if output is None:
         raise KnownError("Unable to submit data. Please try again.")
         
       await interaction.followup.send(output, ephemeral=True)
       if event_created:
-        print('New event created')
-        print('GuildId:', interaction.guild_id)
-        print('ChannelId:', interaction.channel_id)
         await MessageChannel(self.bot,
                              f"New data for {event_created.strftime('%B %-d')}'s event have been submitted! Use the appropriate `/claim` command to input your archetype!",
                              interaction.guild_id,
@@ -115,7 +116,13 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     except Exception as exception:
       await Error(self.bot, interaction, exception)
 
-async def AddDataMessage(bot, date, message, interaction, channel_id, isError):
+async def AddDataMessage(bot,
+                         date,
+                         message,
+                         round_number,
+                         interaction,
+                         channel_id,
+                         isError):
   message = f"""
   {'Could not submit data due to error' if isError else 'Submitted data'}
     Guild name: {interaction.guild.name}

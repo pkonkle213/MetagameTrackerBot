@@ -35,7 +35,6 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
         discord.SelectOption(label='No', value='False')
       ],
       placeholder='Is the event complete?',
-      min_values=1,
       max_values=1
     )
     self.add_item(self.is_event_complete)

@@ -1,6 +1,6 @@
 from discord.ext import commands
 from discord import app_commands, Interaction, Member
-
+from services.command_error_service import Error
 from custom_errors import KnownError
 from services.user_info_services import GetUserData
 
@@ -34,8 +34,8 @@ class UserInfoCommand(commands.Cog):
       await interaction.followup.send(output, ephemeral=True)
     except KnownError as error:
       await interaction.followup.send(error.message, ephemeral=True)
-    except Exception as error:
-      await interaction.followup.send(f"An error occurred: {error}", ephemeral=True) #TODO: Fix
+    except Exception as exception:
+      await Error(self.bot, interaction, exception)
 
 async def setup(bot):
   await bot.add_cog(UserInfoCommand(bot))

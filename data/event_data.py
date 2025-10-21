@@ -65,7 +65,6 @@ def GetEvent(discord_id,
     row = cur.fetchone()
     return ConvertToEvent(row) if row else None
 
-#TODO: DOES THIS WORK YET?!
 def CreateEvent(event_date,
   discord_id,
   game,
@@ -98,8 +97,6 @@ def CreateEvent(event_date,
     cur.execute(command)
     conn.commit()
     event = cur.fetchone()
-    #TODO: An event gets created even though no data was found? Uh oh
-    print('Created event:', event)
     return ConvertToEvent(event) if event else None
 
 def GetEventMeta(event_id):

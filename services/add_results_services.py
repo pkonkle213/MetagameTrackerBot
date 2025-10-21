@@ -6,7 +6,7 @@ from services.input_services import ConvertInput
 from services.date_functions import ConvertToDate
 from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
 from interaction_objects import GetObjectsFromInteraction
-from tuple_conversions import Data, Standing, Pairing
+from tuple_conversions import Data, Standing, Pairing, Event
 
 def SubmitCheck(interaction:discord.Interaction):
   """Checks if the user can submit data in this channel"""
@@ -18,13 +18,16 @@ def SubmitCheck(interaction:discord.Interaction):
 def SubmitData(interaction_objects:Data,
                data: List[Standing] | List[Pairing],
                date_str:str,
+               round_number:str,
                is_complete: bool):
   """Submits an events data to the database"""
   store = interaction_objects.Store
   game = interaction_objects.Game
   format = interaction_objects.Format
   userId = interaction_objects.UserId
-  
+
+  round_num = int(round_number) if round_number != '' else 0
+ 
   date = ConvertToDate(date_str)
   event = GetEvent(store.DiscordId, date, game, format)
   event_created = False
@@ -45,12 +48,14 @@ def SubmitData(interaction_objects:Data,
     if event.EventType != 'PAIRINGS':
       #Delete the standings data
       DeleteStandingsFromEvent(event.ID)
-    results = AddPairingResults(event, data, userId)
+    results = AddPairingResults(event, data, userId, round_num)
   else:
     raise Exception("Congratulations, you've reached the impossible to reach area.")
   return results, event.EventDate if event_created else None
 
-def AddStandingResults(event, data, submitterId):
+def AddStandingResults(event:Event,
+                       data:List[Standing],
+                       submitterId:int):
   successes = 0
   for person in data:
     if person.PlayerName != '':
@@ -67,9 +72,12 @@ def AddStandingResults(event, data, submitterId):
     output += f"{len(data)-successes} were skipped."
   return 
 
-def AddPairingResults(event, data, submitterId):
+def AddPairingResults(event:Event,
+                      data:List[Pairing],
+                      submitterId:int,
+                      round_number:int):
   successes = 0
-  round_number = data[0].Round
+  round_number = data[0].Round if not round_number else round_number
   for table in data:
     result = SubmitTable(event.ID,
                          ConvertInput(table.P1Name),

@@ -1,3 +1,4 @@
+from collections import namedtuple
 import os
 import psycopg2
 from psycopg2.errors import UniqueViolation
@@ -16,7 +17,8 @@ def AddWord(word):
       cur.execute(command, criteria)
       conn.commit()
       row = cur.fetchall()
-      return row
+      Word = namedtuple("Word", ["ID", "Word"])
+      return Word(row[0], row[1])
   except UniqueViolation:
     return None
 
@@ -31,8 +33,10 @@ def GetWord(word):
     
     criteria = [word]
     cur.execute(command, criteria)
-    rows = cur.fetchall()
-    return rows
+    row = cur.fetchone()
+    
+    Word = namedtuple("Word", ["ID", "Word"])
+    return Word(row[0], row[1]) if row else None
 
 def MatchDisabledArchetypes(discord_id, user_id):
   days = 30

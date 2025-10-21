@@ -31,20 +31,24 @@ def MeleePairings(message):
   errors = []
   rows = message.split('\n')
   byes = True
+  
   #TODO: Start looking for byes, which have 3-4 rows
   i = 0
   while byes:
     if rows[i + 2].split(' ')[-1] == 'bye':
       row = rows[i:i+3]
-      print('Bye Row:', row)
+      p1name = SeperateNameFromPronouns(row[1]).strip()
+      p2name = 'BYE'
+      wins = 2
+      losses = 0
+      round_number = 0
+      pairing = Pairing(p1name, wins, p2name, losses, round_number)
+      print('Bye Pairing:', pairing)
+      data.append(pairing)
       i += 3
     else:
       byes = False
-      print('No more byes: Row ', i)
-  
-  print('Value of i:', i)
-  #TODO: Then filter through the matches, which have 4-5 rows
-  
+    
   for j in range(i, len(rows), 4):
     try:
       row = rows[j:j+4]

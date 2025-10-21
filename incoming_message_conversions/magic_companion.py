@@ -53,9 +53,6 @@ def CompanionPairings(message):
         if p2name == '':
           raise KnownError(f'Names cannot be blank (row {i + 5}, please resubmit rows {i + 1} - {i + 6})')
         roundnumber = int(row[2][0]) + int(row[2][2]) + int(row[2][4])
-        #TODO: Why is this commented out?
-        #result = Pairing(p1name, p1gw, p2name, p2gw, roundnumber)
-        #data.append(result)
       else:
         p1name = row[0]
         if p1name == '':

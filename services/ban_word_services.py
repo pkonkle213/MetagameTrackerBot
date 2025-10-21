@@ -1,18 +1,13 @@
-from collections import namedtuple
 from interaction_objects import GetObjectsFromInteraction
 from data.ban_word_data import AddWord, GetWord, MatchDisabledArchetypes, DisableMatchingWords, AddBadWordBridge, CheckStoreBannedWords, GetOffenders
 from discord import Interaction
 
-#TODO: English, please?
-def AddBadWord(interaction:Interaction, bad_word):
-  #TODO: Conversion should be in the data layer
-  Word = namedtuple("Word", ["ID", "word"])
-  word_obj = GetWord(bad_word)
-  if word_obj is None or len(word_obj) == 0:
-    word_obj = AddWord(bad_word)
-    if word_obj is None:
-      raise Exception('Unable to add word')
-  word = Word(word_obj[0][0], word_obj[0][1])
+def AddBadWord(interaction:Interaction, bad_word:str):
+  word = GetWord(bad_word)
+  if word is None:
+    word = AddWord(bad_word)
+    if word is None:
+      raise Exception('Unable to add word')  
 
   bridge_check = AddBadWordBridge(interaction.guild_id, word.ID)
   if bridge_check is None:
