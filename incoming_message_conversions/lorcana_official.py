@@ -8,11 +8,13 @@ def LorcanaOfficialPairing(message):
   try:
     start = 0
     #TODO: I think this could be a while loop in case the RARE event that there is more than one BYE
+    """
     if rows[7].upper() == 'BYE':
       #TODO: This probably needs updated too
       pairing = Pairing(rows[1], 2, 'BYE', 0, 0)
       data.append(pairing)
       start = 8
+    """
     for i in range(start, len(rows), table_length):
       row = rows[i:i + table_length]
       print('Lorcana Official Pairing Row:', row)
