@@ -27,7 +27,7 @@ def SubmitData(interaction_objects:Data,
   userId = interaction_objects.UserId
 
   round_num = int(round_number) if round_number != '' else 0
- 
+  
   date = ConvertToDate(date_str)
   event = GetEvent(store.DiscordId, date, game, format)
   event_created = False
@@ -76,15 +76,16 @@ def AddPairingResults(event:Event,
                       data:List[Pairing],
                       submitterId:int,
                       round_number:int):
-  successes = 0
   round_number = data[0].Round if not round_number else round_number
+  successes = 0
+ 
   for table in data:
     result = SubmitTable(event.ID,
                          ConvertInput(table.P1Name),
                          table.P1Wins,
                          ConvertInput(table.P2Name),
                          table.P2Wins,
-                         table.Round,
+                         round_number,
                          submitterId)
     
     if result:

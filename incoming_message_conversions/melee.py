@@ -43,7 +43,6 @@ def MeleePairings(message):
       losses = 0
       round_number = 0
       pairing = Pairing(p1name, wins, p2name, losses, round_number)
-      print('Bye Pairing:', pairing)
       data.append(pairing)
       i += 3
     else:
@@ -56,14 +55,12 @@ def MeleePairings(message):
       p2name = SeperateNameFromPronouns(row[2]).strip()
       winner = ' '.join(row[3].split(' ')[:-2]).strip()
       record = row[3].split(' ')[-1].split('-')
-      print('Comparison:', winner == p1name)
       if winner == p1name:
         wins = record[0]
         losses = record[1]
       else:
         wins = record[1]
         losses = record[0]
-      print('WLD', wins, losses)
       
       pairing = Pairing(p1name, wins, p2name, losses, 0)
       data.append(pairing)

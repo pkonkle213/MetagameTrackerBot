@@ -5,8 +5,10 @@ def LorcanaOfficialPairing(message):
   rows = message.split('\n')
   try:
     start = 0
+    #TODO: I think this could be a while loop in case the RARE event that there is more than one BYE
     if rows[7].upper() == 'BYE':
-      data.append(Pairing(rows[1], 2, 'BYE', 0, 0))
+      pairing = Pairing(rows[1], 2, 'BYE', 0, 0)
+      data.append(pairing)
       start = 8
     for i in range(start, len(rows), 9):
       row = rows[i:i + 9]

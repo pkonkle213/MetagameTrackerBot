@@ -8,16 +8,33 @@ def ConvertMessageToData(interaction:Interaction,
                          message:str,
                          game:Game):
   data = None
+  print('Game:', game)
   errors = []
   if game.Name.upper() == 'MAGIC':
+    print('Attempting to parse Magic - Companion Data')
+    
     if data is None:
+      print('Testing magic - companion - standings - 4 spaces')
       data, errors = CompanionStandings(message, "    ")
         
     if data is None:
+      print('Testing magic - companion - standings - tab')
       data, errors = CompanionStandings(message, "\t")
     
     if data is None:
+      print('Testing magic - companion - pairings')
       data, errors = CompanionPairings(message)
+
+  if game.Name.upper() == 'LORCANA':
+    print('Attempting to parse Lorcana Official Pairings Data')
+    
+    if data is None:
+      print('Testing Lorcana Official Pairings')
+      data = LorcanaOfficialPairing(message)
+      
+    if data is None:
+      print('Testing Lorcana Official Standings')
+      data = LorcanaOfficialStanding(message)
 
   if data is None:
     print('Attempting to parse Melee Standings Data')
@@ -27,13 +44,5 @@ def ConvertMessageToData(interaction:Interaction,
     print('Attempting to parse Melee Pairings Data')
     data, errors = MeleePairings(message)
 
-  '''
-  if game is not None and game.Name == 'Lorcana':
-    #Cannot determine what round this is
-    if data is None:
-      data = LorcanaOfficialPairing(message)
-    if data is None:
-      data = LorcanaOfficialStanding(message)
-  '''
   
   return data, errors
