@@ -22,8 +22,7 @@ def LorcanaOfficialPairing(dataframe:pd.DataFrame):
   except Exception as exception:
     print('Lorcana Official Pairing DataFrame:', dataframe)
     print('Lorcana Official Pairing Exception:', exception)
-    errors.append(str(exception))
-    return Result(None, errors)
+    return Result(None, None)
 
 #TODO: This may be out of date and needs updated
 def LorcanaOfficialStanding(dataframe:pd.DataFrame):
@@ -47,5 +46,4 @@ def LorcanaOfficialStanding(dataframe:pd.DataFrame):
   except Exception as exception:
     print('Lorcana Official Standing Rows:', dataframe)
     print('Lorcana Official Standing Exception:', exception)
-    errors.append(str(exception))
-    return Result(None, errors)
+    return Result(None, None)
