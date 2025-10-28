@@ -10,7 +10,7 @@ format = Format(1, 'Pauper', ConvertToDate('1/1/2020'), False)
 
 data = GetMetagame(game, format, '2025-01-01', '2025-12-31', store)
 if data is None:
-raise Exception("No data found")
+  raise Exception("No data found")
 dataframe = pd.DataFrame(data, columns=['Archetype', 'Metagame Percent', 'Win Percent'])
 
 print('Dataframe:', dataframe)

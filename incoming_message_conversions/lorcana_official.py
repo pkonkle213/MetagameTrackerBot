@@ -1,57 +1,51 @@
-from tuple_conversions import Pairing, Standing
+import pandas as pd
+from tuple_conversions import Pairing, Standing, Result
 
 #TODO: This may be out of date and needs updated as Lorcana has CSV export
-def LorcanaOfficialPairing(message):
+def LorcanaOfficialPairing(dataframe:pd.DataFrame):
+  """Takes a provided dataframe and attempts to make it into a Pairing object"""
   data = []
-  rows = message.split('\n')
-  table_length = 18
+  errors = []
+  
   try:
-    start = 0
-    #TODO: I think this could be a while loop in case the RARE event that there is more than one BYE
-    """
-    if rows[7].upper() == 'BYE':
-      #TODO: This probably needs updated too
-      pairing = Pairing(rows[1], 2, 'BYE', 0, 0)
-      data.append(pairing)
-      start = 8
-    """
-    for i in range(start, len(rows), table_length):
-      row = rows[i:i + table_length]
-      print('Lorcana Official Pairing Row:', row)
-      p1name = row[1] #But it's LASTNAME, FIRSTNAME
-      p2name = row[4] #But it's LASTNAME, FIRSTNAME
-      record_index = 8
-      record_split = row[record_index].index(',')
-      p1gw = row[record_index][record_split + 2]
-      p2gw = row[record_index][record_split + 4]
+    #TODO: I don't know what a bye looks like in the CSV
+    for index, row in dataframe.iterrows():
+      p1name = row['Player 1 First Name'] + ' ' + row['Player 1 Last Name']
+      p2name = row['Player 2 First Name'] + ' ' + row['Player 2 Last Name']
+      p1gw = row['Player 1 Round Record'][0]
+      p2gw = row['Player 2 Round Record'][0]
       result = Pairing(p1name, p1gw, p2name, p2gw, 0)
-      print('Lorcana Official Pairing Result:', result)
-      data.append(result)
-    return data
+      data.append(result)    
+    
+    return Result(data if len(data) > 0 else None, errors)
+    
   except Exception as exception:
-    print('Lorcana Official Pairing Rows:', rows)
+    print('Lorcana Official Pairing DataFrame:', dataframe)
     print('Lorcana Official Pairing Exception:', exception)
-    return None
+    errors.append(str(exception))
+    return Result(None, errors)
 
 #TODO: This may be out of date and needs updated
-def LorcanaOfficialStanding(message):
+def LorcanaOfficialStanding(dataframe:pd.DataFrame):
+  """Takes a provided dataframe and attempts to make it into a Standing object"""
   data = []
-  rows = message.split('\n')
+  errors = []
   try:
-    for i in range(0, len(rows), 4):
-      row = rows[i:i + 4]
-      name = row[1]
-      details = row[3].split('    ')
-      wins = details[2][0]
-      losses = details[2][2]
-      draws = details[2][4]
+    for index, row in dataframe.iterrows():
+      name = row['Name']
+      record = row['Record']
+      wins = record[0]
+      losses = record[2]
+      draws = record[4]
       participant = Standing(name,
-                                wins,
-                                losses,
-                                draws)
-      print('Participant: ', participant)
+                            wins,
+                            losses,
+                            draws)
       data.append(participant)
-    return data
+
+    return Result(data if len(data) > 0 else None, errors)
   except Exception as exception:
-    print('Lorcana Official Standing Rows:', rows)
+    print('Lorcana Official Standing Rows:', dataframe)
     print('Lorcana Official Standing Exception:', exception)
+    errors.append(str(exception))
+    return Result(None, errors)

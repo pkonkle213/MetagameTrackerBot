@@ -1,4 +1,10 @@
+import os
+import pytz
+import pathlib
+import io
+from datetime import datetime
 import pandas as pd
+import typing
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Wedge, Polygon, Rectangle
@@ -11,6 +17,8 @@ from discord import app_commands, Interaction
 import settings
 
 TARGET_GUILDS = [settings.TESTGUILDID]
+
+BASE_DIR = pathlib.Path(__file__).parent.parent
                  
 class ATest(commands.Cog):
   def __init__(self, bot):
@@ -27,34 +35,46 @@ class ATest(commands.Cog):
  
   @app_commands.command(name="atest",
                         description="Tests something stupid!")
-  #@app_commands.guild_only()
+  @app_commands.guild_only()
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   #@app_commands.checks.has_role('MTSubmitter') #TODO: Find a way to check the role
-  async def Testing(self, interaction: discord.Interaction, message_id: str):
-    """
-    Edits a message with the given ID in the current channel to "this is good".
-    """
+  async def Testing(self,
+                    interaction: discord.Interaction,
+                    csv_file: typing.Optional[discord.Attachment] = None):
+    await interaction.response.defer(ephemeral=True)
     try:
-      # Get the channel from the interaction
-      channel = interaction.channel
-      if channel is None: 
-        raise Exception("Channel is None")
+      if not csv_file:
+        raise Exception("No file provided")
+      if not csv_file.filename.endswith('.csv'):
+        return await interaction.followup.send("Please upload a file with a '.csv' extension.")
 
-      # Fetch the message using its ID
-      message = await channel.fetch_message(int(message_id))
+      timezone = pytz.timezone('US/Eastern')
+      timestamp = datetime.now(timezone).strftime("%Y%m%d_%H%M%S")
+      file_name = f"{timestamp}_{csv_file.filename}"
+      folder_name = f'{interaction.guild.id} - {interaction.guild.name}'
+      
+      SAVE_DIRECTORY = BASE_DIR / "imported_files" / folder_name
+      SAVE_DIRECTORY.mkdir(parents=True, exist_ok=True)
+      save_path = os.path.join(SAVE_DIRECTORY, file_name)
 
-      # Edit the message
-      await message.edit(content="this is good")
+      csv_data = await csv_file.read()
+      df = pd.read_csv(io.StringIO(csv_data.decode('utf-8')), na_values=['FALSE','False'])
+      
+      await csv_file.save(pathlib.Path(save_path))
 
-      # Respond to the interaction to confirm
-      await interaction.response.send_message(f"Message `{message_id}` edited successfully.", ephemeral=True)
-
-    except discord.NotFound:
-        await interaction.response.send_message(f"Message with ID `{message_id}` not found in this channel.", ephemeral=True)
-    except discord.Forbidden:
-        await interaction.response.send_message("I do not have permissions to edit that message.", ephemeral=True)
-    except Exception as e:
-        await interaction.response.send_message(f"An error occurred: {e}", ephemeral=True)    
+      round_number = int(csv_file.filename.split('-')[4])
+      
+      for index, row in df.iterrows():
+        print('Table Number:', row['Table Number'])
+        print('Player 1:', row['Player 1 First Name'] + ' ' + row['Player 1 Last Name'])
+        print('Player 2:', row['Player 2 First Name'] + ' ' + row['Player 2 Last Name'])
+        print('Player 1 wins', row['Player 1 Round Record'][0])
+        print('Player 2 wins', row['Player 2 Round Record'][0])        
+        
+      await interaction.followup.send(f"File {csv_file.filename} uploaded successfully...kinda")
+    except Exception as exception:
+      await interaction.followup.send(f"An error occurred: {exception}")
+  
       
   async def on_tree_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
     if isinstance(error, app_commands.MissingRole):

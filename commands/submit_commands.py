@@ -1,9 +1,16 @@
+import os
+import pytz
+import pathlib
+import io
+from datetime import datetime
+import pandas as pd
+import typing
 import settings
 from checks import isSubmitter
 from custom_errors import KnownError
-from data_translation import ConvertMessageToData
+from data_translation import ConvertMessageToData, ConvertCSVToData
 from tuple_conversions import Standing, Event
-from discord import app_commands, Interaction
+from discord import app_commands, Interaction, Attachment
 from discord.ext import commands
 from discord_messages import MessageChannel
 from interaction_objects import GetObjectsFromInteraction
@@ -50,67 +57,94 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
                         description="Submitting your event's data")
   @app_commands.checks.has_role('MTSubmitter')
   @app_commands.guild_only()
-  async def SubmitDataCommand(self, interaction: Interaction):
+  async def SubmitDataCommand(self,
+                              interaction: Interaction,
+                              csv_file: typing.Optional[Attachment] = None):
     try:
       #Checks to ensure data can be submitted in the current channel
       interaction_objects = SubmitCheck(interaction)
 
-      #Get the data from the user
-      modal = SubmitDataModal()
-      await interaction.response.send_modal(modal)
-      await modal.wait()
+      if csv_file:
+        if not csv_file.filename.endswith('.csv'):
+          raise KnownError("Please upload a file with a '.csv' extension.")
 
-      if not modal.is_submitted:
-        raise KnownError("SubmitData modal was dismissed or timed out. Please try again.")
+        #Save the file to the server
+        timezone = pytz.timezone('US/Eastern')
+        timestamp = datetime.now(timezone).strftime("%Y%m%d_%H%M%S")
+        file_name = f"{timestamp}_{csv_file.filename}"
+        folder_name = f'{interaction.guild.id} - {interaction.guild.name}'
 
-      #Convert the data to the appropriate format
-      data, errors = ConvertMessageToData(interaction,
-                                          modal.submitted_message,
-                                          interaction_objects.Game)
+        BASE_DIR = pathlib.Path(__file__).parent.parent
+        SAVE_DIRECTORY = BASE_DIR / "imported_files" / folder_name
+        SAVE_DIRECTORY.mkdir(parents=True, exist_ok=True)
+        save_path = os.path.join(SAVE_DIRECTORY, file_name)
 
-      if data is None:
+        csv_data = await csv_file.read()
+        df = pd.read_csv(io.StringIO(csv_data.decode('utf-8')), na_values=['FALSE','False'])
+        if df is None or df.empty:
+          raise KnownError("The file is empty. Please try again.")
+        
+        await csv_file.save(pathlib.Path(save_path))
+        
+        data, errors = ConvertCSVToData(interaction, df, interaction_objects.Game)
+        #TODO: Add the round number
+      else:
+        #Get the data from the user
+        modal = SubmitDataModal()
+        await interaction.response.send_modal(modal)
+        await modal.wait()
+        
+        if not modal.is_submitted:
+          raise KnownError("SubmitData modal was dismissed or timed out. Please try again.")
+
+        #Convert the data to the appropriate format
+        data, errors = ConvertMessageToData(interaction,
+                                            modal.submitted_message,
+                                            interaction_objects.Game)
+  
+        if data is None:
+          await AddDataMessage(self.bot,
+                               modal.submitted_date,
+                               modal.submitted_message,
+                               modal.submitted_round,
+                               interaction,
+                               settings.ERRORCHANNELID,
+                               True)
+          raise KnownError("Unable to submit due to not recognizing the form data. Please try again.")
+  
+        #Advise user of submission process starting
+        message_type = 'standings' if isinstance(data[0], Standing) else 'pairings'
+        await interaction.followup.send(f"Attempting to add {len(data)} {message_type} to event", ephemeral=True)
+        
+        #Inform user of any errors in submitted data
+        if len(errors) > 0:
+          await interaction.followup.send('Errors:\n' + '\n'.join(errors), ephemeral=True)
+        
+        #Inform me of the new event being added
         await AddDataMessage(self.bot,
                              modal.submitted_date,
                              modal.submitted_message,
                              modal.submitted_round,
                              interaction,
-                             settings.ERRORCHANNELID,
-                             True)
-        raise KnownError("Unable to submit due to not recognizing the form data. Please try again.")
-
-      #Advise user of submission process starting
-      message_type = 'standings' if isinstance(data[0], Standing) else 'pairings'
-      await interaction.followup.send(f"Attempting to add {len(data)} {message_type} to event", ephemeral=True)
-      
-      #Inform user of any errors in submitted data
-      if len(errors) > 0:
-        await interaction.followup.send('Errors:\n' + '\n'.join(errors), ephemeral=True)
-      
-      #Inform me of the new event being added
-      await AddDataMessage(self.bot,
-                           modal.submitted_date,
-                           modal.submitted_message,
-                           modal.submitted_round,
-                           interaction,
-                           settings.BOTEVENTINPUTID,
-                           False)
-
-      #Submit the data to the database. Returning event for an announcement
-      output, event_created = SubmitData(interaction_objects,
-                                         data,
-                                         modal.submitted_date,
-                                         modal.submitted_round,
-                                         False) #modal.submitted_is_event_complete)
-      if output is None:
-        raise KnownError("Unable to submit data. Please try again.")
-        
-      await interaction.followup.send(output, ephemeral=True)
-      if event_created:
-        await MessageChannel(self.bot,
-                             f"New data for {event_created.strftime('%B %-d')}'s event have been submitted! Use the appropriate `/claim` command to input your archetype!",
-                             interaction.guild_id,
-                             interaction.channel_id)
-        print('Channel message sent')
+                             settings.BOTEVENTINPUTID,
+                             False)
+  
+        #Submit the data to the database. Returning event for an announcement
+        output, event_created = SubmitData(interaction_objects,
+                                           data,
+                                           modal.submitted_date,
+                                           modal.submitted_round,
+                                           False) #modal.submitted_is_event_complete)
+        if output is None:
+          raise KnownError("Unable to submit data. Please try again.")
+          
+        await interaction.followup.send(output, ephemeral=True)
+        if event_created:
+          await MessageChannel(self.bot,
+                               f"New data for {event_created.strftime('%B %-d')}'s event have been submitted! Use the appropriate `/claim` command to input your archetype!",
+                               interaction.guild_id,
+                               interaction.channel_id)
+          print('Channel message sent')
     except KnownError as exception:
       await interaction.followup.send(exception.message, ephemeral=True)
     except Exception as exception:
