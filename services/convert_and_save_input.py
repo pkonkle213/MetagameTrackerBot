@@ -1,0 +1,75 @@
+import pandas as pd
+from discord import Interaction, Attachment
+from text_modal import SubmitDataModal
+from tuple_conversions import Data
+import pytz
+from data_translation import ConvertCSVToData, ConvertMessageToData
+from datetime import datetime
+from custom_errors import KnownError
+import pathlib
+import os
+import io
+
+def BuildFilePath(interaction:Interaction,
+                  prev_filename:str):
+   if not interaction.guild:
+      raise KnownError("This command can only be used in a server.")
+   #Save the file to the server
+   timezone = pytz.timezone('US/Eastern')
+   timestamp = datetime.now(timezone).strftime("%Y%m%d_%H%M%S")
+   file_name = f"{timestamp}_{prev_filename}" if prev_filename != '' else 'ModalInput'
+
+   folder_name = f'{interaction.guild.id} - {interaction.guild.name}'
+
+   BASE_DIR = pathlib.Path(__file__).parent.parent
+   SAVE_DIRECTORY = BASE_DIR / "imported_files" / folder_name
+   SAVE_DIRECTORY.mkdir(parents=True, exist_ok=True)
+   save_path = os.path.join(SAVE_DIRECTORY, file_name)
+
+   return save_path, file_name
+
+async def ConvertCSVToDataErrors(interaction_objects:Data,
+                                 interaction:Interaction,
+                                 csv_file:Attachment):
+   save_path, file_name = BuildFilePath(interaction, csv_file.filename)
+   
+   csv_data = await csv_file.read()
+   df = pd.read_csv(io.StringIO(csv_data.decode('utf-8')), na_values=['FALSE','False'])
+   if df is None or df.empty:
+      raise KnownError("The file is empty. Please try again.")
+      
+   await csv_file.save(pathlib.Path(save_path))
+   
+   data, errors = ConvertCSVToData(df, interaction_objects.Game)
+   
+   filename_split = csv_file.filename.split('-')
+   round_number = filename_split[4]
+   #TODO: THE DATE OF THE EVENT IS NOT IN THE FILE
+   #Example event was held on 10/25/2025
+   date = datetime.now(pytz.timezone('US/Eastern')).strftime("%m/%d/%Y")
+   return data, errors, round_number, date
+
+async def ConvertModalToDataErrors(interaction_objects:Data,
+                                   interaction:Interaction):
+   #Get the data from the user
+   modal = SubmitDataModal()
+   await interaction.response.send_modal(modal)
+   await modal.wait()
+   
+   if not modal.is_submitted:
+      raise KnownError("SubmitData modal was dismissed or timed out. Please try again.")
+   
+   submission = '\n'.join([f'Date:{modal.submitted_date}',
+                           f'Round:{modal.submitted_round}'
+                           f'Message:{modal.submitted_message}'])
+   
+   save_path, file_name = BuildFilePath(interaction, '')
+   with open(save_path, 'w') as file:
+      file.write(submission)    
+
+   #Convert the data to the appropriate format
+   data, errors = ConvertMessageToData(modal.submitted_message,
+                    interaction_objects.Game)
+   round_number = modal.submitted_round
+   date = modal.submitted_date
+   return data, errors, round_number, date

@@ -1,9 +1,9 @@
+from services.date_functions import ConvertToDate
 from typing import List
 import discord
 from custom_errors import KnownError
 from data.add_results_data import AddResult, SubmitTable
 from services.input_services import ConvertInput
-from services.date_functions import ConvertToDate
 from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
 from interaction_objects import GetObjectsFromInteraction
 from tuple_conversions import Data, Standing, Pairing, Event
@@ -26,9 +26,9 @@ def SubmitData(interaction_objects:Data,
   format = interaction_objects.Format
   userId = interaction_objects.UserId
 
+  date = ConvertToDate(date_str)
   round_num = int(round_number) if round_number != '' else 0
   
-  date = ConvertToDate(date_str)
   event = GetEvent(store.DiscordId, date, game, format)
   event_created = False
   if event is None:
