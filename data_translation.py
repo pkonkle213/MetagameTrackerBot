@@ -5,8 +5,7 @@ from incoming_message_conversions.lorcana_official import LorcanaOfficialPairing
 from incoming_message_conversions.melee import MeleeStandings, MeleePairings
 from tuple_conversions import Game
 
-def ConvertCSVToData(interaction:Interaction,
-                     dataframe:pd.DataFrame,
+def ConvertCSVToData(dataframe:pd.DataFrame,
                      game:Game):
   data = None
   errors = []
@@ -28,8 +27,7 @@ def ConvertCSVToData(interaction:Interaction,
   
   return data, errors  
 
-def ConvertMessageToData(interaction:Interaction,
-                         message:str,
+def ConvertMessageToData(message:str,
                          game:Game):
   data = None
   errors = []
