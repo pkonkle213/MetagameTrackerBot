@@ -1,4 +1,4 @@
-from next_text_modal import ModalWithSelect
+from next_text_modal import SubmitArchetypeModal
 import typing
 import discord
 from discord.ext import commands
@@ -17,9 +17,8 @@ class ATest(commands.Cog):
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   @app_commands.checks.has_role('MTSubmitter') #TODO: Find a way to check the role, idk why this doesn't get caught
   async def Testing(self,
-                    interaction: discord.Interaction,
-                    csv_file: typing.Optional[discord.Attachment] = None):
-    modal = ModalWithSelect()
+                    interaction: discord.Interaction):
+    modal = SubmitArchetypeModal()
     await interaction.response.send_modal(modal)
     return await interaction.followup.send("Testing.")
 

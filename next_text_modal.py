@@ -1,62 +1,47 @@
 import discord
-from services.date_functions import GetToday
+from discord import ui, Interaction
 
 class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
-  is_submitted = False
-
-  def __init__(self):
-    super().__init__()
-    today = GetToday()   
-
-    self.is_complete = discord.ui.Select(
-      options=[
-        discord.SelectOption(label='Yes', value='True'),
-        discord.SelectOption(label='No', value='False')
-      ],
-      placeholder='Is the event complete?',
-      max_values=1
+    # defining a Label with the component set to a Select
+    fruit_select = ui.Label(
+        text="Your favorite fruit",
+        # setting an optional description
+        # this will appear below the label on desktop, and below the component on mobile
+        description="Please select your favorite fruit from the list.",
+        # this is where a select (or TextInput) component goes
+        component=ui.Select(
+            placeholder="Select your favorite fruit...", # this is optional
+            # we can make it optional too using the required kwarg
+            # defaults to True (required)
+            required=True,
+            options=[
+                discord.SelectOption(label="Apple", value="apple"),
+                discord.SelectOption(label="Banana", value="banana"),
+                discord.SelectOption(label="Cherry", value="cherry"),
+            ]
+        )
     )
-    self.add_item(self.is_complete)
-    
-    self.date_input = discord.ui.TextInput(
-      label='Date of Event',
-      style=discord.TextStyle.short,
-      placeholder='MM/DD/YYYY',
-      default=today.strftime('%m/%d/%Y'),
-      required=True,
-      max_length=10
+
+    # adding a TextInput for the sake of example
+    reason = ui.Label(
+        text="Why is that your favorite fruit?",
+        component=ui.TextInput(
+            placeholder="Tell us why...",
+            # making this one optional -- we don't really need to know
+            required=False
+        )
     )
-    self.add_item(self.date_input)
 
-    self.player_name_input = discord.ui.TextInput(
-      label='Player Name',
-      style=discord.TextStyle.short,
-      placeholder='Player Name',
-      required=True,
-      max_length=50
-    )
-    self.add_item(self.player_name_input)
-    
-    self.archetype_input = discord.ui.TextInput(
-       label='Archetype',
-       style=discord.TextStyle.short,
-       placeholder='Archetype Name',
-       required=True,
-       max_length=50
-    )
-    self.add_item(self.archetype_input)
+    # handling the submission
+    async def on_submit(self, interaction: Interaction) -> None:
+        # will be one of: "apple", "banana", "cherry"
+        chosen_fruit = self.fruit_select.component.values[0]
+        reason = self.reason.component.value
 
-  async def on_submit(self, interaction: discord.Interaction):
-    self.submitted_date = self.date_input.value
-    self.submitted_player_name = self.player_name_input.value
-    self.submitted_archetype = self.archetype_input.value
-    self.submitted_is_complete = self.is_complete.values[0]
-    self.is_submitted = True
-    await interaction.response.defer()
+        # reason is optional so we can handle that here
+        if not reason:
+            reason = "*you didn't tell us why :(*"
 
-  async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
-    await interaction.followup.send(f'Oops! Something went wrong: {error}', ephemeral=True)
-    self.is_submitted = False
-
-  async def on_timeout(self) -> None:
-    self.is_submitted = False
+        await interaction.response.send_message(
+            f"Your favorite fruit is {chosen_fruit} because {reason}"
+        )
