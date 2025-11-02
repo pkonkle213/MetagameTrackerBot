@@ -1,4 +1,3 @@
-from custom_errors import KnownError
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
@@ -6,6 +5,7 @@ from services.unknown_archetypes_services import GetAllUnknown
 from output_builder import BuildTableOutput
 from services.store_level_service import LEVEL1STORES
 from services.command_error_service import Error
+
 class UnknownArchetypes(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
@@ -27,17 +27,18 @@ class UnknownArchetypes(commands.Cog):
       End of Date Range (MM/DD/YYYY)
     """
     await interaction.response.defer()
-    try:
-      data, title, headers = GetAllUnknown(interaction, start_date, end_date)
-      if data is None or len(data) == 0:
-        await interaction.followup.send('Congratulations! No unknown archetypes found for this format')
-      else:
-        output = BuildTableOutput(title, headers, data)
-        await interaction.followup.send(output)
-    except KnownError as exception:
-      await interaction.followup.send(exception.message, ephemeral=True)
-    except Exception as exception:
-      await Error(self.bot, interaction, exception)
+    data, title, headers = GetAllUnknown(interaction, start_date, end_date)
+    if data is None or len(data) == 0:
+      await interaction.followup.send('Congratulations! No unknown archetypes found for this format')
+    else:
+      output = BuildTableOutput(title, headers, data)
+      await interaction.followup.send(output)
+
+  @IntoTheUnknown.error
+  async def Errors(self,
+                   interaction: Interaction,
+                   error: app_commands.AppCommandError):
+    await Error(self.bot, interaction, error)
 
 async def setup(bot):
   await bot.add_cog(UnknownArchetypes(bot))

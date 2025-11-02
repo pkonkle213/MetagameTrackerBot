@@ -1,6 +1,7 @@
+import settings
 from discord.ext import commands
 from discord import app_commands, Interaction, Member
-from services.command_error_service import Error
+from discord_messages import MessageChannel
 from custom_errors import KnownError
 from services.user_info_services import GetUserData
 
@@ -9,7 +10,7 @@ class UserInfoCommand(commands.Cog):
     self.bot = bot
 
     self.user_info_context_menu = app_commands.ContextMenu(
-      name='Get User Info',  # This is the name displayed in Discord
+      name='Get User Info',  # This is the name of the command displayed in Discord
       callback=self.GetUserInfo # The function to call when the command is used
     )
     # Add the context menu to the bot's command tree
@@ -35,7 +36,11 @@ class UserInfoCommand(commands.Cog):
     except KnownError as error:
       await interaction.followup.send(error.message, ephemeral=True)
     except Exception as exception:
-      await Error(self.bot, interaction, exception)
+      await MessageChannel(self.bot,
+                           exception,
+                           settings.BOTGUILDID,
+                           settings.ERRORCHANNELID)
+      await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
 
 async def setup(bot):
   await bot.add_cog(UserInfoCommand(bot))

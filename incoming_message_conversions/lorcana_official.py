@@ -1,7 +1,6 @@
 import pandas as pd
 from tuple_conversions import Pairing, Standing, Result
 
-#TODO: This may be out of date and needs updated as Lorcana has CSV export
 def LorcanaOfficialPairing(dataframe:pd.DataFrame):
   """Takes a provided dataframe and attempts to make it into a Pairing object"""
   data = []
@@ -24,7 +23,6 @@ def LorcanaOfficialPairing(dataframe:pd.DataFrame):
     print('Lorcana Official Pairing Exception:', exception)
     return Result(None, None)
 
-#TODO: This may be out of date and needs updated
 def LorcanaOfficialStanding(dataframe:pd.DataFrame):
   """Takes a provided dataframe and attempts to make it into a Standing object"""
   data = []
@@ -37,9 +35,9 @@ def LorcanaOfficialStanding(dataframe:pd.DataFrame):
       losses = record[2]
       draws = record[4]
       participant = Standing(name,
-                            wins,
-                            losses,
-                            draws)
+                             wins,
+                             losses,
+                             draws)
       data.append(participant)
 
     return Result(data if len(data) > 0 else None, errors)

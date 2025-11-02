@@ -1,14 +1,13 @@
-from custom_errors import KnownError
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
-import settings
+from settings import BOTGUILDID
 from services.events_reported_services import GetMyEventsReported
 from output_builder import BuildTableOutput
 from checks import isPhil
 from services.command_error_service import Error
 
-TARGET_GUILDS = [settings.BOTGUILDID]
+TARGET_GUILDS = [BOTGUILDID]
 
 class EventsReported(commands.Cog):
   def __init__(self, bot):
@@ -26,17 +25,18 @@ class EventsReported(commands.Cog):
       The discord id of the store to check
     '''
     await interaction.response.defer()
-    try:
-      discord_id_int = 0
-      if discord_id != '':
-        discord_id_int = int(discord_id)
-      data, title, headers = GetMyEventsReported(interaction, discord_id_int)
-      output = BuildTableOutput(title, headers, data)
-      await interaction.followup.send(output)
-    except KnownError as exception:
-      await interaction.followup.send(exception.message, ephemeral=True)
-    except Exception as exception:
-      await Error(self.bot, interaction, exception)
+    discord_id_int = 0
+    if discord_id != '':
+      discord_id_int = int(discord_id)
+    data, title, headers = GetMyEventsReported(interaction, discord_id_int)
+    output = BuildTableOutput(title, headers, data)
+    await interaction.followup.send(output)
+    
+  @MyEventsReported.error
+  async def Errors(self,
+                   interaction: discord.Interaction,
+                   error: app_commands.AppCommandError):
+    await Error(self.bot, interaction, error)
 
 async def setup(bot):
   await bot.add_cog(EventsReported(bot))

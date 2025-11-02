@@ -27,20 +27,15 @@ class BannedWordCommands(commands.GroupCog, name='bannedwords'):
       The inappropriate word or phrase to ban
     """
     await interaction.response.defer(ephemeral=True)
-    try:
-      if len(word) < 3:
-        await interaction.followup.send('Word must be at least 3 characters long')
+    if len(word) < 3:
+      await interaction.followup.send('Word must be at least 3 characters long')
+    else:
+      check = AddBadWord(interaction, word)
+      if check:
+        await interaction.followup.send('Word added and offending archetypes disabled')
       else:
-        check = AddBadWord(interaction, word)
-        if check:
-          await interaction.followup.send('Word added and offending archetypes disabled')
-        else:
-          await interaction.followup.send('Something went wrong. Please try again later.', ephemeral=True)
-    except KnownError as exception:
-      await interaction.followup.send(exception.message, ephemeral=True)
-    except Exception as exception:
-      await Error(self.bot, interaction, exception)
-
+        raise KnownError(f'Unable to add {word} for discord {interaction.guild.id}')
+  
   @app_commands.command(name='offenders',
                         description='See who has been flagged for bad words/phrases')
   @app_commands.checks.has_role('MTSubmitter')
@@ -48,14 +43,16 @@ class BannedWordCommands(commands.GroupCog, name='bannedwords'):
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def StoreOffenders(self, interaction: Interaction):
     await interaction.response.defer(ephemeral=True)
-    try:
-      data, title, headers = Offenders(interaction)
-      output = BuildTableOutput(title, headers, data)
-      await interaction.followup.send(output)
-    except KnownError as exception:
-      await interaction.followup.send(exception.message, ephemeral=True)
-    except Exception as exception:
-      await Error(self.bot, interaction, exception)
+    data, title, headers = Offenders(interaction)
+    output = BuildTableOutput(title, headers, data)
+    await interaction.followup.send(output)
+  
+  @BadWord.error
+  @StoreOffenders.error
+  async def Errors(self,
+                   interaction: discord.Interaction,
+                   error: app_commands.AppCommandError):
+    await Error(self.bot, interaction, error)
 
 async def setup(bot):
   await bot.add_cog(BannedWordCommands(bot))

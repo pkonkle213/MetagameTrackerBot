@@ -1,10 +1,9 @@
-from custom_errors import KnownError
+import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 from services.store_attendance_services import GetStoreAttendance
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
-import discord
 from services.store_level_service import LEVEL1STORES
 
 class EventAttendance(commands.Cog):
@@ -29,20 +28,21 @@ class EventAttendance(commands.Cog):
       End of Date Range (MM/DD/YYYY)
     """
     await interaction.response.defer()
-    try:
-      data, title, headers = GetStoreAttendance(interaction, start_date, end_date)
-      if data is None or len(data) == 0:
-        await interaction.followup.send('No attendance data found for this store and/or format')
-      else:
-        output = BuildTableOutput(title,
-                    headers,
-                    data)
-        await interaction.followup.send(output)
-    except KnownError as exception:
-      await interaction.followup.send(exception.message, ephemeral=True)
-    except Exception as exception:
-      await Error(self.bot, interaction, exception)
+    data, title, headers = GetStoreAttendance(interaction, start_date, end_date)
+    if data is None or len(data) == 0:
+      await interaction.followup.send('No attendance data found for this store and/or format')
+    else:
+      output = BuildTableOutput(title,
+                  headers,
+                  data)
+      await interaction.followup.send(output)
 
+  @Attendance.error
+  async def Errors(self,
+                   interaction: discord.Interaction,
+                   error: app_commands.AppCommandError):
+    await Error(self.bot, interaction, error)
+  
 async def setup(bot):
   await bot.add_cog(EventAttendance(bot))
 

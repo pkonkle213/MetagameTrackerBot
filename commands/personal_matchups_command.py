@@ -1,11 +1,10 @@
-from custom_errors import KnownError
+import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 from services.personal_matchups_services import PersonalMatchups
 from services.player_win_record_services import PlayRecord
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
-import discord
 from services.store_level_service import LEVEL3STORES
 
 class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
@@ -23,17 +22,13 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
                 start_date: str = '',
                 end_date: str = ''):
     await interaction.response.defer(ephemeral=True)
-    try:
-      data, title, headers = PersonalMatchups(interaction, start_date, end_date)
-      output = BuildTableOutput(title, headers, data)
-      await interaction.followup.send(output)
-    except KnownError as exception:
-      await interaction.followup.send(exception.message, ephemeral=True)
-    except Exception as exception:
-      await Error(self.bot, interaction, exception)
+    data, title, headers = PersonalMatchups(interaction, start_date, end_date)
+    output = BuildTableOutput(title, headers, data)
+    await interaction.followup.send(output)
+
 
   @app_commands.command(name="wlrecord",
-    description="Look up your win/loss record(s)")
+                        description="Look up your win/loss record(s)")
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL3STORES])
@@ -50,19 +45,16 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
       End of Date Range (MM/DD/YYYY)
     """
     await interaction.response.defer(ephemeral=True)
-    try:
-      data, title, header = PlayRecord(interaction, start_date, end_date)
-      output = BuildTableOutput(title, header, data)
-      await interaction.followup.send(output)
-    except KnownError as exception:
-      await interaction.followup.send(exception.message, ephemeral=True)
-    except Exception as exception:
-      await Error(self.bot, interaction, exception)
-
+    data, title, header = PlayRecord(interaction, start_date, end_date)
+    output = BuildTableOutput(title, header, data)
+    await interaction.followup.send(output)
+  
+  @PersonalMatchupReport.error
   @WLDRecord.error
-  async def on_test_error(self, interaction: discord.Interaction, error: app_commands.AppCommandError):
-      if isinstance(error, app_commands.CommandOnCooldown):
-          await interaction.response.send_message(str(error), ephemeral=True)
+  async def Errors(self,
+                   interaction: discord.Interaction,
+                   error: app_commands.AppCommandError):
+    await Error(self.bot, interaction, error)
   
 
 async def setup(bot):

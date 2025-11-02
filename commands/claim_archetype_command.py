@@ -1,8 +1,7 @@
+import settings
 from discord.ext import commands
 from discord import app_commands, Interaction
 from data.store_data import GetClaimFeed
-import settings
-from custom_errors import KnownError
 from discord_messages import MessageChannel
 from services.input_services import ConvertInput
 from services.command_error_service import Error
@@ -43,10 +42,8 @@ class ClaimArchetype(commands.GroupCog, name='claim'):
                              full_event,
                              interaction.guild_id,
                              interaction.channel_id)
-    except KnownError as exception:
-      await interaction.followup.send(exception.message, ephemeral=True)
-    except Exception as exception:
-      await Error(self.bot, interaction, exception)
+    except ValueError:
+      await interaction.followup.send("The date provided doesn't match the MM/DD/YYYY formatting. Please try again", ephemeral=True)
 
   @app_commands.command(name='constructed',
                         description='Enter the deck archetype for a player and their last played constructed event')
@@ -84,10 +81,13 @@ class ClaimArchetype(commands.GroupCog, name='claim'):
                              interaction.channel_id)
     except ValueError:
       await interaction.followup.send("The date provided doesn't match the MM/DD/YYYY formatting. Please try again", ephemeral=True)
-    except KnownError as exception:
-      await interaction.followup.send(exception.message, ephemeral=True)
-    except Exception as exception:
-      await Error(self.bot, interaction, exception)
+
+  @ClaimConstructed.error
+  @ClaimLimited.error
+  async def Errors(self,
+                   interaction: Interaction,
+                   error: app_commands.AppCommandError):
+    await Error(self.bot, interaction, error)
 
 async def MessageStoreFeed(bot, message, interaction):
   try:

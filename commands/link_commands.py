@@ -1,5 +1,5 @@
-from discord import Interaction
 import settings
+from discord import Interaction
 from discord.ext import commands
 from discord import app_commands
 

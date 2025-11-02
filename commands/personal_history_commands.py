@@ -1,7 +1,6 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from custom_errors import KnownError
 from services.personal_history_service import GetPersonalStandingsHistory, GetPersonalPairingsHistory
 from services.store_level_service import LEVELINFSTORES
 from services.command_error_service import Error
@@ -9,9 +8,7 @@ from services.command_error_service import Error
 TARGET_GUILD_IDS = LEVELINFSTORES
 
 class PersonalHistoryCommands(commands.GroupCog, name='history'):
-  """
-  A group of commands for getting personal history
-  """
+  """A group of commands for getting personal history"""
   def __init__(self, bot):
     self.bot = bot
 
@@ -33,13 +30,8 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
     """
       
     await interaction.response.defer(ephemeral=True)
-    try:
-      output = GetPersonalStandingsHistory(interaction, start_date, end_date)
-      await interaction.followup.send(output, ephemeral=True)
-    except KnownError as exception:
-      await interaction.followup.send(exception.message, ephemeral=True)
-    except Exception as exception:
-      await Error(self.bot, interaction, exception)
+    output = GetPersonalStandingsHistory(interaction, start_date, end_date)
+    await interaction.followup.send(output, ephemeral=True)
 
   @app_commands.command(name='pairings', description='Your history according to pairings')
   @app_commands.guild_only()
@@ -59,13 +51,16 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
     """
 
     await interaction.response.defer(ephemeral=True)
-    try:
-      output = GetPersonalPairingsHistory(interaction, start_date, end_date)
-      await interaction.followup.send(output, ephemeral=True)
-    except KnownError as exception:
-      await interaction.followup.send(exception.message, ephemeral=True)
-    except Exception as exception:
-      await Error(self.bot, interaction, exception)
+    output = GetPersonalPairingsHistory(interaction, start_date, end_date)
+    await interaction.followup.send(output, ephemeral=True)
+
+
+  @GetPersonalStandingsHistory.error
+  @GetPersonalPairingsHistory.error
+  async def Errors(self,
+                 interaction: discord.Interaction,
+                 error: app_commands.AppCommandError):
+    await Error(self.bot, interaction, error)
 
 async def setup(bot):
   await bot.add_cog(PersonalHistoryCommands(bot))

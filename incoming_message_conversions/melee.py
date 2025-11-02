@@ -1,6 +1,6 @@
 from tuple_conversions import Standing, Pairing, Result
 
-#TODO: If this includes the "decklist" column, that adds a row to each standing
+#TODO: This will be updated soon, once CSV files are obtained
 def MeleeStandings(message):
   data = []
   errors = []
@@ -25,14 +25,12 @@ def MeleeStandings(message):
   
   return Result(data if len(data) > 0 else None, errors)
 
-#TODO: If this includes the "decklist" column, that adds a row to each standing
 def MeleePairings(message):
   data = []
   errors = []
   rows = message.split('\n')
   byes = True
   
-  #TODO: Start looking for byes, which have 3-4 rows
   i = 0
   while byes:
     if rows[i + 2].split(' ')[-1] == 'bye':
