@@ -8,6 +8,16 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     super().__init__()
     today = GetToday()   
 
+    self.is_complete = discord.ui.Select(
+      options=[
+        discord.SelectOption(label='Yes', value='True'),
+        discord.SelectOption(label='No', value='False')
+      ],
+      placeholder='Is the event complete?',
+      max_values=1
+    )
+    self.add_item(self.is_complete)
+    
     self.date_input = discord.ui.TextInput(
       label='Date of Event',
       style=discord.TextStyle.short,
@@ -40,6 +50,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     self.submitted_date = self.date_input.value
     self.submitted_player_name = self.player_name_input.value
     self.submitted_archetype = self.archetype_input.value
+    self.submitted_is_complete = self.is_complete.values[0]
     self.is_submitted = True
     await interaction.response.defer()
 
