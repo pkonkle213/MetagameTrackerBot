@@ -15,15 +15,23 @@ async def MissingRoleError(interaction, error:app_commands.AppCommandError):
 async def Error(bot:Bot,
                 interaction:Interaction,
                 error:app_commands.AppCommandError):
-  if isinstance(error, app_commands.MissingRole):
-    await interaction.followup.send('You do not have the required role to use this command.', ephemeral=True)
+  print('Error type:', type(error))
+  print('IsMissingRole:', isinstance(error, app_commands.errors.MissingRole))
+  if isinstance(error, app_commands.errors.MissingRole):
+    feedback = 'You do not have the required role to use this command.'
   elif isinstance(error, app_commands.CommandOnCooldown):
-    await interaction.response.send_message(str(error), ephemeral=True)
+    feedback = str(error)
   elif isinstance(error, app_commands.CommandInvokeError):
-    await interaction.followup.send(str(error.original), ephemeral=True)
+    feedback = str(error.original)
   else:
-    await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
+    feedback = "Something unexpected went wrong. It's been reported. Please try again in a few hours."
     await MessageChannel(bot,
                          error,
                          settings.BOTGUILDID,
                          settings.ERRORCHANNELID)
+
+  try:
+    await interaction.response.send_message(feedback, ephemeral=True)
+  except Exception:
+    await interaction.followup.send(feedback, ephemeral=True)
+    

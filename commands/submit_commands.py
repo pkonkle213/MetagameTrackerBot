@@ -120,8 +120,9 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
                              interaction.guild_id,
                              interaction.channel_id)
 
-  @SubmitDataCommand.error
   @SubmitCheck.error
+  @SubmitDataCommand.error
+  @SubmitArchetypeCommand.error
   async def Errors(self,
                    interaction: Interaction,
                    error: app_commands.AppCommandError):
