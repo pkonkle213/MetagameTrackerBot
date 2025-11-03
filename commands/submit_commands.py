@@ -1,4 +1,5 @@
 import typing
+from services.claim_result_services import GetUserInput, AddTheArchetype, MessageStoreFeed
 import settings
 from services.convert_and_save_input import ConvertCSVToDataErrors, ConvertModalToDataErrors
 from checks import isSubmitter
@@ -41,6 +42,30 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     else:
       await interaction.followup.send('\n'.join(issues))
 
+  @app_commands.command(name="archetype",
+                       description="Submit a player's archetype for an event")
+  @app_commands.guild_only()
+  async def SubmitArchetypeCommand(self,
+                                   interaction: Interaction):
+    try:
+      player_name, date, archetype = await GetUserInput(interaction)
+      private_output, feed_output, public_output, full_event = await AddTheArchetype(interaction, player_name, date, archetype)
+      await interaction.followup.send(private_output, ephemeral=True)
+      await MessageStoreFeed(self.bot, feed_output, interaction)
+      if public_output:
+        await MessageChannel(self.bot,
+                            public_output,
+                            interaction.guild_id,
+                            interaction.channel_id)
+      if full_event:
+        await MessageChannel(self.bot,
+                             full_event,
+                             interaction.guild_id,
+                             interaction.channel_id)
+    except ValueError:
+      await interaction.followup.send("The date provided doesn't match the MM/DD/YYYY formatting. Please try again", ephemeral=True)
+    #await interaction.response.send_message(response)
+  
   @app_commands.command(name="data",
                         description="Submitting your event's data")
   @app_commands.checks.has_role('MTSubmitter')

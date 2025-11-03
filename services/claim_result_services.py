@@ -1,19 +1,55 @@
+import settings
 from checks import isSubmitter
 from custom_errors import KnownError
 from data.claim_data import GetEventAndPlayerName
+from data.store_data import GetClaimFeed
 from services.date_functions import ConvertToDate, GetToday, DateDifference
 from select_menu_bones import SelectMenu
 from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
+from input_modals.submit_archetype_modal import SubmitArchetypeModal
 from data.archetype_data import AddArchetype
 from data.event_data import EventIsPosted, GetEventMeta
 from services.input_services import ConvertInput
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
-from tuple_conversions import Event
 from interaction_objects import GetObjectsFromInteraction
 from output_builder import BuildTableOutput
+from discord_messages import MessageChannel
 
-async def AddTheArchetype(bot, interaction, player_name, date, archetype=''):
+#TODO: This is a lot of stuff. Needs to be broken up into smaller functions, refactored, and renamed
+async def GetUserInput(interaction:Interaction) -> tuple[str, str, str]:
+  data = GetObjectsFromInteraction(interaction,
+                                    game=True,
+                                    format=True,
+                                    store=True)
+  #TODO: Eventually, this should just send the game as Magic/Limited will need special input
+  modal = SubmitArchetypeModal(data.Game.Name)
+  await interaction.response.send_modal(modal)
+  await modal.wait()
+
+  archetype = ConvertInput(modal.submitted_archetype)
+  #TODO: Makes more sense for this to be handled in the modal?
+  if data.Game.Name.upper() == 'LORCANA':
+    archetype = f'{modal.submitted_inks[0]}/{modal.submitted_inks[1]} - {archetype}'
+  return (modal.submitted_player_name, modal.submitted_date, archetype)
+
+async def MessageStoreFeed(bot, message, interaction):
+  try:
+    #Message the store feed channel specific to the game
+    channel_id = GetClaimFeed(interaction.guild_id,
+                              interaction.channel.category.id)
+    await MessageChannel(bot,
+                         message,
+                         interaction.guild_id,
+                         channel_id)
+  except Exception:
+    #If none listed or found, message the bot guild
+    await MessageChannel(bot,
+                         message,
+                         settings.BOTGUILDID,
+                         settings.CLAIMCHANNEL)
+
+async def AddTheArchetype(interaction, player_name, date, archetype=''):
   archetype_submitted, event = await ClaimResult(interaction,
                                                  player_name,
                                                  archetype,

@@ -1,6 +1,6 @@
 import pandas as pd
 from discord import Interaction, Attachment
-from text_modal import SubmitDataModal
+from input_modals.submit_data_modal import SubmitDataModal
 from tuple_conversions import Data
 import pytz
 from data_translation import ConvertCSVToData, ConvertMessageToData
@@ -60,8 +60,9 @@ async def ConvertModalToDataErrors(interaction_objects:Data,
       raise KnownError("SubmitData modal was dismissed or timed out. Please try again.")
    
    submission = '\n'.join([f'Date:{modal.submitted_date}',
-                           f'Round:{modal.submitted_round}'
-                           f'Message:{modal.submitted_message}'])
+                           f'Round:{modal.submitted_round}',
+                           f'Message:{modal.submitted_message}',
+                           f'Is Complete:{modal.submitted_is_complete}'])
    
    save_path, file_name = BuildFilePath(interaction, '')
    with open(save_path, 'w') as file:
@@ -69,7 +70,8 @@ async def ConvertModalToDataErrors(interaction_objects:Data,
 
    #Convert the data to the appropriate format
    data, errors = ConvertMessageToData(modal.submitted_message,
-                    interaction_objects.Game)
+                                       interaction_objects.Game)
    round_number = modal.submitted_round
    date = modal.submitted_date
+   is_complete = modal.submitted_is_complete
    return data, errors, round_number, date

@@ -91,6 +91,7 @@ def AddPairingResults(event:Event,
     if result:
       successes += 1
 
+  #TODO: The day should not have a leading zero
   if successes >= 1:
     return f"Ready for the next round, as {successes} entries were added for round {round_number} of {event.EventDate.strftime('%B %d')}'s event."
   else:
