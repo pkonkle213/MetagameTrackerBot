@@ -17,11 +17,13 @@ async def Error(bot:Bot,
                 error:app_commands.AppCommandError):
   print('Error type:', type(error))
   print('IsMissingRole:', isinstance(error, app_commands.errors.MissingRole))
+  print('IsCommandOnCooldown:', isinstance(error, app_commands.errors.CommandOnCooldown))
+  print('IsCommandInvokeError:', isinstance(error, app_commands.errors.CommandInvokeError))
   if isinstance(error, app_commands.errors.MissingRole):
     feedback = 'You do not have the required role to use this command.'
-  elif isinstance(error, app_commands.CommandOnCooldown):
+  elif isinstance(error, app_commands.errors.CommandOnCooldown):
     feedback = str(error)
-  elif isinstance(error, app_commands.CommandInvokeError):
+  elif isinstance(error, app_commands.errors.CommandInvokeError):
     feedback = str(error.original)
   else:
     feedback = "Something unexpected went wrong. It's been reported. Please try again in a few hours."

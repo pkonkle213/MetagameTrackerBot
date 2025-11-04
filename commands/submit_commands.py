@@ -116,7 +116,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     await interaction.followup.send(output, ephemeral=True)
     if event_created:
       await MessageChannel(self.bot,
-                           f"New data for {event_created.strftime('%B %-d')}'s event has been submitted! Use the appropriate `/claim` command to input your archetype!",
+                           f"New data for {event_created.strftime('%B %-d')}'s event has been submitted! Use the `/submit archetype` command to input your archetype!",
                              interaction.guild_id,
                              interaction.channel_id)
 
