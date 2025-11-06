@@ -17,7 +17,7 @@ def BuildFilePath(interaction:Interaction,
    #Save the file to the server
    timezone = pytz.timezone('US/Eastern')
    timestamp = datetime.now(timezone).strftime("%Y%m%d_%H%M%S")
-   file_name = f"{timestamp}_{prev_filename}" if prev_filename != '' else 'ModalInput'
+   file_name = f"{timestamp}_{prev_filename}" if prev_filename != '' else f"{timestamp}_ModalInput"
 
    folder_name = f'{interaction.guild.id} - {interaction.guild.name}'
 
