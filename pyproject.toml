@@ -13,4 +13,5 @@ dependencies = [
     "pytesseract==0.3.13",
     "python-dotenv>=1.1.0",
     "pytz==2024.2",
+    "requests==2.32.3",
 ]

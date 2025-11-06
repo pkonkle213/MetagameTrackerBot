@@ -36,9 +36,11 @@ async def ConvertCSVToDataErrors(interaction_objects:Data,
    csv_data = await csv_file.read()
    df = pd.read_csv(io.StringIO(csv_data.decode('utf-8')), na_values=['FALSE','False'])
    if df is None or df.empty:
-      raise KnownError("The file is empty. Please try again.")
-      
+     raise KnownError("The file is empty or unreadable. Please try again.")
+
+   print('Save path:', save_path)
    await csv_file.save(pathlib.Path(save_path))
+   print('File saved')
    
    data, errors = ConvertCSVToData(df, interaction_objects.Game)
    
@@ -63,6 +65,8 @@ async def ConvertModalToDataErrors(interaction_objects:Data,
                            f'Round:{modal.submitted_round}',
                            f'Message:{modal.submitted_message}',
                            f'Is Complete:{modal.submitted_is_complete}'])
+   
+   print('Submission:', submission)
    
    save_path, file_name = BuildFilePath(interaction, '')
    with open(save_path, 'w') as file:

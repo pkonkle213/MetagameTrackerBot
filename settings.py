@@ -2,6 +2,9 @@ import os
 
 DISCORDTOKEN = os.environ['DISCORD_TOKEN']
 
+MELEE_CLIENTID = os.environ['MELEE_CLIENTID']
+MELEE_CLIENTSECRET = os.environ['MELEE_CLIENTSECRET']
+
 BOTGUILDID = int(os.environ['BOT_GUILD_ID'])
 TESTGUILDID = int(os.environ['TEST_GUILD_ID'])
 DATAGUILDID = int(os.environ['DATA_GUILD_ID'])
