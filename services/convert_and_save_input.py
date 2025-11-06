@@ -10,6 +10,7 @@ import pathlib
 import os
 import io
 
+#TODO: These aren't saving when the bot is in production.
 def BuildFilePath(interaction:Interaction,
                   prev_filename:str):
    if not interaction.guild:
@@ -65,8 +66,6 @@ async def ConvertModalToDataErrors(interaction_objects:Data,
                            f'Round:{modal.submitted_round}',
                            f'Message:{modal.submitted_message}',
                            f'Is Complete:{modal.submitted_is_complete}'])
-   
-   print('Submission:', submission)
    
    save_path, file_name = BuildFilePath(interaction, '')
    with open(save_path, 'w') as file:
