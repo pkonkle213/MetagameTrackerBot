@@ -32,6 +32,7 @@ class UnknownArchetypes(commands.Cog):
       await interaction.followup.send('Congratulations! No unknown archetypes found for this format')
     else:
       output = BuildTableOutput(title, headers, data)
+      output += '\n\nTo submit yours, type and enter: /submit archetype'
       await interaction.followup.send(output)
 
   @IntoTheUnknown.error

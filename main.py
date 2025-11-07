@@ -1,3 +1,4 @@
+import pytz
 from timedposts.automated_check_events import EventCheck
 import pathlib
 import discord
@@ -17,6 +18,8 @@ bot = commands.Bot(command_prefix='?', intents=intents)
 BASE_DIR = pathlib.Path(__file__).parent
 CMDS_DIR = BASE_DIR / "commands"
 
+TIME_ZONE = pytz.timezone('US/Eastern')
+
 @bot.event
 async def on_ready():
   print(f'Logged on as {format(bot.user)}!')
@@ -31,7 +34,7 @@ async def on_guild_join(guild:discord.Guild):
   """This event triggers when the bot joins a new guild (server)."""
   await NewStoreRegistration(bot, guild)
 
-@tasks.loop(time=datetime.time(hour=23, minute=00, tzinfo=datetime.timezone.utc))
+@tasks.loop(time=datetime.time(hour=18, minute=00, tzinfo=TIME_ZONE))
 async def find_the_unknown():
   """Every day at 6:00 PM EST, the bot will check for events that are 3 days old and have unknown archetypes."""  
   await EventCheck(bot)
@@ -40,16 +43,16 @@ async def find_the_unknown():
 async def before_find_the_unknown():
   await bot.wait_until_ready()
 
-@tasks.loop(time=datetime.time(hour=9, minute=00, tzinfo=datetime.timezone.utc))
+@tasks.loop(time=datetime.time(hour=4, minute=00, tzinfo=TIME_ZONE))
 async def update_store_levels():
-  """Store levels are updated every day at 8:00 AM UTC, 4:00 AM EST"""
+  """Store levels are updated every day 4:00 AM EST"""
   await SyncCommands(bot, CMDS_DIR)
 
 @update_store_levels.before_loop
 async def before_update_store_levels():
   await bot.wait_until_ready()
 
-@tasks.loop(time=datetime.time(hour=15, minute=00, tzinfo=datetime.timezone.utc)) 
+@tasks.loop(time=datetime.time(hour=10, minute=00, tzinfo=TIME_ZONE)) 
 async def data_guild_update():
   """Every Friday at 10:00 AM EST, the data guild is updated with new data"""
   time_now = datetime.datetime.now(datetime.timezone.utc)

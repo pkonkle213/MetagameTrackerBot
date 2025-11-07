@@ -19,4 +19,5 @@ async def UpdateDataGuild(bot):
       title = f'{title_name} metagame from {date_start} to {date_end}'
       headers = ['Deck Archetype', 'Meta %', 'Win %']
       output = BuildTableOutput(title, headers, data, 0 if format.IsLimited else None)
+      output += '\n\nTo submit yours, type and enter: /submit archetype'
       await channel.send(output)
