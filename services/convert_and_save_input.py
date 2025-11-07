@@ -4,7 +4,6 @@ from discord import Interaction, Attachment
 from input_modals.submit_data_modal import SubmitDataModal
 from tuple_conversions import Data, Pairing, Standing
 import pytz
-from typing import List
 from data_translation import ConvertCSVToData, ConvertMessageToData
 from datetime import datetime
 from custom_errors import KnownError
@@ -33,7 +32,7 @@ def BuildFilePath(interaction:Interaction,
 
 def ConvertMeleeTournamentToDataErrors(interaction_objects:Data,
                               interaction:Interaction,
-                              json_data:dict) -> tuple[List[Pairing] | List[Standing], List[str], str, str]:
+                              json_data:dict) -> tuple[list[Pairing] | list[Standing], list[str], str, str]:
   save_path, file_name = BuildFilePath(interaction, '')
   data, errors, round_number, date = MeleeJsonPairings(json_data)
   

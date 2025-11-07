@@ -1,5 +1,4 @@
 from services.date_functions import ConvertToDate
-from typing import List
 import discord
 from custom_errors import KnownError
 from data.add_results_data import AddResult, SubmitTable
@@ -16,10 +15,11 @@ def SubmitCheck(interaction:discord.Interaction):
                                    store=True)
 
 def SubmitData(interaction_objects:Data,
-               data: List[Standing] | List[Pairing],
+               data: list[Standing] | list[Pairing],
                date_str:str,
                round_number:str,
-               is_complete: bool):
+               is_complete: bool,
+               whole_event: bool):
   """Submits an events data to the database"""
   store = interaction_objects.Store
   game = interaction_objects.Game
@@ -48,13 +48,13 @@ def SubmitData(interaction_objects:Data,
     if event.EventType != 'PAIRINGS':
       #Delete the standings data
       DeleteStandingsFromEvent(event.ID)
-    results = AddPairingResults(event, data, userId, round_num)
+    results = AddPairingResults(event, data, userId, round_num, whole_event)
   else:
     raise Exception("Congratulations, you've reached the impossible to reach area.")
   return results, event.EventDate if event_created else None
 
 def AddStandingResults(event:Event,
-                       data:List[Standing],
+                       data:list[Standing],
                        submitterId:int):
   successes = 0
   for person in data:
@@ -73,9 +73,10 @@ def AddStandingResults(event:Event,
   return 
 
 def AddPairingResults(event:Event,
-                      data:List[Pairing],
+                      data:list[Pairing],
                       submitterId:int,
-                      round_number:int):
+                      round_number:int,
+                      whole_event:bool):
   round_number = data[0].Round if not round_number else round_number
   successes = 0
  
@@ -93,6 +94,8 @@ def AddPairingResults(event:Event,
 
   #TODO: The day should not have a leading zero
   if successes >= 1:
+    if whole_event:
+      return f"{successes} entries were added for {event.EventDate.strftime('%B %d')}'s event."
     return f"Ready for the next round, as {successes} entries were added for round {round_number} of {event.EventDate.strftime('%B %d')}'s event."
   else:
     return "Sorry, no entries were added. Please try again later."

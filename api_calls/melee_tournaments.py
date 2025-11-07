@@ -1,20 +1,25 @@
 import settings
 import requests
 
-API_URL = "https://melee.gg/api/match/list/"
-PAGE_SIZE = "?variables.pageSize=250"
-
-#TODO: There is pagination in the data received, so for larger events I would need to while-loop through until "HasMore" is false
-#Which realistically means that instead of returning data, I need to build data['Content'] and test data['HasMore']
-def GetMeleeTournamentData(tournament_id) -> dict:
+#TODO: This needs to be generalized for future state when multiple stores have IDs and Secrets that I need to grab from a database
+def GetMeleeTournamentData(tournament_id) -> list:
   username = settings.MELEE_CLIENTID
   password = settings.MELEE_CLIENTSECRET
-  response = requests.get(API_URL + tournament_id + PAGE_SIZE, auth=(username, password))
-  content = []
+  page_size = 250
+  has_more = True
+  data = []
+  page = 1
 
-  if response.status_code == 200:
-    data = response.json()
-    return data
-  else:
-    raise Exception("Unable to get data from Melee.gg. Please try again.")
+  while has_more:
+    api_url = f"https://melee.gg/api/match/list/{tournament_id}?variables.page={page}&variables.pageSize={page_size}"
+    response = requests.get(api_url, auth=(username, password))
+
+    if response.status_code == 200:
+      response_obj = response.json()
+      data += response_obj['Content']
+      has_more = response_obj['HasMore']
+      page += 1
+    else:
+      raise Exception("Unable to get data from Melee.gg. Please try again.")
     
+  return data

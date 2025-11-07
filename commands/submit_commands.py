@@ -77,6 +77,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
                               melee_tournament_id: str = ''):
     #Checks to ensure data can be submitted in the current channel
     interaction_objects = SubmitCheck(interaction)
+    whole_event = False
 
     #Ensure that only one type of data is being submitted
     if csv_file and melee_tournament_id:
@@ -92,6 +93,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
                                                                      csv_file)
     elif melee_tournament_id:
       await interaction.response.defer(ephemeral=True)
+      whole_event = True
       json_dict = GetMeleeTournamentData(melee_tournament_id)
       data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(interaction_objects,
                                                                                   interaction,
@@ -120,7 +122,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
                                        data,
                                        date,
                                        round_number,
-                                       False) #modal.submitted_is_event_complete)
+                                       False, #modal.submitted_is_event_complete)
+                                       whole_event)
     if output is None:
       raise KnownError("Unable to submit data. Please try again.")
         
