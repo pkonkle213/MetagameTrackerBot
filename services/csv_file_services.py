@@ -38,3 +38,13 @@ def save_csv_file(csv_file, filename=None):
     print("good morning")
     
     return destination_path
+
+"""
+from services.csv_file_services import save_csv_file
+
+# Save a CSV file from a file path
+saved_path = save_csv_file('/path/to/file.csv')
+
+# Or save with a custom filename
+saved_path = save_csv_file(csv_file_object, filename='my_data.csv')
+"""

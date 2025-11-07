@@ -1,7 +1,8 @@
 import typing
 from services.claim_result_services import GetUserInput, AddTheArchetype, MessageStoreFeed
+from api_calls.melee_tournaments import GetMeleeTournamentData
 import settings
-from services.convert_and_save_input import ConvertCSVToDataErrors, ConvertModalToDataErrors
+from services.convert_and_save_input import ConvertCSVToDataErrors, ConvertModalToDataErrors, ConvertMeleeTournamentToDataErrors
 from checks import isSubmitter
 from custom_errors import KnownError
 from tuple_conversions import  Standing
@@ -72,10 +73,16 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
   @app_commands.guild_only()
   async def SubmitDataCommand(self,
                               interaction: Interaction,
-                              csv_file: typing.Optional[Attachment] = None):
+                              csv_file: typing.Optional[Attachment] = None,
+                              melee_tournament_id: str = ''):
     #Checks to ensure data can be submitted in the current channel
     interaction_objects = SubmitCheck(interaction)
-    
+
+    #Ensure that only one type of data is being submitted
+    if csv_file and melee_tournament_id:
+      raise KnownError("You can only submit a CSV file or a Melee Tournament ID, not both.")
+
+    #Get the data source from the user
     if csv_file:
       await interaction.response.defer(ephemeral=True)          
       if not csv_file.filename.endswith('.csv'):
@@ -83,15 +90,19 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       data, errors, round_number, date = await ConvertCSVToDataErrors(interaction_objects,
                                                                      interaction,
                                                                      csv_file)
-    
+    elif melee_tournament_id:
+      await interaction.response.defer(ephemeral=True)
+      json_dict = GetMeleeTournamentData(melee_tournament_id)
+      data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(interaction_objects,
+                                                                                  interaction,
+                                                                                  json_dict)
     else:
-    
       data, errors, round_number, date = await ConvertModalToDataErrors(interaction_objects,
                                                                       interaction)
 
     if data is None:
       await NewDataMessage(self.bot, interaction, True)
-      raise KnownError("Unable to submit due to not recognizing the form data. Please try again.")
+      raise KnownError("Unable to submit due to not recognizing the data. Please try again.")
   
     #Advise user of submission process starting
     message_type = 'standings' if isinstance(data[0], Standing) else 'pairings'
@@ -121,7 +132,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
                              interaction.channel_id)
 
   @SubmitCheck.error
-  @SubmitDataCommand.error
+  #@SubmitDataCommand.error
   @SubmitArchetypeCommand.error
   async def Errors(self,
                    interaction: Interaction,

@@ -1,3 +1,4 @@
+import json
 import requests
 import discord
 from discord.ext import commands
@@ -17,21 +18,31 @@ class ATest(commands.Cog):
   #@app_commands.checks.has_role('MTSubmitter')
   async def Testing(self,
                     interaction: discord.Interaction):
+    await interaction.response.defer(ephemeral=True)
+    """
     api_url = 'https://melee.gg/api/tournament/list'
     username = settings.MELEE_CLIENTID
     password = settings.MELEE_CLIENTSECRET
+    """
+    json_path = '_nonfunctioning/example_response.json'
+    with open(json_path, 'r') as file:
+      response = json.load(file)
+    matches = response['Content']
 
-    response = requests.get(api_url, auth=(username, password))
-
-    if response.status_code == 200:
-      print('Code:', response.status_code)
-      print('Text:', response.text)
-      print('Success:', response.json())
-    else:
-      print('Code:', response.status_code)
-      print('Text:', response.text)
-      print('Failure:', response.json())
-
+    print('DateCreated:', response['Content'][0]['DateCreated'])
+    """
+    for match in matches:
+      print("Round number:", match['RoundDescription'][6:])
+      print("Table number:", match['TableNumberDescription'])
+      print("Player 1 name:", match['Competitors'][0]['Team']['Players'][0]['DisplayName'])
+      print("Player 1 game wins:", match['Competitors'][0]['GameWins'])
+      p1byes = match['Competitors'][0]['GameByes']
+      if p1byes > 0:
+        print("Player 1 byes:", match['Competitors'][0]['GameByes'])
+      else:
+        print("Player 2 name:", match['Competitors'][1]['Team']['Players'][0]['DisplayName'])
+        print("Player 2 game wins:", match['Competitors'][1]['GameWins'])    
+    """
     await interaction.followup.send("Testing.")
 
   @Testing.error
