@@ -2,8 +2,6 @@ import os
 import psycopg2
 from collections import namedtuple
 
-from tuple_conversions import ConvertToEvent
-
 Message = namedtuple('Message',['DiscordID',
                                 'GameID',
                                 'CategoryID',
@@ -16,9 +14,9 @@ def ThreeDayOldEventsWithUnknown():
     command = """
     SELECT
       e.discord_id,
-      g.id as game_id,
+      gm.game_id AS game_id,
       gm.category_id,
-      f.id as format_id,
+      fm.format_id AS format_id,
       fm.channel_id
     FROM
       events_reported er
@@ -28,13 +26,15 @@ def ThreeDayOldEventsWithUnknown():
       INNER JOIN formatchannelmaps fm ON fm.format_id = e.format_id
       AND fm.discord_id = e.discord_id
     WHERE
-      e.event_date = NOW() - INTERVAL '3 days'
+      e.event_date = NOW()::date - INTERVAL '3 days'
     GROUP BY
       e.discord_id,
+      gm.game_id,
       gm.category_id,
+      fm.format_id,
       fm.channel_id
     HAVING
-      SUM(er.reported) < SUM(er.total_attended)
+      SUM(er.reported) < SUM(er.total_attended);
     """
 
     cur.execute(command)
