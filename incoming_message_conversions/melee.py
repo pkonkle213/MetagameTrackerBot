@@ -2,7 +2,7 @@ import pytz
 from datetime import datetime
 from tuple_conversions import Standing, Pairing, Result
 
-def MeleeJsonPairings(json_data) -> tuple[list[Pairing], list[str], str, str]:
+def MeleeJsonPairings(json_data:list) -> tuple[list[Pairing], list[str], str, str]:
   data = []
   errors = []
 

@@ -94,7 +94,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     elif melee_tournament_id:
       await interaction.response.defer(ephemeral=True)
       whole_event = True
-      json_dict = GetMeleeTournamentData(melee_tournament_id)
+      json_dict = GetMeleeTournamentData(melee_tournament_id,
+                                         interaction_objects.Store)
       data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(interaction_objects,
                                                                                   interaction,
                                                                                   json_dict)

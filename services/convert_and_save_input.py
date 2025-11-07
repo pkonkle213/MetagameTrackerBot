@@ -32,7 +32,7 @@ def BuildFilePath(interaction:Interaction,
 
 def ConvertMeleeTournamentToDataErrors(interaction_objects:Data,
                               interaction:Interaction,
-                              json_data:dict) -> tuple[list[Pairing] | list[Standing], list[str], str, str]:
+                              json_data:list) -> tuple[list[Pairing] | list[Standing], list[str], str, str]:
   save_path, file_name = BuildFilePath(interaction, '')
   data, errors, round_number, date = MeleeJsonPairings(json_data)
   
