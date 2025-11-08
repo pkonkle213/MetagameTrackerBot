@@ -23,15 +23,19 @@ async def GetUserInput(interaction:Interaction) -> tuple[str, str, str]:
                                     format=True,
                                     store=True)
   #TODO: Eventually, this should just send the game as Magic/Limited will need special input
-  modal = SubmitArchetypeModal(data.Game.Name)
+  modal = SubmitArchetypeModal(data.Game, data.Format)
   await interaction.response.send_modal(modal)
   await modal.wait()
 
-  archetype = ConvertInput(modal.submitted_archetype)
+  if data.Game.Name.upper() == 'MAGIC' and data.Format.IsLimited:
+    archetype = MagicLimited(modal.submitted_main_colors,
+                             modal.submitted_splash_colors)
+  else:
+    archetype = ConvertInput(modal.submitted_archetype)
   #TODO: Makes more sense for this to be handled in the modal?
-  if data.Game.Name.upper() == 'LORCANA':
-    archetype = f'{modal.submitted_inks[0]}/{modal.submitted_inks[1]} - {archetype}'
-  return (modal.submitted_player_name, modal.submitted_date, archetype)
+    if data.Game.Name.upper() == 'LORCANA':
+      archetype = f'{modal.submitted_inks[0]}/{modal.submitted_inks[1]} - {archetype}'
+  return modal.submitted_player_name, modal.submitted_date, archetype
 
 async def MessageStoreFeed(bot, message, interaction):
   try:
@@ -95,22 +99,16 @@ async def ClaimResult(interaction:Interaction,
 
   player_name = ConvertInput(player_name)
 
-  (event, player_name) = GetEventAndPlayerName(store.DiscordId, date_used, game, format, player_name)
+  event, player_name = GetEventAndPlayerName(store.DiscordId,
+                                             date_used,
+                                             game,
+                                             format,
+                                             player_name)
   
   if event is None:
     raise KnownError('Event not found. Please check the date provided. If date is correct, the event has yet to be submitted. Please alert your store owner.')
   if player_name is None:
     raise KnownError('Player not found. Please check the name provided.')
-  
-  if game.Name.upper() == 'LORCANA':
-    inks = await LorcanaInkMenu(interaction)
-    if format.IsLimited:
-      archetype = f'{inks}'
-    else:
-      archetype = f'{inks} - {archetype}'
-  
-  if game.Name.upper() == 'MAGIC' and format.IsLimited:
-    archetype = await MagicLimited(interaction)
 
   updater_name = interaction.user.display_name
   archetype_added = AddArchetype(event.ID,
@@ -169,27 +167,34 @@ async def LorcanaInkMenu(interaction):
   if len(inks) == 1:
     return f'{inks[0][1].title()}'
 
-async def MagicLimited(interaction):
-  color_selections = [(1,'White','W'),
-                      (2,'Blue','U'),
-                      (3,'Black','B'),
-                      (4,'Red','R'),
-                      (5,'Green','G')]
+def MagicLimited(drafted_colors:list, splashed_colors:list) -> str:
   colors = ""
-  drafted_colors = await SelectMenu(interaction, 'Please select the main colors of your deck (> 3 cards)', 'Main Colors', color_selections, 5)
-  print('Drafted Colors:', drafted_colors)
   for color in drafted_colors:
-    colors += color[2]
-  print('Colors:', colors)
-  splashed_colors = await SelectMenu(interaction, 'Please select the colors you splashed (<= 3 cards)', 'Colors Splashed', [(0,'None','N')] + color_selections, 5)
-  print('Splashed Colors:', splashed_colors)
+    colors += ConvertMagicColor(color)
+
+  if len(splashed_colors) == 0:
+    return colors
   for color in splashed_colors:
-    if color[0] == 0:
-      return colors
-    if color[2] in colors:
+    letter = ConvertMagicColor(color)
+    if letter in colors:
       raise KnownError('You cannot splash a color you drafted. Please try again.')
-    colors += color[2].lower()
+    colors += letter.lower()
   print('Colors:', colors)
   if len(colors) > 5:
     raise KnownError('Too many colors selected, please try again.')
   return colors
+
+def ConvertMagicColor(color:str) -> str:
+  match color:
+   case 'White':
+     return 'W'
+   case 'Blue':
+     return 'U'
+   case 'Black':
+     return 'B'
+   case 'Red':
+     return 'R'
+   case 'Green':
+     return 'G'
+   case _:
+     raise KnownError('Color not recognized. Please try again.')
