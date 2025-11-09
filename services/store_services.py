@@ -45,7 +45,7 @@ async def MessageOwnerMappings(guild: discord.Guild,
   if owner is None:
     raise KnownError('No owner found')
   if mappings:
-    await owner.send(f"Your store has been auto registered!\n\nHere's what was also automapped:\n{output}If you'd like to change these mappings, please use the /map commands.")
+    await owner.send(f"Your store has been auto registered!\n\nHere's what was also automapped:\n{output}If you'd like to change these mappings, please use the `/map` commands.")
   else:
     await owner.send("Your store has been auto registered! However, categories or channels weren't automapped. Please map your categories and channels manually.")
 

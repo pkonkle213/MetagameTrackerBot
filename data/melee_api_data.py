@@ -7,8 +7,8 @@ def GetStoreMeleeInfo(store):
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT
-      MeleeClientId,
-      MeleeClientSecret
+      melee_client_id,
+      melee_client_secret
     FROM
       stores
     WHERE
