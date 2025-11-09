@@ -83,7 +83,8 @@ def GetFormat(game: Game | None, channel_id: int, required: bool):
     raise KnownError('Format not found. Please map a format to this channel.')
   return format
 
-def GetStore(discord_id: int, required: bool = True):
+def GetStore(discord_id: int,
+             required: bool = True):
   """Returns the store mapped to the given discord_id
   
   Parameters:
@@ -100,5 +101,4 @@ def FormatInteractionData(data, requirements):
   game = GetGame(data.CategoryId, requirements.Game)
   format = GetFormat(game, data.ChannelId, requirements.Format)
   store = GetStore(data.DiscordId, requirements.Store)
-
   return Data(game, format, store, data.UserId)

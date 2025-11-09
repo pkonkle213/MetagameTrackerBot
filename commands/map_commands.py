@@ -30,6 +30,7 @@ class MappingCommands(commands.GroupCog, name='map'):
     placeholder = 'Choose a game'
     dynamic_options = GetGameOptions()
     result = await SelectMenu(interaction, message, placeholder, dynamic_options)
+    print('Result:', result[0])
     output = AddStoreGameMap(interaction, result[0])
     await interaction.followup.send(output, ephemeral=True)
 

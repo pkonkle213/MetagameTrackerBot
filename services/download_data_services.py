@@ -40,23 +40,17 @@ def GetPlayerData(interaction, start_date, end_date):
   message = f'Here is your data for {store.StoreName.title()}:'
   files = []
 
-  print('Getting participant data')
   participant_data = GetPlayerStandingData(store, game, format, date_start, date_end, user_id)
   if len(participant_data) == 0:
-    print('No participant data found')
     message += 'No participant data found for this player.'
   else:
-    print('Participant data found')
     header = 'GAME,FORMAT,DATE,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS'
     files.append(ConvertRowsToFile(participant_data, 'MyStoreParticipantData', header))
 
-  print('Getting round data')
   round_data = GetPlayerPairingData(store, game, format, date_start, date_end, user_id)
   if len(round_data) == 0:
-    print('No round data found')
     message += 'No round by round data found for this player.'
   else:
-    print('Round data found')
     header = 'GAME,FORMAT,DATE,ROUND,ARCHETYPE_PLAYED,OPPONENT_ARCHETYPE,RESULT'
     files.append(ConvertRowsToFile(round_data, 'MyRoundByRoundData', header))
   return message, files

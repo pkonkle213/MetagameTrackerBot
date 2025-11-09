@@ -82,7 +82,6 @@ def CheckLevel(store):
       1
       '''
 
-    print('Level check command: ', command)
     cur.execute(command)
     row = cur.fetchone()
     return row[0] if row else 0

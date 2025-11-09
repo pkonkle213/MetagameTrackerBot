@@ -49,11 +49,9 @@ def MeleeStandings(message):
       wins = int(match_record[0])
       losses = int(match_record[1])
       draws = int(match_record[2])
-  
       standing = Standing(name, wins, losses, draws)
-      print('Standing:', standing)
       
-      data.append(Standing(name, wins, losses, draws))
+      data.append(standing)
     except Exception as e:
       errors.append(f'Unable to parse row(s) {i+1} - {i+3} due to {e}')
   

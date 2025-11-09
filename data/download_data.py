@@ -151,7 +151,6 @@ def GetPlayerStandingData(store, game, format, start_date, end_date, user_id):
       draws desc
     '''
 
-    print('Player round:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows

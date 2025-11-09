@@ -165,7 +165,6 @@ def GetTopPlayerData(store,
       player_rank
     """
 
-    print('Leaderboard command:', command)
     cur.execute(command)
     rows = cur.fetchall()
     return rows
