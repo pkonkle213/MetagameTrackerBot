@@ -11,8 +11,8 @@ class MappingCommands(commands.GroupCog, name='map'):
   def __init__(self, bot):
     self.bot = bot
 
-  @app_commands.command(name='claimfeed',
-                        description='Map your channel as a claim feed for a game')
+  @app_commands.command(name='archetypefeed',
+                        description='Map this channel as feed for submitted archetypes in this game')
   @app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
   async def AddClaimFeedMap(self, interaction: Interaction):
