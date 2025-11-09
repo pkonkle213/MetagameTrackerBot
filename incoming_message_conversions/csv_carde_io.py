@@ -1,7 +1,7 @@
 import pandas as pd
 from tuple_conversions import Pairing, Standing, Result
 
-def LorcanaOfficialPairing(dataframe:pd.DataFrame):
+def Pairings(dataframe:pd.DataFrame):
   """Takes a provided dataframe and attempts to make it into a Pairing object"""
   data = []
   errors = []
@@ -23,7 +23,7 @@ def LorcanaOfficialPairing(dataframe:pd.DataFrame):
     print('Lorcana Official Pairing Exception:', exception)
     return Result(None, None)
 
-def LorcanaOfficialStanding(dataframe:pd.DataFrame):
+def Standings(dataframe:pd.DataFrame):
   """Takes a provided dataframe and attempts to make it into a Standing object"""
   data = []
   errors = []

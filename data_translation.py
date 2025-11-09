@@ -1,7 +1,6 @@
 import pandas as pd
-from discord import Interaction
 from incoming_message_conversions.magic_companion import CompanionStandings, CompanionPairings
-from incoming_message_conversions.lorcana_official import LorcanaOfficialPairing, LorcanaOfficialStanding
+from incoming_message_conversions.csv_carde_io import Pairings, Standings
 from incoming_message_conversions.melee import MeleeStandings, MeleePairings
 from tuple_conversions import Game
 
@@ -9,21 +8,11 @@ def ConvertCSVToData(dataframe:pd.DataFrame,
                      game:Game):
   data = None
   errors = []
-  if game.Name.upper() == 'LORCANA':
-    if data is None:
-      data, errors = LorcanaOfficialPairing(dataframe)
+  if data is None:
+    data, errors = Pairings(dataframe)
 
-    if data is None:
-      data, errors = LorcanaOfficialStanding(dataframe)
-
-  """
-  if game.Name.upper() == 'STAR WARS UNLIMITED':
-    if data is None:
-      data, errors = StarWarsOfficialPairing(csv_file)
-
-    if data is None:
-      data, errors = StarWarsOfficialStanding(csv_file)
-  """
+  if data is None:
+    data, errors = Standings(dataframe)
   
   return data, errors  
 

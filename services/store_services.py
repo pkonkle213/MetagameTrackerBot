@@ -19,9 +19,7 @@ async def UpdateStoreDetails(interaction: discord.Interaction,
 
 async def NewStoreRegistration(bot:discord.Client,
                                guild: discord.Guild):
-  """
-  Goes through the steps to register a new store and automap categories and channels
-  """
+  """Goes through steps to register a new store and automap categories and channels"""
   try:
     if guild is None:
       raise KnownError('No guild found')
