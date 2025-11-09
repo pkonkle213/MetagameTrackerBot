@@ -16,14 +16,16 @@ def GetPairingsHistory(user_id: int, game: Game, format: Format,
       {'g.name AS game_name,' if not game else ''}
       {'f.name AS format_name,' if not format else ''}
       fp.round_number,
-      COALESCE(ua.archetype_played,'BYE') as archetype_played,
+      COALESCE(uap.archetype_played, 'Unknown') as players_archetype,
+      COALESCE(uao.archetype_played, 'BYE') as opponents_archetype,
       fp.result
     FROM
       full_pairings fp
       INNER JOIN events e ON e.id = fp.event_id
       INNER JOIN stores s ON s.discord_id = e.discord_id
       INNER JOIN player_names pn ON UPPER(pn.player_name) = UPPER(fp.player_name) AND pn.discord_id = s.discord_id
-      LEFT JOIN unique_archetypes ua ON ua.event_id = e.id AND UPPER(ua.player_name) = UPPER(fp.opponent_name)
+      LEFT JOIN unique_archetypes uap ON uap.event_id = e.id AND UPPER(uap.player_name) = UPPER(pn.player_name)
+      LEFT JOIN unique_archetypes uao ON uao.event_id = e.id AND UPPER(uao.player_name) = UPPER(fp.opponent_name)
       INNER JOIN games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
     WHERE

@@ -30,7 +30,7 @@ def GetPersonalPairingsHistory(interaction: discord.Interaction, start_date: str
   if data is None:
     return 'No history found.'
   title = f'Personal History for {store.StoreName.title()}'
-  headers = ['Date', 'Round', 'Archetype', 'Result']
+  headers = ['Date', 'Round', 'Your Archetype', "Opponent's Archetype", 'Result']
   if not format:
     headers.insert(1, 'Format')
   if not game:
