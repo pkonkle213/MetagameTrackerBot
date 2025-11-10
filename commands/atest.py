@@ -36,11 +36,24 @@ class ATest(commands.Cog):
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   #@app_commands.checks.has_role('MTSubmitter')
   async def Testing(self,
-                    interaction: discord.Interaction):
-    await interaction.response.defer(ephemeral=True)
-    await EventCheck(self.bot)
-    await interaction.followup.send("Testing.")
+                    interaction: Interaction,
+                    fruit: str):
+    #await interaction.response.defer(ephemeral=True)
+    await interaction.response.send_message(f'Your favourite fruit seems to be {fruit}')
+    #await interaction.followup.send("Testing.")
 
+  @Testing.autocomplete('fruit')
+  async def fruits_autocomplete(
+    self,   
+    interaction: Interaction,
+    current: str,
+  ) -> list[app_commands.Choice[str]]:
+      fruits = ['Banana', 'Pineapple', 'Apple', 'Watermelon', 'Melon', 'Cherry']
+      return [
+          app_commands.Choice(name=fruit, value=fruit)
+          for fruit in fruits if current.lower() in fruit.lower()
+      ]
+  
   @Testing.error
   async def on_tree_error(self,
                           interaction: Interaction,

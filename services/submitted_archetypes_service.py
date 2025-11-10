@@ -22,3 +22,5 @@ def SubmittedArchetypesReport(interaction: discord.Interaction, player_name, eve
     title += f' for {date_used.strftime("%B %d")}'
   archetype_column = 2 if format and format.IsLimited else None
   return data, headers, title, archetype_column
+
+def GetArchetypes(inter)
