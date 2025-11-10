@@ -73,8 +73,7 @@ async def ConvertModalToDataErrors(interaction_objects:Data,
   
   submission = '\n'.join([f'Date:{modal.submitted_date}',
                   f'Round:{modal.submitted_round}',
-                  f'Message:{modal.submitted_message}',
-                  f'Is Complete:{modal.submitted_is_complete}'])
+                  f'Message:{modal.submitted_message}'])
   
   save_path, file_name = BuildFilePath(interaction, '')
   with open(save_path, 'w') as file:
