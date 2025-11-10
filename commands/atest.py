@@ -12,24 +12,6 @@ class ATest(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
   
-  """
-  @app_commands.command()
-  async def fruits(self, interaction: Interaction, fruit: str):
-      await interaction.response.send_message(f'Your favourite fruit seems to be {fruit}')
-
-  @fruits.autocomplete('fruit')
-  async def fruits_autocomplete(
-    self,   
-      interaction: Interaction,
-      current: str,
-  ) -> list[app_commands.Choice[str]]:
-      fruits = ['Banana', 'Pineapple', 'Apple', 'Watermelon', 'Melon', 'Cherry']
-      return [
-          app_commands.Choice(name=fruit, value=fruit)
-          for fruit in fruits if current.lower() in fruit.lower()
-      ]
-  """
-  
   @app_commands.command(name="atest",
                         description="Tests something stupid!")
   @app_commands.guild_only()
@@ -38,21 +20,8 @@ class ATest(commands.Cog):
   async def Testing(self,
                     interaction: Interaction,
                     fruit: str):
-    #await interaction.response.defer(ephemeral=True)
-    await interaction.response.send_message(f'Your favourite fruit seems to be {fruit}')
-    #await interaction.followup.send("Testing.")
-
-  @Testing.autocomplete('fruit')
-  async def fruits_autocomplete(
-    self,   
-    interaction: Interaction,
-    current: str,
-  ) -> list[app_commands.Choice[str]]:
-      fruits = ['Banana', 'Pineapple', 'Apple', 'Watermelon', 'Melon', 'Cherry']
-      return [
-          app_commands.Choice(name=fruit, value=fruit)
-          for fruit in fruits if current.lower() in fruit.lower()
-      ]
+    await interaction.response.defer(ephemeral=True)
+    await interaction.followup.send("Testing.")
   
   @Testing.error
   async def on_tree_error(self,

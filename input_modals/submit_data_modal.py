@@ -40,24 +40,10 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
     )
     self.add_item(self.message_input)
 
-    #TODO: Think through this more, as CSV submission doesn't have this option
-    self.is_complete = discord.ui.Label(
-      text="Is the event complete?",
-      component=discord.ui.Select(
-          required=True,
-          options=[
-              discord.SelectOption(label="Yes", value="T"),
-              discord.SelectOption(label="No", value="F", default=True)
-          ],
-      )
-    )    
-    self.add_item(self.is_complete)
-
   async def on_submit(self, interaction: discord.Interaction):
     self.submitted_message = self.message_input.component.value
     self.submitted_date = self.date_input.component.value
     self.submitted_round = self.round_input.component.value
-    self.submitted_is_complete = self.is_complete.component.values[0]
     self.is_submitted = True
     await interaction.response.defer()
 

@@ -85,5 +85,4 @@ async def ConvertModalToDataErrors(interaction_objects:Data,
                           interaction_objects.Game)
   round_number = modal.submitted_round
   date = modal.submitted_date
-  is_complete = modal.submitted_is_complete
   return data, errors, round_number, date
