@@ -26,6 +26,8 @@ def SubmitData(interaction_objects:Data,
   format = interaction_objects.Format
   userId = interaction_objects.UserId
 
+  print('Submitting Data')
+
   date = ConvertToDate(date_str)
   round_num = int(round_number) if round_number != '' else 0
   
@@ -41,11 +43,11 @@ def SubmitData(interaction_objects:Data,
   #TODO: is_complete needs to be added to the database
   results = ''
   if isinstance(data[0], Standing):
-    if event.EventType != 'STANDINGS':
+    if event.EventType == 'PAIRINGS' or type(event) is list[Pairing]:
       raise KnownError('This event already has pairings submitted')
     results = AddStandingResults(event, data, userId)
   elif isinstance(data[0], Pairing):
-    if event.EventType != 'PAIRINGS':
+    if event.EventType == 'STANDINGS':
       #Delete the standings data
       DeleteStandingsFromEvent(event.ID)
     results = AddPairingResults(event, data, userId, round_num, whole_event)
@@ -55,7 +57,7 @@ def SubmitData(interaction_objects:Data,
 
 def AddStandingResults(event:Event,
                        data:list[Standing],
-                       submitterId:int):
+                       submitterId:int) -> str:
   successes = 0
   for person in data:
     if person.PlayerName != '':
@@ -67,10 +69,10 @@ def AddStandingResults(event:Event,
       if output:
         successes += 1
 
-  output = f"{successes} entries were added for {event.EventDate.strftime('%B %d')}'s event."
+  result = f"{successes} players were added for {event.EventDate.strftime('%B %d')}'s event."
   if len(data)-successes > 0:
-    output += f"{len(data)-successes} were skipped."
-  return 
+    result += f"{len(data)-successes} were skipped."
+  return result
 
 def AddPairingResults(event:Event,
                       data:list[Pairing],
@@ -95,7 +97,7 @@ def AddPairingResults(event:Event,
   #TODO: The day should not have a leading zero
   if successes >= 1:
     if whole_event:
-      return f"{successes} entries were added for {event.EventDate.strftime('%B %d')}'s event."
-    return f"Ready for the next round, as {successes} entries were added for round {round_number} of {event.EventDate.strftime('%B %d')}'s event."
+      return f"{successes} entries were pairings for {event.EventDate.strftime('%B %d')}'s event."
+    return f"Ready for the next round, as {successes} pairings were added for round {round_number} of {event.EventDate.strftime('%B %d')}'s event."
   else:
-    return "Sorry, no entries were added. Please try again later."
+    return "Sorry, no pairings were added. Please try again later."

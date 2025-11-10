@@ -1,6 +1,7 @@
 import os
 import psycopg2
 
+#TODO: The player names should be injected to prevent SQL injection attacks
 def SubmitTable(event_id,
                 p1name,
                 p1wins,
@@ -60,7 +61,7 @@ def AddResult(event_id,
       
       cur.execute(command,
                   (event_id,
-                   player.PlayerName.upper(),
+                   player.PlayerName,
                    player.Wins,
                    player.Losses,
                    player.Draws,
