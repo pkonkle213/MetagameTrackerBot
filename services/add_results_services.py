@@ -97,7 +97,7 @@ def AddPairingResults(event:Event,
   #TODO: The day should not have a leading zero
   if successes >= 1:
     if whole_event:
-      return f"{successes} entries were pairings for {event.EventDate.strftime('%B %d')}'s event."
-    return f"Ready for the next round, as {successes} pairings were added for round {round_number} of {event.EventDate.strftime('%B %d')}'s event."
+      return f"{successes} entries were pairings for {event.EventDate.strftime('%B %-d')}'s event."
+    return f"Ready for the next round, as {successes} pairings were added for round {round_number} of {event.EventDate.strftime('%B %-d')}'s event."
   else:
     return "Sorry, no pairings were added. Please try again later."

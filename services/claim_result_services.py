@@ -22,7 +22,6 @@ async def GetUserInput(interaction:Interaction) -> tuple[str, str, str]:
                                     game=True,
                                     format=True,
                                     store=True)
-  #TODO: Eventually, this should just send the game as Magic/Limited will need special input
   modal = SubmitArchetypeModal(data.Game, data.Format)
   await interaction.response.send_modal(modal)
   await modal.wait()

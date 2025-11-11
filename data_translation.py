@@ -1,7 +1,6 @@
 import pandas as pd
 from incoming_message_conversions.magic_companion import CompanionStandings, CompanionPairings
 from incoming_message_conversions.csv_carde_io import Pairings, Standings
-from incoming_message_conversions.melee import MeleeStandings, MeleePairings
 from tuple_conversions import Game
 
 def ConvertCSVToData(dataframe:pd.DataFrame,
@@ -34,13 +33,5 @@ def ConvertMessageToData(message:str,
     if data is None:
       print('Testing magic - companion - pairings')
       data, errors = CompanionPairings(message)
-
-  if data is None:
-    print('Attempting to parse Melee Standings Data')
-    data, errors = MeleeStandings(message)
-
-  if data is None:
-    print('Attempting to parse Melee Pairings Data')
-    data, errors = MeleePairings(message)
   
   return data, errors

@@ -20,7 +20,6 @@ MAGIC_MANA = [
   discord.SelectOption(label="Green", value="Green")
 ]
 
-#TODO: If the game is Magic/Limited, archetype is not needed and colors should be selectable
 class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
   def __init__(self, game: Game, format: Format) -> None:
     super().__init__()

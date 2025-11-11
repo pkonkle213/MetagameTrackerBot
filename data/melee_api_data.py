@@ -15,7 +15,10 @@ def GetStoreMeleeInfo(store):
       discord_id = {store.DiscordId}
     '''
 
-    Details = namedtuple('ApiDetail',['ClientId','ClientSecret'])
+    Details = namedtuple('ApiDetail',
+                         ['ClientId',
+                          'ClientSecret']
+                        )
     cur.execute(command)
     row = cur.fetchone()
     return Details(row[0],row[1]) if row else Details(None, None)

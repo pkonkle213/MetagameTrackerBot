@@ -13,7 +13,7 @@ import io
 
 #TODO: These aren't saving when the bot is in production.
 def BuildFilePath(interaction:Interaction,
-            prev_filename:str):
+                  prev_filename:str):
   if not interaction.guild:
     raise KnownError("This command can only be used in a server.")
   #Save the file to the server
@@ -53,11 +53,13 @@ async def ConvertCSVToDataErrors(interaction_objects:Data,
   print('File saved')
   
   data, errors = ConvertCSVToData(df, interaction_objects.Game)
-  
+
   filename_split = csv_file.filename.split('-')
-  round_number = filename_split[4]
-  #TODO: THE DATE OF THE EVENT IS NOT IN THE FILE
-  #Example event was held on 10/25/2025
+  if filename_split[0].upper() == 'STANDINGS':
+    round_number = '0'
+  else: #if filename_split[0].upper() == 'MATCHES'
+    round_number = filename_split[4]
+  
   date = datetime.now(pytz.timezone('US/Eastern')).strftime("%m/%d/%Y")
   return data, errors, round_number, date
 
