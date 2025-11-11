@@ -1,18 +1,33 @@
 import os
 import psycopg2
 
-from tuple_conversions import ConvertToStore
+from tuple_conversions import ConvertToStore, Store
 
-def UpdateStore(discord_id, store_name, owner_name):
+def UpdateStore(discord_id
+                , owner_name
+                , store_name
+                , store_address
+                , melee_id
+                , melee_secret
+               ) -> Store | None:
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
     UPDATE Stores
-    SET store_name = %s, owner_name = %s
+    SET store_name = %s
+      , owner_name = %s
+      , store_address = %s
+      , melee_id = %s
+      , melee_secret = %s
     WHERE discord_id = {discord_id}
     RETURNING discord_id, discord_name, store_name, owner_id, owner_name, used_for_data, FALSE
     '''
-    cur.execute(command, [store_name, owner_name])
+    cur.execute(command,
+                [store_name
+                 , owner_name
+                 , store_address
+                 , melee_id
+                 , melee_secret])
     conn.commit()
     row = cur.fetchone()
     return ConvertToStore(row) if row else None

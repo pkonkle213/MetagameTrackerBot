@@ -15,25 +15,11 @@ class StoreProfile(commands.Cog):
   #@app_commands.check(isOwner)
   @app_commands.checks.has_role('MTSubmitter')
   async def UpdateProfile(self,
-                          interaction: Interaction,
-                          store_name: str,
-                          owner_name: str):
-    """
-    Updates the store name and owner's name in the database
+                          interaction: Interaction):
+    """Updates all info in the store profile"""
+    await UpdateStoreDetails(interaction)
+    await interaction.followup.send('Store profile updated')
     
-    Parameters
-    ----------
-    store_name: string
-      The name of the store
-    owner_name: string
-      The owner's preferred name
-    """
-    await interaction.response.defer(ephemeral=True)
-    result = await UpdateStoreDetails(interaction, store_name, owner_name)
-    if result:
-      await interaction.followup.send('Store profile updated')
-    else:
-      await interaction.followup.send('Unable to update the store profile')
 
   @UpdateProfile.error
   async def Errors(self,

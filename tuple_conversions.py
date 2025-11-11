@@ -8,7 +8,7 @@ Archetype = namedtuple('Archetype',
                         'SubmitterID',
                         'SubmitterName'])
 
-def ConvertToArchetype(archetype_obj: tuple[Any, Any, Any, Any, Any]):
+def ConvertToArchetype(archetype_obj: tuple[Any, Any, Any, Any, Any]) -> Archetype:
   """Converts a tuple to an Archetype object."""
   return Archetype(int(archetype_obj[0]),
                    archetype_obj[1],
@@ -22,7 +22,7 @@ Format = namedtuple('Format',
                      'LastBanUpdate',
                      'IsLimited'])
 
-def ConvertToFormat(format_obj: tuple[Any, Any, Any, Any]):
+def ConvertToFormat(format_obj: tuple[Any, Any, Any, Any]) -> Format:
   """Converts a tuple to a Format object."""
   return Format(int(format_obj[0]),
                 format_obj[1],
@@ -34,7 +34,7 @@ Game = namedtuple('Game',
                    'Name',
                    'HasFormats'])
 
-def ConvertToGame(game_obj: tuple[Any, Any, Any]):
+def ConvertToGame(game_obj: tuple[Any, Any, Any]) -> Game:
   """Converts a tuple to a Game object."""
   return Game(int(game_obj[0]),
               game_obj[1],
@@ -49,7 +49,7 @@ Store = namedtuple('Store',
                     'UsedForData',
                     'IsPaid'])
 
-def ConvertToStore(store: tuple[Any, Any, Any, Any, Any, Any, Any]):
+def ConvertToStore(store: tuple[Any, Any, Any, Any, Any, Any, Any]) -> Store:
   """Converts a tuple to a Store object."""
   return Store(int(store[0]),
                store[1],

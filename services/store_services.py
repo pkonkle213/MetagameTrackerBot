@@ -6,16 +6,27 @@ from services.game_mapper_services import GetGameOptions
 from data.formats_data import AddFormatMap, GetFormatsByGameId
 from tuple_conversions import Format, Game
 from settings import BOTGUILDID
-from interaction_objects import GetStore
+from input_modals.store_profile_update import StoreProfileModal
+from interaction_objects import GetObjectsFromInteraction
 
-async def UpdateStoreDetails(interaction: discord.Interaction,
-                             store_name: str,
-                             owner_name: str):
+async def UpdateStoreDetails(interaction: discord.Interaction):
   """Updates the store details in the database"""
-  store = GetStore(interaction.guild.id, True)
-  if not store:
-    raise KnownError('Store not found')
-  return UpdateStore(store.DiscordId, store_name, owner_name)
+  objects = GetObjectsFromInteraction(interaction, store=True)
+  modal = StoreProfileModal(objects.Store)
+  await interaction.response.send_modal(modal)
+
+  if not modal.is_submitted:
+    raise KnownError('Modal not submitted correctly')
+
+  result = UpdateStore(objects.Store.DiscordId,
+                       modal.submitted_owners_name,
+                       modal.submitted_store_name,
+                       modal.submitted_store_address,
+                       modal.submitted_melee_id,
+                       modal.submitted_melee_secret)
+  
+  if result:
+    return 'Store profile updated'
 
 async def NewStoreRegistration(bot:discord.Client,
                                guild: discord.Guild):
