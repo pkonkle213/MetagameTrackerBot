@@ -5,6 +5,7 @@ def GetMyEventsReported(interaction, discord_id):
   title = 'Events Reported Percentage'
   headers = ['Event Date',
              'Store Name',
+             'Game',
              'Format',
              'Reported',
              'Attended',

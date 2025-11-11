@@ -2,11 +2,23 @@ import settings
 import os
 import psycopg2
 
+from tuple_conversions import Store
+
+#TODO: To implement this, it will require two new columns in the database, editing the Store object in tuple_conversions, and updating all queries that use or return the Store object.
+"""
+def GetAreaForMeta(store:Store) -> str:
+  if store.IsHub:
+    return f'AND s.region = {store.Region}'
+  if store.DiscordId == settings.DATAGUILDID:
+    return f'AND s.used_for_data = {True}'
+  return f'AND e.discord_id = {store.DiscordId}'
+"""  
+
 def GetMetagame(game,
                 format,
                 start_date,
                 end_date,
-                store):
+                store:Store):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
