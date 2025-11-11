@@ -18,7 +18,7 @@ class StoreProfile(commands.Cog):
                           interaction: Interaction):
     """Updates all info in the store profile"""
     await UpdateStoreDetails(interaction)
-    await interaction.followup.send('Store profile updated')
+    await interaction.followup.send('Store profile updated',ephemeral=True)
     
 
   @UpdateProfile.error
