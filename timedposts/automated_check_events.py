@@ -5,11 +5,15 @@ from discord_messages import MessageChannel
 from services.claim_result_services import OneEvent
 from services.date_functions import GetDaysAgo, GetToday
 from output_builder import BuildTableOutput
+from discord_messages import MessageUser
+import settings
 
 #This needs to be split into two functions, that would make sense.
 async def EventCheck(bot):
+  await MessageUser(bot, 'Checking events for unknown archetypes...', settings.PHILID)
   await GetEventsWithUnkown(bot)
   await GetCompletedEvents(bot)
+  await MessageUser(bot, 'All done!', settings.PHILID)
 
 async def GetCompletedEvents(bot):
   #Find events exactly 3 days old and are marked as complete (aka not expecting any more input), no unknown archetypes, but has not been posted
