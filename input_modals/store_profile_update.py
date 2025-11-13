@@ -3,6 +3,8 @@ import discord
 from tuple_conversions import Store
 
 class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
+  is_submitted = False
+  
   def __init__(self, store: Store) -> None:
     super().__init__()
 

@@ -21,6 +21,8 @@ MAGIC_MANA = [
 ]
 
 class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
+  is_submitted = False
+
   def __init__(self, game: Game, format: Format) -> None:
     super().__init__()
     self.game = game
@@ -101,6 +103,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
       self.submitted_archetype = self.archetype.component.value
     self.submitted_date = self.date.component.value
     self.submitted_player_name = self.player_name.component.value
+    self.is_submitted = True
     await interaction.response.defer()
 
   async def on_error(self, interaction: Interaction, error: Exception) -> None:

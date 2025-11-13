@@ -17,8 +17,8 @@ def UpdateStore(discord_id
     SET store_name = %s
       , owner_name = %s
       , store_address = %s
-      , melee_id = %s
-      , melee_secret = %s
+      {', melee_id = %s' if melee_id else ''}
+      {', melee_secret = %s' if melee_secret else ''}
     WHERE discord_id = {discord_id}
     RETURNING discord_id, discord_name, store_name, owner_id, owner_name, used_for_data, FALSE
     '''
