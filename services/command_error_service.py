@@ -23,8 +23,8 @@ async def Error(bot:Bot,
     feedback = 'You do not have the required role to use this command.'
   elif isinstance(error, app_commands.errors.CommandOnCooldown):
     feedback = str(error)
-  elif isinstance(error, app_commands.errors.CommandInvokeError):
-    feedback = str(error.original)
+  #elif isinstance(error, app_commands.errors.CommandInvokeError):
+  #  feedback = str(error.original)
   else:
     feedback = "Something unexpected went wrong. It's been reported. Please try again in a few hours."
     await MessageChannel(bot,

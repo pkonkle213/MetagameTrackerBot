@@ -92,18 +92,19 @@ def AddBadWordBridge(discord_id, word_id):
 def CheckStoreBannedWords(discord_id, archetype):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
-    command = f'''
+    command = '''
     SELECT
       *
     FROM
       badwords b
       INNER JOIN badwords_stores bs ON b.id = bs.badword_id
     WHERE
-      bs.discord_id = {discord_id}
-      AND POSITION(badword IN '{archetype}') > 0
+      bs.discord_id = %s
+      AND POSITION(badword IN %s) > 0
     '''
-    
-    cur.execute(command)
+
+    criteria = [discord_id, archetype]
+    cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows
 
