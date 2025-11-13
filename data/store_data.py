@@ -22,12 +22,14 @@ def UpdateStore(discord_id
     WHERE discord_id = {discord_id}
     RETURNING discord_id, discord_name, store_name, owner_id, owner_name, used_for_data, FALSE
     '''
-    cur.execute(command,
-                [store_name
-                 , owner_name
-                 , store_address
-                 , melee_id
-                 , melee_secret])
+
+    criteria = [store_name, owner_name, store_address]
+    if melee_id:
+      criteria.append(melee_id)
+    if melee_secret:
+      criteria.append(melee_secret)
+      
+    cur.execute(command, criteria)
     conn.commit()
     row = cur.fetchone()
     return ConvertToStore(row) if row else None
