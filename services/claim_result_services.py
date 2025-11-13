@@ -19,9 +19,8 @@ from discord_messages import MessageChannel
 #TODO: This is a lot of stuff. Needs to be broken up into smaller functions, refactored, and renamed
 async def GetUserInput(interaction:Interaction) -> tuple[str, str, str]:
   data = GetObjectsFromInteraction(interaction,
-                                    game=True,
-                                    format=True,
-                                    store=True)
+                                   game=True,
+                                   store=True)
   modal = SubmitArchetypeModal(data.Game, data.Format)
   await interaction.response.send_modal(modal)
   await modal.wait()
@@ -52,7 +51,7 @@ async def MessageStoreFeed(bot, message, interaction):
                          settings.BOTGUILDID,
                          settings.CLAIMCHANNEL)
 
-async def AddTheArchetype(interaction, player_name, date, archetype=''):
+async def AddTheArchetype(interaction, player_name, date, archetype):
   archetype_submitted, event = await ClaimResult(interaction,
                                                  player_name,
                                                  archetype,

@@ -37,7 +37,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       issues.append("- You don't have the MTSubmitter role.")
     if not game:
       issues.append('- Category not mapped to a game')
-    if not game.HasFormats and not format:
+    if game and game.HasFormats and not format:
       issues.append('- Channel not mapped to a format')
 
     if len(issues) == 1:
@@ -92,8 +92,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
 
     #Ensure that only one type of data is being submitted
     if csv_file and melee_tournament_id:
-      raise KnownError(
-          "You can only submit a CSV file or a Melee Tournament ID, not both.")
+      raise KnownError("You can only submit a CSV file or a Melee Tournament ID, not both.")
 
     #Get the data source from the user
     if csv_file:
@@ -110,14 +109,12 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(
           interaction_objects, interaction, json_dict)
     else:
-      data, errors, round_number, date = await ConvertModalToDataErrors(
-          interaction_objects, interaction)
+      data, errors, round_number, date = await ConvertModalToDataErrors(interaction_objects,
+                                                                        interaction)
 
     if data is None:
       await NewDataMessage(self.bot, interaction, True)
-      raise KnownError(
-          "Unable to submit due to not recognizing the data. Please try again."
-      )
+      raise KnownError("Unable to submit due to not recognizing the data. Please try again.")
 
     #Advise user of submission process starting
     message_type = 'standings' if isinstance(data[0], Standing) else 'pairings'
@@ -158,7 +155,6 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
                    error: app_commands.AppCommandError):
     await Error(self.bot, interaction, error)
 
-
 async def NewDataMessage(bot: commands.Bot, interaction: Interaction,
                          isError: bool):
   message = f"""
@@ -170,9 +166,10 @@ async def NewDataMessage(bot: commands.Bot, interaction: Interaction,
     Author name: {interaction.user.name}
     Author id: {interaction.user.id}
     """
-  await MessageChannel(bot, message, settings.BOTGUILDID,
+  await MessageChannel(bot,
+                       message,
+                       settings.BOTGUILDID,
                        settings.BOTEVENTINPUTID)
-
 
 async def setup(bot):
   await bot.add_cog(SubmitDataChecker(bot))

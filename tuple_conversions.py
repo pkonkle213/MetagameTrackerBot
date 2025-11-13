@@ -70,7 +70,7 @@ Event = namedtuple('Event',
                     'IsPosted',
                     'IsComplete'])
 
-def ConvertToEvent(event_obj: tuple[Any, Any, Any, Any, Any, Any, Any, Any, Any]):
+def ConvertToEvent(event_obj: tuple[int, int, str, int, int|None, int, str, bool, bool]):
   """Converts a tuple to an Event object."""
   return Event(int(event_obj[0]),
                int(event_obj[1]),
