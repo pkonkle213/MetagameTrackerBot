@@ -10,10 +10,14 @@ import settings
 
 #This needs to be split into two functions, that would make sense.
 async def EventCheck(bot):
-  await MessageUser(bot, 'Checking events for unknown archetypes...', settings.PHILID)
-  await GetEventsWithUnkown(bot)
-  await GetCompletedEvents(bot)
-  await MessageUser(bot, 'All done!', settings.PHILID)
+  try:
+    await MessageUser(bot, 'Checking events for unknown archetypes...', settings.PHILID)
+    await GetEventsWithUnkown(bot)
+    await MessageUser(bot, 'Checking events for completed unposted events...', settings.PHILID)
+    await GetCompletedEvents(bot)
+    await MessageUser(bot, 'All done!', settings.PHILID)
+  except Exception as error:
+    await MessageUser(bot, f'Error checking events: {error}', settings.PHILID)
 
 async def GetCompletedEvents(bot):
   #Find events exactly 3 days old and are marked as complete (aka not expecting any more input), no unknown archetypes, but has not been posted
