@@ -47,10 +47,9 @@ async def GetEventsWithUnkown(bot):
 
     output = BuildTableOutput('Unknown Archetypes', ['Date', 'Player Name'], archetypes, None)
     output = output[:-3] + '\nTo submit yours, type and enter: /submit archetype```'
-    await MessageUser(bot, output, settings.PHILID)
+    
     #Message each channel with the unknown archetypes
-    #await MessageChannel(bot, output, channel.DiscordID, channel.ChannelID)
-  await MessageUser(bot, f'Done checking for unknown archetypes. {channels.c', settings.PHILID)
+    await MessageChannel(bot, output, channel.DiscordID, channel.ChannelID)
   
   """
   Other changes: Data input needs a dropdown for IsEventComplete
