@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 import settings
-from timedposts.automated_check_events import GetCompletedEvents
+from timedposts.automated_check_events import GetEventsWithUnkown
 
 TARGET_GUILDS = [settings.TESTGUILDID]
                  
@@ -16,11 +16,10 @@ class ATest(commands.Cog):
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   #@app_commands.checks.has_role('MTSubmitter')
   async def Testing(self,
-                    interaction: Interaction,
-                    fruit: str):
+                    interaction: Interaction):
     await interaction.response.defer(ephemeral=True)
-    await GetCompletedEvents(self.bot)
-    await interaction.followup.send("Testing.")
+    await GetEventsWithUnkown(self.bot)
+    await interaction.followup.send("Testing?")
   
   @Testing.error
   async def on_tree_error(self,
