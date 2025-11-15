@@ -50,6 +50,7 @@ async def GetEventsWithUnkown(bot):
     await MessageUser(bot, output, settings.PHILID)
     #Message each channel with the unknown archetypes
     #await MessageChannel(bot, output, channel.DiscordID, channel.ChannelID)
+  await MessageUser(bot, f'Done checking for unknown archetypes. {channels.c', settings.PHILID)
   
   """
   Other changes: Data input needs a dropdown for IsEventComplete
