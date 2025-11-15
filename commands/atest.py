@@ -1,10 +1,8 @@
-from timedposts.automated_check_events import EventCheck
-import json
-import requests
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 import settings
+from timedposts.automated_check_events import GetCompletedEvents
 
 TARGET_GUILDS = [settings.TESTGUILDID]
                  
@@ -21,6 +19,7 @@ class ATest(commands.Cog):
                     interaction: Interaction,
                     fruit: str):
     await interaction.response.defer(ephemeral=True)
+    await GetCompletedEvents(self.bot)
     await interaction.followup.send("Testing.")
   
   @Testing.error

@@ -34,7 +34,7 @@ def ThreeDayOldEventsWithUnknown():
       fm.format_id,
       fm.channel_id
     HAVING
-      SUM(er.reported) < SUM(er.total_attended);
+      SUM(er.reported) < SUM(er.total_attended)
     """
 
     cur.execute(command)
