@@ -57,6 +57,7 @@ async def TestThis(bot, interaction):
   overwrite = discord.PermissionOverwrite()
   overwrite.send_messages = True
 
+  #TODO: When a channel is mapped, the bot should be given send_messages permissions.
   try:
     await channel.set_permissions(user_bot, overwrite=overwrite)
     print('Maybe this gave the bot permissions?')

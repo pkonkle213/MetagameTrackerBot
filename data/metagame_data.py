@@ -19,7 +19,7 @@ def GetMetagame(game,
                 start_date,
                 end_date,
                 store:Store):
-  conn = psycopg2.connect(os.environ['DATABASE_U RL'])
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
