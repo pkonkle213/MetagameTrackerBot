@@ -119,15 +119,13 @@ async def CreateMTSubmitterRole(guild:discord.Guild):
   owner = guild.owner
   if owner is None:
     raise KnownError('No owner found')
-  mtsubmitter_role = discord.utils.find(lambda r: r.name == 'MTSubmitter',
-                                        guild.roles)  
+  mtsubmitter_role = discord.utils.get(guild.roles, name="MTSubmitter")
 
-  print("Attempting to create and add the MTSubmitter role")
   if mtsubmitter_role is None:
+    print("Attempting to create and add the MTSubmitter role")
     try:
       #TODO: This is giving me a "Missing Permissions" error even when manage_roles is true??  
-      mtsubmitter_role = await guild.create_role(name="MTSubmitter",
-                                                 permissions=discord.Permissions.all())
+      mtsubmitter_role = await guild.create_role(name="MTSubmitter")
       await owner.add_roles(mtsubmitter_role)
       print('Success!')
       return 'MTSubmitter role created and assigned to owner.'

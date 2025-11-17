@@ -1,3 +1,4 @@
+import logging
 import pytz
 from timedposts.automated_check_events import EventCheck
 import pathlib
@@ -14,6 +15,8 @@ intents.message_content = True
 intents.members = True
 intents.guilds = True
 bot = commands.Bot(command_prefix='?', intents=intents)
+
+handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 
 BASE_DIR = pathlib.Path(__file__).parent
 CMDS_DIR = BASE_DIR / "commands"
@@ -66,4 +69,4 @@ async def data_guild_update():
 async def before_scheduled_post():
   await bot.wait_until_ready()
 
-bot.run(settings.DISCORDTOKEN)
+bot.run(settings.DISCORDTOKEN, log_handler=handler)

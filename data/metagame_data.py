@@ -11,7 +11,7 @@ def GetAreaForMeta(store:Store) -> str:
     return f'AND s.region = {store.Region}'
   if store.DiscordId == settings.DATAGUILDID:
     return f'AND s.used_for_data = {True}'
-  return f'AND e.discord_id = {store.DiscordId}'
+  return f'AND s.discord_id = {store.DiscordId}'
 """  
 
 def GetMetagame(game,
@@ -19,7 +19,7 @@ def GetMetagame(game,
                 start_date,
                 end_date,
                 store:Store):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(os.environ['DATABASE_U RL'])
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
