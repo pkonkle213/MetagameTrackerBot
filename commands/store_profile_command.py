@@ -17,8 +17,11 @@ class StoreProfile(commands.Cog):
   async def UpdateProfile(self,
                           interaction: Interaction):
     """Updates all info in the store profile"""
-    await UpdateStoreDetails(interaction)
-    await interaction.followup.send('Store profile updated',ephemeral=True)
+    result = await UpdateStoreDetails(interaction)
+    if result:
+      await interaction.followup.send('Store profile updated!',ephemeral=True)
+    else:
+      await interaction.followup.send('Store profile unable to update.',ephemeral=True)
     
 
   @UpdateProfile.error
