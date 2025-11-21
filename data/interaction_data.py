@@ -25,6 +25,7 @@ def GetStoreByDiscord(discord_id):
       store_name,
       owner_id,
       owner_name,
+      store_address,
       used_for_data,
       CASE
         WHEN last_payment >= CURRENT_DATE - INTERVAL '1 month' THEN TRUE

@@ -46,10 +46,11 @@ Store = namedtuple('Store',
                     'StoreName',
                     'OwnerId',
                     'OwnerName',
+                    'Address',
                     'UsedForData',
                     'IsPaid'])
 
-def ConvertToStore(store: tuple[Any, Any, Any, Any, Any, Any, Any]) -> Store:
+def ConvertToStore(store: tuple[Any, Any, Any, Any, Any, Any, Any, Any]) -> Store:
   """Converts a tuple to a Store object."""
   return Store(int(store[0]),
                store[1],
@@ -57,7 +58,8 @@ def ConvertToStore(store: tuple[Any, Any, Any, Any, Any, Any, Any]) -> Store:
                int(store[3]),
                store[4],
                store[5],
-               store[6])
+               store[6],
+               store[7])
 
 Event = namedtuple('Event',
                    ['ID',

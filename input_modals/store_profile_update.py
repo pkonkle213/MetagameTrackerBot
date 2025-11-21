@@ -27,7 +27,7 @@ class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
       )
     )
     self.add_item(self.owners_name)
-
+    """
     self.store_address = discord.ui.Label(
       text="Store Address",
       component=discord.ui.TextInput(
@@ -37,7 +37,7 @@ class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
       )
     )
     self.add_item(self.store_address)
-
+    """
     self.melee_id = discord.ui.Label(
       text="Melee ClientId",
       component=discord.ui.TextInput(
@@ -59,7 +59,7 @@ class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
   async def on_submit(self, interaction: discord.Interaction) -> None:
     self.submitted_store_name = self.store_name.component.value
     self.submitted_owners_name = self.owners_name.component.value
-    self.submitted_store_address = self.store_address.component.value
+    self.submitted_store_address = None # self.store_address.component.value
     self.submitted_melee_id =  self.melee_id.component.value if self.melee_id.component.value else None
     self.submitted_melee_secret = self.melee_secret.value if self.melee_secret.component.value else None
     self.is_submitted = True
