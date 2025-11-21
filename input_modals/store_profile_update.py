@@ -32,6 +32,7 @@ class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
       text="Store Address",
       component=discord.ui.TextInput(
         placeholder="Store address",
+        #default=store.StoreAddress,
         required=False
       )
     )
@@ -60,7 +61,7 @@ class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
     self.submitted_owners_name = self.owners_name.component.value
     self.submitted_store_address = self.store_address.component.value
     self.submitted_melee_id =  self.melee_id.component.value if self.melee_id.component.value else None
-    self.submitted_melee_secret = self.melee_secret.value if self.melee_secret.value else None
+    self.submitted_melee_secret = self.melee_secret.value if self.melee_secret.component.value else None
     self.is_submitted = True
     await interaction.response.defer()
 

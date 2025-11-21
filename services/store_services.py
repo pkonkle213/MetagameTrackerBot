@@ -14,6 +14,7 @@ async def UpdateStoreDetails(interaction: discord.Interaction):
   objects = GetObjectsFromInteraction(interaction, store=True)
   modal = StoreProfileModal(objects.Store)
   await interaction.response.send_modal(modal)
+  await modal.wait()
 
   if not modal.is_submitted:
     raise KnownError('Modal not submitted correctly')
