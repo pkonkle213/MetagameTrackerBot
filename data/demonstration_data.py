@@ -7,7 +7,7 @@ def UpdateDemo(event_id, event_date):
   with conn, conn.cursor() as cur:
     command = f'''
     UPDATE events
-    SET event_date = '{event_date}' AND discord_id = {TESTGUILDID}
+    SET event_date = '{event_date}', discord_id = {TESTGUILDID}
     WHERE id = {event_id}
     '''
     
