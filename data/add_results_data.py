@@ -58,15 +58,14 @@ def AddResult(event_id,
       %s)
       RETURNING *
       '''
-      
-      cur.execute(command,
-                  (event_id,
-                   player.PlayerName,
-                   player.Wins,
-                   player.Losses,
-                   player.Draws,
-                   submitter_id)
-                 )
+
+      criteria = [event_id,
+                  player.PlayerName,
+                  player.Wins,
+                  player.Losses,
+                  player.Draws,
+                  submitter_id]
+      cur.execute(command, criteria)
       
       conn.commit()
       row = cur.fetchone()

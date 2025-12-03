@@ -115,7 +115,7 @@ async def ClaimResult(interaction:Interaction,
                                  userId,
                                  updater_name)
   if archetype_added is None:
-    raise KnownError('Unable to submit the archetype. Please try again later.')
+    raise Exception('Unable to submit the archetype. Please try again later.')
   return archetype_added, event
 
 def CheckEventPercentage(event):
@@ -144,26 +144,6 @@ def OneEvent(event):
   title = f"{event.EventDate.strftime('%B %d')} Meta ({len(data)} attended)"
   headers = ['Archetype', 'Wins', 'Losses', 'Draws']
   return title, headers, data
-
-async def LorcanaInkMenu(interaction):
-  ink_colors = [(1, 'Amber'),
-                (2, 'Amethyst'),
-                (3, 'Emerald'),
-                (4, 'Ruby'),
-                (5, 'Saphhire'),
-                (6, 'Steel')]
-  message = 'Please select your ink colors'
-  placeholder = 'Choose your ink colors'
-  inks = await SelectMenu(interaction,
-                          message,
-                          placeholder,
-                          ink_colors,
-                          2)
-  inks = sorted(inks)
-  if len(inks) == 2:
-    return f'{inks[0][1].title()}/{inks[1][1].title()}'
-  if len(inks) == 1:
-    return f'{inks[0][1].title()}'
 
 def MagicLimited(drafted_colors:list, splashed_colors:list) -> str:
   colors = ""

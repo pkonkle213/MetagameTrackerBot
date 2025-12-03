@@ -10,7 +10,7 @@ import settings
 
 #This needs to be split into two functions, that would make sense.
 async def EventCheck(bot):
-  await MessageUser(bot, 'Checking events for unknown archetypes...', settings.PHILID)
+  #await MessageUser(bot, 'Checking events for unknown archetypes...', settings.PHILID)
   await GetEventsWithUnkown(bot)
   #await MessageUser(bot, 'Checking events for completed unposted events...', settings.PHILID)
   #await GetCompletedEvents(bot)

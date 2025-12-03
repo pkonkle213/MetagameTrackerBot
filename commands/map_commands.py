@@ -48,7 +48,7 @@ class MappingCommands(commands.GroupCog, name='map'):
       message = 'Please select a format'
       placeholder = 'Choose a format'
       result = await SelectMenu(interaction, message, placeholder, dynamic_options)
-      output = AddStoreFormatMap(interaction, result[0])
+      output = await AddStoreFormatMap(interaction, result[0])
       await interaction.followup.send(output, ephemeral=True)
 
 

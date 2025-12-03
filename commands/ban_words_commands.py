@@ -19,7 +19,7 @@ class BannedWordCommands(commands.GroupCog, name='bannedwords'):
   @app_commands.checks.has_role('MTSubmitter')
   async def BadWord(self,
                     interaction: Interaction,
-                    word:str):
+                    word:str) -> None:
     """
     Parameters
     ----------

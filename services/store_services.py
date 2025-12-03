@@ -1,13 +1,13 @@
 import discord
 from custom_errors import KnownError
+from data.formats_data import AddFormatMap, GetFormatsByGameId
 from data.games_data import AddGameMap
 from data.store_data import AddStore, UpdateStore
-from services.game_mapper_services import GetGameOptions
-from data.formats_data import AddFormatMap, GetFormatsByGameId
-from tuple_conversions import Format, Game
-from settings import BOTGUILDID
 from input_modals.store_profile_update import StoreProfileModal
 from interaction_objects import GetObjectsFromInteraction
+from services.game_mapper_services import GetGameOptions
+from settings import BOTGUILDID
+from tuple_conversions import Format, Game
 
 async def UpdateStoreDetails(interaction: discord.Interaction):
   """Updates the store details in the database"""
@@ -124,9 +124,9 @@ async def CreateMTSubmitterRole(guild:discord.Guild):
 
   if mtsubmitter_role is None:
     print("Attempting to create and add the MTSubmitter role")
-    try:
-      #TODO: This is giving me a "Missing Permissions" error even when manage_roles is true??  
-      mtsubmitter_role = await guild.create_role(name="MTSubmitter")
+    try: 
+      perms = discord.Permissions(manage_messages=True)
+      mtsubmitter_role = await guild.create_role(name="MTSubmitter", permissions=perms)
       await owner.add_roles(mtsubmitter_role)
       print('Success!')
       return 'MTSubmitter role created and assigned to owner.'

@@ -56,7 +56,6 @@ def SplitInteractionData(interaction: discord.Interaction):
                      "UserId"])
   return Data(discord_id, category_id, channel_id, user_id)
 
-
 def GetGame(category_id: int,
             required: bool):
   """Returns the game mapped to the given category_id

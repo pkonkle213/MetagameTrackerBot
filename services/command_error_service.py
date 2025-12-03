@@ -23,6 +23,8 @@ async def Error(bot:Bot,
     feedback = 'You do not have the required role to use this command.'
   elif isinstance(error, app_commands.errors.CommandOnCooldown):
     feedback = str(error)
+  elif isinstance(error, KnownError):
+    feedback = error.message
   #elif isinstance(error, app_commands.errors.CommandInvokeError):
   #  feedback = str(error.original)
   else:
@@ -31,7 +33,6 @@ async def Error(bot:Bot,
                          error,
                          settings.BOTGUILDID,
                          settings.ERRORCHANNELID)
-
   try:
     await interaction.response.send_message(feedback, ephemeral=True)
   except Exception:

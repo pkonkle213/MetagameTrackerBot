@@ -18,7 +18,7 @@ def PlayRecord(interaction:Interaction,
                   user_id,
                   date_start,
                   date_end)
-  title = f'Your Play Record from {str(date_start)} to {str(date_end)}'
+  title = f'Your Results From {str(date_start)} To {str(date_end)}'
   header = ['Archetype Name', 'Wins', 'Losses', 'Draws', 'Win %']
   if not format:
     header.insert(0, 'Format')

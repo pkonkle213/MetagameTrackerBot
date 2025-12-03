@@ -78,8 +78,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
                               melee_tournament_id: str = ''):
     """
     Parameters
-    ----------
-    
+    ----------    
     csv_file: Attachment
       The CSV file containing the event's data from CARDE.IO
       

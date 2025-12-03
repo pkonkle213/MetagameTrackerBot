@@ -7,7 +7,7 @@ from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
 from interaction_objects import GetObjectsFromInteraction
 from tuple_conversions import Data, Standing, Pairing, Event
 
-def SubmitCheck(interaction:discord.Interaction):
+def SubmitCheck(interaction:discord.Interaction) -> Data:
   """Checks if the user can submit data in this channel"""
   return GetObjectsFromInteraction(interaction,
                                    game=True,
