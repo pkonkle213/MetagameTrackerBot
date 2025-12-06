@@ -20,13 +20,11 @@ def SubmitData(interaction_objects:Data,
                round_number:str,
                is_complete: bool,
                whole_event: bool):
-  """Submits an events data to the database"""
+  """Submits an event's data to the database"""
   store = interaction_objects.Store
   game = interaction_objects.Game
   format = interaction_objects.Format
   userId = interaction_objects.UserId
-
-  print('Submitting Data')
 
   date = ConvertToDate(date_str)
   round_num = int(round_number) if round_number != '' else 0

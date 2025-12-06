@@ -99,7 +99,10 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       if not csv_file.filename.endswith('.csv'):
         raise KnownError("Please upload a file with a '.csv' extension.")
       data, errors, round_number, date = await ConvertCSVToDataErrors(
-          interaction_objects, interaction, csv_file)
+        self.bot,
+        interaction_objects,
+        interaction,
+        csv_file)
     elif melee_tournament_id:
       await interaction.response.defer(ephemeral=True)
       whole_event = True
@@ -108,7 +111,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(
           interaction_objects, interaction, json_dict)
     else:
-      data, errors, round_number, date = await ConvertModalToDataErrors(interaction_objects,
+      data, errors, round_number, date = await ConvertModalToDataErrors(self.bot, interaction_objects,
                                                                         interaction)
 
     if data is None:
@@ -154,7 +157,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
                    error: app_commands.AppCommandError):
     await Error(self.bot, interaction, error)
 
-async def NewDataMessage(bot: commands.Bot, interaction: Interaction,
+async def NewDataMessage(bot: commands.Bot,
+                         interaction: Interaction,
                          isError: bool):
   message = f"""
   {'Could not submit data due to error' if isError else 'Successfully received new data'}

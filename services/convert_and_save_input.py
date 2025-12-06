@@ -1,3 +1,5 @@
+from discord.ext import commands
+from discord_messages import MessageChannel
 from incoming_message_conversions.melee import MeleeJsonPairings
 import pandas as pd
 from discord import Interaction, Attachment
@@ -10,6 +12,7 @@ from custom_errors import KnownError
 import pathlib
 import os
 import io
+import settings
 
 #TODO: These aren't saving when the bot is in production.
 def BuildFilePath(interaction:Interaction,
@@ -38,7 +41,8 @@ def ConvertMeleeTournamentToDataErrors(interaction_objects:Data,
   
   return data, errors, round_number, date
 
-async def ConvertCSVToDataErrors(interaction_objects:Data,
+async def ConvertCSVToDataErrors(bot:commands.Bot,
+                                 interaction_objects:Data,
                                  interaction:Interaction,
                                  csv_file:Attachment):
   save_path, file_name = BuildFilePath(interaction, csv_file.filename)
@@ -48,10 +52,15 @@ async def ConvertCSVToDataErrors(interaction_objects:Data,
   if df is None or df.empty:
     raise KnownError("The file is empty or unreadable. Please try again.")
 
-  print('Save path:', save_path)
   await csv_file.save(pathlib.Path(save_path))
-  print('File saved')
-  
+  #TODO: Fix this so that the file is sent to the channel
+  """
+  await MessageChannel(bot,
+                       f'Attempting to add new event data from {interaction_objects.Store.StoreName}',
+                       settings.BOTGUILDID,
+                       settings.BOTEVENTINPUTID,
+                       file=csv_data)
+  """
   data, errors = ConvertCSVToData(df, interaction_objects.Game)
 
   filename_split = csv_file.filename.split('-')
@@ -63,8 +72,9 @@ async def ConvertCSVToDataErrors(interaction_objects:Data,
   date = datetime.now(pytz.timezone('US/Eastern')).strftime("%m/%d/%Y")
   return data, errors, round_number, date
 
-async def ConvertModalToDataErrors(interaction_objects:Data,
-                        interaction:Interaction):
+async def ConvertModalToDataErrors(bot:commands.Bot,
+                                   interaction_objects:Data,
+                                   interaction:Interaction):
   #Get the data from the user
   modal = SubmitDataModal()
   await interaction.response.send_modal(modal)
@@ -81,6 +91,11 @@ async def ConvertModalToDataErrors(interaction_objects:Data,
   with open(save_path, 'w') as file:
     file.write(submission)    
 
+  await MessageChannel(bot,
+     f'Attempting to add new event data from {interaction_objects.Store.StoreName}:\n{modal.submitted_message}',
+     settings.BOTGUILDID,
+     settings.BOTEVENTINPUTID)
+  
   #Convert the data to the appropriate format
   data, errors = ConvertMessageToData(modal.submitted_message,
                           interaction_objects.Game)

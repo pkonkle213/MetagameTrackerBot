@@ -7,7 +7,7 @@ async def MessageUser(bot, msg, userId, files=None):
   else:
     await user.send(f'{msg}', files=files)
 
-async def MessageChannel(bot, msg, guildId, channelId):
+async def MessageChannel(bot, msg, guildId, channelId, file=None):
   server = bot.get_guild(int(guildId))
   if server is None:
     print(f'Server {guildId} not found')
@@ -20,5 +20,8 @@ async def MessageChannel(bot, msg, guildId, channelId):
     if not isinstance(channel, discord.TextChannel):
       raise Exception(f'Channel {channelId} is not a text channel')
 
-    await channel.send(f'{msg}')
+    if file is None:
+      await channel.send(f'{msg}')
+    else:
+      await channel.send(f'{msg}', file=file)
     
