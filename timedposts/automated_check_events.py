@@ -14,7 +14,7 @@ async def EventCheck(bot):
   await GetEventsWithUnkown(bot)
   #await MessageUser(bot, 'Checking events for completed unposted events...', settings.PHILID)
   #await GetCompletedEvents(bot)
-  await MessageUser(bot, 'All done!', settings.PHILID)
+  #await MessageUser(bot, 'All done!', settings.PHILID)
 
 async def GetCompletedEvents(bot):
   #Find events exactly 3 days old and are marked as complete (aka not expecting any more input), no unknown archetypes, but has not been posted

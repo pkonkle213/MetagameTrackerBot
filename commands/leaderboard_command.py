@@ -4,7 +4,6 @@ from discord import app_commands, Interaction
 from services.top_players_services import GetTopPlayers
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
-from services.store_level_service import LEVEL1STORES
 
 class StoreTopPlayers(commands.Cog):
   def __init__(self, bot):
@@ -15,7 +14,7 @@ class StoreTopPlayers(commands.Cog):
   #@app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-  @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL1STORES])
+  #@app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL1STORES])
   async def Leaderboard(self,
                        interaction: Interaction,
                        start_date: str = '',

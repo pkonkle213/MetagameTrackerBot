@@ -1,6 +1,0 @@
-Steps to updating:
-1) Loop through stores
-2) find the store level
-3) Update the store IF THE LEVEL IS NOT THE SAME and return store info
-4) If info is returned, this means that the level changed and the owner should be updated
-5) if no info is returned, the level did not change and the owner does not need to be updated

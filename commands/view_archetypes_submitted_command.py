@@ -4,7 +4,6 @@ from discord.ext import commands
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from services.submitted_archetypes_service import SubmittedArchetypesReport
-from services.store_level_service import LEVEL2STORES
 
 class ArchetypeSubmittedCommand(commands.Cog):
   def __init__(self, bot):
@@ -12,7 +11,7 @@ class ArchetypeSubmittedCommand(commands.Cog):
 
   @app_commands.command(name='viewsubmissions',
                         description='Generate a report of the archetypes submitted and by whom')
-  @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL2STORES])
+#  @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL2STORES])
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   @app_commands.checks.has_role('MTSubmitter')

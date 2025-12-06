@@ -27,7 +27,6 @@ TIME_ZONE = pytz.timezone('US/Eastern')
 async def on_ready():
   print(f'Logged on as {format(bot.user)}!')
   data_guild_update.start()
-  update_store_levels.start()
   find_the_unknown.start()
   await SyncCommands(bot, CMDS_DIR)
   print('Synced commands. Good to go')
@@ -44,15 +43,6 @@ async def find_the_unknown():
 
 @find_the_unknown.before_loop
 async def before_find_the_unknown():
-  await bot.wait_until_ready()
-
-@tasks.loop(time=datetime.time(hour=4, minute=00, tzinfo=TIME_ZONE))
-async def update_store_levels():
-  """Store levels are updated every day 4:00 AM EST"""
-  await SyncCommands(bot, CMDS_DIR)
-
-@update_store_levels.before_loop
-async def before_update_store_levels():
   await bot.wait_until_ready()
 
 @tasks.loop(time=datetime.time(hour=10, minute=00, tzinfo=TIME_ZONE)) 
