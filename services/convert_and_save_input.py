@@ -13,6 +13,7 @@ import pathlib
 import os
 import io
 import settings
+from services.object_storage_service import upload_file
 
 #TODO: These aren't saving when the bot is in production.
 def BuildFilePath(interaction:Interaction,
@@ -46,13 +47,14 @@ async def ConvertCSVToDataErrors(bot:commands.Bot,
                                  interaction:Interaction,
                                  csv_file:Attachment):
   save_path, file_name = BuildFilePath(interaction, csv_file.filename)
+  await csv_file.save(pathlib.Path(save_path))
+  upload_file(save_path, file_name)
   
   csv_data = await csv_file.read()
   df = pd.read_csv(io.StringIO(csv_data.decode('utf-8')), na_values=['FALSE','False'])
   if df is None or df.empty:
     raise KnownError("The file is empty or unreadable. Please try again.")
 
-  await csv_file.save(pathlib.Path(save_path))
   #TODO: Fix this so that the file is sent to the channel
   """
   await MessageChannel(bot,

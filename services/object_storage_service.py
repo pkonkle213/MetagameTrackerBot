@@ -1,7 +1,5 @@
 import os
-import json
 import requests
-from uuid import uuid4
 from datetime import datetime, timedelta
 from google.cloud import storage
 from google.oauth2 import credentials as google_credentials

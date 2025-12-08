@@ -41,3 +41,6 @@ args = "python main.py"
 
 [workflows.workflow.metadata]
 outputType = "console"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-7f38bbe0-52e1-4e3b-aba8-51bfb65b8dde"
