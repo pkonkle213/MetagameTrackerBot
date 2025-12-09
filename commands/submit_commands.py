@@ -87,6 +87,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     """
     #Checks to ensure data can be submitted in the current channel
     interaction_objects = SubmitCheck(interaction)
+    #TODO: WHAT THIS DO?
     whole_event = False
 
     #Ensure that only one type of data is being submitted
@@ -113,8 +114,9 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     else:
       data, errors, round_number, date = await ConvertModalToDataErrors(self.bot, interaction_objects,
                                                                         interaction)
-
+    
     if data is None:
+      print('Data is None')
       await NewDataMessage(self.bot, interaction, True)
       raise KnownError("Unable to submit due to not recognizing the data. Please try again.")
 

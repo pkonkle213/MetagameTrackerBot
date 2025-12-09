@@ -9,35 +9,26 @@ import pytz
 from data_translation import ConvertCSVToData, ConvertMessageToData
 from datetime import datetime
 from custom_errors import KnownError
-import pathlib
-import os
 import io
 import settings
-from services.object_storage_service import upload_file
+from services.object_storage_service import upload_bytes, upload_string
 
 #TODO: These aren't saving when the bot is in production.
 def BuildFilePath(interaction:Interaction,
-                  prev_filename:str):
-  if not interaction.guild:
-    raise KnownError("This command can only be used in a server.")
-  #Save the file to the server
+                  prev_filename:str = ''):
   timezone = pytz.timezone('US/Eastern')
   timestamp = datetime.now(timezone).strftime("%Y%m%d_%H%M%S")
-  file_name = f"{timestamp}_{prev_filename}" if prev_filename != '' else f"{timestamp}_ModalInput"
+  file_name = f"{timestamp}_{prev_filename}.csv" if prev_filename != '' else f"{timestamp}_ModalInput.txt"
 
-  folder_name = f'{interaction.guild.id} - {interaction.guild.name}'
+  save_path = f"{interaction.guild.id} - {interaction.guild.name}/{file_name}"
 
-  BASE_DIR = pathlib.Path(__file__).parent.parent
-  SAVE_DIRECTORY = BASE_DIR / "imported_files" / folder_name
-  SAVE_DIRECTORY.mkdir(parents=True, exist_ok=True)
-  save_path = os.path.join(SAVE_DIRECTORY, file_name)
-
-  return save_path, file_name
+  return save_path
 
 def ConvertMeleeTournamentToDataErrors(interaction_objects:Data,
                               interaction:Interaction,
                               json_data:list) -> tuple[list[Pairing] | list[Standing], list[str], str, str]:
-  save_path, file_name = BuildFilePath(interaction, '')
+  #Need to save JSON data to a file
+  #save_path = BuildFilePath(interaction, '')
   data, errors, round_number, date = MeleeJsonPairings(json_data)
   
   return data, errors, round_number, date
@@ -46,11 +37,11 @@ async def ConvertCSVToDataErrors(bot:commands.Bot,
                                  interaction_objects:Data,
                                  interaction:Interaction,
                                  csv_file:Attachment):
-  save_path, file_name = BuildFilePath(interaction, csv_file.filename)
-  await csv_file.save(pathlib.Path(save_path))
-  upload_file(save_path, file_name)
-  
+  save_path = BuildFilePath(interaction, csv_file.filename)
+  print('Save path: ', save_path)
   csv_data = await csv_file.read()
+  upload_bytes(csv_data, save_path)
+  
   df = pd.read_csv(io.StringIO(csv_data.decode('utf-8')), na_values=['FALSE','False'])
   if df is None or df.empty:
     raise KnownError("The file is empty or unreadable. Please try again.")
@@ -87,12 +78,10 @@ async def ConvertModalToDataErrors(bot:commands.Bot,
   
   submission = '\n'.join([f'Date:{modal.submitted_date}',
                   f'Round:{modal.submitted_round}',
-                  f'Message:{modal.submitted_message}'])
+                  f'Message:\n{modal.submitted_message}'])
   
-  save_path, file_name = BuildFilePath(interaction, '')
-  with open(save_path, 'w') as file:
-    file.write(submission)    
-
+  save_path = BuildFilePath(interaction)
+  upload_string(submission, save_path)
   await MessageChannel(bot,
      f'Attempting to add new event data from {interaction_objects.Store.StoreName}:\n{modal.submitted_message}',
      settings.BOTGUILDID,
