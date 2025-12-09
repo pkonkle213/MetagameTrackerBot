@@ -19,6 +19,7 @@ async def UpdateStoreDetails(interaction: discord.Interaction):
   if not modal.is_submitted:
     raise KnownError('Modal not submitted correctly')
 
+  #TODO: I receive an error that 'tuple index out of range'
   result = UpdateStore(objects.Store.DiscordId,
                        modal.submitted_owners_name,
                        modal.submitted_store_name,

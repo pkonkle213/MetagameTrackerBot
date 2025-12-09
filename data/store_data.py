@@ -20,7 +20,7 @@ def UpdateStore(discord_id
       {', melee_id = %s' if melee_id else ''}
       {', melee_secret = %s' if melee_secret else ''}
     WHERE discord_id = {discord_id}
-    RETURNING discord_id, discord_name, store_name, owner_id, owner_name, used_for_data, FALSE
+    RETURNING discord_id, discord_name, store_name, owner_id, owner_name, store_address, used_for_data, FALSE
     '''
 
     criteria = [store_name, owner_name, store_address]

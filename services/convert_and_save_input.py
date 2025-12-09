@@ -1,17 +1,17 @@
 from discord.ext import commands
 from discord_messages import MessageChannel
 from incoming_message_conversions.melee import MeleeJsonPairings
-import pandas as pd
 from discord import Interaction, Attachment
 from input_modals.submit_data_modal import SubmitDataModal
 from tuple_conversions import Data, Pairing, Standing
-import pytz
 from data_translation import ConvertCSVToData, ConvertMessageToData
 from datetime import datetime
 from custom_errors import KnownError
+from services.object_storage_service import upload_bytes, upload_string
+import pandas as pd
+import pytz
 import io
 import settings
-from services.object_storage_service import upload_bytes, upload_string
 
 #TODO: These aren't saving when the bot is in production.
 def BuildFilePath(interaction:Interaction,
