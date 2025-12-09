@@ -2,10 +2,11 @@ import os
 from datetime import datetime
 from discord import app_commands, Interaction, Attachment
 from discord.ext import commands
+from services.convert_and_save_input import BuildFilePath
 from services.object_storage_service import upload_bytes
 from services.command_error_service import Error
 from custom_errors import KnownError
-
+import pytz
 
 class UploadCSVCommand(commands.Cog):
     """Commands for uploading CSV files to App Storage"""
@@ -30,10 +31,17 @@ class UploadCSVCommand(commands.Cog):
 
         try:
             file_content = await csv_file.read()
+            timezone = pytz.timezone('US/Eastern')
+            timestamp = datetime.now(timezone).strftime("%Y%m%d_%H%M%S")
             
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            base_name = os.path.splitext(csv_file.filename)[0]
-            destination_name = f"{base_name}_{timestamp}.csv"
+            file_name = os.path.splitext(csv_file.filename)[0]
+            
+            guild_id = interaction.guild.id
+            guild_name = interaction.guild.name
+            destination_name = f"{guild_id} - {guild_name}/{timestamp}_{file_name}.csv" #f"{base_name}_{timestamp}.csv"
+            #print('Save path: ', save_path)
+            print('File name: ', file_name)
+            print('destination_name: ', destination_name)
             
             storage_path = upload_bytes(file_content, destination_name, "text/csv")
             
