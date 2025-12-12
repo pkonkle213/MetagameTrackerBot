@@ -13,7 +13,6 @@ import pytz
 import io
 import settings
 
-#TODO: These aren't saving when the bot is in production.
 def BuildFilePath(interaction:Interaction,
                   prev_filename:str = ''):
   timezone = pytz.timezone('US/Eastern')
@@ -27,9 +26,7 @@ def BuildFilePath(interaction:Interaction,
 def ConvertMeleeTournamentToDataErrors(interaction_objects:Data,
                               interaction:Interaction,
                               json_data:list) -> tuple[list[Pairing] | list[Standing], list[str], str, str]:
-  #Need to save JSON data to a file
-  #save_path = BuildFilePath(interaction, '')
-  data, errors, round_number, date = MeleeJsonPairings(json_data)
+  data, errors, round_number, date, archetypes = MeleeJsonPairings(json_data)
   
   return data, errors, round_number, date
 
@@ -46,14 +43,6 @@ async def ConvertCSVToDataErrors(bot:commands.Bot,
   if df is None or df.empty:
     raise KnownError("The file is empty or unreadable. Please try again.")
 
-  #TODO: Fix this so that the file is sent to the channel
-  """
-  await MessageChannel(bot,
-                       f'Attempting to add new event data from {interaction_objects.Store.StoreName}',
-                       settings.BOTGUILDID,
-                       settings.BOTEVENTINPUTID,
-                       file=csv_data)
-  """
   data, errors = ConvertCSVToData(df, interaction_objects.Game)
 
   filename_split = csv_file.filename.split('-')

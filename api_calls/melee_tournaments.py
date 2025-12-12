@@ -1,4 +1,5 @@
 import requests
+from custom_errors import KnownError
 from tuple_conversions import Store
 from data.melee_api_data import GetStoreMeleeInfo
 
@@ -6,7 +7,7 @@ def GetMeleeTournamentData(tournament_id:str,
                            store: Store) -> list:
   storeInfo = GetStoreMeleeInfo(store)
   if storeInfo.ClientId is None or storeInfo.ClientSecret is None:
-    raise Exception("Store not registered for Melee.gg API. Please contact Phil.")
+    raise KnownError("Store not registered for Melee.gg API. Please contact Phil.")
   page_size = 250
   has_more = True
   data = []
