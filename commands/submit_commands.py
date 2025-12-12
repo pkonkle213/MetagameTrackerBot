@@ -109,6 +109,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       whole_event = True
       json_dict = GetMeleeTournamentData(melee_tournament_id,
                                          interaction_objects.Store)
+      #TODO: Save the json_dict to App Storage
       data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(
           interaction_objects, interaction, json_dict)
     else:

@@ -1,4 +1,5 @@
 import os
+import json
 from replit.object_storage import Client
 
 BUCKET_NAME = "NewEventData"
@@ -63,6 +64,24 @@ def upload_string(content: str, destination_name: str, content_type: str = "text
     """
     client = get_client()
     client.upload_from_text(destination_name, content)
+    
+    return f"/{BUCKET_NAME}/{destination_name}"
+
+
+def upload_json(data: dict | list, destination_name: str) -> str:
+    """
+    Uploads a JSON object to the NewEventData bucket.
+    
+    Args:
+        data: The dict or list to serialize and upload as JSON
+        destination_name: Name for the file in storage (should end with .json)
+    
+    Returns:
+        str: The path to the uploaded file in storage
+    """
+    client = get_client()
+    json_content = json.dumps(data, indent=2)
+    client.upload_from_text(destination_name, json_content)
     
     return f"/{BUCKET_NAME}/{destination_name}"
 

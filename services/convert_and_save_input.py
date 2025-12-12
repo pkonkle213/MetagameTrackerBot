@@ -27,7 +27,8 @@ def ConvertMeleeTournamentToDataErrors(interaction_objects:Data,
                               interaction:Interaction,
                               json_data:list) -> tuple[list[Pairing] | list[Standing], list[str], str, str]:
   data, errors, round_number, date, archetypes = MeleeJsonPairings(json_data)
-  
+
+  #TODO: Do something with archetypes
   return data, errors, round_number, date
 
 async def ConvertCSVToDataErrors(bot:commands.Bot,
