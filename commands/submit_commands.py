@@ -1,6 +1,7 @@
 import typing
 from services.claim_result_services import GetUserInput, AddTheArchetype, MessageStoreFeed
 from api_calls.melee_tournaments import GetMeleeTournamentData
+from services.object_storage_service import upload_json
 import settings
 from services.convert_and_save_input import ConvertCSVToDataErrors, ConvertModalToDataErrors, ConvertMeleeTournamentToDataErrors
 from checks import isSubmitter
@@ -109,7 +110,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       whole_event = True
       json_dict = GetMeleeTournamentData(melee_tournament_id,
                                          interaction_objects.Store)
-      #TODO: Save the json_dict to App Storage
+      
       data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(
           interaction_objects, interaction, json_dict)
     else:

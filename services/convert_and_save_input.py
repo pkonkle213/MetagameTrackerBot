@@ -7,7 +7,7 @@ from tuple_conversions import Data, Pairing, Standing
 from data_translation import ConvertCSVToData, ConvertMessageToData
 from datetime import datetime
 from custom_errors import KnownError
-from services.object_storage_service import upload_bytes, upload_string
+from services.object_storage_service import upload_bytes, upload_json, upload_string
 import pandas as pd
 import pytz
 import io
@@ -17,7 +17,7 @@ def BuildFilePath(interaction:Interaction,
                   prev_filename:str = ''):
   timezone = pytz.timezone('US/Eastern')
   timestamp = datetime.now(timezone).strftime("%Y%m%d_%H%M%S")
-  file_name = f"{timestamp}_{prev_filename}.csv" if prev_filename != '' else f"{timestamp}_ModalInput.txt"
+  file_name = f"{timestamp}_{prev_filename}"
 
   save_path = f"{interaction.guild.id} - {interaction.guild.name}/{file_name}"
 
@@ -26,6 +26,9 @@ def BuildFilePath(interaction:Interaction,
 def ConvertMeleeTournamentToDataErrors(interaction_objects:Data,
                               interaction:Interaction,
                               json_data:list) -> tuple[list[Pairing] | list[Standing], list[str], str, str]:
+  path = BuildFilePath(interaction, 'MeleeTournament.json')
+  upload_json(json_data, path)
+  
   data, errors, round_number, date, archetypes = MeleeJsonPairings(json_data)
 
   #TODO: Do something with archetypes
@@ -70,7 +73,7 @@ async def ConvertModalToDataErrors(bot:commands.Bot,
                   f'Round:{modal.submitted_round}',
                   f'Message:\n{modal.submitted_message}'])
   
-  save_path = BuildFilePath(interaction)
+  save_path = BuildFilePath(interaction, 'ModalInput.txt')
   upload_string(submission, save_path)
   await MessageChannel(bot,
      f'Attempting to add new event data from {interaction_objects.Store.StoreName}:\n{modal.submitted_message}',

@@ -46,16 +46,11 @@ def MeleeJsonPairings(json_data:list) -> tuple[list[Pairing], list[str], str, st
   return data, errors, '', event_date, archetypes
 
 def DetermineAchetype(competitor: dict) -> str | None:
-  #print('Competitor:', competitor)
   decklists = competitor['Decklists'][0]
-  print('Decklist:', decklists)
-  print('Decklist length:', len(decklists))
   if len(decklists) == 0:
     print('No decklist found')
     return None
 
-  print('Decklist found')
   name = decklists['DecklistName']
-  print('DecklistName:', name)
   return name
   
