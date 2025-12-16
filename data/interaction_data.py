@@ -2,6 +2,7 @@ import os
 import psycopg2
 from tuple_conversions import ConvertToGame, ConvertToFormat, ConvertToStore
 
+#TODO: Why are these in here and not in their corresponding data files?
 def GetFormatByMap(channel_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:

@@ -7,7 +7,7 @@ def GetMeleeTournamentData(tournament_id:str,
                            store: Store) -> list:
   storeInfo = GetStoreMeleeInfo(store)
   if storeInfo.ClientId is None or storeInfo.ClientSecret is None:
-    raise KnownError("Store not registered for Melee.gg API. Please contact Phil.")
+    raise KnownError("Store not registered for Melee.gg API. Update store settings and try again.")
   page_size = 250
   has_more = True
   data = []

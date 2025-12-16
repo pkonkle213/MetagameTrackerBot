@@ -5,14 +5,14 @@ from tuple_conversions import Store
 class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
   is_submitted = False
   
-  def __init__(self, store: Store) -> None:
+  def __init__(self, store: Store | None = None) -> None:
     super().__init__()
 
     self.store_name = discord.ui.Label(
       text="Store Name",
       component=discord.ui.TextInput(
         placeholder="Store name",
-        default=store.StoreName,
+        default=store.StoreName if store else "",
         required=True
       )
     )
@@ -22,7 +22,7 @@ class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
       text="Owner's Name",
       component=discord.ui.TextInput(
         placeholder="Owner's name",
-        default=store.OwnerName,
+        default=store.OwnerName if store else "",
         required=True
       )
     )

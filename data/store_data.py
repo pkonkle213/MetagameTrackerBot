@@ -1,6 +1,5 @@
 import os
 import psycopg2
-
 from tuple_conversions import ConvertToStore, Store
 
 def UpdateStore(discord_id
@@ -66,8 +65,6 @@ def AddStore(discord_id,
     row = cur.fetchone()
     return ConvertToStore(row) if row else None
 
-#This needs to update the store profile
-#Store name, store address, lpayout style
 def RegisterStore(discord_id,
   discord_name,
   store_name,
@@ -115,3 +112,19 @@ def GetClaimFeed(discord_id, category_id):
     cur.execute(command)
     row = cur.fetchone()
     return row[0] if row else None
+
+def GetPaidStoreIds():
+  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  with conn, conn.cursor() as cur:
+    command = '''
+    SELECT
+      discord_id
+    FROM
+      stores
+    WHERE
+      last_payment >= CURRENT_DATE - INTERVAL '1 month'
+    '''
+    cur.execute(command)
+    rows = cur.fetchall()
+    return [row[0] for row in rows]
+    

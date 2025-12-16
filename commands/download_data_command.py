@@ -5,6 +5,7 @@ from checks import isOwner
 from services.download_data_services import GetStoreData, GetPlayerData
 from discord_messages import MessageUser
 from services.command_error_service import Error
+from paid_stores import PAIDSTORES
 
 class DownloadDataGroup(commands.GroupCog, name='download'):
   """A group of commands for downloading data"""
@@ -14,7 +15,7 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
   @app_commands.command(name='store',
   description='Download the store data for a date range')
   @app_commands.check(isOwner)
-  #@app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVELINFSTORES])
+  @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in PAIDSTORES])
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def StoreDownload(self,

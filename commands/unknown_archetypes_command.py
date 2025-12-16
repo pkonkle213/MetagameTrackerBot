@@ -4,6 +4,7 @@ from discord import app_commands, Interaction
 from services.unknown_archetypes_services import GetAllUnknown
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
+from paid_stores import PAIDSTORES
 
 class UnknownArchetypes(commands.Cog):
   def __init__(self, bot):
@@ -13,7 +14,7 @@ class UnknownArchetypes(commands.Cog):
   description='See what archetypes still need submitted for a date range')
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-  #@app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in LEVEL1STORES])
+  @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in PAIDSTORES])
   async def IntoTheUnknown(self, interaction: Interaction,
          start_date: str = '',
          end_date: str = ''):

@@ -59,15 +59,19 @@ async def ConvertCSVToDataErrors(bot:commands.Bot,
   return data, errors, round_number, date
 
 async def ConvertModalToDataErrors(bot:commands.Bot,
-                                   interaction_objects:Data,
                                    interaction:Interaction):
-  #Get the data from the user
+  from interaction_objects import GetObjectsFromInteraction
+  
+  #Get the data from the user - send modal FIRST before any database operations
   modal = SubmitDataModal()
   await interaction.response.send_modal(modal)
   await modal.wait()
   
   if not modal.is_submitted:
     raise KnownError("SubmitData modal was dismissed or timed out. Please try again.")
+  
+  # Now that modal is submitted, get interaction objects (database operations)
+  interaction_objects = GetObjectsFromInteraction(interaction, game=True, format=True, store=True)
   
   submission = '\n'.join([f'Date:{modal.submitted_date}',
                   f'Round:{modal.submitted_round}',
@@ -85,4 +89,4 @@ async def ConvertModalToDataErrors(bot:commands.Bot,
                           interaction_objects.Game)
   round_number = modal.submitted_round
   date = modal.submitted_date
-  return data, errors, round_number, date
+  return data, errors, round_number, date, interaction_objects

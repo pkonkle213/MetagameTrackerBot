@@ -86,8 +86,6 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     melee_tournament_id: str
       The Melee Tournament ID for the event
     """
-    #Checks to ensure data can be submitted in the current channel
-    interaction_objects = SubmitCheck(interaction)
     #TODO: WHAT THIS DO?
     whole_event = False
 
@@ -95,9 +93,10 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     if csv_file and melee_tournament_id:
       raise KnownError("You can only submit a CSV file or a Melee Tournament ID, not both.")
 
-    #Get the data source from the user
+    #Get the data source from the user - respond FIRST before any slow operations
     if csv_file:
       await interaction.response.defer(ephemeral=True)
+      interaction_objects = SubmitCheck(interaction)
       if not csv_file.filename.endswith('.csv'):
         raise KnownError("Please upload a file with a '.csv' extension.")
       data, errors, round_number, date = await ConvertCSVToDataErrors(
@@ -107,6 +106,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
         csv_file)
     elif melee_tournament_id:
       await interaction.response.defer(ephemeral=True)
+      interaction_objects = SubmitCheck(interaction)
       whole_event = True
       json_dict = GetMeleeTournamentData(melee_tournament_id,
                                          interaction_objects.Store)
@@ -114,8 +114,9 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(
           interaction_objects, interaction, json_dict)
     else:
-      data, errors, round_number, date = await ConvertModalToDataErrors(self.bot, interaction_objects,
-                                                                        interaction)
+      # Send modal first, get interaction_objects after modal submits
+      data, errors, round_number, date, interaction_objects = await ConvertModalToDataErrors(
+          self.bot, interaction)
     
     if data is None:
       print('Data is None')
