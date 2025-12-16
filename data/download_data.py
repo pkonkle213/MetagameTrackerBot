@@ -85,8 +85,8 @@ def GetPlayerPairingData(store, game, format, start_date, end_date, user_id):
       f.name AS Format_name,
       e.event_date,
       frr.round_number,
-      ua1.archetype_played as your_archetype,
-      ua2.archetype_played as opponents_archetype,
+      INITCAP(ua1.archetype_played) as your_archetype,
+      INITCAP(ua2.archetype_played) as opponents_archetype,
       frr.result
     FROM
       full_pairings frr
@@ -97,7 +97,7 @@ def GetPlayerPairingData(store, game, format, start_date, end_date, user_id):
       INNER JOIN games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
       INNER JOIN player_names pn ON pn.discord_id = e.discord_id
-      AND pn.player_name = frr.player_name
+      AND UPPER(pn.player_name) = UPPER(frr.player_name)
     WHERE
       s.discord_id = {store.DiscordId}
       AND pn.submitter_id = {user_id}
@@ -123,7 +123,7 @@ def GetPlayerStandingData(store, game, format, start_date, end_date, user_id):
       g.name AS Game_Name,
       f.name AS Format_name,
       e.event_date,
-      COALESCE(ua.archetype_played, 'UNKNOWN') AS archetype_played,
+      INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
       fp.wins,
       fp.losses,
       fp.draws
@@ -136,7 +136,7 @@ def GetPlayerStandingData(store, game, format, start_date, end_date, user_id):
       INNER JOIN Games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
       INNER JOIN player_names pn ON pn.discord_id = e.discord_id
-      AND pn.player_name = fp.player_name
+      AND UPPER(pn.player_name) = UPPER(fp.player_name)
     WHERE
       e.discord_id = {store.DiscordId}
       {f'AND e.game_id = {game.ID}' if game else ''}
