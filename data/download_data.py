@@ -1,7 +1,6 @@
 import os
 import psycopg2
 
-#TODO: Double check
 def GetStoreStandingData(store, game, format, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
@@ -40,7 +39,6 @@ def GetStoreStandingData(store, game, format, start_date, end_date):
     rows = cur.fetchall()
     return rows
 
-#TODO: FIX THIS NOW
 def GetStorePairingData(store, game, format, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:

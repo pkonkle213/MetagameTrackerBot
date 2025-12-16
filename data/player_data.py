@@ -32,7 +32,7 @@ def GetStats(discord_id,
               draws
             FROM
               full_standings fs
-              LEFT JOIN unique_archetypes ua ON UPPER(ua.player_name) = fs.player_name
+              LEFT JOIN unique_archetypes ua ON UPPER(ua.player_name) = UPPER(fs.player_name)
               AND ua.event_id = fs.event_id
               LEFT JOIN events e ON e.id = fs.event_id
               LEFT JOIN formats f ON e.format_id = f.id
