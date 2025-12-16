@@ -12,7 +12,7 @@ def GetStoreData(interaction, start_date, end_date):
   
   date_start, date_end = BuildDateRange(start_date, end_date, format)
 
-  message = f'Here is the data for {store.StoreName.title()} between {start_date} and {end_date}:'
+  message = f'Here is the data for {store.StoreName.title()} between {date_start} and {date_end}:'
   files = []
   
   participant_data = GetStoreStandingData(store, game, format, date_start, date_end)
@@ -33,7 +33,7 @@ def GetPlayerData(interaction, start_date, end_date):
   game, format, store, user_id = GetObjectsFromInteraction(interaction, store=True, game=True)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   
-  message = f'Here is your data from {store.StoreName.title()} between {start_date} and {end_date}:'
+  message = f'Here is your data from {store.StoreName.title()} between {date_start} and {date_end}:'
   files = []
 
   participant_data = GetPlayerStandingData(store, game, format, date_start, date_end, user_id)
