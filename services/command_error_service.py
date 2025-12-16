@@ -20,6 +20,7 @@ async def Error(bot:Bot,
   print('IsCommandOnCooldown:', isinstance(error, app_commands.errors.CommandOnCooldown))
   print('IsCommandInvokeError:', isinstance(error, app_commands.errors.CommandInvokeError))
   print('IsKnownError:', isinstance(error, KnownError))
+  print('IsCheckFailure:', isinstance(error, app_commands.errors.CheckFailure))
   if isinstance(error, app_commands.errors.MissingRole):
     feedback = 'You do not have the required role to use this command.'
   elif isinstance(error, app_commands.errors.CommandOnCooldown):
