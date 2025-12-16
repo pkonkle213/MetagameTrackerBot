@@ -28,6 +28,8 @@ async def Error(bot:Bot,
     feedback = error.message
   #elif isinstance(error, app_commands.errors.CommandInvokeError):
   #  feedback = str(error.original)
+  elif isinstance(error, app_commands.errors.CheckFailure):
+    feedback = 'Only the owner of the discord has access to this command.'
   else:
     feedback = "Something unexpected went wrong. It's been reported. Please try again in a few hours."
     await MessageChannel(bot,
