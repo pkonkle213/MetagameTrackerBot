@@ -7,18 +7,18 @@ def GetStoreStandingData(store, game, format, start_date, end_date):
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT
-      g.name AS Game_Name,
-      f.name AS Format_Name,
-      DATE(e.event_date) as Event_Date,
-      fp.Player_Name,
-      COALESCE(ua.archetype_played, 'UNKNOWN') AS archetype_played,
+      INITCAP(g.name) AS Game_Name,
+      INITCAP(f.name) AS Format_Name,
+      DATE (e.event_date) AS Event_Date,
+      INITCAP(fp.Player_Name) AS player_name,
+      INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
       fp.wins,
       fp.losses,
       fp.draws
     FROM
       full_standings fp
       LEFT JOIN unique_archetypes ua ON fp.event_id = ua.event_id
-      AND fp.player_name = ua.player_name
+      AND UPPER(fp.player_name) = UPPER(ua.player_name)
       INNER JOIN events e ON e.id = fp.event_id
       INNER JOIN stores s ON s.discord_id = e.discord_id
       INNER JOIN Games g ON g.id = e.game_id
@@ -46,21 +46,25 @@ def GetStorePairingData(store, game, format, start_date, end_date):
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      g.name AS Game_Name,
-      f.name AS Format_name,
+      INITCAP(g.name) AS Game_Name,
+      INITCAP(f.name) AS Format_name,
       e.event_date,
       frr.round_number,
-      UPPER(frr.player_name),
-      INITCAT(frr.player_archetype),
-      frr.opponent_name,
-      INITCAP(frr.opponent_archetype),
-      frr.result
+      INITCAP(frr.player_name) as player_name,
+      INITCAP(COALESCE(ua1.archetype_played, 'UNKNOWN')) AS player_archetype,
+      INITCAP(frr.opponent_name),
+      INITCAP(COALESCE(ua2.archetype_played, 'UNKNOWN')) AS opponent_archetype,
+      INITCAP(frr.result) as result
     FROM
       full_pairings frr
       INNER JOIN events e ON e.id = frr.event_id
       INNER JOIN stores s ON s.discord_id = e.discord_id
       INNER JOIN Games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
+      LEFT JOIN unique_archetypes ua1 ON ua1.event_id = e.id
+      AND upper(ua1.player_name) = upper(frr.player_name)
+      LEFT JOIN unique_archetypes ua2 ON ua2.event_id = e.id
+      AND upper(ua2.player_name) = upper(frr.opponent_name)
     WHERE
       s.discord_id = {store.DiscordId}  
       {f'AND e.game_id = {game.ID}' if game else ''}
@@ -71,7 +75,7 @@ def GetStorePairingData(store, game, format, start_date, end_date):
       f.name,
       e.event_date DESC,
       round_number,
-      UPPER(player_name)
+      frr.player_name
     '''
 
     cur.execute(command)
@@ -83,13 +87,13 @@ def GetPlayerPairingData(store, game, format, start_date, end_date, user_id):
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      g.name AS Game_Name,
-      f.name AS Format_name,
+      INITCAP(g.name) AS Game_Name,
+      INITCAP(f.name) AS Format_name,
       e.event_date,
       frr.round_number,
       INITCAP(ua1.archetype_played) as your_archetype,
       INITCAP(ua2.archetype_played) as opponents_archetype,
-      frr.result
+      INITCAP(frr.result) as result
     FROM
       full_pairings frr
       INNER JOIN events e ON e.id = frr.event_id
@@ -122,8 +126,8 @@ def GetPlayerStandingData(store, game, format, start_date, end_date, user_id):
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT
-      g.name AS Game_Name,
-      f.name AS Format_name,
+      INITCAP(g.name) AS Game_Name,
+      INITCAP(f.name) AS Format_name,
       e.event_date,
       INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
       fp.wins,

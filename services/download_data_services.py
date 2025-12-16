@@ -45,7 +45,7 @@ def GetPlayerData(interaction, start_date, end_date):
     message += '\nNo participant data found for this player.'
   else:
     header = 'GAME,FORMAT,DATE,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS'
-    files.append(ConvertRowsToFile(participant_data, 'MyStoreParticipantData', header))
+    files.append(ConvertRowsToFile(participant_data, 'MyEventResultsData', header))
 
   round_data = GetPlayerPairingData(store, game, format, date_start, date_end, user_id)
   if len(round_data) == 0:
