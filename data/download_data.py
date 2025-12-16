@@ -1,6 +1,7 @@
 import os
 import psycopg2
 
+#TODO: Double check
 def GetStoreStandingData(store, game, format, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
@@ -39,6 +40,7 @@ def GetStoreStandingData(store, game, format, start_date, end_date):
     rows = cur.fetchall()
     return rows
 
+#TODO: FIX THIS NOW
 def GetStorePairingData(store, game, format, start_date, end_date):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
@@ -48,10 +50,10 @@ def GetStorePairingData(store, game, format, start_date, end_date):
       f.name AS Format_name,
       e.event_date,
       frr.round_number,
-      frr.player_name,
-      frr.player_archetype,
+      UPPER(frr.player_name),
+      INITCAT(frr.player_archetype),
       frr.opponent_name,
-      frr.opponent_archetype,
+      INITCAP(frr.opponent_archetype),
       frr.result
     FROM
       full_pairings frr
@@ -69,7 +71,7 @@ def GetStorePairingData(store, game, format, start_date, end_date):
       f.name,
       e.event_date DESC,
       round_number,
-      player_name
+      UPPER(player_name)
     '''
 
     cur.execute(command)
@@ -133,7 +135,7 @@ def GetPlayerStandingData(store, game, format, start_date, end_date, user_id):
       AND fp.player_name = ua.player_name
       INNER JOIN events e ON e.id = fp.event_id
       INNER JOIN stores s ON s.discord_id = e.discord_id
-      INNER JOIN Games g ON g.id = e.game_id
+      INNER JOIN games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
       INNER JOIN player_names pn ON pn.discord_id = e.discord_id
       AND UPPER(pn.player_name) = UPPER(fp.player_name)
