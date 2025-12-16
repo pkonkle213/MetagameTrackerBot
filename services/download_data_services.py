@@ -12,21 +12,17 @@ def GetStoreData(interaction, start_date, end_date):
   
   date_start, date_end = BuildDateRange(start_date, end_date, format)
 
-  message = f'Here is the data for {store.StoreName.title()}:'
+  message = f'Here is the data for {store.StoreName.title()} between {start_date} and {end_date}:'
   files = []
   
   participant_data = GetStoreStandingData(store, game, format, date_start, date_end)
-  if len(participant_data) == 0:
-    message += 'No participant data found for this store.'
-  else:  
+  if len(participant_data) != 0:
     header = 'GAME,FORMAT,DATE,PLAYER_NAME,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS'
     files.append(ConvertRowsToFile(participant_data, 'MyStoreParticipantData', header))
     message += ' Participant data is attached.'
 
   round_data = GetStorePairingData(store, game, format, date_start, date_end)
-  if len(round_data) == 0:
-    message += 'No round by round data found for this store.'
-  else:
+  if len(round_data) != 0:
     header = 'GAME,FORMAT,DATE,ROUND,PLAYER_NAME,ARCHETYPE_PLAYED,OPPONENT_NAME,OPPONENT_ARCHETYPE,RESULT'
     files.append(ConvertRowsToFile(round_data, 'MyStoreRoundByRoundData', header))
     message += ' Round by round data is attached.'
@@ -37,22 +33,19 @@ def GetPlayerData(interaction, start_date, end_date):
   game, format, store, user_id = GetObjectsFromInteraction(interaction, store=True, game=True)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   
-  message = f'Here is your data for {store.StoreName.title()}:'
+  message = f'Here is your data from {store.StoreName.title()} between {start_date} and {end_date}:'
   files = []
 
   participant_data = GetPlayerStandingData(store, game, format, date_start, date_end, user_id)
-  if len(participant_data) == 0:
-    message += '\nNo participant data found for this player.'
-  else:
+  if len(participant_data) != 0:
     header = 'GAME,FORMAT,DATE,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS'
     files.append(ConvertRowsToFile(participant_data, 'MyEventResultsData', header))
 
   round_data = GetPlayerPairingData(store, game, format, date_start, date_end, user_id)
-  if len(round_data) == 0:
-    message += '\nNo round by round data found for this player.'
-  else:
+  if len(round_data) != 0:
     header = 'GAME,FORMAT,DATE,ROUND,ARCHETYPE_PLAYED,OPPONENT_ARCHETYPE,RESULT'
     files.append(ConvertRowsToFile(round_data, 'MyRoundByRoundData', header))
+    
   return message, files
 
 def ConvertRowsToFile(data, filename, header):
