@@ -114,4 +114,4 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     self.is_submitted = False
 
 def IsMagicLimited(self) -> bool:
-  return self.game.Name.upper() == 'MAGIC' and self.game.HasFormats and self.format and self.format.IsLimited
+  return self.game.Name.upper() == 'MAGIC' and self.format and self.format.IsLimited

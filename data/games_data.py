@@ -30,7 +30,7 @@ def GetAllGames():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = '''
-    SELECT id, name, hasFormats
+    SELECT id, name
     FROM Games
     ORDER BY name
     '''

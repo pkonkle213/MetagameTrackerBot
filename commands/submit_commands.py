@@ -38,7 +38,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       issues.append("- You don't have the MTSubmitter role.")
     if not game:
       issues.append('- Category not mapped to a game')
-    if game and game.HasFormats and not format:
+    if game and not format:
       issues.append('- Channel not mapped to a format')
 
     if len(issues) == 1:
@@ -86,7 +86,6 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     melee_tournament_id: str
       The Melee Tournament ID for the event
     """
-    #TODO: WHAT THIS DO?
     whole_event = False
 
     #Ensure that only one type of data is being submitted

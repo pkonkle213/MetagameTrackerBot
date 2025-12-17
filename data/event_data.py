@@ -43,7 +43,7 @@ def GetEvent(discord_id,
       discord_id,
       event_date,
       game_id,
-      {'format_id,' if game.HasFormats and format else ''}
+      {'format_id,' if format else ''}
       last_update,
       event_type,
       COALESCE(is_posted, {False}) as is_posted,
@@ -53,7 +53,7 @@ def GetEvent(discord_id,
     WHERE
       discord_id = {discord_id}
       AND game_id = {game.ID}
-      {f'AND format_id = {format.ID}' if game.HasFormats and format else ''}
+      {f'AND format_id = {format.ID}' if format else ''}
       AND event_date = '{date}'
     ORDER BY
       event_date DESC
@@ -76,7 +76,7 @@ def CreateEvent(event_date,
     (event_date,
     discord_id,
     game_id
-    {', format_id' if game.HasFormats and format else ''}
+    {', format_id' if format else ''}
     , last_update
     , is_posted
     , is_complete
@@ -85,7 +85,7 @@ def CreateEvent(event_date,
     ('{event_date}',
     {discord_id},
     {game.ID}
-    {f' , {format.ID}' if game.HasFormats and format else ''}
+    {f' , {format.ID}' if format else ''}
     , 0
     , {False}
     , {False}

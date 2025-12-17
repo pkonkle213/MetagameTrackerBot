@@ -75,7 +75,7 @@ def GetFormat(game: Game | None, channel_id: int, required: bool):
     game (Game): The game to get the format for
     channel_id (int): The channel_id mapped to the format
     required (bool): Whether or not the format is required"""
-  if game is None or not game.HasFormats:
+  if game is None:
     return None
   format = db.GetFormatByMap(channel_id)
   if format is None and required:

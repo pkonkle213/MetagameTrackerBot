@@ -1,3 +1,4 @@
+from typing import List
 from services.date_functions import ConvertToDate
 import discord
 from custom_errors import KnownError
@@ -38,10 +39,9 @@ def SubmitData(interaction_objects:Data,
     event_created = True
 
   #Add the data to the database depending on the type of data
-  #TODO: is_complete needs to be added to the database
   results = ''
   if isinstance(data[0], Standing):
-    if event.EventType == 'PAIRINGS' or type(event) is list[Pairing]:
+    if event.EventType == 'PAIRINGS':
       raise KnownError('This event already has pairings submitted')
     results = AddStandingResults(event, data, userId)
   elif isinstance(data[0], Pairing):
@@ -92,7 +92,6 @@ def AddPairingResults(event:Event,
     if result:
       successes += 1
 
-  #TODO: The day should not have a leading zero
   if successes >= 1:
     if whole_event:
       return f"{successes} entries were pairings for {event.EventDate.strftime('%B %-d')}'s event."

@@ -46,7 +46,7 @@ def GetGameByMap(category_id:int):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command =  f'''
-    SELECT id, name, hasformats
+    SELECT id, name
     FROM Games g
     INNER JOIN gamecategorymaps gc ON g.id = gc.game_id
     WHERE category_id = {category_id}

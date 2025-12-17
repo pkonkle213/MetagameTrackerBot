@@ -31,14 +31,12 @@ def ConvertToFormat(format_obj: tuple[Any, Any, Any, Any]) -> Format:
 
 Game = namedtuple('Game',
                   ['ID',
-                   'Name',
-                   'HasFormats'])
+                   'Name'])
 
-def ConvertToGame(game_obj: tuple[Any, Any, Any]) -> Game:
+def ConvertToGame(game_obj: tuple[Any, Any]) -> Game:
   """Converts a tuple to a Game object."""
   return Game(int(game_obj[0]),
-              game_obj[1],
-              game_obj[2])
+              game_obj[1])
 
 Store = namedtuple('Store',
                    ['DiscordId',
