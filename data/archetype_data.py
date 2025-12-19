@@ -4,6 +4,7 @@ import psycopg2
 from models.archetype import Archetype
 from models.unknownArchetype import Unknown
 from data.sql.readSQL import read_sql_file
+from settings import DATABASE_URL
 
 NewArchetype = "NewArchetype.sql"
 

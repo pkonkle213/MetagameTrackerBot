@@ -1,22 +1,26 @@
 from collections import namedtuple
+from typing import NamedTuple
 from custom_errors import KnownError
 import discord
 import data.interaction_data as db
 from tuple_conversions import Game, Data
+from models.game import Game
+from models.format import Format
+from models.store import Store
 
+class Requirements(NamedTuple):
+  Game:bool
+  Format:bool
+  Store:bool
 
 def GetObjectsFromInteraction(interaction: discord.Interaction,
                               game:bool = False,
                               format:bool = False,
                               store:bool = False):
   """Gets the game, format, store, and user_id from the interaction"""
-  Requirements = namedtuple("Requirements",
-                            ["Game",
-                             "Format",
-                             "Store"])
   requirements = Requirements(game, format, store)
-  raw_data = SplitInteractionData(interaction)
-  formatted_data = FormatInteractionData(raw_data, requirements)
+  discord_id, category_id, channel_id, user_id = SplitInteractionData(interaction)
+  formatted_data = FormatInteractionData(discord_id, category_id, channel_id, user_id, requirements)
   return formatted_data
 
 
@@ -42,22 +46,12 @@ def SplitInteractionData(interaction: discord.Interaction):
   category_id = category.id
 
   user_id = -1
-  if isinstance(interaction, discord.Interaction):
-    user_id = interaction.user.id
-  elif isinstance(interaction, discord.Message):
-    user_id = interaction.author.id
-  else:
-    raise KnownError('No user found!?')
-
-  Data = namedtuple("Data",
-                    ["DiscordId",
-                     "CategoryId",
-                     "ChannelId",
-                     "UserId"])
-  return Data(discord_id, category_id, channel_id, user_id)
+  user_id = interaction.user.id
+  
+  return discord_id, category_id, channel_id, user_id
 
 def GetGame(category_id: int,
-            required: bool):
+            required: bool) -> Game:
   """Returns the game mapped to the given category_id
   
   Parameters:
@@ -68,22 +62,20 @@ def GetGame(category_id: int,
     raise KnownError('Game not found. Please map a game to this category.')
   return game
 
-def GetFormat(game: Game | None, channel_id: int, required: bool):
+def GetFormat(game: Game, channel_id: int, required: bool) -> Format:
   """Returns the format mapped to the given channel_id
   
   Parameters:
     game (Game): The game to get the format for
     channel_id (int): The channel_id mapped to the format
     required (bool): Whether or not the format is required"""
-  if game is None:
-    return None
   format = db.GetFormatByMap(channel_id)
   if format is None and required:
     raise KnownError('Format not found. Please map a format to this channel.')
   return format
 
 def GetStore(discord_id: int,
-             required: bool = True):
+             required: bool = True) -> Store:
   """Returns the store mapped to the given discord_id
   
   Parameters:
@@ -95,7 +87,7 @@ def GetStore(discord_id: int,
     raise KnownError('Store not found. Please register your store.')
   return store
 
-def FormatInteractionData(data, requirements):
+def FormatInteractionData(discord_id:int, category_id:int, channel_id:int, user_id:int, requirements:Requirements) -> tuple[Game, Format, Store, int]:
   """Formats the interaction data into the appropriate objects"""
   game = GetGame(data.CategoryId, requirements.Game)
   format = GetFormat(game, data.ChannelId, requirements.Format)

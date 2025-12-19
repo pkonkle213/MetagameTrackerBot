@@ -1,10 +1,13 @@
 import os
 import psycopg2
-from tuple_conversions import ConvertToGame, ConvertToFormat, ConvertToStore
+from custom_errors import KnownError
+from models.format import Format
+from tuple_conversions import ConvertToGame, ConvertToStore
+from settings import DATABASE_URL
 
 #TODO: Why are these in here and not in their corresponding data files?
-def GetFormatByMap(channel_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetFormatByMap(channel_id:int) -> Format:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT f.id, f.name, f.last_ban_update, f.is_limited
@@ -14,7 +17,9 @@ def GetFormatByMap(channel_id):
     '''
     cur.execute(command)
     row = cur.fetchone()
-    return ConvertToFormat(row) if row else None
+    if row is None:
+      raise KnownError('Format not found')
+    return Format(row[0], row[1], row[2], row[3])
 
 #TODO: Update to stores_view
 def GetStoreByDiscord(discord_id):
