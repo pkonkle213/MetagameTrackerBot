@@ -1,7 +1,14 @@
 import os
 import psycopg2
+from typing import NamedTuple
 
-from tuple_conversions import ConvertToArchetype
+class Archetype(NamedTuple):
+  """Represents a submitted archetype"""
+  EventId: str
+  PlayerName: str
+  Archetype: str
+  SubmitterId: str
+  SubmitterName: str
 
 def AddArchetype(event_id,
   player_name,
@@ -38,7 +45,7 @@ def AddArchetype(event_id,
     cur.execute(command, criteria)
     conn.commit()
     row = cur.fetchone()
-    return ConvertToArchetype(row) if row else None
+    return Archetype(row[0], row[1], row[2], row[3], row[4]) if row else None
 
 def GetUnknownArchetypes(discord_id,
                          game_id,
