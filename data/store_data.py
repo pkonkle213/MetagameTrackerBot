@@ -19,7 +19,7 @@ def UpdateStore(discord_id
       {', melee_id = %s' if melee_id else ''}
       {', melee_secret = %s' if melee_secret else ''}
     WHERE discord_id = {discord_id}
-    RETURNING discord_id, discord_name, store_name, owner_id, owner_name, store_address, used_for_data, FALSE
+    RETURNING discord_id, discord_name, store_name, owner_id, owner_name, store_address, used_for_data, FALSE, is_data_hub
     '''
 
     criteria = [store_name, owner_name, store_address]
@@ -53,32 +53,14 @@ def AddStore(discord_id,
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
-    INSERT INTO Stores (discord_id, discord_name, owner_id, owner_name, used_for_data)
-    VALUES ({discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True})
+    INSERT INTO Stores (discord_id, discord_name, owner_id, owner_name, used_for_data, is_data_hub)
+    VALUES ({discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True}, {False})
     ON CONFLICT (discord_id) DO UPDATE
     SET discord_name = '{discord_name}', owner_id = {owner_id}, owner_name = '{owner_name}'
-    RETURNING discord_id, discord_name, 'NONE', owner_id, owner_name, used_for_data, FALSE
+    RETURNING discord_id, discord_name, 'NONE', owner_id, owner_name, used_for_data, FALSE, is_data_hub
     '''
 
     cur.execute(command)
-    conn.commit()
-    row = cur.fetchone()
-    return ConvertToStore(row) if row else None
-
-def RegisterStore(discord_id,
-  discord_name,
-  store_name,
-  owner_id,
-  owner_name):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'''
-    INSERT INTO Stores (store_name, discord_id, discord_name, owner_id, owner_name, used_for_data)
-    VALUES (%s, {discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True})
-    RETURNING discord_id, discord_name, store_name, owner_id, owner_name, used_for_data, FALSE
-    '''
-    
-    cur.execute(command, [store_name])
     conn.commit()
     row = cur.fetchone()
     return ConvertToStore(row) if row else None
@@ -113,6 +95,7 @@ def GetClaimFeed(discord_id, category_id):
     row = cur.fetchone()
     return row[0] if row else None
 
+#TODO: Update to stores_view
 def GetPaidStoreIds():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:

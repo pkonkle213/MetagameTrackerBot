@@ -16,6 +16,7 @@ def GetFormatByMap(channel_id):
     row = cur.fetchone()
     return ConvertToFormat(row) if row else None
 
+#TODO: Update to stores_view
 def GetStoreByDiscord(discord_id):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
@@ -31,7 +32,10 @@ def GetStoreByDiscord(discord_id):
       CASE
         WHEN last_payment >= CURRENT_DATE - INTERVAL '1 month' THEN TRUE
         ELSE FALSE
-      END AS isPaid
+      END AS isPaid,
+      state,
+      region,
+      is_data_hub
     FROM
       Stores
     WHERE

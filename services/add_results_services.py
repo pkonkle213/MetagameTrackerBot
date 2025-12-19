@@ -41,7 +41,7 @@ def SubmitData(interaction_objects:Data,
   #Add the data to the database depending on the type of data
   results = ''
   if isinstance(data[0], Standing):
-    if event.EventType == 'PAIRINGS':
+    if event.EventType == 'PAIRINGS' or type(event) is list[Pairing]:
       raise KnownError('This event already has pairings submitted')
     results = AddStandingResults(event, data, userId)
   elif isinstance(data[0], Pairing):

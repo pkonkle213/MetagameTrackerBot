@@ -28,30 +28,3 @@ def GetStoreReportedPercentage(discord_id):
     cur.execute(command)
     rows = cur.fetchall()
     return rows
-
-def EventsAboveThreshold(percent, num_expected, date=None):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'''
-    SELECT
-      er.discord_id
-    FROM
-      events_reported er
-      INNER JOIN events e ON e.id = er.id
-      INNER JOIN stores s ON er.discord_id = s.discord_id
-    WHERE
-      e.event_date BETWEEN {'CURRENT_DATE' if date is None else f"DATE('{date}')"} - 40 AND {'CURRENT_DATE' if date is None else f"DATE('{date}')"}
-      AND s.last_payment > CURRENT_DATE - INTERVAL '1 month'
-    GROUP BY
-      er.discord_id
-    HAVING
-      COUNT(
-        CASE
-          WHEN reported_percent >= {percent} THEN 1
-        END
-      ) >= {num_expected}
-    '''
-
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows

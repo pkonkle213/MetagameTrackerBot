@@ -1,9 +1,10 @@
 from discord import utils, Interaction
 from settings import PHILID
 
+#TODO: Not a check, but a method
 def isSubmitter(guild, author, role_name):
   role = utils.find(lambda r: r.name == role_name, guild.roles)
-  return role in author.roles or author.id == PHILID
+  return role in author.roles #or author.id == PHILID
 
 def isOwner(interaction: Interaction):
   userid = interaction.user.id

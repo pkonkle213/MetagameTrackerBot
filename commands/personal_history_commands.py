@@ -4,6 +4,8 @@ from discord.ext import commands
 from services.personal_history_service import GetPersonalStandingsHistory, GetPersonalPairingsHistory
 from services.command_error_service import Error
 from paid_stores import PAIDSTORES
+from paid_users import is_allowed_user
+
 
 class PersonalHistoryCommands(commands.GroupCog, name='history'):
   """A group of commands for getting personal history"""
@@ -12,6 +14,7 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
 
   @app_commands.command(name='standings', description='Your history according to standings')
   @app_commands.guild_only()
+  @is_allowed_user()
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in PAIDSTORES])
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def GetPersonalStandingsHistory(self,
@@ -33,6 +36,7 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
 
   @app_commands.command(name='pairings', description='Your history according to pairings')
   @app_commands.guild_only()
+  @is_allowed_user()
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in PAIDSTORES])
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def GetPersonalPairingsHistory(self,

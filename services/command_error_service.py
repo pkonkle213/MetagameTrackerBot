@@ -27,8 +27,6 @@ async def Error(bot:Bot,
     feedback = str(error)
   elif isinstance(error, KnownError):
     feedback = error.message
-  #elif isinstance(error, app_commands.errors.CommandInvokeError):
-  #  feedback = str(error.original)
   elif isinstance(error, app_commands.errors.CheckFailure):
     feedback = 'Only the owner of the discord has access to this command.'
   else:
