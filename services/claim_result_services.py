@@ -1,3 +1,4 @@
+from tuple_conversions import Event
 import settings
 from checks import isSubmitter
 from custom_errors import KnownError
@@ -137,7 +138,7 @@ def CheckEventPercentage(event):
     return followup, final
   return None, None
 
-def OneEvent(event):
+def OneEvent(event: Event):
   event_meta = GetEventMeta(event.ID)
   data = event_meta
   title = f"{event.EventDate.strftime('%B %d')} Meta ({len(data)} attended)"

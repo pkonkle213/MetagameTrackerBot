@@ -1,58 +1,34 @@
-import os
+from datetime import date
+from settings import DATABASE_URL
 import psycopg2
-from typing import NamedTuple
+from models.archetype import Archetype
+from models.unknownArchetype import Unknown
+from data.sql.readSQL import read_sql_file
 
-class Archetype(NamedTuple):
-  """Represents a submitted archetype"""
-  EventId: str
-  PlayerName: str
-  Archetype: str
-  SubmitterId: str
-  SubmitterName: str
+NewArchetype = "NewArchetype.sql"
 
-def AddArchetype(event_id,
-  player_name,
-  archetype_played,
-  submitter_id,
-  submitter_name):
-  criteria = [player_name, archetype_played]
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def AddArchetype(event_id:int,
+  player_name:str,
+  archetype_played:str,
+  submitter_id:int,
+  submitter_name:str) -> Archetype | None:
+  """Adds the archetype to the database"""
+  criteria = [event_id, player_name, archetype_played, submitter_id, submitter_name]
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
-    command = f'''
-    INSERT INTO ArchetypeSubmissions
-    (event_id,
-    player_name,
-    archetype_played,
-    date_submitted,
-    submitter_id,
-    submitter_username,
-    reported)
-    VALUES
-    ({event_id},
-    %s,
-    %s,
-    NOW(),
-    {submitter_id},
-    '{submitter_name}',
-    {False})
-    RETURNING event_id,
-    player_name,
-    archetype_played,
-    submitter_id,
-    submitter_username
-    '''
+    command = read_sql_file(NewArchetype)
     
     cur.execute(command, criteria)
     conn.commit()
     row = cur.fetchone()
     return Archetype(row[0], row[1], row[2], row[3], row[4]) if row else None
 
-def GetUnknownArchetypes(discord_id,
-                         game_id,
-                         format_id,
-                         start_date,
-                         end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetUnknownArchetypes(discord_id:int,
+                         game_id:int,
+                         format_id:int,
+                         start_date:date,
+                         end_date:date) -> list[Unknown]:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -69,4 +45,4 @@ def GetUnknownArchetypes(discord_id,
 
     cur.execute(command)
     rows = cur.fetchall()
-    return rows
+    return [Unknown(row[0], row[1]) for row in rows]

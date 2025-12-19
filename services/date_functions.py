@@ -1,58 +1,33 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import pytz
+from models.format import Format
 
-def BuildDateRange(start_date, end_date, format, weeks=8):
+def BuildDateRange(start_date:str, end_date:str, format:Format, weeks:int =8) -> tuple[date,date]:
   date_end = GetToday() if end_date == '' else ConvertToDate(end_date)
   date_start = GetStartDate(date_end, weeks)
   if start_date != '':
     date_start = ConvertToDate(start_date)
-  elif format is not None and format.LastBanUpdate is not None and format.LastBanUpdate > date_start:
+  elif format and format.LastBanUpdate  and format.LastBanUpdate > date_start:
     date_start = format.LastBanUpdate
   return date_start, date_end
 
-def DateDifference(date1, date2):
+def DateDifference(date1:date, date2:date) -> int:
   return abs((date1 - date2).days)
-
-def GetCurrentQuarter():
-  now = datetime.now(pytz.timezone('America/New_York'))
-  return (now.year, (now.month + 2) // 3)
-
-def GetQuarterRange(year, quarter):
-  if year != 0 and quarter == 0:
-    year = datetime.now(pytz.timezone('America/New_York')).year
-    start_date = datetime(year, 1, 1).date()
-    end_date = datetime(year, 12, 31).date()
-  else:
-    if year == 0 and quarter != 0:
-      year = datetime.now(pytz.timezone('America/New_York')).year
-    
-    if year == 0 and quarter == 0:
-      year, quarter = GetCurrentQuarter()
-    
-    start_month = 1 + 3 * (quarter - 1)
-    start_date = datetime(year, start_month, 1).date()
-    next_start_month = start_month + 3
-    if next_start_month > 12:
-      year += 1
-      next_start_month = 1
-    next_month = datetime(year, next_start_month, 1).date()
-    end_date = next_month - timedelta(days=1)
-  return (start_date, end_date)
   
-def GetStartDate(end_date, weeks):
+def GetStartDate(end_date:date, weeks:int) -> date:
   start = end_date - timedelta(days=end_date.weekday()) - timedelta(weeks=weeks)
   return start
 
-def GetWeeksAgo(date, weeks):
+def GetWeeksAgo(date:date, weeks:int) -> date:
   return date - timedelta(weeks=weeks)
 
-def GetDaysAgo(date, days):
+def GetDaysAgo(date:date, days:int) -> date:
   return date - timedelta(days=days)
 
-def GetToday():
+def GetToday() -> date:
   return datetime.now(pytz.timezone('US/Eastern')).date()
 
-def ConvertToDate(date):
+def ConvertToDate(date:str) -> date:
   if date.count('/') == 1:
     date += '/' + str(GetToday().year)
   newDate = datetime.strptime(date, '%m/%d/%Y').date()

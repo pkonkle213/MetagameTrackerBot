@@ -44,104 +44,104 @@ def GetAnalysis(discord_id, game_id, format_id, weeks, isMeta, dates):
   formula = 'COUNT(*) * 1.0 / SUM(COUNT(*)) OVER()' if isMeta else '(sum(p.wins) * 1.0) / (sum(p.wins) + sum(p.losses))'
   with conn, conn.cursor() as cur:
     command = f"""
-SELECT
-  archetype_played,
-  ROUND(BeginningRange * 100, 2) AS BeginningRange,
-  ROUND(EndingRange * 100, 2) AS EndingRange,
-  ROUND((EndingRange - BeginningRange) * 100, 2) AS Shift
-FROM
-  (
-    SELECT
-      Decks.archetype_played,
-      SUM(COALESCE(BeginningRange.StatBR, 0)) AS BeginningRange,
-      SUM(COALESCE(EndingRange.StatER, 0)) AS EndingRange
-    FROM
-      (
-        SELECT DISTINCT
-          archetype_played
-        FROM
-          unique_archetypes
-        WHERE
-          event_id IN (
-            SELECT
-              id
-            FROM
-              events
-            WHERE
-              game_id = 1
-              AND format_id = 1
-              AND discord_id = 1210746744602890310
-              AND event_date BETWEEN '2025-01-01' AND '2025-04-30'
-          )
-      ) AS Decks
-      LEFT OUTER JOIN (
-        SELECT
-          ua.archetype_played,
-          COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () AS StatBR
-        FROM
-          full_standings fp
-        INNER JOIN unique_archetypes ua ON fp.event_id = ua.event_id AND fp.player_name = ua.player_name
-          INNER JOIN events e ON fp.event_id = e.id
-        WHERE
-          e.event_date BETWEEN '2025-05-01' AND '2025-07-23'
-          AND game_id = 1
-          AND format_id = 1
-          AND discord_id = 1210746744602890310
-        GROUP BY
-          ua.archetype_played
-      ) AS BeginningRange ON Decks.archetype_played = BeginningRange.archetype_played
-      LEFT OUTER JOIN (
-        SELECT
-        ua.archetype_played,
-          COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () AS StatER
-        FROM
-          full_standings fp
-        INNER JOIN unique_archetypes ua ON fp.event_id = ua.event_id AND fp.player_name = ua.player_name
-          INNER JOIN events e ON fp.event_id = e.id
-        WHERE
-          e.event_date BETWEEN '2025-01-01' AND '2025-07-23'
-          AND game_id = 1
-          AND format_id = 1
-          AND discord_id = 1210746744602890310
-        GROUP BY
-          ua.archetype_played
-      ) AS EndingRange ON Decks.archetype_played = EndingRange.archetype_played
-    GROUP BY
-      Decks.archetype_played
-  )
-WHERE
-  EndingRange >= .02
-  OR BeginningRange >= .02
-ORDER BY
-  Shift DESC,
-  archetype_played;
+      SELECT
+        archetype_played,
+        ROUND(BeginningRange * 100, 2) AS BeginningRange,
+        ROUND(EndingRange * 100, 2) AS EndingRange,
+        ROUND((EndingRange - BeginningRange) * 100, 2) AS Shift
+      FROM
+        (
+          SELECT
+            Decks.archetype_played,
+            SUM(COALESCE(BeginningRange.StatBR, 0)) AS BeginningRange,
+            SUM(COALESCE(EndingRange.StatER, 0)) AS EndingRange
+          FROM
+            (
+              SELECT DISTINCT
+                archetype_played
+              FROM
+                unique_archetypes
+              WHERE
+                event_id IN (
+                  SELECT
+                    id
+                  FROM
+                    events
+                  WHERE
+                    game_id = 1
+                    AND format_id = 1
+                    AND discord_id = 1210746744602890310
+                    AND event_date BETWEEN '2025-01-01' AND '2025-04-30'
+                )
+            ) AS Decks
+            LEFT OUTER JOIN (
+              SELECT
+                ua.archetype_played,
+                COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () AS StatBR
+              FROM
+                full_standings fp
+              INNER JOIN unique_archetypes ua ON fp.event_id = ua.event_id AND fp.player_name = ua.player_name
+                INNER JOIN events e ON fp.event_id = e.id
+              WHERE
+                e.event_date BETWEEN '2025-05-01' AND '2025-07-23'
+                AND game_id = 1
+                AND format_id = 1
+                AND discord_id = 1210746744602890310
+              GROUP BY
+                ua.archetype_played
+            ) AS BeginningRange ON Decks.archetype_played = BeginningRange.archetype_played
+            LEFT OUTER JOIN (
+              SELECT
+              ua.archetype_played,
+                COUNT(*) * 1.0 / SUM(COUNT(*)) OVER () AS StatER
+              FROM
+                full_standings fp
+              INNER JOIN unique_archetypes ua ON fp.event_id = ua.event_id AND fp.player_name = ua.player_name
+                INNER JOIN events e ON fp.event_id = e.id
+              WHERE
+                e.event_date BETWEEN '2025-01-01' AND '2025-07-23'
+                AND game_id = 1
+                AND format_id = 1
+                AND discord_id = 1210746744602890310
+              GROUP BY
+                ua.archetype_played
+            ) AS EndingRange ON Decks.archetype_played = EndingRange.archetype_played
+          GROUP BY
+            Decks.archetype_played
+        )
+      WHERE
+        EndingRange >= .02
+        OR BeginningRange >= .02
+      ORDER BY
+        Shift DESC,
+        archetype_played;
 
-SELECT
-  Archetypes.player_archetype,
-  Matches.opponent_archetype,
-  total_matches
-FROM
-  (
-    SELECT DISTINCT
-      player_archetype
-    FROM
-      full_pairings
-    ORDER BY
-      player_archetype
-  ) AS Archetypes
-  LEFT OUTER JOIN (
-    SELECT
-      player_archetype,
-      opponent_archetype,
-      count(*) AS total_matches
-    FROM
-      full_pairings
-    GROUP BY
-      player_archetype,
-      opponent_archetype
-  ) AS Matches ON Matches.player_archetype = Archetypes.player_archetype
-ORDER BY
-  player_archetype
+      SELECT
+        Archetypes.player_archetype,
+        Matches.opponent_archetype,
+        total_matches
+      FROM
+        (
+          SELECT DISTINCT
+            player_archetype
+          FROM
+            full_pairings
+          ORDER BY
+            player_archetype
+        ) AS Archetypes
+        LEFT OUTER JOIN (
+          SELECT
+            player_archetype,
+            opponent_archetype,
+            count(*) AS total_matches
+          FROM
+            full_pairings
+          GROUP BY
+            player_archetype,
+            opponent_archetype
+        ) AS Matches ON Matches.player_archetype = Archetypes.player_archetype
+      ORDER BY
+        player_archetype
       """
     
       cur.execute(command)

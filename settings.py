@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+DATABASE_URL = os.environ['DATABASE_URL']
+
 DISCORDTOKEN = os.environ['DISCORD_TOKEN']
 
 BOTGUILDID = int(os.environ['BOT_GUILD_ID'])

@@ -1,5 +1,6 @@
 import discord
-from tuple_conversions import Game, Format
+from tuple_conversions import Game
+from models.format import Format
 from discord import ui, Interaction
 from services.date_functions import GetToday
 

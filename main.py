@@ -1,4 +1,3 @@
-import logging
 import pytz
 from timedposts.automated_check_events import EventCheck
 import pathlib
