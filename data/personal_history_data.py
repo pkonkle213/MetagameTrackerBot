@@ -7,7 +7,7 @@ from tuple_conversions import Format, Game, Store
 
 def GetPairingsHistory(user_id: int, game: Game, format: Format,
                        start_date: date, end_date: date, store: Store):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -46,7 +46,7 @@ def GetPairingsHistory(user_id: int, game: Game, format: Format,
 
 def GetStandingsHistory(user_id: int, game: Game, format: Format,
                        start_date: date, end_date: date, store: Store):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT

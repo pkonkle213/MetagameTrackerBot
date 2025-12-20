@@ -1,13 +1,18 @@
 import discord
+from discord.ext import commands
+from typing import Optional, Sequence
+from discord.file import File
 
-async def MessageUser(bot, msg, userId, files=None):
+
+#TODO: How do I type files??
+async def MessageUser(bot: commands.Bot, msg:str, userId:int, files:Optional[Sequence[File]] = None):
   user = await bot.fetch_user(userId)
-  if files is None:
-    await user.send(f'{msg}')
-  else:
+  if files:
     await user.send(f'{msg}', files=files)
+  else:
+    await user.send(f'{msg}')
 
-async def MessageChannel(bot, msg, guildId, channelId, file=None):
+async def MessageChannel(bot:commands.Bot, msg:str, guildId:int, channelId:int):
   server = bot.get_guild(int(guildId))
   if server is None:
     print(f'Server {guildId} not found')
@@ -20,8 +25,5 @@ async def MessageChannel(bot, msg, guildId, channelId, file=None):
     if not isinstance(channel, discord.TextChannel):
       raise Exception(f'Channel {channelId} is not a text channel')
 
-    if file is None:
-      await channel.send(f'{msg}')
-    else:
-      await channel.send(f'{msg}', file=file)
+    await channel.send(f'{msg}')
     

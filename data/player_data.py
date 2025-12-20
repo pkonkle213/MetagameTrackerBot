@@ -8,7 +8,7 @@ def GetStats(discord_id,
              user_id,
              start_date,
              end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -87,7 +87,7 @@ def GetTopPlayerData(store,
                      format,
                      start_date,
                      end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
     SELECT

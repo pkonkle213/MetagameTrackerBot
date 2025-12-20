@@ -2,7 +2,7 @@ import os
 import psycopg2
 
 def GetSubmittedArchetypes(game, format, store, player_name, date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     criteria = [player_name] if player_name != '' else []
     command = f'''

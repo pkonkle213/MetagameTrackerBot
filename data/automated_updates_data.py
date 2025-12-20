@@ -1,8 +1,9 @@
-import os
+from typing import Any
+from settings import DATABASE_URL
 import psycopg2
 
-def GetDataChannels(data_guild_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetDataChannels(data_guild_id:int) -> list[tuple[Any,...]]:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT

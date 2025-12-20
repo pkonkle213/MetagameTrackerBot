@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 import pytz
 from models.format import Format
 
-def BuildDateRange(start_date:str, end_date:str, format:Format, weeks:int =8) -> tuple[date,date]:
+def BuildDateRange(start_date:str, end_date:str, format:Format | None, weeks:int = 8) -> tuple[date,date]:
   date_end = GetToday() if end_date == '' else ConvertToDate(end_date)
   date_start = GetStartDate(date_end, weeks)
   if start_date != '':

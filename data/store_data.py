@@ -1,15 +1,15 @@
-import os
+from data.interaction_data import GetStoreByDiscord
+from models.store import Store
+from settings import DATABASE_URL
 import psycopg2
-from tuple_conversions import ConvertToStore, Store
 
-def UpdateStore(discord_id
-                , owner_name
-                , store_name
-                , store_address
-                , melee_id
-                , melee_secret
-               ) -> Store | None:
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def UpdateStore(discord_id:int,
+  owner_name:str,
+  store_name:str, 
+  store_address:str, 
+  melee_id:str, 
+  melee_secret:str) -> Store | None:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     UPDATE Stores
@@ -19,7 +19,7 @@ def UpdateStore(discord_id
       {', melee_id = %s' if melee_id else ''}
       {', melee_secret = %s' if melee_secret else ''}
     WHERE discord_id = {discord_id}
-    RETURNING discord_id, discord_name, store_name, owner_id, owner_name, store_address, used_for_data, FALSE, is_data_hub
+    RETURNING discord_id
     '''
 
     criteria = [store_name, owner_name, store_address]
@@ -31,10 +31,10 @@ def UpdateStore(discord_id
     cur.execute(command, criteria)
     conn.commit()
     row = cur.fetchone()
-    return ConvertToStore(row) if row else None
+    return GetStoreByDiscord(row[0]) if row else None
 
-def DeleteStore(discord_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def DeleteStore(discord_id:int) -> bool:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     DELETE FROM Stores
@@ -44,29 +44,29 @@ def DeleteStore(discord_id):
     cur.execute(command)
     conn.commit()
     success = cur.fetchone()
-    return success
+    return True if success else False
 
-def AddStore(discord_id,
-  discord_name,
-  owner_id,
-  owner_name):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def AddStore(discord_id:int,
+  discord_name:str,
+  owner_id:int,
+  owner_name:str) -> Store | None:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     INSERT INTO Stores (discord_id, discord_name, owner_id, owner_name, used_for_data, is_data_hub)
     VALUES ({discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True}, {False})
     ON CONFLICT (discord_id) DO UPDATE
     SET discord_name = '{discord_name}', owner_id = {owner_id}, owner_name = '{owner_name}'
-    RETURNING discord_id, discord_name, 'NONE', owner_id, owner_name, used_for_data, FALSE, is_data_hub
+    RETURNING discord_id
     '''
 
     cur.execute(command)
     conn.commit()
     row = cur.fetchone()
-    return ConvertToStore(row) if row else None
+    return GetStoreByDiscord(row[0]) if row else None
 
-def GetAllStoreDiscordIds():
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetAllStoreDiscordIds() -> list[int] | None:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = '''
     SELECT discord_id
@@ -74,10 +74,10 @@ def GetAllStoreDiscordIds():
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    return [row[0] for row in rows]
+    return [row[0] for row in rows] if rows else None
 
-def GetClaimFeed(discord_id, category_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetClaimFeed(discord_id:int, category_id:int) -> int | None:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -95,19 +95,17 @@ def GetClaimFeed(discord_id, category_id):
     row = cur.fetchone()
     return row[0] if row else None
 
-#TODO: Update to stores_view
-def GetPaidStoreIds():
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetPaidStoreIds() -> list[int] | None:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = '''
     SELECT
       discord_id
     FROM
-      stores
+      stores_view
     WHERE
-      last_payment >= CURRENT_DATE - INTERVAL '1 month'
+      isPaid = TRUE
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    return [row[0] for row in rows]
-    
+    return [row[0] for row in rows] if rows else None

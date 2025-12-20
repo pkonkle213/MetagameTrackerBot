@@ -9,7 +9,7 @@ Message = namedtuple('Message',['DiscordID',
                                 'ChannelID'])
 
 def ThreeDayOldEventsWithUnknown():
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = """
     SELECT
@@ -46,7 +46,7 @@ Event = namedtuple('Event',['ID',
                             'ChannelID'])
 
 def GetCompletedUnpostedEvents():
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = """
     SELECT

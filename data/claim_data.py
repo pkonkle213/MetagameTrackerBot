@@ -3,7 +3,7 @@ import psycopg2
 from tuple_conversions import ConvertToEvent
 
 def GetEventAndPlayerName(discord_id, date, game, format, player_name):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT

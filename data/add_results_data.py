@@ -1,46 +1,51 @@
-import os
+from typing import Any
+from models.pairing import Pairing
+from settings import DATABASE_URL
 import psycopg2
+from models.standing import Standing
 
-#TODO: The player names should be injected to prevent SQL injection attacks
-def SubmitTable(event_id,
-                p1name,
-                p1wins,
-                p2name,
-                p2wins,
-                round_number,
-                submitter_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def SubmitTable(event_id:int,
+                players:Pairing,
+                submitter_id:int) -> tuple[Any,...] | None:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
-    command = f'''
+    command = '''
     INSERT INTO pairings
     (event_id,
     round_number,
-    player1_game_wins,
-    player2_game_wins,
     player1_name,
+    player1_game_wins,
     player2_name,
+    player2_game_wins,
     submitter_id)
-    VALUES ({event_id},
-    {round_number},
-    {p1wins},
-    {p2wins},
-    '{p1name}',
-    '{p2name}',
-    {submitter_id})
+    VALUES (%s,
+    %s,
+    %s,
+    %s,
+    %s,
+    %s,
+    %s)
     RETURNING *
     '''
-    cur.execute(command)
+
+    criteria = [event_id,
+    players.RoundNumber,
+    players.P1Name,
+    players.P1Wins,
+    players.P2Name,
+    players.P2Wins,
+    submitter_id]
+    cur.execute(command, criteria)
     conn.commit()
     row = cur.fetchone()
     return row if row else None
 
-def AddResult(event_id,
-              player,
-              submitter_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def AddResult(event_id:int,
+              player:Standing,
+              submitter_id:int) -> tuple[Any,...] | None:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     try:
-      #I'm choosing to inject these values due to player_name technically being a string of user input
       command = '''
       INSERT INTO standings
       (event_id,

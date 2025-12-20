@@ -3,7 +3,7 @@ import os
 from collections import namedtuple
 
 def GetStoreMeleeInfo(store):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT

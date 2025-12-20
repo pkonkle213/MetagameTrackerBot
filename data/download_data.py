@@ -2,7 +2,7 @@ import os
 import psycopg2
 
 def GetStoreStandingData(store, game, format, start_date, end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT
@@ -40,7 +40,7 @@ def GetStoreStandingData(store, game, format, start_date, end_date):
     return rows
 
 def GetStorePairingData(store, game, format, start_date, end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -81,7 +81,7 @@ def GetStorePairingData(store, game, format, start_date, end_date):
     return rows
 
 def GetPlayerPairingData(store, game, format, start_date, end_date, user_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -120,7 +120,7 @@ def GetPlayerPairingData(store, game, format, start_date, end_date, user_id):
     return rows
 
 def GetPlayerStandingData(store, game, format, start_date, end_date, user_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT

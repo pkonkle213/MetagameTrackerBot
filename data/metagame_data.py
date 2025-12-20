@@ -1,21 +1,24 @@
-import settings
-import os
+from typing import Any
+from settings import DATABASE_URL, DATAGUILDID
+from datetime import date
+from models.store import Store
+from models.format import Format
+from models.game import Game
 import psycopg2
-from tuple_conversions import Store
 
 def GetAreaForMeta(store:Store) -> str:
   if store.IsHub:
     return f'AND s.region = {store.Region}'
-  if store.DiscordId == settings.DATAGUILDID:
-    return f'AND s.used_for_data = {True}'
+  if store.DiscordId == DATAGUILDID:
+    return 'AND s.used_for_data = TRUE'
   return f'AND s.discord_id = {store.DiscordId}'
 
-def GetMetagame(game,
-                format,
-                start_date,
-                end_date,
-                store:Store):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetMetagame(game:Game,
+                format:Format,
+                start_date:date,
+                end_date:date,
+                store:Store) -> list[tuple[Any,...]]:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -34,9 +37,9 @@ def GetMetagame(game,
         INNER JOIN stores s ON e.discord_id = s.discord_id
       WHERE
         e.event_date BETWEEN '{start_date}' AND '{end_date}'
-        {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != settings.DATAGUILDID else f'AND s.used_for_data = {True}'}
-        AND e.format_id = {format.ID}
-        AND e.game_id = {game.ID}
+        {GetAreaForMeta(store)}
+        AND e.format_id = {format.FormatId}
+        AND e.game_id = {game.GameId}
       GROUP BY
         UPPER(ua.archetype_played)
       )

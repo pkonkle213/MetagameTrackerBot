@@ -2,7 +2,7 @@ import os
 import psycopg2
 
 def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT

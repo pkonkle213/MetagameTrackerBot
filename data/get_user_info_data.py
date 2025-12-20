@@ -8,7 +8,7 @@ from tuple_conversions import Format, Game, Store
 def GetPlayerName(user_id: int,
                   discord_id: int):
   """Pulls the player name for a userId and a discordId from the database"""
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
     SELECT
@@ -28,7 +28,7 @@ def GetWinPercentage(user_id: int,
                      store: Store,
                      game: Game,
                      format: Format):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
     SELECT
@@ -54,7 +54,7 @@ def GetLastArchetype(user_id: int,
                   store: Store,
                   game: Game,
                   format: Format):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
     SELECT
@@ -85,7 +85,7 @@ def GetMostPlayed(user_id: int,
                   store: Store,
                   game: Game,
                   format: Format):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
     SELECT

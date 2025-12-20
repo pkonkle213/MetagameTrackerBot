@@ -1,6 +1,8 @@
-def MaxLength(headers, collection):
+from typing import Any
+
+def MaxLength(headers:list[str], collection:list[tuple[Any,...]]) -> list[int]:
   buffer = 2
-  maxLengths = []
+  maxLengths:list[int] = []
   for header in headers:
     maxLengths.append(len(header) + buffer)
 
@@ -13,10 +15,10 @@ def MaxLength(headers, collection):
   maxLengths[len(maxLengths) - 1] -= 2
   return maxLengths
 
-def BuildTableOutput(title,
-                     headers,
-                     items,
-                     archetype_column = None):
+def BuildTableOutput(title:str,
+                     headers:list[str],
+                     items:list[tuple[Any,...]],
+                     archetype_column:int = -1) -> str:
   column_widths = MaxLength(headers, items)
   align = ''
   output = f'```{title}\n\n'
@@ -33,7 +35,7 @@ def BuildTableOutput(title,
       column_format = '{:' + align + str(column_widths[i]) + 's}'
       if element[0] == '-':
         output = output[:-1]
-      if archetype_column is not None and i == archetype_column and element != 'UNKNOWN':
+      if i == archetype_column and element != 'UNKNOWN':
         output += column_format.format(element)
       else:
         output += column_format.format(element.title())

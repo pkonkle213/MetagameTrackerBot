@@ -2,7 +2,7 @@ import os
 import psycopg2
 
 def GetStoreReportedPercentage(discord_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT

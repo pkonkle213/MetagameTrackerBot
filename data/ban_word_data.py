@@ -4,7 +4,7 @@ import psycopg2
 from psycopg2.errors import UniqueViolation
 
 def AddWord(word):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   try:
     with conn, conn.cursor() as cur:
       criteria = [word]
@@ -23,7 +23,7 @@ def AddWord(word):
     return None
 
 def GetWord(word):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = '''
     SELECT id, badword
@@ -40,7 +40,7 @@ def GetWord(word):
 
 def MatchDisabledArchetypes(discord_id, user_id):
   days = 30
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT e.event_date, asu.player_name, asu.archetype_played, asu.date_submitted, asu.submitter_username
@@ -56,7 +56,7 @@ def MatchDisabledArchetypes(discord_id, user_id):
     return rows
 
 def DisableMatchingWords(discord_id, word):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     word_inject = "%" + word + "%"
     criteria = [word_inject]
@@ -77,7 +77,7 @@ def DisableMatchingWords(discord_id, word):
     return row
 
 def AddBadWordBridge(discord_id, word_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     INSERT INTO badwords_stores (discord_id, badword_id)
@@ -90,7 +90,7 @@ def AddBadWordBridge(discord_id, word_id):
     return row
 
 def CheckStoreBannedWords(discord_id, archetype):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = '''
     SELECT
@@ -109,7 +109,7 @@ def CheckStoreBannedWords(discord_id, archetype):
     return rows
 
 def GetOffenders(game, format, store):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT 

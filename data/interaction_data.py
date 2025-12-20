@@ -1,12 +1,11 @@
-import os
 import psycopg2
-from custom_errors import KnownError
 from models.format import Format
-from tuple_conversions import ConvertToGame, ConvertToStore
+from models.game import Game
+from models.store import Store
 from settings import DATABASE_URL
 
 #TODO: Why are these in here and not in their corresponding data files?
-def GetFormatByMap(channel_id:int) -> Format:
+def GetFormatByMap(channel_id:int) -> Format | None:
   conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
@@ -17,13 +16,11 @@ def GetFormatByMap(channel_id:int) -> Format:
     '''
     cur.execute(command)
     row = cur.fetchone()
-    if row is None:
-      raise KnownError('Format not found')
-    return Format(row[0], row[1], row[2], row[3])
 
-#TODO: Update to stores_view
-def GetStoreByDiscord(discord_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+    return Format(row[0], row[1], row[2], row[3]) if row else None
+
+def GetStoreByDiscord(discord_id:int) -> Store | None:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT
@@ -34,25 +31,23 @@ def GetStoreByDiscord(discord_id):
       owner_name,
       store_address,
       used_for_data,
-      CASE
-        WHEN last_payment >= CURRENT_DATE - INTERVAL '1 month' THEN TRUE
-        ELSE FALSE
-      END AS isPaid,
+      isPaid,
       state,
       region,
       is_data_hub
     FROM
-      Stores
+      stores_view
     WHERE
       discord_id = {discord_id}
     '''
 
     cur.execute(command)
     row = cur.fetchone()
-    return ConvertToStore(row) if row else None
+    
+    return Store(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9], row[10]) if row else None
 
-def GetGameByMap(category_id:int):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetGameByMap(category_id:int) -> Game | None:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT id, name
@@ -63,4 +58,5 @@ def GetGameByMap(category_id:int):
     
     cur.execute(command)
     row = cur.fetchone()
-    return ConvertToGame(row) if row else None
+
+    return Game(row[0], row[1]) if row else None

@@ -6,11 +6,10 @@ import settings
 from services.convert_and_save_input import ConvertCSVToDataErrors, ConvertModalToDataErrors, ConvertMeleeTournamentToDataErrors
 from checks import isSubmitter
 from custom_errors import KnownError
-from tuple_conversions import Standing
 from discord import app_commands, Interaction, Attachment
 from discord.ext import commands
 from discord_messages import MessageChannel
-from interaction_objects import GetObjectsFromInteraction
+from interaction_objects import GetFormat, GetGame, GetObjectsFromInteraction, GetStore, SplitInteractionData
 from services.add_results_services import SubmitCheck, SubmitData
 from services.command_error_service import Error
 
@@ -18,7 +17,7 @@ from services.command_error_service import Error
 class SubmitDataChecker(commands.GroupCog, name='submit'):
   """A group of commands to submit data"""
 
-  def __init__(self, bot):
+  def __init__(self, bot: commands.Bot):
     self.bot = bot
 
   @app_commands.command(name="check",
@@ -28,18 +27,24 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
   async def SubmitCheck(self, interaction: Interaction):
     await interaction.response.defer(ephemeral=True)
     issues = ['Issues I detect:']
-    interactionData = GetObjectsFromInteraction(interaction)
-    game = interactionData.Game
-    format = interactionData.Format
-    store = interactionData.Store
-    if not store:
+    
+    discord_id, category_id, channel_id, user_id = SplitInteractionData(interaction)
+    try:
+      GetGame(category_id)
+      try:
+        GetFormat(channel_id)
+      except:
+        issues.append('- Channel not mapped to a format')
+    except:
+      issues.append('- Category not mapped to a game')
+
+    try:
+      GetStore(discord_id)
+    except:
       issues.append('- Store not registered')
+
     if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter'):
       issues.append("- You don't have the MTSubmitter role.")
-    if not game:
-      issues.append('- Category not mapped to a game')
-    if game and not format:
-      issues.append('- Channel not mapped to a format')
 
     if len(issues) == 1:
       await interaction.followup.send(
@@ -142,7 +147,6 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
         data,
         date,
         round_number,
-        False,  #modal.submitted_is_event_complete)
         whole_event)
     if output is None:
       raise KnownError("Unable to submit data. Please try again.")
