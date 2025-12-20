@@ -1,11 +1,13 @@
-from custom_errors import KnownError
-import discord
-import data.interaction_data as db
 from typing import NamedTuple
-from models.game import Game
+
+import discord
+
+from custom_errors import KnownError
+import data.interaction_data as db
 from models.format import Format
-from models.store import Store
+from models.game import Game
 from models.interactionData import Data
+from models.store import Store
 
 class Requirements(NamedTuple):
   Game:bool

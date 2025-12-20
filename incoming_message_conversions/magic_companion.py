@@ -1,9 +1,11 @@
 from custom_errors import KnownError
-from tuple_conversions import Standing, Pairing, Result
+from models.standing import Standing
+from models.pairing import Pairing
+from models.result import Result
 
-def CompanionStandings(message, seperator):
-  data = []
-  errors = []
+def CompanionStandings(message:str, seperator:str) -> Result:
+  data:list[Standing] = []
+  errors:list[str] = []
   rows = message.split('\n')
 
   for i in range(0, len(rows)):
@@ -34,9 +36,9 @@ def CompanionStandings(message, seperator):
 
   return Result(data if len(data) > 0 else None, errors)
 
-def CompanionPairings(message):
-  data = []
-  errors = []
+def CompanionPairings(message:str):
+  data:list[Pairing] = []
+  errors:list[str] = []
   rows = message.split('\n')
   for i in range(0, len(rows), 6):
     row = rows[i:i + 6]

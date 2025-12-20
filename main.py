@@ -1,13 +1,15 @@
-import pytz
-from timedposts.automated_check_events import EventCheck
+import datetime
 import pathlib
+
 import discord
 from discord.ext import commands, tasks
-import datetime
+import pytz
+
 from services.store_services import NewStoreRegistration
-import settings
-from timedposts.automated_updates import UpdateDataGuild
 from services.sync_service import SyncCommands
+import settings
+from timedposts.automated_check_events import EventCheck
+from timedposts.automated_updates import UpdateDataGuild
 
 intents = discord.Intents.all()
 intents.message_content = True

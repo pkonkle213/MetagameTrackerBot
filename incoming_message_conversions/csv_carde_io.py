@@ -1,10 +1,12 @@
 import pandas as pd
-from tuple_conversions import Pairing, Standing, Result
+from models.pairing import Pairing
+from models.standing import Standing
+from models.result import Result
 
-def Pairings(dataframe:pd.DataFrame):
+def Pairings(dataframe:pd.DataFrame) -> Result:
   """Takes a provided dataframe and attempts to make it into a Pairing object"""
-  data = []
-  errors = []
+  data:list[Pairing] = []
+  errors:list[str] = []
   
   try:
     for index, row in dataframe.iterrows():
@@ -51,4 +53,4 @@ def Standings(dataframe:pd.DataFrame):
   except Exception as exception:
     print('Lorcana Official Standing Rows:\n', dataframe)
     print('Lorcana Official Standing Exception:', exception)
-    return Result(None, None)
+    return Result(None, [])

@@ -1,10 +1,15 @@
+from typing import Any
 import pandas as pd
-from incoming_message_conversions.magic_companion import CompanionStandings, CompanionPairings
+
 from incoming_message_conversions.csv_carde_io import Pairings, Standings
-from tuple_conversions import Game
+from incoming_message_conversions.magic_companion import (
+  CompanionPairings,
+  CompanionStandings,
+)
+from models.game import Game
 
 def ConvertCSVToData(dataframe:pd.DataFrame,
-                     game:Game):
+                     game:Game) -> Any:
   data = None
   errors = []
   if data is None:
