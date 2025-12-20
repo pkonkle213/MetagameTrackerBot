@@ -26,8 +26,7 @@ def upload_file(file_path: str, destination_name: str | None = None) -> str:
     if destination_name is None:
         destination_name = os.path.basename(file_path)
     
-    with open(file_path, 'rb') as f:
-        client.upload_from_file(destination_name, f)
+    client.upload_from_filename(destination_name, file_path)
     
     return f"/{BUCKET_NAME}/{destination_name}"
 
@@ -99,8 +98,7 @@ def download_file(source_name: str, destination_path: str) -> str:
     """
     client = get_client()
     
-    with open(destination_path, 'wb') as f:
-        client.download_to_file(source_name, f)
+    client.download_to_filename(source_name, destination_path)
     
     return destination_path
 
