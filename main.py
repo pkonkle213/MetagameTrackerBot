@@ -53,6 +53,7 @@ async def before_find_the_unknown():
 @tasks.loop(minutes=5)
 async def sync_paid_users():
   """Every 5 minutes, the bot will sync the paid users for command permission"""
+  print('Syncing paid users')
   with contextlib.suppress(Exception):
     UpdatePaidUsers()
 

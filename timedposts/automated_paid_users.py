@@ -1,7 +1,6 @@
 from data.five6_users import GetFive6Users
 
-# TODO: How do I get this to update every 5 minutes?
-PAID_USERS: list[int] = []
+PAID_USERS: list[int] = [] + GetFive6Users()
 
 def UpdatePaidUsers():
   global PAID_USERS
