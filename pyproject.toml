@@ -17,4 +17,5 @@ dependencies = [
     "replit>=4.1.2",
     "replit-object-storage>=1.0.2",
     "requests==2.32.3",
+    "urllib3>=2.5.0",
 ]

@@ -1765,6 +1765,7 @@ dependencies = [
     { name = "replit" },
     { name = "replit-object-storage" },
     { name = "requests" },
+    { name = "urllib3" },
 ]
 
 [package.metadata]
@@ -1781,6 +1782,7 @@ requires-dist = [
     { name = "replit", specifier = ">=4.1.2" },
     { name = "replit-object-storage", specifier = ">=1.0.2" },
     { name = "requests", specifier = "==2.32.3" },
+    { name = "urllib3", specifier = ">=2.5.0" },
 ]
 
 [[package]]
