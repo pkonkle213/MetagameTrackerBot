@@ -6,7 +6,7 @@ from services.player_win_record_services import PlayRecord
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from paid_stores import PAIDSTORES
-from paid_users import is_allowed_user
+from checks import isPaidUser
 
 class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
   """A group of commands to get personal statistics"""
@@ -16,7 +16,7 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
   @app_commands.command(name='matchups',
                         description="See your win/loss record based upon archetypes you've played against in this format")
   @app_commands.guild_only()
-  @is_allowed_user()
+  @isPaidUser()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in PAIDSTORES])
   async def PersonalMatchupReport(self,
@@ -32,7 +32,7 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
   @app_commands.command(name="wlrecord",
                         description="Look up your win/loss record(s)")
   @app_commands.guild_only()
-  @is_allowed_user()
+  @isPaidUser()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in PAIDSTORES])
   async def WLDRecord(self,

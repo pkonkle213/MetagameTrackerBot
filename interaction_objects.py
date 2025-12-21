@@ -2,18 +2,15 @@ from collections import namedtuple
 from custom_errors import KnownError
 import discord
 import data.interaction_data as db
-from tuple_conversions import Game, Data
+from tuple_conversions import Game, Data, Format
 
 
 def GetObjectsFromInteraction(interaction: discord.Interaction,
-                              game:bool = False,
-                              format:bool = False,
-                              store:bool = False):
+                              game: bool = False,
+                              format: bool = False,
+                              store: bool = False):
   """Gets the game, format, store, and user_id from the interaction"""
-  Requirements = namedtuple("Requirements",
-                            ["Game",
-                             "Format",
-                             "Store"])
+  Requirements = namedtuple("Requirements", ["Game", "Format", "Store"])
   requirements = Requirements(game, format, store)
   raw_data = SplitInteractionData(interaction)
   formatted_data = FormatInteractionData(raw_data, requirements)
@@ -31,7 +28,9 @@ def SplitInteractionData(interaction: discord.Interaction):
   discord_id = discord_guild.id
 
   channel = interaction.channel
-  if channel is None or not isinstance(channel, discord.TextChannel) or isinstance(channel, discord.GroupChannel):
+  if channel is None or not isinstance(channel,
+                                       discord.TextChannel) or isinstance(
+                                           channel, discord.GroupChannel):
     raise KnownError('No channel found.')
 
   channel_id = channel.id
@@ -49,15 +48,11 @@ def SplitInteractionData(interaction: discord.Interaction):
   else:
     raise KnownError('No user found!?')
 
-  Data = namedtuple("Data",
-                    ["DiscordId",
-                     "CategoryId",
-                     "ChannelId",
-                     "UserId"])
+  Data = namedtuple("Data", ["DiscordId", "CategoryId", "ChannelId", "UserId"])
   return Data(discord_id, category_id, channel_id, user_id)
 
-def GetGame(category_id: int,
-            required: bool):
+
+def GetGame(category_id: int, required: bool):
   """Returns the game mapped to the given category_id
   
   Parameters:
@@ -68,7 +63,9 @@ def GetGame(category_id: int,
     raise KnownError('Game not found. Please map a game to this category.')
   return game
 
-def GetFormat(game: Game | None, channel_id: int, required: bool):
+
+def GetFormat(game: Game | None, channel_id: int,
+              required: bool) -> Format | None:
   """Returns the format mapped to the given channel_id
   
   Parameters:
@@ -82,8 +79,8 @@ def GetFormat(game: Game | None, channel_id: int, required: bool):
     raise KnownError('Format not found. Please map a format to this channel.')
   return format
 
-def GetStore(discord_id: int,
-             required: bool = True):
+
+def GetStore(discord_id: int, required: bool = True):
   """Returns the store mapped to the given discord_id
   
   Parameters:
@@ -94,6 +91,7 @@ def GetStore(discord_id: int,
   if store is None and required:
     raise KnownError('Store not found. Please register your store.')
   return store
+
 
 def FormatInteractionData(data, requirements):
   """Formats the interaction data into the appropriate objects"""

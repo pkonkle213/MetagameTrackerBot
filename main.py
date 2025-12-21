@@ -5,7 +5,7 @@ import datetime
 import discord
 from discord.ext import commands, tasks
 import settings
-from timedposts.automated_paid_users import SyncPaidUsers
+from timedposts.automated_paid_users import UpdatePaidUsers
 from timedposts.automated_check_events import EventCheck
 from services.store_services import NewStoreRegistration
 from timedposts.automated_updates import UpdateDataGuild
@@ -28,6 +28,7 @@ async def on_ready():
   print(f'Logged on as {format(bot.user)}!')
   data_guild_update.start()
   find_the_unknown.start()
+  sync_paid_users.start()
   await SyncCommands(bot, CMDS_DIR)
   print('Synced commands. Good to go')
 
@@ -53,7 +54,7 @@ async def before_find_the_unknown():
 async def sync_paid_users():
   """Every 5 minutes, the bot will sync the paid users for command permission"""
   with contextlib.suppress(Exception):
-    SyncPaidUsers()
+    UpdatePaidUsers()
 
 
 @sync_paid_users.before_loop

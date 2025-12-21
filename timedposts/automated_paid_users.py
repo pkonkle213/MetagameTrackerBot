@@ -1,12 +1,8 @@
 from data.five6_users import GetFive6Users
 
+# TODO: How do I get this to update every 5 minutes?
 PAID_USERS: list[int] = []
 
-
-def SyncPaidUsers():
-  """Syncs the paid users for command permission"""
-
-  pateron_users = []  #GetPatreonUsers()
-  five6_users = GetFive6Users()
-
-  PAID_USERS = pateron_users + five6_users
+def UpdatePaidUsers():
+  global PAID_USERS
+  PAID_USERS = [] + GetFive6Users()
