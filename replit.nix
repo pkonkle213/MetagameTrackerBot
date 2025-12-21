@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.pyright
     pkgs.tesseract
     pkgs.tk
     pkgs.tcl

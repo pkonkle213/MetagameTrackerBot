@@ -8,24 +8,9 @@ from output_builder import BuildTableOutput
 from discord_messages import MessageUser
 import settings
 
-#This needs to be split into two functions, that would make sense.
 async def EventCheck(bot):
-  #await MessageUser(bot, 'Checking events for unknown archetypes...', settings.PHILID)
   await GetEventsWithUnkown(bot)
-  #await MessageUser(bot, 'Checking events for completed unposted events...', settings.PHILID)
-  #await GetCompletedEvents(bot)
-  #await MessageUser(bot, 'All done!', settings.PHILID)
-
-async def GetCompletedEvents(bot):
-  #Find events exactly 3 days old and are marked as complete (aka not expecting any more input), no unknown archetypes, but has not been posted
-  events = GetCompletedUnpostedEvents()
-
-  for event in events:
-    title, headers, data = OneEvent(event.ID)
-    output = BuildTableOutput(title, headers, data)
-    await MessageChannel(bot, output, event.DiscordID, event.ChannelID)
-    EventIsPosted(event.ID)
-
+ 
 async def GetEventsWithUnkown(bot):
   #Find events exactly 3 days old and need archetypes
   channels = ThreeDayOldEventsWithUnknown()
