@@ -80,13 +80,13 @@ def AddStoreToDatabase(guild: discord.Guild):
 def MatchGame(category_name: str, games: list[Game]):
   """Matches the category name to a game"""
   for game in games:
-    if game.Name.lower() in category_name.lower():
+    if game.GameName.lower() in category_name.lower():
       return game
 
 def MatchFormat(channel_name: str, formats: list[Format]):
   """Matches the channel name to a format"""
   for format in formats:
-    if format.Name.lower() in channel_name.lower():
+    if format.FormatName.lower() in channel_name.lower():
       return format
 
 def MapCategoriesAndChannels(guild: discord.Guild):
@@ -100,19 +100,19 @@ def MapCategoriesAndChannels(guild: discord.Guild):
   for category in guild.categories:
     game = MatchGame(category.name, games)
     if game:
-      result = AddGameMap(guild.id, game.ID, category.id)
+      result = AddGameMap(guild.id, game.GameId, category.id)
       mapping = True
       if result:
-        output += f'Game: {game.Name.title()}, Category: {category.name} ({category.id})\n'
+        output += f'Game: {game.GameName.title()}, Category: {category.name} ({category.id})\n'
     
-      formats = GetFormatsByGameId(game.ID)
+      formats = GetFormatsByGameId(game.GameId)
       if formats:
         for channel in category.channels:
           format = MatchFormat(channel.name, formats)
           if format:
-            result = AddFormatMap(guild.id, format.ID, channel.id)
+            result = AddFormatMap(guild.id, format.FormatId, channel.id)
             if result:
-              output += f'Format: {format.Name.title()}, Channel: {channel.name} ({channel.id})\n'
+              output += f'Format: {format.FormatName.title()}, Channel: {channel.name} ({channel.id})\n'
 
       output += '\n'
 

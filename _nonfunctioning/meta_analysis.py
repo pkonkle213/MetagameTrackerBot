@@ -28,7 +28,7 @@ def GetAnalysis(interaction, weeks):
   format = tuple_conversions.ConvertToFormat((1, "Pauper"))
 
   dates = date_functions.GetAnalysisDates(weeks)
-  data = database_connection.GetAnalysis(discord_id, game.ID, format.ID, weeks,
+  data = database_connection.GetAnalysis(discord_id, game.GameId, format.FormatId, weeks,
                                          True, dates)
   #If the True/False values flex the sql, it needs to flex the title and headers as well
   title = f'Percentage Shifts in Meta from {dates[3]} to {dates[0]}'

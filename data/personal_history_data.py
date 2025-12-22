@@ -31,8 +31,8 @@ def GetPairingsHistory(user_id: int, game: Game, format: Format,
     WHERE
       pn.submitter_id = {user_id}
       {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != DATAGUILDID else ''}
-      {f'AND e.game_id = {game.ID}' if game else ''}
-      {f'AND e.format_id = {format.ID}' if format else ''}
+      {f'AND e.game_id = {game.GameId}' if game else ''}
+      {f'AND e.format_id = {format.FormatId}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     ORDER BY
       e.event_date DESC,
@@ -68,8 +68,8 @@ def GetStandingsHistory(user_id: int, game: Game, format: Format,
     WHERE
       pn.submitter_id = {user_id}
       {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != DATAGUILDID else ''}
-      {f'AND e.game_id = {game.ID}' if game else ''}
-      {f'AND e.format_id = {format.ID}' if format else ''}
+      {f'AND e.game_id = {game.GameId}' if game else ''}
+      {f'AND e.format_id = {format.FormatId}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     ORDER BY
       e.event_date DESC

@@ -52,8 +52,8 @@ def GetEvent(discord_id,
       events_view
     WHERE
       discord_id = {discord_id}
-      AND game_id = {game.ID}
-      {f'AND format_id = {format.ID}' if format else ''}
+      AND game_id = {game.GameId}
+      {f'AND format_id = {format.FormatId}' if format else ''}
       AND event_date = '{date}'
     ORDER BY
       event_date DESC
@@ -84,8 +84,8 @@ def CreateEvent(event_date,
     VALUES
     ('{event_date}',
     {discord_id},
-    {game.ID}
-    {f' , {format.ID}' if format else ''}
+    {game.GameId}
+    {f' , {format.FormatId}' if format else ''}
     , 0
     , {False}
     , {False}

@@ -17,8 +17,8 @@ def ConvertToArchetype(archetype_obj: tuple[Any, Any, Any, Any, Any]) -> Archety
                    archetype_obj[4])
 
 Format = namedtuple('Format',
-                    ['ID',
-                     'Name',
+                    ['FormatId',
+                     'FormatName',
                      'LastBanUpdate',
                      'IsLimited'])
 
@@ -30,8 +30,8 @@ def ConvertToFormat(format_obj: tuple[Any, Any, Any, Any]) -> Format:
                 format_obj[3])
 
 Game = namedtuple('Game',
-                  ['ID',
-                   'Name'])
+                  ['GameId',
+                   'GameName'])
 
 def ConvertToGame(game_obj: tuple[Any, Any]) -> Game:
   """Converts a tuple to a Game object."""

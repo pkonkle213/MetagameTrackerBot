@@ -1,7 +1,7 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
-from services.formats_services import AddStoreFormatMap, GetFormatOptions
-from services.game_mapper_services import AddStoreGameMap, GetGameOptions
+from services.formats_services import AddStoreFormatMap, GetFormatOptions #, AddFormatRKV
+from services.game_mapper_services import AddStoreGameMap, GetGameOptions, AddGameRKV
 from select_menu_bones import SelectMenu
 from services.command_error_service import Error
 from services.map_claim_feed import MapClaimFeed
@@ -30,7 +30,11 @@ class MappingCommands(commands.GroupCog, name='map'):
     placeholder = 'Choose a game'
     dynamic_options = GetGameOptions()
     result = await SelectMenu(interaction, message, placeholder, dynamic_options)
-    print('Result:', result[0])
+    check = AddGameRKV(interaction, result[0])
+    if check:
+      print('Game added to RKV')
+    else:
+      print('Game not added to RKV')
     output = AddStoreGameMap(interaction, result[0])
     await interaction.followup.send(output, ephemeral=True)
 

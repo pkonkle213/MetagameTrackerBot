@@ -1,26 +1,27 @@
-import os
+from settings import DATABASE_URL
 import psycopg2
 from tuple_conversions import ConvertToGame, ConvertToFormat, ConvertToStore
 
+
 #TODO: Why are these in here and not in their corresponding data files?
 def GetFormatByMap(channel_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT f.id, f.name, f.last_ban_update, f.is_limited
     FROM formatchannelmaps fc
     INNER JOIN formats f ON f.id = fc.format_id
-    WHERE channel_id = {channel_id}
+    WHERE fc.channel_id = {channel_id}
     '''
     cur.execute(command)
     row = cur.fetchone()
     return ConvertToFormat(row) if row else None
 
-#TODO: Update to stores_view
+
 def GetStoreByDiscord(discord_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
-    command =  f'''
+    command = f'''
     SELECT
       discord_id,
       discord_name,
@@ -29,15 +30,12 @@ def GetStoreByDiscord(discord_id):
       owner_name,
       store_address,
       used_for_data,
-      CASE
-        WHEN last_payment >= CURRENT_DATE - INTERVAL '1 month' THEN TRUE
-        ELSE FALSE
-      END AS isPaid,
+      isPaid,
       state,
       region,
       is_data_hub
     FROM
-      Stores
+      stores_view
     WHERE
       discord_id = {discord_id}
     '''
@@ -46,16 +44,17 @@ def GetStoreByDiscord(discord_id):
     row = cur.fetchone()
     return ConvertToStore(row) if row else None
 
-def GetGameByMap(category_id:int):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+
+def GetGameByMap(category_id: int):
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
-    command =  f'''
+    command = f'''
     SELECT id, name
     FROM Games g
     INNER JOIN gamecategorymaps gc ON g.id = gc.game_id
-    WHERE category_id = {category_id}
+    WHERE gc.category_id = {category_id}
     '''
-    
+
     cur.execute(command)
     row = cur.fetchone()
     return ConvertToGame(row) if row else None

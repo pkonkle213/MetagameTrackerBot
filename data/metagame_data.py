@@ -35,8 +35,8 @@ def GetMetagame(game,
       WHERE
         e.event_date BETWEEN '{start_date}' AND '{end_date}'
         {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != settings.DATAGUILDID else f'AND s.used_for_data = {True}'}
-        AND e.format_id = {format.ID}
-        AND e.game_id = {game.ID}
+        AND e.format_id = {format.FormatId}
+        AND e.game_id = {game.GameId}
       GROUP BY
         UPPER(ua.archetype_played)
       )

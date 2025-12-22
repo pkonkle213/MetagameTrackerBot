@@ -30,8 +30,8 @@ def GetEventAndPlayerName(discord_id, date, game, format, player_name):
       ) fp ON fp.event_id = id
     WHERE
       discord_id = {discord_id}
-      AND game_id = {game.ID}
-      AND format_id = {format.ID}
+      AND game_id = {game.GameId}
+      AND format_id = {format.FormatId}
       AND event_date = '{date}'
     '''
     

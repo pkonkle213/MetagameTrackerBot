@@ -1,11 +1,11 @@
-import os
+from settings import DATABASE_URL
 import psycopg2
 from tuple_conversions import ConvertToGame
 
 def AddGameMap(discord_id:int,
    game_id:int,
    category_id:int):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     INSERT INTO GameCategoryMaps
@@ -27,7 +27,7 @@ def AddGameMap(discord_id:int,
     return row
 
 def GetAllGames():
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = '''
     SELECT id, name

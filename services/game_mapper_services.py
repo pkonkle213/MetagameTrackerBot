@@ -1,3 +1,4 @@
+from replit import db
 from discord import Interaction, TextChannel
 from custom_errors import KnownError
 from interaction_objects import GetObjectsFromInteraction
@@ -20,6 +21,25 @@ def AddStoreGameMap(interaction:Interaction,
   if rows is None:
     return 'Unable to add game map'
   return f'Success! This category ({category.name}) is now mapped to {chosen_game[1].title()}'
+
+#TODO: If another category is mapped to the same game, this means that both categories will be mapped to the same game. This is not ideal.
+def AddGameRKV(interaction:Interaction, game:Game) -> bool:
+  try:
+    discord_id = interaction.guild.id
+    category_id = interaction.channel.category_id
+    map = {
+            f'{category_id}':
+            {
+              'game': game,
+              'formats': {}
+            }
+          }
+    db[f'{discord_id}'] = map
+    return True
+  except Exception as e:
+    print('Error adding game to RKV:', e)
+    return False
+  
 
 def GetGameOptions():
   return GetAllGames()

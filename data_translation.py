@@ -19,7 +19,7 @@ def ConvertMessageToData(message:str,
                          game:Game):
   data = None
   errors = []
-  if game.Name.upper() == 'MAGIC':
+  if game.GameName.upper() == 'MAGIC':
     print('Attempting to parse Magic - Companion Data')
     
     if data is None:

@@ -127,8 +127,8 @@ def GetOffenders(game, format, store):
       INNER JOIN Formats f on f.id = e.format_id
     WHERE asu.reported = {True}
       AND e.discord_id = {store.DiscordId}
-      {f'AND e.game_id = {game.ID}' if game else ''}
-      {f'AND e.format_id = {format.ID}' if format else ''}
+      {f'AND e.game_id = {game.GameId}' if game else ''}
+      {f'AND e.format_id = {format.FormatId}' if format else ''}
     ORDER BY asu.date_submitted DESC
     '''
     

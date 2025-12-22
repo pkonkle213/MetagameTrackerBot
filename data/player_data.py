@@ -46,8 +46,8 @@ def GetStats(discord_id,
                   discord_id = {discord_id}
                   AND submitter_id = {user_id}
               )
-              {f'AND e.format_id = {format.ID}' if format else ''}
-              AND e.game_id = {game.ID}
+              {f'AND e.format_id = {format.FormatId}' if format else ''}
+              AND e.game_id = {game.GameId}
               AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
               AND e.discord_id = {discord_id}
           )
@@ -125,8 +125,8 @@ def GetTopPlayerData(store,
                     WHERE
                       event_date BETWEEN '{start_date}' AND '{end_date}'
                       {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILDID else ''}
-                      AND game_id = {game.ID}
-                      {f'AND format_id = {format.ID}' if format else ''}
+                      AND game_id = {game.GameId}
+                      {f'AND format_id = {format.FormatId}' if format else ''}
                   ) AS attendance_percentage
                 FROM
                   events e
@@ -134,8 +134,8 @@ def GetTopPlayerData(store,
                 WHERE
                   event_date BETWEEN '{start_date}' AND '{end_date}'
                   {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILDID else ''}
-                  AND game_id = {game.ID}
-                  {f'AND format_id = {format.ID}' if format else ''}
+                  AND game_id = {game.GameId}
+                  {f'AND format_id = {format.FormatId}' if format else ''}
                 GROUP BY
                   UPPER(player_name)
               )
@@ -155,8 +155,8 @@ def GetTopPlayerData(store,
             WHERE
               event_date BETWEEN '{start_date}' AND '{end_date}'
               {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILDID else ''}
-              AND game_id = {game.ID}
-              {f'AND format_id = {format.ID}' if format else ''}
+              AND game_id = {game.GameId}
+              {f'AND format_id = {format.FormatId}' if format else ''}
             GROUP BY
               e.id
           )

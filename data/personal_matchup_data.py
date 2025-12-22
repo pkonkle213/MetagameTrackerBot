@@ -23,8 +23,8 @@ def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id)
       pn.submitter_id = 505548744444477441
       AND UPPER(fp.opponent_name) != 'BYE'
       AND e.discord_id = {discord_id}
-      AND e.game_id = {game.ID}
-      AND e.format_id = {format.ID}
+      AND e.game_id = {game.GameId}
+      AND e.format_id = {format.FormatId}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     GROUP BY UPPER(ua.archetype_played)
     ORDER BY COUNT(*) DESC, 

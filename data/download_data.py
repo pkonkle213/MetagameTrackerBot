@@ -24,8 +24,8 @@ def GetStoreStandingData(store, game, format, start_date, end_date):
       INNER JOIN formats f ON f.id = e.format_id
     WHERE
       e.discord_id = {store.DiscordId}
-      {f'AND e.game_id = {game.ID}' if game else ''}
-      {f'AND e.format_id = {format.ID}' if format else ''}
+      {f'AND e.game_id = {game.GameId}' if game else ''}
+      {f'AND e.format_id = {format.FormatId}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     ORDER BY
       event_date DESC,
@@ -65,8 +65,8 @@ def GetStorePairingData(store, game, format, start_date, end_date):
       AND upper(ua2.player_name) = upper(frr.opponent_name)
     WHERE
       s.discord_id = {store.DiscordId}  
-      {f'AND e.game_id = {game.ID}' if game else ''}
-      {f'AND e.format_id = {format.ID}' if format else ''}
+      {f'AND e.game_id = {game.GameId}' if game else ''}
+      {f'AND e.format_id = {format.FormatId}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     ORDER BY
       g.name,
@@ -105,8 +105,8 @@ def GetPlayerPairingData(store, game, format, start_date, end_date, user_id):
     WHERE
       s.discord_id = {store.DiscordId}
       AND pn.submitter_id = {user_id}
-      {f'AND e.game_id = {game.ID}' if game else ''}
-      {f'AND e.format_id = {format.ID}' if format else ''}
+      {f'AND e.game_id = {game.GameId}' if game else ''}
+      {f'AND e.format_id = {format.FormatId}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     ORDER BY
       g.name,
@@ -143,8 +143,8 @@ def GetPlayerStandingData(store, game, format, start_date, end_date, user_id):
       AND UPPER(pn.player_name) = UPPER(fp.player_name)
     WHERE
       e.discord_id = {store.DiscordId}
-      {f'AND e.game_id = {game.ID}' if game else ''}
-      {f'AND e.format_id = {format.ID}' if format else ''}
+      {f'AND e.game_id = {game.GameId}' if game else ''}
+      {f'AND e.format_id = {format.FormatId}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
       AND pn.submitter_id = {user_id}
     ORDER BY

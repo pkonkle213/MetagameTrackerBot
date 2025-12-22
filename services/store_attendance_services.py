@@ -14,7 +14,7 @@ def GetStoreAttendance(interaction:Interaction, start_date, end_date):
                        format,
                        date_start,
                        date_end)
-  subject = format.Name.title() if format else game.Name.title()
+  subject = format.FormatName.title() if format else game.GameName.title()
   title = f'{subject} attendance from {date_start} to {date_end}'
   headers = ['Date', 'Players']
   if not format:
