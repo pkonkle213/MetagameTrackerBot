@@ -17,22 +17,27 @@ from interaction_objects import GetObjectsFromInteraction
 from output_builder import BuildTableOutput
 from discord_messages import MessageChannel
 
-#TODO: This is a lot of stuff. Needs to be broken up into smaller functions, refactored, and renamed
 async def GetUserInput(interaction:Interaction) -> tuple[str, str, str]:
-  game = ConvertToGame(db[f'{interaction.guild_id}'][f'{interaction.channel.category_id}']['game'])
-  format_obj = db[f'{interaction.guild_id}'][f'{interaction.channel.category_id}']['formats'][f'{interaction.channel_id}']
-  format = ConvertToFormat((format_obj[0], format_obj[1], None, format_obj[2]))
+  try:
+    game = ConvertToGame(db[f'{interaction.guild_id}'][f'{interaction.channel.category_id}']['game'])
+  except Exception:
+    raise KnownError('This category is not mapped to a game. Please contact your store owner to have them map the category.')
+  try:
+    format_obj = db[f'{interaction.guild_id}'][f'{interaction.channel.category_id}']['formats'][f'{interaction.channel_id}']
+    format = ConvertToFormat((format_obj[0], format_obj[1], None, format_obj[2]))
+  except Exception:
+    raise KnownError('This channel is not mapped to a format. Please contact your store owner to have them map the channel.')
   modal = SubmitArchetypeModal(game, format)
   await interaction.response.send_modal(modal)
   await modal.wait()
 
-  if data.game.GameName.upper() == 'MAGIC' and data.Format.IsLimited:
+  if game.GameName.upper() == 'MAGIC' and format.IsLimited:
     archetype = MagicLimited(modal.submitted_main_colors,
                              modal.submitted_splash_colors)
   else:
     archetype = ConvertInput(modal.submitted_archetype)
   #TODO: Makes more sense for this to be handled in the modal?
-    if data.game.GameName.upper() == 'LORCANA':
+    if game.GameName.upper() == 'LORCANA':
       archetype = f'{modal.submitted_inks[0]}/{modal.submitted_inks[1]} - {archetype}'
   return modal.submitted_player_name, modal.submitted_date, archetype
 

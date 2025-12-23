@@ -33,7 +33,7 @@ def UpdateStore(discord_id
     row = cur.fetchone()
     return ConvertToStore(row) if row else None
 
-def DeleteStore(discord_id):
+def DeleteStore(discord_id) -> bool:
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
@@ -44,12 +44,12 @@ def DeleteStore(discord_id):
     cur.execute(command)
     conn.commit()
     success = cur.fetchone()
-    return success
+    return True if success else False
 
 def AddStore(discord_id,
   discord_name,
   owner_id,
-  owner_name):
+  owner_name) -> int | None:
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
@@ -57,13 +57,13 @@ def AddStore(discord_id,
     VALUES ({discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True}, {False})
     ON CONFLICT (discord_id) DO UPDATE
     SET discord_name = '{discord_name}', owner_id = {owner_id}, owner_name = '{owner_name}'
-    RETURNING discord_id, discord_name, 'NONE', owner_id, owner_name, used_for_data, FALSE, is_data_hub
+    RETURNING discord_id
     '''
 
     cur.execute(command)
     conn.commit()
     row = cur.fetchone()
-    return ConvertToStore(row) if row else None
+    return row[0] if row else None
 
 def GetAllStoreDiscordIds():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
@@ -95,7 +95,6 @@ def GetClaimFeed(discord_id, category_id):
     row = cur.fetchone()
     return row[0] if row else None
 
-#TODO: Update to stores_view
 def GetPaidStoreIds():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
@@ -103,9 +102,9 @@ def GetPaidStoreIds():
     SELECT
       discord_id
     FROM
-      stores
+      stores_view
     WHERE
-      last_payment >= CURRENT_DATE - INTERVAL '1 month'
+      isPaid = TRUE
     '''
     cur.execute(command)
     rows = cur.fetchall()
