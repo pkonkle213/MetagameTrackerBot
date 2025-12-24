@@ -18,14 +18,24 @@ from output_builder import BuildTableOutput
 from discord_messages import MessageChannel
 
 async def GetUserInput(interaction:Interaction) -> tuple[str, str, str]:
+  store, game, format = GetObjectsFromInteraction(interaction)
+  """
+  Use this if a database call causes a delay in retrieving the game and format for the modal
+  
   try:
     game = ConvertToGame(db[f'{interaction.guild_id}'][f'{interaction.channel.category_id}']['game'])
   except Exception:
-    raise KnownError('This category is not mapped to a game. Please contact your store owner to have them map the category.')
+  raise KnownError('This category is not mapped to a game. Please contact your store owner to have them map the category.')
+  
   try:
     format_obj = db[f'{interaction.guild_id}'][f'{interaction.channel.category_id}']['formats'][f'{interaction.channel_id}']
     format = ConvertToFormat((format_obj[0], format_obj[1], None, format_obj[2]))
   except Exception:
+    raise KnownError('This channel is not mapped to a format. Please contact your store owner to have them map the channel.')
+    """
+  if game is None:
+    raise KnownError('This category is not mapped to a game. Please contact your store owner to have them map the category.')
+  if format is None:
     raise KnownError('This channel is not mapped to a format. Please contact your store owner to have them map the channel.')
   modal = SubmitArchetypeModal(game, format)
   await interaction.response.send_modal(modal)

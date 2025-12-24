@@ -2,19 +2,28 @@ from collections import namedtuple
 from custom_errors import KnownError
 import discord
 import data.interaction_data as db
-from tuple_conversions import Game, Data, Format
+from tuple_conversions import Game, Data, Format, Store
 
 
-def GetObjectsFromInteraction(interaction: discord.Interaction,
-                              game: bool = False,
-                              format: bool = False,
-                              store: bool = False):
+def GetObjectsFromInteraction(
+    interaction: discord.Interaction
+) -> tuple[Store | None, Game | None, Format | None]:
   """Gets the game, format, store, and user_id from the interaction"""
-  Requirements = namedtuple("Requirements", ["Game", "Format", "Store"])
-  requirements = Requirements(game, format, store)
-  raw_data = SplitInteractionData(interaction)
-  formatted_data = FormatInteractionData(raw_data, requirements)
-  return formatted_data
+  discord_id = interaction.guild_id
+  if not discord_id:
+    raise KnownError('No guild found')
+  if not isinstance(interaction.channel, discord.TextChannel):
+    raise KnownError('No channel found.')
+  category_id = interaction.channel.category_id
+  if not category_id:
+    raise KnownError('No category found.')
+  channel_id = interaction.channel_id
+  if not channel_id:
+    raise KnownError('No channel found.')
+
+  store, game, format = db.GetInteractionDetails(discord_id, category_id,
+                                                 channel_id)
+  return store, game, format
 
 
 def SplitInteractionData(interaction: discord.Interaction):

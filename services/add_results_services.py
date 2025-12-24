@@ -10,10 +10,7 @@ from tuple_conversions import Data, Standing, Pairing, Event
 
 def SubmitCheck(interaction:discord.Interaction) -> Data:
   """Checks if the user can submit data in this channel"""
-  return GetObjectsFromInteraction(interaction,
-                                   game=True,
-                                   format=True,
-                                   store=True)
+  return GetObjectsFromInteraction(interaction)
 
 def SubmitData(interaction_objects:Data,
                data: list[Standing] | list[Pairing],
