@@ -1,6 +1,11 @@
 import discord
 from discord import ui
 
+"""
+This is functional but not implemented. It's a test of sending a modal from a button in a view.
+This will transform into a service for singular player data submission
+"""
+
 # 1. The final modal for Pizza input
 class PizzaModal(ui.Modal, title='Second Step: Favorite Pizza'):
     def __init__(self, ice_cream: str):

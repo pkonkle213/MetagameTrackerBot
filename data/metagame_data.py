@@ -1,7 +1,8 @@
+from datetime import date
 import settings
 import os
 import psycopg2
-from tuple_conversions import Store
+from tuple_conversions import Format, Game, Store
 
 def GetAreaForMeta(store:Store) -> str:
   if store.IsHub:
@@ -10,11 +11,11 @@ def GetAreaForMeta(store:Store) -> str:
     return f'AND s.used_for_data = {True}'
   return f'AND s.discord_id = {store.DiscordId}'
 
-def GetMetagame(game,
-                format,
-                start_date,
-                end_date,
-                store:Store):
+def GetMetagame(game:Game,
+                format:Format,
+                start_date:date,
+                end_date:date,
+                store:Store) -> list:
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''

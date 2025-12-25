@@ -5,4 +5,4 @@ import seaborn as sns
 sns.set_style("whitegrid")
 sns.barplot(x="win_percent", y="archetype_name", data=df, orient="h")
 
-I would then need to save this to a variable, convert to a jpg, then message the output (see ATEST)
+I would then need to save this to a variable, convert to a jpg, then message the output

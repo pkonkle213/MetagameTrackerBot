@@ -1,40 +1,48 @@
 import settings
-from discord import Interaction
+from discord import Interaction, app_commands
 from discord.ext import commands
-from discord import app_commands
+
 
 class Links(commands.Cog):
   """A group of commands for getting links"""
+
   def __init__(self, bot):
     self.bot = bot
 
   @app_commands.command(name="getbot",
-    description="Display the url to install the bot")
+                        description="Display the url to install the bot")
   @app_commands.guilds(settings.BOTGUILDID)
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def GetBot(self, interaction: Interaction):
-    await interaction.response.send_message(f'Here is the link to install the bot: {settings.MYBOTURL}')
-  
-  @app_commands.command(name='viewalldata',
-    description='Get an invite to my data hub with more stores')
+    await interaction.response.send_message(
+        f'Here is the link to install the bot: {settings.MYBOTURL}')
+
+  @app_commands.command(
+      name='viewalldata',
+      description='Get an invite to my data hub with more stores')
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def ViewAllData(self, interaction: Interaction):
-    await interaction.response.send_message(f'Here is the link to my data hub: {settings.DATAHUBINVITE}')
-  
+    await interaction.response.send_message(
+        f'Here is the link to my data hub: {settings.DATAHUBINVITE}')
+
   @app_commands.command(name="getsop",
-    description="Display the url to get the SOP")
+                        description="Display the url to get the SOP")
   @app_commands.guild_only()
   @app_commands.guilds(settings.BOTGUILDID)
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def GetSOP(self, interaction: Interaction):
-    await interaction.response.send_message(f'Here is the link to my living SOP: {settings.SOPURL}')
-  
-  @app_commands.command(name="feedback",
-    description="Display the url to provide feedback on the bot")
+    await interaction.response.send_message(
+        f'Here is the link to my living SOP: {settings.SOPURL}')
+
+  @app_commands.command(
+      name="feedback",
+      description="Display the url to provide feedback on the bot")
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def Feedback(self, interaction: Interaction):
-    await interaction.response.send_message(f'Follow this link: {settings.FEEDBACKURL}')
+    await interaction.response.send_message(
+        f'Follow this link: {settings.FEEDBACKURL}')
+
 
 async def setup(bot):
   await bot.add_cog(Links(bot))
