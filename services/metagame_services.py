@@ -6,7 +6,7 @@ from services.date_functions import BuildDateRange
 def GetMyMetagame(interaction:Interaction,
   start_date:str,
   end_date:str):
-  game, format, store, userId = GetObjectsFromInteraction(interaction, game=True, format=True, store=True)
+  game, format, store, userId = GetObjectsFromInteraction(interaction)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   title_name = format.FormatName.title() if format else game.GameName.title()
   data = GetMetagame(game, format, date_start, date_end, store)

@@ -7,10 +7,7 @@ from tuple_conversions import Format, Game, Store
 def GetUserData(interaction: Interaction,
                member: Member):
   """Gets the player name, win percent, last played, and top decks for a user"""
-  data = GetObjectsFromInteraction(interaction,
-                                   game=True,
-                                   format=True,
-                                   store=True)
+  data = GetObjectsFromInteraction(interaction)
 
   player_name = GetUserName(data.Store.DiscordId,member.id)
   win_percent = GetWinPercent(member.id,

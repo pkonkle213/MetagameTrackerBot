@@ -10,6 +10,7 @@ from data.metagame_data import GetMetagame
 
 def MetagameScatterPlot(interaction:Interaction, start_date: str, end_date: str) -> File:
   """Creates a scatter plot of the metagame for a given format"""
+  
   '''
   Code for non-test
   store, game, format = GetObjectsFromInteraction(interaction)
@@ -36,6 +37,7 @@ def MetagameScatterPlot(interaction:Interaction, start_date: str, end_date: str)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
 
   data = GetMetagame(game, format, date_start, date_end, store)
+  print('Data:', data)
   if data is None:
     raise KnownError('No data found for the given format and date range.')
 

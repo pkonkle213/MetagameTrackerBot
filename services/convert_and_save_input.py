@@ -71,7 +71,7 @@ async def ConvertModalToDataErrors(bot:commands.Bot,
     raise KnownError("SubmitData modal was dismissed or timed out. Please try again.")
   
   # Now that modal is submitted, get interaction objects (database operations)
-  interaction_objects = GetObjectsFromInteraction(interaction, game=True, format=True, store=True)
+  interaction_objects = GetObjectsFromInteraction(interaction)
   
   submission = '\n'.join([f'Date:{modal.submitted_date}',
                   f'Round:{modal.submitted_round}',

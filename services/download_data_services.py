@@ -5,7 +5,7 @@ from data.download_data import GetStoreStandingData, GetStorePairingData, GetPla
 from interaction_objects import GetObjectsFromInteraction
 
 def GetStoreData(interaction, start_date, end_date):
-  interactionData = GetObjectsFromInteraction(interaction, store=True)
+  interactionData = GetObjectsFromInteraction(interaction)
   store = interactionData.Store
   game = interactionData.Game
   format = interactionData.Format
@@ -30,7 +30,7 @@ def GetStoreData(interaction, start_date, end_date):
   return message, files
 
 def GetPlayerData(interaction, start_date, end_date):
-  game, format, store, user_id = GetObjectsFromInteraction(interaction, store=True, game=True)
+  game, format, store, user_id = GetObjectsFromInteraction(interaction)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   
   message = f'Here is your data from {store.StoreName.title()} between {date_start} and {date_end}:'
