@@ -14,12 +14,12 @@ class Graphs(commands.GroupCog, name='graph'):
       name="metagame",
       description="A scatterplot of the metagame for a given format")
   @app_commands.guild_only()
-  #@app_commands.guilds(settings.TESTGUILDID)
+  @app_commands.guilds(settings.TESTGUILDID)
   async def Metagame(self,
                      interaction: Interaction,
                      start_date: str = '',
                      end_date: str = ''):
-    await interaction.response.defer()
+    await interaction.response.defer(ephemeral=True)
     result = MetagameScatterPlot(interaction, start_date, end_date)
     await interaction.followup.send(file=result, ephemeral=True)
 

@@ -6,7 +6,8 @@ from services.date_functions import BuildDateRange
 
 def GetPersonalStandingsHistory(interaction: discord.Interaction, start_date: str, end_date: str):
   """Gets the personal standings history for the user"""
-  game, format, store, user_id = GetObjectsFromInteraction(interaction)
+  store, game, format = GetObjectsFromInteraction(interaction)
+  user_id = interaction.user.id
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   data = GetStandingsHistory(user_id, game, format, date_start, date_end, store)
   if data is None:
@@ -24,7 +25,8 @@ def GetPersonalStandingsHistory(interaction: discord.Interaction, start_date: st
 
 def GetPersonalPairingsHistory(interaction: discord.Interaction, start_date: str, end_date: str):
   """Gets the personal pairings history for the user"""
-  game, format, store, user_id = GetObjectsFromInteraction(interaction)
+  store, game, format = GetObjectsFromInteraction(interaction)
+  user_id = interaction.user.id
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   data = GetPairingsHistory(user_id, game, format, date_start, date_end, store)
   if data is None:

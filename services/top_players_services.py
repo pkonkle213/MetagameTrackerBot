@@ -5,7 +5,7 @@ from data.player_data import GetTopPlayerData
 
 
 def GetTopPlayers(interaction: Interaction, start_date, end_date):
-  game, format, store, user_id = GetObjectsFromInteraction(interaction)
+  store, game, format = GetObjectsFromInteraction(interaction)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   data = GetTopPlayerData(store, game, format, date_start, date_end)
   title = f'Top Players from {date_start} to {date_end}'

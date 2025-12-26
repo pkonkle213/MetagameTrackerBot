@@ -5,10 +5,7 @@ from data.download_data import GetStoreStandingData, GetStorePairingData, GetPla
 from interaction_objects import GetObjectsFromInteraction
 
 def GetStoreData(interaction, start_date, end_date):
-  interactionData = GetObjectsFromInteraction(interaction)
-  store = interactionData.Store
-  game = interactionData.Game
-  format = interactionData.Format
+  store, game, format = GetObjectsFromInteraction(interaction)
   
   date_start, date_end = BuildDateRange(start_date, end_date, format)
 

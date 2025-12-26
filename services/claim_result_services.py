@@ -101,7 +101,8 @@ async def ClaimResult(interaction:Interaction,
   if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter') and DateDifference(GetToday(), date_used) > 14:
     raise KnownError('You can only claim archetypes for events within the last 14 days. Please contact your store owner to have them submit the archetype.')
 
-  game, format, store, userId = GetObjectsFromInteraction(interaction)
+  store, game, format = GetObjectsFromInteraction(interaction)
+  userId = interaction.user.id
   
   if ContainsBadWord(store.DiscordId, archetype):
     raise KnownError('Archetype contains a banned word')

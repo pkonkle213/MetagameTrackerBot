@@ -20,9 +20,9 @@ async def UpdateStoreDetails(interaction: discord.Interaction):
     raise KnownError('Modal not submitted correctly')
 
   # Now get store from database after modal is submitted
-  objects = GetObjectsFromInteraction(interaction)
+  store = GetObjectsFromInteraction(interaction)[0]
   
-  result = UpdateStore(objects.Store.DiscordId,
+  result = UpdateStore(store.DiscordId,
                        modal.submitted_owners_name,
                        modal.submitted_store_name,
                        modal.submitted_store_address,

@@ -7,7 +7,7 @@ from tuple_conversions import Game
 
 def AddStoreGameMap(interaction:Interaction,
                     chosen_game: Game):
-  interaction_objs = GetObjectsFromInteraction(interaction)
+  store = GetObjectsFromInteraction(interaction)[0]
   channel = interaction.channel
   if not isinstance(channel, TextChannel):
     raise KnownError('Cannot map a game to a category that does not have text channels')
@@ -16,7 +16,7 @@ def AddStoreGameMap(interaction:Interaction,
     raise KnownError('Must map a game to a category')
   category_id = category.id
 
-  rows = AddGameMap(interaction_objs.Store.DiscordId, chosen_game[0], category_id)
+  rows = AddGameMap(store.DiscordId, chosen_game[0], category_id)
   if rows is None:
     return 'Unable to add game map'
   return f'Success! This category ({category.name}) is now mapped to {chosen_game[1].title()}'

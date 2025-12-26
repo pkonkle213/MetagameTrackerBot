@@ -27,7 +27,7 @@ def CanSubmitArchetypes(discord_id:int, user_id:int):
   return len(offenses) < 3
 
 def Offenders(interaction:Interaction):
-  game, format, store, user_id = GetObjectsFromInteraction(interaction)
+  store, game, format = GetObjectsFromInteraction(interaction)
   offenders = GetOffenders(game, format, store)
   headers = ['Date Submitted', 'Submitter', 'Submitter ID', 'Event Date', 'Player Name', 'Archetype Played']
   if not format:

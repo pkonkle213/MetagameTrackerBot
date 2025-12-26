@@ -1,5 +1,7 @@
 from collections import namedtuple
+from settings import TESTGUILDID
 from custom_errors import KnownError
+from services.date_functions import ConvertToDate
 import discord
 import data.interaction_data as db
 from tuple_conversions import Game, Data, Format, Store
@@ -23,6 +25,21 @@ def GetObjectsFromInteraction(
 
   store, game, format = db.GetInteractionDetails(discord_id, category_id,
                                                  channel_id)
+
+  if store and store.DiscordId == TESTGUILDID:
+    store = Store(1210746744602890310,
+      'Test Guild',
+      'Test Store',
+      505548744444477441,
+      'Phil',
+      '123 Street',
+      True,
+      True,
+      'Ohio',
+      'Cbus',
+      False)
+    game = Game(1, 'Magic')
+    format = Format(1, 'Pauper', ConvertToDate('1/1/2020'), False)
   return store, game, format
 
 

@@ -5,7 +5,7 @@ from services.date_functions import BuildDateRange
 from checks import isSubmitter
 
 def GetAllUnknown(interaction:Interaction, start_date, end_date):
-  game, format, store, user_id = GetObjectsFromInteraction(interaction)
+  store, game, format  = GetObjectsFromInteraction(interaction)
   date_start, date_end = BuildDateRange(start_date, end_date, format, 4 if isSubmitter(interaction.guild, interaction.user, 'MTSubmitter') else 2)
   data = GetUnknownArchetypes(store.DiscordId,
     game.GameId,

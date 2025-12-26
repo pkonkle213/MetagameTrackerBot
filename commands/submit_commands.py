@@ -28,10 +28,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
   async def SubmitCheck(self, interaction: Interaction):
     await interaction.response.defer(ephemeral=True)
     issues = ['Issues I detect:']
-    interactionData = GetObjectsFromInteraction(interaction)
-    game = interactionData.Game
-    format = interactionData.Format
-    store = interactionData.Store
+    store, game, format = GetObjectsFromInteraction(interaction)
+    
     if not store:
       issues.append('- Store not registered')
     if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter'):
@@ -95,7 +93,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     #Get the data source from the user - respond FIRST before any slow operations
     if csv_file:
       await interaction.response.defer(ephemeral=True)
-      interaction_objects = SubmitCheck(interaction)
+      store, game, format = SubmitCheck(interaction) #TODO: THIS BROKE THINGS
       if not csv_file.filename.endswith('.csv'):
         raise KnownError("Please upload a file with a '.csv' extension.")
       data, errors, round_number, date = await ConvertCSVToDataErrors(
@@ -105,10 +103,10 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
         csv_file)
     elif melee_tournament_id:
       await interaction.response.defer(ephemeral=True)
-      interaction_objects = SubmitCheck(interaction)
+      store, game, format = SubmitCheck(interaction)
       whole_event = True
       json_dict = GetMeleeTournamentData(melee_tournament_id,
-                                         interaction_objects.Store)
+                                         store)
       
       data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(
           interaction_objects, interaction, json_dict)

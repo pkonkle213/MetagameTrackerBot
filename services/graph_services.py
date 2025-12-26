@@ -8,11 +8,10 @@ from custom_errors import KnownError
 from discord import Interaction, File
 from data.metagame_data import GetMetagame
 
-def MetagameScatterPlot(interaction:Interaction, start_date: str, end_date: str) -> File:
+
+def MetagameScatterPlot(interaction: Interaction, start_date: str,
+                        end_date: str) -> File:
   """Creates a scatter plot of the metagame for a given format"""
-  
-  '''
-  Code for non-test
   store, game, format = GetObjectsFromInteraction(interaction)
   if store is None:
      raise KnownError('This server is not mapped to a store. Please contact your store owner to have them map the server.')
@@ -20,20 +19,7 @@ def MetagameScatterPlot(interaction:Interaction, start_date: str, end_date: str)
     raise KnownError('This category is not mapped to a game. Please contact your store owner to have them map the category.')
   if format is None:
     raise KnownError('This channel is not mapped to a format. Please contact your store owner to have them map the channel.')
-  '''
-  store = Store(1210746744602890310,
-                'Test Guild',
-                'Test Store',
-                505548744444477441,
-                'Phil',
-                '123 Street',
-                True,
-                True,
-                'Ohio',
-                'Cbus',
-                False)
-  game = Game(1, 'Magic')
-  format = Format(1, 'Pauper', ConvertToDate('1/1/2020'), False)
+  
   date_start, date_end = BuildDateRange(start_date, end_date, format)
 
   data = GetMetagame(game, format, date_start, date_end, store)
@@ -41,7 +27,9 @@ def MetagameScatterPlot(interaction:Interaction, start_date: str, end_date: str)
   if data is None:
     raise KnownError('No data found for the given format and date range.')
 
-  dataframe = pd.DataFrame(data, columns=['Archetype', 'Metagame Percent', 'Win Percent'])  # type: ignore[arg-type]
+  dataframe = pd.DataFrame(
+      data, columns=['Archetype', 'Metagame Percent',
+                     'Win Percent'])  # type: ignore[arg-type]
 
   fig = plt.figure()
   ax = fig.add_subplot()
@@ -52,7 +40,8 @@ def MetagameScatterPlot(interaction:Interaction, start_date: str, end_date: str)
              marker='o')
   ax.set_xlabel('Metagame Percent')
   ax.set_ylabel('Win Percent')
-  ax.set_title('Metagame Between ' + date_start.strftime('%-m/%-d/%Y') + ' and ' + date_end.strftime('%-m/%-d/%Y'))
+  ax.set_title('Metagame Between ' + date_start.strftime('%-m/%-d/%Y') +
+               ' and ' + date_end.strftime('%-m/%-d/%Y'))
 
   file_path = "metagame.png"
   fig.savefig(file_path)

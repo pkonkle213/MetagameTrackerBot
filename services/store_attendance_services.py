@@ -5,7 +5,7 @@ from data.store_attendance_data import GetAttendance
 from settings import DATAGUILDID
 
 def GetStoreAttendance(interaction:Interaction, start_date, end_date):
-  game, format, store, userId = GetObjectsFromInteraction(interaction)
+  store, game, format = GetObjectsFromInteraction(interaction)
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   
   data = GetAttendance(store,
