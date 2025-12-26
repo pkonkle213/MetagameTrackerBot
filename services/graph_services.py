@@ -42,7 +42,9 @@ def MetagameScatterPlot(interaction: Interaction, start_date: str,
   ax.set_ylabel('Win Percent')
   ax.set_title('Metagame Between ' + date_start.strftime('%-m/%-d/%Y') +
                ' and ' + date_end.strftime('%-m/%-d/%Y'))
+  ax.legend(labels=dataframe["Archetype"])
 
+  #TODO: This should be a more specific path/filename, probably using Replit's internal storage.
   file_path = "metagame.png"
   fig.savefig(file_path)
 
