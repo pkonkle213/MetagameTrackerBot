@@ -1,7 +1,6 @@
 import typing
 from services.claim_result_services import GetUserInput, AddTheArchetype, MessageStoreFeed
 from api_calls.melee_tournaments import GetMeleeTournamentData
-from services.object_storage_service import upload_json
 import settings
 from services.convert_and_save_input import ConvertCSVToDataErrors, ConvertModalToDataErrors, ConvertMeleeTournamentToDataErrors
 from checks import isSubmitter
@@ -29,7 +28,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     await interaction.response.defer(ephemeral=True)
     issues = ['Issues I detect:']
     store, game, format = GetObjectsFromInteraction(interaction)
-    
+
     if not store:
       issues.append('- Store not registered')
     if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter'):
@@ -88,37 +87,37 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
 
     #Ensure that only one type of data is being submitted
     if csv_file and melee_tournament_id:
-      raise KnownError("You can only submit a CSV file or a Melee Tournament ID, not both.")
+      raise KnownError(
+          "You can only submit a CSV file or a Melee Tournament ID, not both.")
 
     #Get the data source from the user - respond FIRST before any slow operations
     if csv_file:
       await interaction.response.defer(ephemeral=True)
-      store, game, format = SubmitCheck(interaction) #TODO: THIS BROKE THINGS
+      store, game, format = SubmitCheck(interaction)  #TODO: THIS BROKE THINGS
       if not csv_file.filename.endswith('.csv'):
         raise KnownError("Please upload a file with a '.csv' extension.")
       data, errors, round_number, date = await ConvertCSVToDataErrors(
-        self.bot,
-        interaction_objects,
-        interaction,
-        csv_file)
+          self.bot, game, interaction, csv_file)
     elif melee_tournament_id:
       await interaction.response.defer(ephemeral=True)
       store, game, format = SubmitCheck(interaction)
       whole_event = True
-      json_dict = GetMeleeTournamentData(melee_tournament_id,
-                                         store)
-      
+      json_dict = GetMeleeTournamentData(melee_tournament_id, store)
+
+      guild = interaction.guild
       data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(
-          interaction_objects, interaction, json_dict)
+          guild, json_dict)
     else:
       # Send modal first, get interaction_objects after modal submits
-      data, errors, round_number, date, interaction_objects = await ConvertModalToDataErrors(
+      data, errors, round_number, date, store, game, format = await ConvertModalToDataErrors(
           self.bot, interaction)
-    
+
     if data is None:
       print('Data is None')
       await NewDataMessage(self.bot, interaction, True)
-      raise KnownError("Unable to submit due to not recognizing the data. Please try again.")
+      raise KnownError(
+          "Unable to submit due to not recognizing the data. Please try again."
+      )
 
     #Advise user of submission process starting
     message_type = 'standings' if isinstance(data[0], Standing) else 'pairings'
@@ -136,7 +135,10 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
 
     #Submit the data to the database. Returning event for an announcement
     output, event_created = SubmitData(
-        interaction_objects,
+        store,
+        game,
+        format,
+        interaction.user.id,
         data,
         date,
         round_number,
@@ -159,8 +161,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
                    error: app_commands.AppCommandError):
     await Error(self.bot, interaction, error)
 
-async def NewDataMessage(bot: commands.Bot,
-                         interaction: Interaction,
+
+async def NewDataMessage(bot: commands.Bot, interaction: Interaction,
                          isError: bool):
   message = f"""
   {'Could not submit data due to error' if isError else 'Successfully received new data'}
@@ -171,10 +173,9 @@ async def NewDataMessage(bot: commands.Bot,
     Author name: {interaction.user.name}
     Author id: {interaction.user.id}
     """
-  await MessageChannel(bot,
-                       message,
-                       settings.BOTGUILDID,
+  await MessageChannel(bot, message, settings.BOTGUILDID,
                        settings.BOTEVENTINPUTID)
+
 
 async def setup(bot):
   await bot.add_cog(SubmitDataChecker(bot))

@@ -12,18 +12,13 @@ def SubmitCheck(interaction:discord.Interaction) -> tuple[Store | None, Game | N
   """Checks if the user can submit data in this channel"""
   return GetObjectsFromInteraction(interaction)
 
-def SubmitData(interaction_objects:Data,
+def SubmitData(store:Store, game:Game, format:Format, userId:int,
                data: list[Standing] | list[Pairing],
                date_str:str,
                round_number:str,
                is_complete: bool,
                whole_event: bool):
   """Submits an event's data to the database"""
-  store = interaction_objects.Store
-  game = interaction_objects.Game
-  format = interaction_objects.Format
-  userId = interaction_objects.UserId
-
   date = ConvertToDate(date_str)
   round_num = int(round_number) if round_number != '' else 0
   

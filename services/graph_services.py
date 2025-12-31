@@ -1,9 +1,7 @@
-from services.date_functions import ConvertToDate
 import pandas as pd
 import matplotlib.pyplot as plt
 from services.date_functions import BuildDateRange
 from interaction_objects import GetObjectsFromInteraction
-from tuple_conversions import Format, Game, Store
 from custom_errors import KnownError
 from discord import Interaction, File
 from data.metagame_data import GetMetagame
@@ -14,12 +12,18 @@ def MetagameScatterPlot(interaction: Interaction, start_date: str,
   """Creates a scatter plot of the metagame for a given format"""
   store, game, format = GetObjectsFromInteraction(interaction)
   if store is None:
-     raise KnownError('This server is not mapped to a store. Please contact your store owner to have them map the server.')
+    raise KnownError(
+        'This server is not mapped to a store. Please contact your store owner to have them map the server.'
+    )
   if game is None:
-    raise KnownError('This category is not mapped to a game. Please contact your store owner to have them map the category.')
+    raise KnownError(
+        'This category is not mapped to a game. Please contact your store owner to have them map the category.'
+    )
   if format is None:
-    raise KnownError('This channel is not mapped to a format. Please contact your store owner to have them map the channel.')
-  
+    raise KnownError(
+        'This channel is not mapped to a format. Please contact your store owner to have them map the channel.'
+    )
+
   date_start, date_end = BuildDateRange(start_date, end_date, format)
 
   data = GetMetagame(game, format, date_start, date_end, store)
