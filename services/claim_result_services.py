@@ -101,6 +101,7 @@ async def ClaimResult(interaction:Interaction,
   if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter') and DateDifference(GetToday(), date_used) > 14:
     raise KnownError('You can only claim archetypes for events within the last 14 days. Please contact your store owner to have them submit the archetype.')
 
+  #TODO: This is a duplicate call and should be removed
   store, game, format = GetObjectsFromInteraction(interaction)
   userId = interaction.user.id
   
@@ -111,7 +112,7 @@ async def ClaimResult(interaction:Interaction,
 
   player_name = ConvertInput(player_name)
 
-  event, player_name = GetEventAndPlayerName(store.DiscordId,
+  event, name_check = GetEventAndPlayerName(store.DiscordId,
                                              date_used,
                                              game,
                                              format,
@@ -119,7 +120,7 @@ async def ClaimResult(interaction:Interaction,
   
   if event is None:
     raise KnownError('Event not found. Please check the date provided. If date is correct, the event has yet to be submitted. Please alert your store owner.')
-  if player_name is None:
+  if name_check is None:
     raise KnownError('Player not found. Please check the name provided.')
 
   updater_name = interaction.user.display_name

@@ -16,7 +16,7 @@ def GetEventAndPlayerName(discord_id, date, game, format, player_name):
       event_type,
       is_posted,
       is_complete,
-      player_name
+      INITCAP(player_name)
     FROM
       events_view
       LEFT JOIN (
