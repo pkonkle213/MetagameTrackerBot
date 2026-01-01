@@ -1,5 +1,5 @@
 SELECT
-  INITCAP(opponent_name),
+  INITCAP(opponent_name) as opponent_name,
   count(*) AS matches,
   ROUND(
     100.0 * count(

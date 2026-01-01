@@ -4,7 +4,6 @@ from checks import isSubmitter
 from custom_errors import KnownError
 from data.claim_data import GetEventAndPlayerName
 from data.store_data import GetClaimFeed
-from tuple_conversions import ConvertToGame, ConvertToFormat
 from services.date_functions import ConvertToDate, GetToday, DateDifference
 from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
@@ -16,6 +15,8 @@ from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from interaction_objects import GetObjectsFromInteraction
 from output_builder import BuildTableOutput
 from discord_messages import MessageChannel
+
+#TODO: This many imports makes me feel like this should be broken up into multiple files, methods, or cleaned up in general
 
 async def GetUserInput(interaction:Interaction) -> tuple[str, str, str]:
   store, game, format = GetObjectsFromInteraction(interaction)

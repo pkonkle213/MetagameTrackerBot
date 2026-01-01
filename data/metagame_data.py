@@ -2,21 +2,21 @@ from datetime import date
 import settings
 import os
 import psycopg2
+from settings import DATABASE_URL
 from tuple_conversions import Format, Game, Store
 
-def GetAreaForMeta(store:Store) -> str:
+
+def GetAreaForMeta(store: Store) -> str:
   if store.IsHub:
     return f'AND s.region = {store.Region}'
   if store.DiscordId == settings.DATAGUILDID:
     return f'AND s.used_for_data = {True}'
   return f'AND s.discord_id = {store.DiscordId}'
 
-def GetMetagame(game:Game,
-                format:Format,
-                start_date:date,
-                end_date:date,
-                store:Store) -> list:
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+
+def GetMetagame(game: Game, format: Format, start_date: date, end_date: date,
+                store: Store) -> list:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -35,7 +35,7 @@ def GetMetagame(game:Game,
         INNER JOIN stores s ON e.discord_id = s.discord_id
       WHERE
         e.event_date BETWEEN '{start_date}' AND '{end_date}'
-        {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != settings.DATAGUILDID else f'AND s.used_for_data = {True}'}
+        {GetAreaForMeta(store)}
         AND e.format_id = {format.FormatId}
         AND e.game_id = {game.GameId}
       GROUP BY
@@ -52,4 +52,3 @@ def GetMetagame(game:Game,
     cur.execute(command)
     rows = cur.fetchall()
     return rows
-    

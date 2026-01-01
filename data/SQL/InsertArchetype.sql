@@ -1,0 +1,22 @@
+INSERT INTO ArchetypeSubmissions
+  (event_id,
+  player_name,
+  archetype_played,
+  date_submitted,
+  submitter_id,
+  submitter_username,
+  reported)
+VALUES
+  (%s,
+  %s,
+  %s,
+  NOW(),
+  %s,
+  '%s',
+  FALSE)
+RETURNING
+  event_id,
+  player_name,
+  archetype_played,
+  submitter_id,
+  submitter_username

@@ -27,7 +27,7 @@ def MetagameScatterPlot(interaction: Interaction, start_date: str,
   date_start, date_end = BuildDateRange(start_date, end_date, format)
 
   data = GetMetagame(game, format, date_start, date_end, store)
-  print('Data:', data)
+  
   if data is None:
     raise KnownError('No data found for the given format and date range.')
 

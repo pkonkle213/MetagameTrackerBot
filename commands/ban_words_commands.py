@@ -9,7 +9,7 @@ from paid_stores import PAIDSTORES
 
 class BannedWordCommands(commands.GroupCog, name='bannedwords'):
   """A group of commands for managing banned words"""
-  def __init__(self, bot):
+  def __init__(self, bot:commands.Bot):
     self.bot = bot
 
   @app_commands.command(name='add',
@@ -54,5 +54,5 @@ class BannedWordCommands(commands.GroupCog, name='bannedwords'):
                    error: app_commands.AppCommandError):
     await Error(self.bot, interaction, error)
 
-async def setup(bot):
+async def setup(bot:commands.Bot):
   await bot.add_cog(BannedWordCommands(bot))
