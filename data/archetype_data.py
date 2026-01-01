@@ -75,5 +75,6 @@ def GetUnknownArchetypes(discord_id,
 
       cur.execute(command)  # type: ignore[arg-type]
       rows = cur.fetchall()
+      print(rows)
       
       return rows
