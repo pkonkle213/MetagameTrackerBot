@@ -41,10 +41,12 @@ class UnknownArchetypes(commands.Cog):
       output = output[:-3] + '\nTo submit yours, type and enter: /submit archetype```'
       await interaction.followup.send(output)
 
+  
   @IntoTheUnknown.error
   async def Errors(self, interaction: Interaction,
                    error: app_commands.AppCommandError):
     await Error(self.bot, interaction, error)
+  
 
 
 async def setup(bot):

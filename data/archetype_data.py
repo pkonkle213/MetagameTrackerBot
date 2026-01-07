@@ -1,3 +1,4 @@
+from typing import NamedTuple
 from settings import DATABASE_URL
 import psycopg
 from psycopg.rows import class_row, namedtuple_row
@@ -6,11 +7,17 @@ from dataclasses import dataclass
 @dataclass
 class Archetype:
   """Represents a submitted archetype"""
-  EventId: str
+  EventId: int
   PlayerName: str
   Archetype: str
   SubmitterId: str
   SubmitterName: str
+
+@dataclass
+class UnknownArchetype:
+  """Represents an unknown archetype"""
+  event_date: str
+  player_name: str
 
 def AddArchetype(event_id,
   player_name,
@@ -54,9 +61,9 @@ def GetUnknownArchetypes(discord_id,
                          game_id,
                          format_id,
                          start_date,
-                         end_date):
+                         end_date) -> list:
   with psycopg.connect(DATABASE_URL) as conn:
-    with conn.cursor(row_factory=namedtuple_row) as cur:
+    with conn.cursor(row_factory=class_row(UnknownArchetype)) as cur:
       command = f'''
       SELECT
         event_date,
@@ -75,6 +82,11 @@ def GetUnknownArchetypes(discord_id,
 
       cur.execute(command)  # type: ignore[arg-type]
       rows = cur.fetchall()
-      print(rows)
+      row = rows[0].__dict__
+      keys = row.keys()
+            
+      print('Rows:\n', rows)
+      print('First row:\n', row)
+      print('Keys:\n', keys)
       
       return rows
