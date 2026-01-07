@@ -8,7 +8,7 @@ def GetSubmittedArchetypes(game, format, store, player_name, date):
     command = f'''
     SELECT e.event_date,
       {'f.name,' if not format else ''}
-      ua.player_name,
+      INITCAP(ua.player_name) as player_name,
       ua.archetype_played,
       ua.submitter_username,
       ua.submitter_id
