@@ -1,8 +1,8 @@
-import os
+from settings import DATABASE_URL
 import psycopg2
 
 def GetStoreReportedPercentage(discord_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -25,6 +25,7 @@ def GetStoreReportedPercentage(discord_id):
       s.store_name,
       f.name
     '''
+    
     cur.execute(command)
     rows = cur.fetchall()
     return rows

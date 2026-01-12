@@ -1,6 +1,6 @@
 from data.events_reported_data import GetStoreReportedPercentage
 
-def GetMyEventsReported(interaction, discord_id):
+def GetMyEventsReported(discord_id):
   data = GetStoreReportedPercentage(discord_id)
   title = 'Events Reported Percentage'
   headers = ['Event Date',
