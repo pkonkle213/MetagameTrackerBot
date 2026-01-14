@@ -89,7 +89,7 @@ def BuildMessage(interaction, date, archetype_submitted=None, error_message=None
   if not archetype_submitted:
     message_parts.append(f'Ran into an error: {error_message}')
   message_parts.append(f'Archetype submitted: {archetype_submitted[2] if archetype_submitted else archetype}')
-  message_parts.append(f'For player name: {player_name if not archetype_submitted else archetype_submitted.PlayerName}')
+  message_parts.append(f'For player name: {player_name if not archetype_submitted else archetype_submitted[1]}')
   message_parts.append(f'For date: {date}')
   message_parts.append(f'For channel name: {interaction.channel.name}')
   return '\n'.join(message_parts)  
