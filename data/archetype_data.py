@@ -26,7 +26,7 @@ def AddArchetype(event_id,
   submitter_name):
   criteria = [player_name, archetype_played]
   with psycopg.connect(DATABASE_URL) as conn:
-    with conn.cursor(row_factory=namedtuple_row) as cur:
+    with conn.cursor() as cur:
       command = f'''
       INSERT INTO ArchetypeSubmissions
       (event_id,
@@ -55,7 +55,8 @@ def AddArchetype(event_id,
       conn.commit()
       row = cur.fetchone()
       print(row)
-      return Archetype(row[0], row[1], row[2], row[3], row[4]) if row else None
+      return row
+      #return Archetype(row[0], row[1], row[2], row[3], row[4]) if row else None
 
 def GetUnknownArchetypes(discord_id,
                          game_id,
@@ -63,7 +64,7 @@ def GetUnknownArchetypes(discord_id,
                          start_date,
                          end_date) -> list:
   with psycopg.connect(DATABASE_URL) as conn:
-    with conn.cursor(row_factory=class_row(UnknownArchetype)) as cur:
+    with conn.cursor() as cur:
       command = f'''
       SELECT
         event_date,
@@ -82,11 +83,11 @@ def GetUnknownArchetypes(discord_id,
 
       cur.execute(command)  # type: ignore[arg-type]
       rows = cur.fetchall()
-      row = rows[0].__dict__
-      keys = row.keys()
+      #row = rows[0].__dict__
+      #keys = row.keys()
             
-      print('Rows:\n', rows)
-      print('First row:\n', row)
-      print('Keys:\n', keys)
+      #print('Rows:\n', rows)
+      #print('First row:\n', row)
+      #print('Keys:\n', keys)
       
       return rows
