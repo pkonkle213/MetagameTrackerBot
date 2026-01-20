@@ -1,7 +1,5 @@
-from typing import NamedTuple
 from settings import DATABASE_URL
 import psycopg
-from psycopg.rows import class_row, namedtuple_row
 from dataclasses import dataclass
 
 @dataclass

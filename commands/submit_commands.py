@@ -147,6 +147,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     if output is None:
       raise KnownError("Unable to submit data. Please try again.")
 
+    
     await interaction.followup.send(output, ephemeral=True)
     if event_created:
       await MessageChannel(
