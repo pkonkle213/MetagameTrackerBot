@@ -83,10 +83,9 @@ async def ConvertModalToDataErrors(bot: commands.Bot,
 
   save_path = BuildFilePath(interaction.guild, 'ModalInput.txt')
   upload_string(submission, save_path)
-  await MessageChannel(
-      bot,
-      f'Attempting to add new event data from {store.StoreName}:\n{modal.submitted_message}',
-      settings.BOTGUILDID, settings.BOTEVENTINPUTID)
+  message = f'Attempting to add new event data from {store.StoreName if store.StoreName else store.DiscordName}:\n{modal.submitted_message}'
+  await MessageChannel(bot, message, settings.BOTGUILDID,
+                       settings.BOTEVENTINPUTID)
 
   #Convert the data to the appropriate format
   data, errors = ConvertMessageToData(modal.submitted_message, game)

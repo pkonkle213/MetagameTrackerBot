@@ -49,8 +49,9 @@ def DeleteStore(discord_id) -> bool:
 def AddStore(discord_id,
   discord_name,
   owner_id,
-  owner_name) -> int | None:
+  owner_name) -> int:
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  discord_name = discord_name.replace("'","")
   with conn, conn.cursor() as cur:
     command = f'''
     INSERT INTO Stores (discord_id, discord_name, owner_id, owner_name, used_for_data, is_data_hub)
@@ -63,7 +64,9 @@ def AddStore(discord_id,
     cur.execute(command)
     conn.commit()
     row = cur.fetchone()
-    return row[0] if row else None
+    if not row:
+      raise Exception(f'Unable to add store: {discord_id}')
+    return row[0] 
 
 def GetAllStoreDiscordIds():
   conn = psycopg2.connect(os.environ['DATABASE_URL'])

@@ -20,8 +20,10 @@ async def MessageChannel(bot, msg, guildId, channelId, file=None):
     if not isinstance(channel, discord.TextChannel):
       raise Exception(f'Channel {channelId} is not a text channel')
 
-    if file is None:
-      await channel.send(f'{msg}')
-    else:
-      await channel.send(f'{msg}', file=file)
-    
+    try:
+      if file is None:
+        await channel.send(f'{msg}')
+      else:
+        await channel.send(f'{msg}', file=file)
+    except Exception as ex:
+      print(f'Error sending message to channel {channelId}: {ex}')

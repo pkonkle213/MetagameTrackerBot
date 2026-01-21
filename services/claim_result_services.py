@@ -173,7 +173,6 @@ def MagicLimited(drafted_colors:list, splashed_colors:list) -> str:
     if letter in colors:
       raise KnownError('You cannot splash a color you drafted. Please try again.')
     colors += letter.lower()
-  print('Colors:', colors)
   if len(colors) > 5:
     raise KnownError('Too many colors selected, please try again.')
   return colors

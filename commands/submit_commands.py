@@ -50,8 +50,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
   async def SubmitArchetypeCommand(self, interaction: Interaction):
     try:
       player_name, date, archetype = await GetUserInput(interaction)
-      private_output, feed_output, public_output, full_event = await AddTheArchetype(
-          interaction, player_name, date, archetype)
+      private_output, feed_output, public_output, full_event = await AddTheArchetype(interaction, player_name, date, archetype)
       await interaction.followup.send(private_output, ephemeral=True)
       await MessageStoreFeed(self.bot, feed_output, interaction)
       if public_output:
@@ -87,13 +86,12 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
 
     #Ensure that only one type of data is being submitted
     if csv_file and melee_tournament_id:
-      raise KnownError(
-          "You can only submit a CSV file or a Melee Tournament ID, not both.")
+      raise KnownError("You can only submit a CSV file or a Melee Tournament ID, not both.")
 
     #Get the data source from the user - respond FIRST before any slow operations
     if csv_file:
       await interaction.response.defer(ephemeral=True)
-      store, game, format = SubmitCheck(interaction)  #TODO: THIS BROKE THINGS
+      store, game, format = SubmitCheck(interaction)
       if not csv_file.filename.endswith('.csv'):
         raise KnownError("Please upload a file with a '.csv' extension.")
       data, errors, round_number, date = await ConvertCSVToDataErrors(
@@ -105,19 +103,15 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       json_dict = GetMeleeTournamentData(melee_tournament_id, store)
 
       guild = interaction.guild
-      data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(
-          guild, json_dict)
+      data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(guild, json_dict)
     else:
       # Send modal first, get interaction_objects after modal submits
-      data, errors, round_number, date, store, game, format = await ConvertModalToDataErrors(
-          self.bot, interaction)
+      data, errors, round_number, date, store, game, format = await ConvertModalToDataErrors(self.bot, interaction)
 
     if data is None:
       print('Data is None')
       await NewDataMessage(self.bot, interaction, True)
-      raise KnownError(
-          "Unable to submit due to not recognizing the data. Please try again."
-      )
+      raise KnownError("Unable to submit due to not recognizing the data. Please try again.")
 
     #Advise user of submission process starting
     message_type = 'standings' if isinstance(data[0], Standing) else 'pairings'

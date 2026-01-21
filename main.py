@@ -22,7 +22,6 @@ CMDS_DIR = BASE_DIR / "commands"
 
 TIME_ZONE = pytz.timezone('US/Eastern')
 
-
 @bot.event
 async def on_ready():
   print(f'Logged on as {format(bot.user)}!')
@@ -32,27 +31,25 @@ async def on_ready():
   await SyncCommands(bot, CMDS_DIR)
   print('Synced commands. Good to go')
 
-
 @bot.event
 async def on_guild_join(guild: discord.Guild):
   """This event triggers when the bot joins a new guild (server)."""
+  print(f'Joined guild: {guild.name}')
   await NewStoreRegistration(bot, guild)
-
 
 @tasks.loop(time=datetime.time(hour=18, minute=00, tzinfo=TIME_ZONE))
 async def find_the_unknown():
   """Every day at 6:00 PM EST, the bot will check for events that are 3 days old and have unknown archetypes."""
   await EventCheck(bot)
 
-
 @find_the_unknown.before_loop
 async def before_find_the_unknown():
   await bot.wait_until_ready()
 
 
-@tasks.loop(minutes=5)
+@tasks.loop(minutes=60)
 async def sync_paid_users():
-  """Every 5 minutes, the bot will sync the paid users for command permission"""
+  """Every 60 minutes, the bot will sync the paid users for command permission"""
   print('Syncing paid users')
   with contextlib.suppress(Exception):
     UpdatePaidUsers()

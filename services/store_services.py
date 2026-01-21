@@ -37,14 +37,16 @@ async def NewStoreRegistration(bot:discord.Client,
   """Goes through steps to register a new store and automap categories and channels"""
   try:
     if guild is None:
-      raise KnownError('No guild found')
+      raise Exception('A guild added the bot, unable to unable to find it')
+    print('Adding store to database')
     AddStoreToDatabase(guild)
+    print('Creating mappings')
     message, mappings = MapCategoriesAndChannels(guild)
     await MessageOwnerMappings(guild, message, mappings)
     output = await CreateMTSubmitterRole(guild)
     owner = guild.owner
     if owner is None:
-      raise KnownError('No owner found')
+      raise Exception('No owner found')
     await AssignStoreOwnerRoleInBotGuild(bot, owner.id)
     return output
   except KnownError as error:
@@ -58,23 +60,26 @@ async def MessageOwnerMappings(guild: discord.Guild,
   """Messages the owner of the guild with the mappings that were performed"""
   owner = guild.owner
   if owner is None:
-    raise KnownError('No owner found')
+    raise Exception('No owner found')
   if mappings:
     await owner.send(f"Your store has been auto registered!\n\nHere's what was also automapped:\n{output}If you'd like to change these mappings, please use the `/map` commands.")
   else:
     await owner.send("Your store has been auto registered! However, categories or channels weren't automapped. Please map your categories and channels manually.")
 
-def AddStoreToDatabase(guild: discord.Guild):
+def AddStoreToDatabase(guild: discord.Guild) -> int:
   """Adds the store to the database"""
   owner = guild.owner
   if owner is None:
     raise KnownError('No owner found')
-  store = AddStore(guild.id,
-                        guild.name,
-                        owner.id,
-                        owner.name)
-  if store is None:
-    raise KnownError('Unable to register store')
+  print('Adding store:',guild.id,                   
+        guild.name,
+        owner.id,
+        owner.name)
+  store = AddStore(guild.id,                   
+                   guild.name,
+                   owner.id,
+                   owner.name)
+  print('Store added:', store)
   return store
 
 def MatchGame(category_name: str, games: list[Game]):
@@ -95,7 +100,7 @@ def MapCategoriesAndChannels(guild: discord.Guild):
   mapping = False
   games = GetGameOptions()
   if games is None:
-    raise KnownError('No games found')
+    raise Exception('No games found to automap')
 
   for category in guild.categories:
     game = MatchGame(category.name, games)
@@ -125,16 +130,17 @@ async def CreateMTSubmitterRole(guild:discord.Guild):
     raise KnownError('No owner found')
   mtsubmitter_role = discord.utils.get(guild.roles, name="MTSubmitter")
 
+  #TODO: This isn't work again. Y U NO WORK?
   if mtsubmitter_role is None:
     print("Attempting to create and add the MTSubmitter role")
-    try: 
+    try:
       perms = discord.Permissions(manage_messages=True)
       mtsubmitter_role = await guild.create_role(name="MTSubmitter", permissions=perms)
       await owner.add_roles(mtsubmitter_role)
       print('Success!')
       return 'MTSubmitter role created and assigned to owner.'
     except Exception:
-      print('Failure')
+      print('Failure to create or assign MTSubmitter role')
       return 'Unable to create MTSubmitter role. Please create and assign manually.'
 
 async def AssignStoreOwnerRoleInBotGuild(bot:discord.Client, owner_id: int):

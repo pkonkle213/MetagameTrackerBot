@@ -24,7 +24,7 @@ async def SyncCommands(bot, commands_directory):
         DeleteStore(guild_id)
 
     sync_global = await bot.tree.sync()
-    print(f'Synced {len(sync_global)} commands globally, allegedly')
+    print(f'Synced {len(sync_global)} commands globally')
 
     sync_my_bot = await bot.tree.sync(guild=discord.Object(settings.BOTGUILDID))
     print(f'Synced {len(sync_my_bot)} command(s) to guild My Bot -> {settings.BOTGUILDID}')

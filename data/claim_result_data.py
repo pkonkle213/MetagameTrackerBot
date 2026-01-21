@@ -14,7 +14,7 @@ def GetEventReportedPercentage(event_id):
     FROM
       full_standings fp
       LEFT OUTER JOIN unique_archetypes ua ON ua.event_id = fp.event_id
-      AND ua.player_name = fp.player_name
+      AND UPPER(ua.player_name) = UPPER(fp.player_name)
     WHERE
       fp.event_id = {event_id}
     """
