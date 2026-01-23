@@ -1,6 +1,7 @@
 from typing import List
 from services.date_functions import ConvertToDate
 import discord
+from output_builder import BuildTableOutput
 from custom_errors import KnownError
 from data.add_results_data import AddResult, SubmitTable
 from services.input_services import ConvertInput
@@ -48,21 +49,21 @@ def SubmitData(store:Store, game:Game, format:Format, userId:int,
 def AddStandingResults(event:Event,
                        data:list[Standing],
                        submitterId:int) -> str:
-  successes = 0
+  successes = []
   for person in data:
     if person.PlayerName != '':
       person = Standing(ConvertInput(person.PlayerName),
-                              person.Wins,
-                              person.Losses,
-                              person.Draws)
+                        person.Wins,
+                        person.Losses,
+                        person.Draws)
       output = AddResult(event.ID, person, submitterId)
       if output:
-        successes += 1
+        successes.append(person)
 
-  result = f"{successes} players were added for {event.EventDate.strftime('%B %d')}'s event."
-  if len(data)-successes > 0:
-    result += f"{len(data)-successes} were skipped."
-  return result
+  title = f'{event.EventDate.strftime("%B %d")} event'
+  headers = ['Player Name', 'Wins', 'Losses', 'Draws']
+  output = BuildTableOutput(title, headers, successes)
+  return output
 
 def AddPairingResults(event:Event,
                       data:list[Pairing],
@@ -70,7 +71,7 @@ def AddPairingResults(event:Event,
                       round_number:int,
                       whole_event:bool):
   round_number = data[0].Round if not round_number else round_number
-  successes = 0
+  successes = []
  
   for table in data:
     result = SubmitTable(event.ID,
@@ -82,11 +83,16 @@ def AddPairingResults(event:Event,
                          submitterId)
     
     if result:
-      successes += 1
+      successes.append((ConvertInput(table.P1Name),
+                       table.P1Wins,
+                       ConvertInput(table.P2Name),
+                       table.P2Wins,
+                       "Win" if table.P1Wins > table.P2Wins else "Loss" if table.P1Wins < table.P2Wins else "Draw"))
 
-  if successes >= 1:
-    if whole_event:
-      return f"{successes} entries were pairings for {event.EventDate.strftime('%B %-d')}'s event."
-    return f"Ready for the next round, as {successes} pairings were added for round {round_number} of {event.EventDate.strftime('%B %-d')}'s event."
+  if len(successes) > 0:
+    title = f"{event.EventDate.strftime('%B %d')} event - Round {round_number}"
+    headers = ['Player 1', 'P1 Wins', 'Player 2', 'P2 Wins', 'Result']
+    output = BuildTableOutput(title, headers, successes)
+    return output
   else:
     return "Sorry, no pairings were added. Please try again later."

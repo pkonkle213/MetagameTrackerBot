@@ -63,7 +63,6 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       await interaction.followup.send(
           "The date provided doesn't match the MM/DD/YYYY formatting. Please try again",
           ephemeral=True)
-    #await interaction.response.send_message(response)
 
   @app_commands.command(name="data",
                         description="Submitting your event's data")
@@ -140,7 +139,6 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
         whole_event)
     if output is None:
       raise KnownError("Unable to submit data. Please try again.")
-
     
     await interaction.followup.send(output, ephemeral=True)
     if event_created:
