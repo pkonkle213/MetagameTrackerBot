@@ -104,14 +104,14 @@ def GetEventMeta(event_id):
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      COALESCE(archetype_played, 'UNKNOWN') AS archetype_played,
+      INITCAP(COALESCE(archetype_played, 'UNKNOWN')) AS archetype_played,
       wins,
       losses,
       draws
     FROM
       full_standings fp
       LEFT JOIN unique_archetypes ua ON ua.event_id = fp.event_id
-      AND ua.player_name = fp.player_name
+      AND UPPER(ua.player_name) = UPPER(fp.player_name)
     WHERE
       fp.event_id = {event_id}
     ORDER BY
