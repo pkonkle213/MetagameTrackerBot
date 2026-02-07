@@ -1,4 +1,3 @@
-from typing import List
 from services.date_functions import ConvertToDate
 import discord
 from output_builder import BuildTableOutput
@@ -7,7 +6,7 @@ from data.add_results_data import AddResult, SubmitTable
 from services.input_services import ConvertInput
 from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
 from interaction_objects import GetObjectsFromInteraction
-from tuple_conversions import Data, Standing, Pairing, Event, Store, Game, Format
+from tuple_conversions import Standing, Pairing, Event, Store, Game, Format
 
 def SubmitCheck(interaction:discord.Interaction) -> tuple[Store | None, Game | None, Format | None]:
   """Checks if the user can submit data in this channel"""
