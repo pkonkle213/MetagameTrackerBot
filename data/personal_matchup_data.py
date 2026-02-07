@@ -20,7 +20,7 @@ def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id)
       INNER JOIN player_names pn ON pn.discord_id = e.discord_id
         AND fp.player_name = pn.player_name
     WHERE
-      pn.submitter_id = 505548744444477441
+      pn.submitter_id = {user_id}
       AND UPPER(fp.opponent_name) != 'BYE'
       AND e.discord_id = {discord_id}
       AND e.game_id = {game.GameId}
