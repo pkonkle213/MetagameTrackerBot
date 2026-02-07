@@ -15,10 +15,10 @@ def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id)
     FROM
       full_pairings fp
       INNER JOIN events e ON fp.event_id = e.id
-      LEFT JOIN unique_archetypes ua ON fp.opponent_name = ua.player_name
+      LEFT JOIN unique_archetypes ua ON UPPER(fp.opponent_name) = UPPER(ua.player_name)
         AND ua.event_id = fp.event_id
       INNER JOIN player_names pn ON pn.discord_id = e.discord_id
-        AND fp.player_name = pn.player_name
+        AND UPPER(fp.player_name) = UPPER(pn.player_name)
     WHERE
       pn.submitter_id = {user_id}
       AND UPPER(fp.opponent_name) != 'BYE'
