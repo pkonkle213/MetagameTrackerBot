@@ -12,34 +12,8 @@ WITH
       AND e.game_id = 1
   )
 SELECT
-  INITCAP(archetype_played) AS archetype_played,
-  ROUND(100.0 * COUNT(*) / COUNT(*) OVER (), 2) AS meta_percent
-FROM
-  X
-WHERE
-  event_date BETWEEN date_trunc('week', event_date) - interval '8 weeks' AND date_trunc('week', CURRENT_DATE)
-GROUP BY
-  archetype_played
-ORDER BY
-  2 DESC
-LIMIT
-  10;
-
-WITH
-  X AS (
-    SELECT
-      event_date,
-      INITCAP(archetype_played) AS archetype_played
-    FROM
-      events e
-      INNER JOIN unique_archetypes ua ON ua.event_id = e.id
-    WHERE
-      e.discord_id = 1210746744602890310
-      AND e.format_id = 1
-      AND e.game_id = 1
-  )
-SELECT
   A.archetype_played,
+  J.meta_percent AS current_week,
   B.meta_percent AS week1,
   C.meta_percent AS week2,
   D.meta_percent AS week3,
@@ -47,17 +21,16 @@ SELECT
   F.meta_percent AS week5,
   G.meta_percent AS week6,
   H.meta_percent AS week7,
-  I.meta_percent AS week8,
-  J.meta_percent AS current_week
+  I.meta_percent AS week8
 FROM
   (
     SELECT
       INITCAP(archetype_played) AS archetype_played,
-      ROUND(100.0 * COUNT(*) / COUNT(*) OVER (), 2) AS meta_percent
+      ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS meta_percent
     FROM
       X
     WHERE
-      event_date BETWEEN date_trunc('week', event_date) - interval '8 weeks' AND date_trunc('week', CURRENT_DATE)
+      event_date >= date_trunc('week', CURRENT_DATE) - interval '8 weeks'
     GROUP BY
       archetype_played
     ORDER BY
@@ -69,7 +42,7 @@ FROM
     SELECT
       date_trunc('week', event_date) AS week_of,
       archetype_played,
-      ROUND(100.0 * COUNT(*) / COUNT(*) OVER (), 2) AS meta_percent
+      ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS meta_percent
     FROM
       X
     WHERE
@@ -82,7 +55,7 @@ FROM
     SELECT
       date_trunc('week', event_date) AS week_of,
       archetype_played,
-      ROUND(100.0 * COUNT(*) / COUNT(*) OVER (), 2) AS meta_percent
+      ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS meta_percent
     FROM
       X
     WHERE
@@ -95,7 +68,7 @@ FROM
     SELECT
       date_trunc('week', event_date) AS week_of,
       archetype_played,
-      ROUND(100.0 * COUNT(*) / COUNT(*) OVER (), 2) AS meta_percent
+      ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS meta_percent
     FROM
       X
     WHERE
@@ -108,7 +81,7 @@ FROM
     SELECT
       date_trunc('week', event_date) AS week_of,
       archetype_played,
-      ROUND(100.0 * COUNT(*) / COUNT(*) OVER (), 2) AS meta_percent
+      ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS meta_percent
     FROM
       X
     WHERE
@@ -121,7 +94,7 @@ FROM
     SELECT
       date_trunc('week', event_date) AS week_of,
       archetype_played,
-      ROUND(100.0 * COUNT(*) / COUNT(*) OVER (), 2) AS meta_percent
+      ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS meta_percent
     FROM
       X
     WHERE
@@ -134,7 +107,7 @@ FROM
     SELECT
       date_trunc('week', event_date) AS week_of,
       archetype_played,
-      ROUND(100.0 * COUNT(*) / COUNT(*) OVER (), 2) AS meta_percent
+      ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS meta_percent
     FROM
       X
     WHERE
@@ -147,7 +120,7 @@ FROM
     SELECT
       date_trunc('week', event_date) AS week_of,
       archetype_played,
-      ROUND(100.0 * COUNT(*) / COUNT(*) OVER (), 2) AS meta_percent
+      ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS meta_percent
     FROM
       X
     WHERE
@@ -160,7 +133,7 @@ FROM
     SELECT
       date_trunc('week', event_date) AS week_of,
       archetype_played,
-      ROUND(100.0 * COUNT(*) / COUNT(*) OVER (), 2) AS meta_percent
+      ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS meta_percent
     FROM
       X
     WHERE
@@ -173,7 +146,7 @@ FROM
     SELECT
       date_trunc('week', event_date) AS week_of,
       archetype_played,
-      ROUND(100.0 * COUNT(*) / COUNT(*) OVER (), 2) AS meta_percent
+      ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS meta_percent
     FROM
       X
     WHERE
@@ -182,5 +155,4 @@ FROM
       archetype_played,
       date_trunc('week', event_date)
   ) J ON A.archetype_played = J.archetype_played
-ORDER BY
-  1;
+;
