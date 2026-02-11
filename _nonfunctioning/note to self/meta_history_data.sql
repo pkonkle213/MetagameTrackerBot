@@ -13,15 +13,15 @@ WITH
   )
 SELECT
   A.archetype_played,
-  J.meta_percent AS current_week,
-  B.meta_percent AS week1,
+  B.meta_percent AS week1, --Are the week dates better suited as the row?
   C.meta_percent AS week2,
   D.meta_percent AS week3,
   E.meta_percent AS week4,
   F.meta_percent AS week5,
   G.meta_percent AS week6,
   H.meta_percent AS week7,
-  I.meta_percent AS week8
+  I.meta_percent AS week8,
+  J.meta_percent AS week9
 FROM
   (
     SELECT
@@ -150,7 +150,7 @@ FROM
     FROM
       X
     WHERE
-      date_trunc('week', event_date) = date_trunc('week', CURRENT_DATE)
+      date_trunc('week', event_date) = date_trunc('week', CURRENT_DATE) - interval '9 weeks'
     GROUP BY
       archetype_played,
       date_trunc('week', event_date)

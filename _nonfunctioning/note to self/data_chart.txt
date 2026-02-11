@@ -1,8 +1,0 @@
-so, it looks like if my dataframe has columns of archetype name != 'other', and win_percent, and meta_percent, I could do something like this:
-sort the df descending based upon meta percent
-
-import seaborn as sns
-sns.set_style("whitegrid")
-sns.barplot(x="win_percent", y="archetype_name", data=df, orient="h")
-
-I would then need to save this to a variable, convert to a jpg, then message the output

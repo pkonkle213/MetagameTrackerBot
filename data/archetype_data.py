@@ -54,7 +54,6 @@ def AddArchetype(event_id,
       row = cur.fetchone()
       print(row)
       return row
-      #return Archetype(row[0], row[1], row[2], row[3], row[4]) if row else None
 
 def GetUnknownArchetypes(discord_id,
                          game_id,
@@ -81,11 +80,4 @@ def GetUnknownArchetypes(discord_id,
 
       cur.execute(command)  # type: ignore[arg-type]
       rows = cur.fetchall()
-      #row = rows[0].__dict__
-      #keys = row.keys()
-            
-      #print('Rows:\n', rows)
-      #print('First row:\n', row)
-      #print('Keys:\n', keys)
-      
       return rows
