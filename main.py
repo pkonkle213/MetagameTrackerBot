@@ -47,7 +47,7 @@ async def before_find_the_unknown():
   await bot.wait_until_ready()
 
 
-@tasks.loop(hours=24)#minutes=60)
+@tasks.loop(minutes=60)
 async def sync_paid_users():
   """Every 60 minutes, the bot will sync the paid users for command permission"""
   print('Syncing paid users')
