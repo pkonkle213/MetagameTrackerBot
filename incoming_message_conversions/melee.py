@@ -1,9 +1,8 @@
 import pytz
 from datetime import datetime
-from custom_errors import KnownError
 from tuple_conversions import Pairing
 
-def MeleeJsonPairings(json_data:list) -> tuple[list[Pairing], list[str], str, str, dict]:
+def MeleeJsonPairings(json_data:list) -> tuple[list[Pairing], list[str], int, str, dict]:
   print('Welcome to MeleeJsonPairings')
   data = []
   errors = []
@@ -43,7 +42,7 @@ def MeleeJsonPairings(json_data:list) -> tuple[list[Pairing], list[str], str, st
     except Exception as e:
       errors.append(f'Unable to parse round {round_number}, table number {table_number} match due to {e}')
     
-  return data, errors, '', event_date, archetypes
+  return data, errors, 0, event_date, archetypes
 
 def DetermineAchetype(competitor: dict) -> str | None:
   decklists = competitor['Decklists'][0]

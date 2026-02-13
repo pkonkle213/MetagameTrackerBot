@@ -113,7 +113,3 @@ Data = namedtuple("Data",
                    "Format",
                    "Store",
                    "UserId"])
-
-Result = namedtuple('Result',
-                    ['Data',
-                     'Errors'])

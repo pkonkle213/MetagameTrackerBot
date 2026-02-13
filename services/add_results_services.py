@@ -10,7 +10,7 @@ def SubmitData(store:Store,
                game:Game,
                format:Format,
                userId:int,
-               data: list[Standing] | list[Pairing],
+               data:list[Standing] | list[Pairing],
                date_str:str,
               round_number:int):
   """Submits an event's data to the database"""

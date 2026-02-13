@@ -1,5 +1,5 @@
 from custom_errors import KnownError
-from tuple_conversions import Standing, Pairing, Result
+from tuple_conversions import Standing, Pairing
 from typing import Tuple
 
 def CompanionStandings(message, seperator) -> Tuple[list[Standing] | None,list[str]]:

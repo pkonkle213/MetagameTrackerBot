@@ -30,7 +30,7 @@ def BuildFilePath(
 def ConvertMeleeTournamentToDataErrors(
   store: Store,
   json_data: list
-) -> tuple[list[Pairing] | list[Standing], list[str], str, str]:
+) -> tuple[list[Pairing] | list[Standing], list[str], int, str]:
   path = BuildFilePath(store, 'MeleeTournament.json')
   upload_json(json_data, path)
 
@@ -40,11 +40,13 @@ def ConvertMeleeTournamentToDataErrors(
   return data, errors, round_number, date
 
 
-async def ConvertCSVToDataErrors(bot: commands.Bot,
-                                 store: Store,
-                                 game: Game,
-                                 interaction: Interaction,
-                                 csv_file: Attachment):
+async def ConvertCSVToDataErrors(
+  bot: commands.Bot,
+  store: Store,
+  game: Game,
+  interaction: Interaction,
+  csv_file: Attachment
+) -> Tuple[list[Standing]|list[Pairing], list[str] | None, int, str]:
   save_path = BuildFilePath(store, csv_file.filename)
   print('Save path: ', save_path)
   csv_data = await csv_file.read()
@@ -59,9 +61,9 @@ async def ConvertCSVToDataErrors(bot: commands.Bot,
 
   filename_split = csv_file.filename.split('-')
   if filename_split[0].upper() == 'STANDINGS':
-    round_number = '0'
+    round_number = 0
   else:
-    round_number = filename_split[4]
+    round_number = int(filename_split[4])
 
   date = datetime.now(pytz.timezone('US/Eastern')).strftime("%m/%d/%Y")
   return data, errors, round_number, date
@@ -73,7 +75,7 @@ async def ConvertModalToDataErrors(
   store:Store,
   game:Game,
   format:Format
-) -> Tuple[list[Pairing] | list[Standing], list[str], str]:
+) -> Tuple[list[Pairing] | list[Standing], list[str], int, str]:
   if store is None or game is None or format is None:
     raise KnownError("The princess isn't in this castle.")
   modal = SubmitDataModal(store, game, format)
@@ -101,4 +103,4 @@ async def ConvertModalToDataErrors(
 
   data, errors, round_number = ConvertMessageToData(selected_event.Data, game)
   date = selected_event.Date
-  return data, errors, date
+  return data, errors, round_number, date

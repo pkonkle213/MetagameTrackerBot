@@ -113,9 +113,11 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
         ephemeral=True)
 
     #Inform user of any errors in submitted data
-    if len(errors) > 0:
-      await interaction.followup.send('Errors:\n' + '\n'.join(errors),
-                                      ephemeral=True)
+    if errors is not None and len(errors) > 0:
+      await interaction.followup.send(
+        'Errors:\n' + '\n'.join(errors),
+        ephemeral=True
+      )
 
     #Inform me of the new event being added
     await NewDataMessage(self.bot, interaction, False)

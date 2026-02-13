@@ -7,7 +7,7 @@ from tuple_conversions import Game, Pairing, Standing
 def ConvertCSVToData(
   dataframe:pd.DataFrame,
   game:Game
-) -> Tuple[list[Standing] | list[Pairing], list[str]]:
+) -> Tuple[list[Standing] | list[Pairing], list[str] | None]:
   data = None
   errors = []
   if data is None:
@@ -18,7 +18,7 @@ def ConvertCSVToData(
 
   if not data:
     raise Exception("Unable to parse data. Please try again.")
-  return data, errors  
+  return data, errors
 
 def ConvertMessageToData(
   message:str,
@@ -26,18 +26,17 @@ def ConvertMessageToData(
 ) -> Tuple[list[Pairing] | list[Standing], list[str], int]:
   data = None
   errors = []
+  round_number = 0
   if game.GameName.upper() == 'MAGIC':
     print('Attempting to parse Magic - Companion Data')
     
     if data is None:
       print('Testing magic - companion - standings - 4 spaces')
       data, errors = CompanionStandings(message, "    ")
-      round_number = 0
     
     if data is None:
       print('Testing magic - companion - standings - tab')
       data, errors = CompanionStandings(message, "\t")
-      round_number = 0
     
     if data is None:
       print('Testing magic - companion - pairings')
