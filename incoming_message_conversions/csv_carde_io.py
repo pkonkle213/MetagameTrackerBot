@@ -1,7 +1,7 @@
 import pandas as pd
 from tuple_conversions import Pairing, Standing, Result
 
-def Pairings(dataframe:pd.DataFrame):
+def ConvertToPairings(dataframe:pd.DataFrame):
   """Takes a provided dataframe and attempts to make it into a Pairing object"""
   data = []
   errors = []
@@ -30,7 +30,7 @@ def Pairings(dataframe:pd.DataFrame):
     print('Carde.io Official Pairing Exception:', exception)
     return Result(None, None)
 
-def Standings(dataframe:pd.DataFrame):
+def ConvertToStandings(dataframe:pd.DataFrame):
   """Takes a provided dataframe and attempts to make it into a Standing object"""
   data = []
   errors = []

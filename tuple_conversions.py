@@ -73,20 +73,27 @@ Event = namedtuple('Event',
                     'FormatID',
                     'LastUpdate',
                     'EventType',
+                    'ReportedType',
+                    'EventName',
                     'IsPosted',
                     'IsComplete'])
 
-def ConvertToEvent(event_obj: tuple[int, int, str, int, int|None, int, str, bool, bool]):
+def ConvertToEvent(event_obj: tuple[int, int, str, int, int, int, str, str, str, bool, bool]) -> Event:
   """Converts a tuple to an Event object."""
-  return Event(int(event_obj[0]),
+  try:
+    return Event(int(event_obj[0]),
                int(event_obj[1]),
                event_obj[2],
                int(event_obj[3]),
-               int(event_obj[4]) if event_obj[4] else None,
+               int(event_obj[4]),
                int(event_obj[5]),
                event_obj[6],
                event_obj[7],
-               event_obj[8])
+                event_obj[8],
+               event_obj[9],
+               event_obj[10])
+  except Exception as e:
+    raise Exception(f"Error converting event object: {e}")
 
 Pairing = namedtuple('Pairing',
                      ['P1Name',

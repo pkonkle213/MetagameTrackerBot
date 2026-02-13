@@ -1,7 +1,8 @@
 from custom_errors import KnownError
 from tuple_conversions import Standing, Pairing, Result
+from typing import Tuple
 
-def CompanionStandings(message, seperator):
+def CompanionStandings(message, seperator) -> Tuple[list[Standing] | None,list[str]]:
   data = []
   errors = []
   rows = message.split('\n')
@@ -32,11 +33,12 @@ def CompanionStandings(message, seperator):
     except Exception:
       errors.append(f'Unable to parse row {i+1}: {rows[i]}')
 
-  return Result(data if len(data) > 0 else None, errors)
+  return data if len(data) > 0 else None, errors
 
-def CompanionPairings(message):
+def CompanionPairings(message) -> Tuple[list[Pairing] | None, list[str], int]:
   data = []
   errors = []
+  roundnumber = 0
   rows = message.split('\n')
   for i in range(0, len(rows), 6):
     row = rows[i:i + 6]
@@ -70,4 +72,4 @@ def CompanionPairings(message):
     except Exception:
       errors.append(f'Unable to parse result (rows {i + 1} - {i + 6})')
 
-  return Result(data if len(data) > 0 else None, errors)
+  return data if len(data) > 0 else None, errors, roundnumber

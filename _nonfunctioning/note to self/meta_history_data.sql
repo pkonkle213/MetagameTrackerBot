@@ -1,3 +1,5 @@
+--SQL For Chart
+
 WITH
   X AS (
     SELECT
@@ -7,21 +9,20 @@ WITH
       events e
       INNER JOIN unique_archetypes ua ON ua.event_id = e.id
     WHERE
-      e.discord_id = 1210746744602890310
+      e.discord_id = 1437606618144444448
       AND e.format_id = 1
       AND e.game_id = 1
   )
 SELECT
   A.archetype_played,
-  B.meta_percent AS week1, --Are the week dates better suited as the row?
-  C.meta_percent AS week2,
-  D.meta_percent AS week3,
-  E.meta_percent AS week4,
-  F.meta_percent AS week5,
-  G.meta_percent AS week6,
-  H.meta_percent AS week7,
-  I.meta_percent AS week8,
-  J.meta_percent AS week9
+  B.meta_percent AS current_week,
+  C.meta_percent AS week1,
+  D.meta_percent AS week2,
+  E.meta_percent AS week3,
+  F.meta_percent AS week4,
+  G.meta_percent AS week5,
+  H.meta_percent AS week6,
+  I.meta_percent AS week7
 FROM
   (
     SELECT
@@ -30,7 +31,7 @@ FROM
     FROM
       X
     WHERE
-      event_date >= date_trunc('week', CURRENT_DATE) - interval '8 weeks'
+      event_date >= date_trunc('week', CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York') - interval '8 weeks'
     GROUP BY
       archetype_played
     ORDER BY
@@ -46,7 +47,7 @@ FROM
     FROM
       X
     WHERE
-      date_trunc('week', event_date) = date_trunc('week', CURRENT_DATE) - interval '1 weeks'
+      date_trunc('week', event_date) = date_trunc('week', CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York')
     GROUP BY
       archetype_played,
       date_trunc('week', event_date)
@@ -59,7 +60,7 @@ FROM
     FROM
       X
     WHERE
-      date_trunc('week', event_date) = date_trunc('week', CURRENT_DATE) - interval '2 weeks'
+      date_trunc('week', event_date) = date_trunc('week', CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York') - interval '1 weeks'
     GROUP BY
       archetype_played,
       date_trunc('week', event_date)
@@ -72,7 +73,7 @@ FROM
     FROM
       X
     WHERE
-      date_trunc('week', event_date) = date_trunc('week', CURRENT_DATE) - interval '3 weeks'
+      date_trunc('week', event_date) = date_trunc('week', CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York') - interval '2 weeks'
     GROUP BY
       archetype_played,
       date_trunc('week', event_date)
@@ -85,7 +86,7 @@ FROM
     FROM
       X
     WHERE
-      date_trunc('week', event_date) = date_trunc('week', CURRENT_DATE) - interval '4 weeks'
+      date_trunc('week', event_date) = date_trunc('week', CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York') - interval '3 weeks'
     GROUP BY
       archetype_played,
       date_trunc('week', event_date)
@@ -98,7 +99,7 @@ FROM
     FROM
       X
     WHERE
-      date_trunc('week', event_date) = date_trunc('week', CURRENT_DATE) - interval '5 weeks'
+      date_trunc('week', event_date) = date_trunc('week', CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York') - interval '4 weeks'
     GROUP BY
       archetype_played,
       date_trunc('week', event_date)
@@ -111,7 +112,7 @@ FROM
     FROM
       X
     WHERE
-      date_trunc('week', event_date) = date_trunc('week', CURRENT_DATE) - interval '6 weeks'
+      date_trunc('week', event_date) = date_trunc('week', CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York') - interval '5 weeks'
     GROUP BY
       archetype_played,
       date_trunc('week', event_date)
@@ -124,7 +125,7 @@ FROM
     FROM
       X
     WHERE
-      date_trunc('week', event_date) = date_trunc('week', CURRENT_DATE) - interval '7 weeks'
+      date_trunc('week', event_date) = date_trunc('week', CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York') - interval '6 weeks'
     GROUP BY
       archetype_played,
       date_trunc('week', event_date)
@@ -137,22 +138,9 @@ FROM
     FROM
       X
     WHERE
-      date_trunc('week', event_date) = date_trunc('week', CURRENT_DATE) - interval '8 weeks'
+      date_trunc('week', event_date) = date_trunc('week', CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York') - interval '7 weeks'
     GROUP BY
       archetype_played,
       date_trunc('week', event_date)
   ) I ON A.archetype_played = I.archetype_played
-  LEFT JOIN (
-    SELECT
-      date_trunc('week', event_date) AS week_of,
-      archetype_played,
-      ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS meta_percent
-    FROM
-      X
-    WHERE
-      date_trunc('week', event_date) = date_trunc('week', CURRENT_DATE) - interval '9 weeks'
-    GROUP BY
-      archetype_played,
-      date_trunc('week', event_date)
-  ) J ON A.archetype_played = J.archetype_played
-;
+ ;

@@ -10,7 +10,7 @@ from discord import app_commands, Interaction, Attachment
 from discord.ext import commands
 from discord_messages import MessageChannel
 from interaction_objects import GetObjectsFromInteraction
-from services.add_results_services import SubmitCheck, SubmitData
+from services.add_results_services import SubmitData
 from services.command_error_service import Error
 
 
@@ -81,31 +81,25 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     melee_tournament_id: str
       The Melee Tournament ID for the event
     """
-    whole_event = False
-
     #Ensure that only one type of data is being submitted
     if csv_file and melee_tournament_id:
       raise KnownError("You can only submit a CSV file or a Melee Tournament ID, not both.")
 
-    #Get the data source from the user - respond FIRST before any slow operations
+    store, game, format = GetObjectsFromInteraction(interaction)
+    if not store or not game or not format:
+      raise Exception('The princess is in another castle.')
     if csv_file:
       await interaction.response.defer(ephemeral=True)
-      store, game, format = SubmitCheck(interaction)
       if not csv_file.filename.endswith('.csv'):
         raise KnownError("Please upload a file with a '.csv' extension.")
       data, errors, round_number, date = await ConvertCSVToDataErrors(
-          self.bot, game, interaction, csv_file)
+          self.bot, store, game, interaction, csv_file)
     elif melee_tournament_id:
       await interaction.response.defer(ephemeral=True)
-      store, game, format = SubmitCheck(interaction)
-      whole_event = True
       json_dict = GetMeleeTournamentData(melee_tournament_id, store)
-
-      guild = interaction.guild
-      data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(guild, json_dict)
+      data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(store, json_dict)
     else:
-      # Send modal first, get interaction_objects after modal submits
-      data, errors, round_number, date, store, game, format = await ConvertModalToDataErrors(self.bot, interaction)
+      data, errors, round_number, date = await ConvertModalToDataErrors(self.bot, interaction, store, game, format)
 
     if data is None:
       print('Data is None')
@@ -128,15 +122,13 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
 
     #Submit the data to the database. Returning event for an announcement
     output, event_created = SubmitData(
-        store,
-        game,
-        format,
-        interaction.user.id,
-        data,
-        date,
-        round_number,
-        False,  #modal.submitted_is_event_complete)
-        whole_event)
+      store,
+      game,
+      format,
+      interaction.user.id,
+      data,
+      date,
+      round_number)
     if output is None:
       raise KnownError("Unable to submit data. Please try again.")
     

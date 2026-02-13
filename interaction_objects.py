@@ -26,12 +26,12 @@ def GetObjectsFromInteraction(
   store, game, format = db.GetInteractionDetails(discord_id, category_id,
                                                  channel_id)
 
-  if store and store.DiscordId == TESTGUILDID:
+  """if store and store.DiscordId == TESTGUILDID:
     store = Store(1210746744602890310, 'Test Guild', 'Test Store',
                   505548744444477441, 'Phil', '123 Street', True, True, 'Ohio',
                   'Cbus', False)
     game = Game(1, 'Magic')
-    format = Format(1, 'Pauper', ConvertToDate('1/1/2020'), False)
+    format = Format(1, 'Pauper', ConvertToDate('1/1/2020'), False)"""
   return store, game, format
 
 

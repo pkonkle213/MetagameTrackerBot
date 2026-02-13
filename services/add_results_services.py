@@ -1,26 +1,20 @@
 from services.date_functions import ConvertToDate
-import discord
 from output_builder import BuildTableOutput
 from custom_errors import KnownError
 from data.add_results_data import AddResult, SubmitTable
 from services.input_services import ConvertInput
 from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
-from interaction_objects import GetObjectsFromInteraction
 from tuple_conversions import Standing, Pairing, Event, Store, Game, Format
 
-def SubmitCheck(interaction:discord.Interaction) -> tuple[Store | None, Game | None, Format | None]:
-  """Checks if the user can submit data in this channel"""
-  return GetObjectsFromInteraction(interaction)
-
-def SubmitData(store:Store, game:Game, format:Format, userId:int,
+def SubmitData(store:Store,
+               game:Game,
+               format:Format,
+               userId:int,
                data: list[Standing] | list[Pairing],
                date_str:str,
-               round_number:str,
-               is_complete: bool,
-               whole_event: bool):
+              round_number:int):
   """Submits an event's data to the database"""
   date = ConvertToDate(date_str)
-  round_num = int(round_number) if round_number != '' else 0
   
   event = GetEvent(store.DiscordId, date, game, format)
   event_created = False
@@ -40,7 +34,7 @@ def SubmitData(store:Store, game:Game, format:Format, userId:int,
     if event.EventType == 'STANDINGS':
       #Delete the standings data
       DeleteStandingsFromEvent(event.ID)
-    results = AddPairingResults(event, data, userId, round_num, whole_event)
+    results = AddPairingResults(event, data, userId, round_number)
   else:
     raise Exception("Congratulations, you've reached the impossible to reach area.")
   return results, event.EventDate if event_created else None
@@ -67,8 +61,7 @@ def AddStandingResults(event:Event,
 def AddPairingResults(event:Event,
                       data:list[Pairing],
                       submitterId:int,
-                      round_number:int,
-                      whole_event:bool):
+                      round_number:int):
   round_number = data[0].Round if not round_number else round_number
   successes = []
  
