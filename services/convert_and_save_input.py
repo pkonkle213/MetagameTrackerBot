@@ -4,7 +4,7 @@ from discord_messages import MessageChannel
 from incoming_message_conversions.melee import MeleeJsonPairings
 from discord import Guild, Interaction, Attachment
 from input_modals.submit_data_modal import SubmitDataModal
-from tuple_conversions import Store, Format, Game, Pairing, Standing
+from tuple_conversions import Event, Store, Format, Game, Pairing, Standing
 from data_translation import ConvertCSVToData, ConvertMessageToData
 from datetime import datetime
 from custom_errors import KnownError
@@ -74,8 +74,8 @@ async def ConvertModalToDataErrors(
   interaction: Interaction                                  ,
   store:Store,
   game:Game,
-  format:Format
-) -> Tuple[list[Pairing] | list[Standing], list[str], int, str]:
+  format:Format,
+) -> Tuple[list[Pairing] | list[Standing], list[str], int, str, int]:
   if store is None or game is None or format is None:
     raise KnownError("The princess isn't in this castle.")
   modal = SubmitDataModal(store, game, format)
@@ -97,10 +97,13 @@ async def ConvertModalToDataErrors(
 
   save_path = BuildFilePath(store, 'ModalInput.txt')
   upload_string(submission, save_path)
-  message = f'Attempting to add new event data from {store.StoreName if store.StoreName else store.DiscordName}:\n{selected_event.Data}'
-  await MessageChannel(bot, message, settings.BOTGUILDID,
+  try:
+    message = f'Attempting to add new event data from {store.StoreName if store.StoreName else store.DiscordName}:\n{selected_event.Data}'
+    await MessageChannel(bot, message, settings.BOTGUILDID,
                        settings.BOTEVENTINPUTID)
+  except Exception as e:
+    print('Error sending message to channel:', e)
 
   data, errors, round_number = ConvertMessageToData(selected_event.Data, game)
   date = selected_event.Date
-  return data, errors, round_number, date
+  return data, errors, round_number, date, selected_event.ID

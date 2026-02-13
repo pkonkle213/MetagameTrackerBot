@@ -74,11 +74,11 @@ Event = namedtuple('Event',
                     'LastUpdate',
                     'EventType',
                     'ReportedType',
-                    'EventName',
-                    'IsPosted',
-                    'IsComplete'])
+                    'EventName'])
 
-def ConvertToEvent(event_obj: tuple[int, int, str, int, int, int, str, str, str, bool, bool]) -> Event:
+def ConvertToEvent(
+  event_obj: tuple[int, int, str, int, int, int, str, str, str, bool, bool]
+) -> Event:
   """Converts a tuple to an Event object."""
   try:
     return Event(int(event_obj[0]),
@@ -89,9 +89,7 @@ def ConvertToEvent(event_obj: tuple[int, int, str, int, int, int, str, str, str,
                int(event_obj[5]),
                event_obj[6],
                event_obj[7],
-                event_obj[8],
-               event_obj[9],
-               event_obj[10])
+                event_obj[8])
   except Exception as e:
     raise Exception(f"Error converting event object: {e}")
 

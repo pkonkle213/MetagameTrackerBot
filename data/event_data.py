@@ -1,41 +1,15 @@
 import os
 import psycopg2
+from settings import DATABASE_URL
+from tuple_conversions import ConvertToEvent, Event
 
-from tuple_conversions import ConvertToEvent
-
-def EventIsComplete(event_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'''
-    UPDATE events
-    SET is_complete = TRUE
-    WHERE id = {event_id}
-    RETURNING *
-    '''
-    cur.execute(command)
-    conn.commit()
-    row = cur.fetchone()
-    return row
-
-def EventIsPosted(event_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'''
-    UPDATE events
-    SET is_posted = TRUE
-    WHERE id = {event_id}
-    RETURNING *
-    '''
-    cur.execute(command)
-    conn.commit()
-    row = cur.fetchone()
-    return row
-    
-def GetEvent(discord_id,
-                date,
-                game,
-                format):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetEvent(
+  discord_id,
+  date,
+  game,
+  format
+) -> Event | None:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -46,8 +20,6 @@ def GetEvent(discord_id,
       {'format_id,' if format else ''}
       last_update,
       event_type,
-      COALESCE(is_posted, {False}) as is_posted,
-      COALESCE(is_complete, {False}) as is_complete
     FROM
       events_view
     WHERE
@@ -65,11 +37,12 @@ def GetEvent(discord_id,
     row = cur.fetchone()
     return ConvertToEvent(row) if row else None
 
+#TODO: Save point - Need to add event_type and just return the ID for the event to know it was created
 def CreateEvent(event_date,
   discord_id,
   game,
   format):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     INSERT INTO Events
@@ -91,16 +64,16 @@ def CreateEvent(event_date,
     , {False}
     )
     RETURNING
-    id, discord_id, event_date, game_id, format_id, 0, '{None}', {False}, {False}
+    id
     '''
     
     cur.execute(command)
     conn.commit()
-    event = cur.fetchone()
-    return ConvertToEvent(event) if event else None
+    event_id = cur.fetchone()
+    return event_id
 
 def GetEventMeta(event_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -124,7 +97,7 @@ def GetEventMeta(event_id):
     return rows
 
 def DeleteStandingsFromEvent(event_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     DELETE FROM standings

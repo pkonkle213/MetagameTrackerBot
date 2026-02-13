@@ -86,6 +86,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       raise KnownError("You can only submit a CSV file or a Melee Tournament ID, not both.")
 
     store, game, format = GetObjectsFromInteraction(interaction)
+    event_id = 0
     if not store or not game or not format:
       raise Exception('The princess is in another castle.')
     if csv_file:
@@ -99,7 +100,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       json_dict = GetMeleeTournamentData(melee_tournament_id, store)
       data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(store, json_dict)
     else:
-      data, errors, round_number, date = await ConvertModalToDataErrors(self.bot, interaction, store, game, format)
+      data, errors, round_number, date, event_id = await ConvertModalToDataErrors(self.bot, interaction, store, game, format)
 
     if data is None:
       print('Data is None')
@@ -120,7 +121,10 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       )
 
     #Inform me of the new event being added
-    await NewDataMessage(self.bot, interaction, False)
+    try:
+      await NewDataMessage(self.bot, interaction, False)
+    except Exception as e:
+      print(f'Attempted to send new event to Bot Guild: {e}')
 
     #Submit the data to the database. Returning event for an announcement
     output, event_created = SubmitData(
