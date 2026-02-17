@@ -8,7 +8,7 @@ def GetStoreStandingData(store, game, format, start_date, end_date):
     SELECT
       INITCAP(g.name) AS Game_Name,
       INITCAP(f.name) AS Format_Name,
-      DATE (e.event_date) AS Event_Date,
+      DATE(e.event_date) AS Event_Date,
       INITCAP(fp.Player_Name) AS player_name,
       INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
       fp.wins,
@@ -20,7 +20,7 @@ def GetStoreStandingData(store, game, format, start_date, end_date):
       AND UPPER(fp.player_name) = UPPER(ua.player_name)
       INNER JOIN events e ON e.id = fp.event_id
       INNER JOIN stores s ON s.discord_id = e.discord_id
-      INNER JOIN Games g ON g.id = e.game_id
+      INNER JOIN games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
     WHERE
       e.discord_id = {store.DiscordId}
@@ -134,7 +134,7 @@ def GetPlayerStandingData(store, game, format, start_date, end_date, user_id):
     FROM
       full_standings fp
       LEFT JOIN unique_archetypes ua ON fp.event_id = ua.event_id
-      AND fp.player_name = ua.player_name
+      AND UPPER(fp.player_name) = UPPER(ua.player_name)
       INNER JOIN events e ON e.id = fp.event_id
       INNER JOIN stores s ON s.discord_id = e.discord_id
       INNER JOIN games g ON g.id = e.game_id
