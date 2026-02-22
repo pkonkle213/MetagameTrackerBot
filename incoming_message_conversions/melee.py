@@ -2,8 +2,7 @@ import pytz
 from datetime import datetime
 from tuple_conversions import Pairing
 
-def MeleeJsonPairings(json_data:list) -> tuple[list[Pairing], list[str], int, str, dict]:
-  print('Welcome to MeleeJsonPairings')
+def MeleeJsonPairings(json_data:list) -> tuple[list[Pairing], list[str], int, str, dict[str,str]]:
   data = []
   errors = []
   archetypes = {}

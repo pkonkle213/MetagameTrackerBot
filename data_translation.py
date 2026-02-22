@@ -7,42 +7,44 @@ from tuple_conversions import Game, Pairing, Standing
 def ConvertCSVToData(
   dataframe:pd.DataFrame,
   game:Game
-) -> Tuple[list[Standing] | list[Pairing], list[str] | None]:
-  data = None
-  errors = []
-  if data is None:
-    data, errors = ConvertToPairings(dataframe)
+) -> Tuple[list[Standing] | None, list[Pairing] | None, list[str] | None]:
+  errors = None
+  standings_data = None
+  pairings_data = None
+  
+  pairings_data, errors = ConvertToPairings(dataframe)
 
-  if data is None:
-    data, errors = ConvertToStandings(dataframe)
+  if pairings_data is None:
+    standings_data, errors = ConvertToStandings(dataframe)
 
-  if not data:
+  if pairings_data is None and standings_data is None:
     raise Exception("Unable to parse data. Please try again.")
-  return data, errors
+  return standings_data, pairings_data, errors
 
 def ConvertMessageToData(
   message:str,
   game:Game
-) -> Tuple[list[Pairing] | list[Standing], list[str], int]:
-  data = None
-  errors = []
+) -> Tuple[list[Standing] | None, list[Pairing] | None, list[str] | None, int]:
+  errors = None
   round_number = 0
+  standings_data = None
+  pairings_data = None
+  
   if game.GameName.upper() == 'MAGIC':
     print('Attempting to parse Magic - Companion Data')
     
-    if data is None:
-      print('Testing magic - companion - standings - 4 spaces')
-      data, errors = CompanionStandings(message, "    ")
+    print('Testing magic - companion - standings - 4 spaces')
+    standings_data, errors = CompanionStandings(message, "    ")
     
-    if data is None:
+    if standings_data is None:
       print('Testing magic - companion - standings - tab')
-      data, errors = CompanionStandings(message, "\t")
+      standings_data, errors = CompanionStandings(message, "\t")
     
-    if data is None:
+    if standings_data is None:
       print('Testing magic - companion - pairings')
-      data, errors, round_number = CompanionPairings(message)
+      pairings_data, errors, round_number = CompanionPairings(message)
 
-  if not data:
+  if standings_data is None and pairings_data is None:
     raise Exception("Unable to parse data. Please try again.")
     
-  return data, errors, round_number
+  return standings_data, pairings_data, errors, round_number

@@ -4,37 +4,37 @@ from custom_errors import KnownError
 from data.add_results_data import AddResult, SubmitTable
 from services.input_services import ConvertInput
 from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
-from tuple_conversions import Standing, Pairing, Event, Store, Game, Format
+from tuple_conversions import EventInput, Standing, Pairing, Event, Store, Game, Format
 
-def SubmitData(store:Store,
-               game:Game,
-               format:Format,
-               userId:int,
-               data:list[Standing] | list[Pairing],
-               date_str:str,
-              round_number:int):
+def SubmitData(
+  submitted_event:EventInput,
+  userId:int
+): #TODO: What does this return?
   """Submits an event's data to the database"""
-  date = ConvertToDate(date_str)
-  
-  event = GetEvent(store.DiscordId, date, game, format)
+  date = ConvertToDate(submitted_event.Date)
+
   event_created = False
-  if event is None:
-    event = CreateEvent(date, store.DiscordId, game, format)
-    if event is None:
+  if submitted_event.ID == '0':
+    event_id = CreateEvent(date, submitted_event.StoreID, submitted_event.GameID, submitted_event.FormatID, submitted_event.TypeID)
+    if event_id is None:
       raise KnownError('Unable to create event')
     event_created = True
+  else:
+    event_id = submitted_event.ID
+
+  event = GetEvent(event_id)
 
   #Add the data to the database depending on the type of data
   results = ''
-  if isinstance(data[0], Standing):
+  if submitted_event.StandingData:
     if event.EventType == 'PAIRINGS' or type(event) is list[Pairing]:
       raise KnownError('This event already has pairings submitted')
-    results = AddStandingResults(event, data, userId)
-  elif isinstance(data[0], Pairing):
+    results = AddStandingResults(event, submitted_event.StandingData, userId)
+  elif submitted_event.PairingData:
     if event.EventType == 'STANDINGS':
       #Delete the standings data
       DeleteStandingsFromEvent(event.ID)
-    results = AddPairingResults(event, data, userId, round_number)
+    results = AddPairingResults(event, submitted_event.PairingData, userId, submitted_event.RoundNumber)
   else:
     raise Exception("Congratulations, you've reached the impossible to reach area.")
   return results, event.EventDate if event_created else None

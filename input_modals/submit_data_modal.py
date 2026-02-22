@@ -15,10 +15,11 @@ PredictEvent = namedtuple('PredictEvent',
 class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
   is_submitted = False
 
-  def __init__(self, store:Store, game:Game, format:Format):
+  def __init__(self, store:Store, game:Game, format:Format, data:bool = True):
     super().__init__()
     today = GetToday().strftime('%m/%d/%Y')
     self.previous_events = GetPreviousEvents(store, game, format)
+    self.data = data
     event_types = GetEventTypes()
       
     default_event_name = f'{format.FormatName}'
@@ -79,21 +80,22 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
         min_values=1)
     )
     self.add_item(self.event_type)
-  
-    self.message_input = discord.ui.Label(
-      text="Event Data",
-      component=discord.ui.TextInput(
-        style=discord.TextStyle.paragraph,
-        placeholder='Paste your data here',
-        required=True,
-        max_length=2000  # Max length for text input
-      ))
-    self.add_item(self.message_input)
+
+    if data:
+      self.message_input = discord.ui.Label(
+        text="Event Data",
+        component=discord.ui.TextInput(
+          style=discord.TextStyle.paragraph,
+          placeholder='Paste your data here',
+          required=True,
+          max_length=2000  # Max length for text input
+        ))
+      self.add_item(self.message_input)
 
   async def on_submit(self, interaction: discord.Interaction):
     self.submitted_event = SetEventDateAndName(self.continue_event.component.values[0],
                                                self.previous_events,
-                                               self.date_input.component.value,
+                                               self.date_input.component.value if self.data else None,
                                                self.name_input.component.value,
                                                self.event_type.component.values[0],
                                                self.message_input.component.value

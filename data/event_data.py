@@ -1,47 +1,50 @@
-import os
+from datetime import date
+from typing import Tuple
+import psycopg
 import psycopg2
+from psycopg.rows import class_row
 from settings import DATABASE_URL
-from tuple_conversions import ConvertToEvent, Event
+from tuple_conversions import Event
 
 def GetEvent(
-  discord_id,
-  date,
-  game,
-  format
-) -> Event | None:
-  conn = psycopg2.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
-    command = f'''
+  event_id: int
+) -> Event:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Event)) as cur:
+    command = """
     SELECT
       id,
+      custom_event_id,
       discord_id,
       event_date,
       game_id,
-      {'format_id,' if format else ''}
+      format_id,
       last_update,
-      event_type,
+      event_type_id,
+      event_name,
+      reported_as
     FROM
       events_view
     WHERE
-      discord_id = {discord_id}
-      AND game_id = {game.GameId}
-      {f'AND format_id = {format.FormatId}' if format else ''}
-      AND event_date = '{date}'
-    ORDER BY
-      event_date DESC
-    LIMIT
-      1
-    '''
+      id = %s"""
     
-    cur.execute(command)
+    criteria = [event_id]
+    print('GetEvent Command:', command, criteria)
+    cur.execute(command, criteria)
     row = cur.fetchone()
-    return ConvertToEvent(row) if row else None
+    if not row:
+      raise Exception(f'Cannot find event. ID: {event_id}')
+    print('GetEvent Row:', row)
+    return row
 
-#TODO: Save point - Need to add event_type and just return the ID for the event to know it was created
-def CreateEvent(event_date,
-  discord_id,
-  game,
-  format):
+#TODO: When I create an event, should I track when and by whom the event was created? (Answer: probably, yes)
+def CreateEvent(
+  event_date:date,
+  discord_id:int,
+  game_id:int,
+  format_id:int,
+  event_type_id:int
+) -> int:
   conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
@@ -51,28 +54,28 @@ def CreateEvent(event_date,
     game_id
     {', format_id' if format else ''}
     , last_update
-    , is_posted
-    , is_complete
+    , event_type_id
     )
     VALUES
     ('{event_date}',
     {discord_id},
-    {game.GameId}
-    {f' , {format.FormatId}' if format else ''}
+    {game_id}
+    , {format_id}
     , 0
-    , {False}
-    , {False}
+    , {event_type_id}
     )
-    RETURNING
-    id
+    RETURNING id
     '''
     
     cur.execute(command)
     conn.commit()
     event_id = cur.fetchone()
-    return event_id
+    print('Event ID received:', event_id)
+    if not event_id:
+      raise Exception('Unable to create event')
+    return event_id[0]
 
-def GetEventMeta(event_id):
+def GetEventMeta(event_id) -> list[Tuple[str,int,int,int]]:
   conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
