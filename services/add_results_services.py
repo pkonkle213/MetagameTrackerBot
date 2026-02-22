@@ -15,7 +15,13 @@ def SubmitData(
 
   event_created = False
   if submitted_event.ID == '0':
-    event_id = CreateEvent(date, submitted_event.StoreID, submitted_event.GameID, submitted_event.FormatID, submitted_event.TypeID)
+    event_id = CreateEvent(date,
+                           submitted_event.StoreID,
+                           submitted_event.GameID, 
+                           submitted_event.FormatID,
+                           submitted_event.Name,
+                           submitted_event.TypeID,
+                          userId)
     if event_id is None:
       raise KnownError('Unable to create event')
     event_created = True
@@ -27,17 +33,17 @@ def SubmitData(
   #Add the data to the database depending on the type of data
   results = ''
   if submitted_event.StandingData:
-    if event.EventType == 'PAIRINGS' or type(event) is list[Pairing]:
+    if event.reported_as == 'PAIRINGS' or type(event) is list[Pairing]:
       raise KnownError('This event already has pairings submitted')
     results = AddStandingResults(event, submitted_event.StandingData, userId)
   elif submitted_event.PairingData:
-    if event.EventType == 'STANDINGS':
+    if event.reported_as == 'STANDINGS':
       #Delete the standings data
-      DeleteStandingsFromEvent(event.ID)
+      DeleteStandingsFromEvent(event.id)
     results = AddPairingResults(event, submitted_event.PairingData, userId, submitted_event.RoundNumber)
   else:
     raise Exception("Congratulations, you've reached the impossible to reach area.")
-  return results, event.EventDate if event_created else None
+  return results, event.event_date if event_created else None
 
 def AddStandingResults(event:Event,
                        data:list[Standing],
@@ -49,11 +55,11 @@ def AddStandingResults(event:Event,
                         person.Wins,
                         person.Losses,
                         person.Draws)
-      output = AddResult(event.ID, person, submitterId)
+      output = AddResult(event.id, person, submitterId)
       if output:
         successes.append(person)
 
-  title = f'{event.EventDate.strftime("%B %d")} event'
+  title = f'{event.event_date.strftime("%B %d")} event'
   headers = ['Player Name', 'Wins', 'Losses', 'Draws']
   output = BuildTableOutput(title, headers, successes)
   return output
@@ -66,7 +72,7 @@ def AddPairingResults(event:Event,
   successes = []
  
   for table in data:
-    result = SubmitTable(event.ID,
+    result = SubmitTable(event.id,
                          ConvertInput(table.P1Name),
                          table.P1Wins,
                          ConvertInput(table.P2Name),
@@ -82,7 +88,7 @@ def AddPairingResults(event:Event,
                        "Win" if table.P1Wins > table.P2Wins else "Loss" if table.P1Wins < table.P2Wins else "Draw"))
 
   if len(successes) > 0:
-    title = f"{event.EventDate.strftime('%B %d')} event - Round {round_number}"
+    title = f"{event.event_date.strftime('%B %d')} event - Round {round_number}"
     headers = ['Player 1', 'P1 Wins', 'Player 2', 'P2 Wins', 'Result']
     output = BuildTableOutput(title, headers, successes)
     return output

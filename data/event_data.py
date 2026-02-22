@@ -43,7 +43,9 @@ def CreateEvent(
   discord_id:int,
   game_id:int,
   format_id:int,
-  event_type_id:int
+  event_name:str,
+  event_type_id:int,
+  user_id:int
 ) -> int:
   conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
@@ -52,9 +54,12 @@ def CreateEvent(
     (event_date,
     discord_id,
     game_id
-    {', format_id' if format else ''}
+    , format_id
     , last_update
+    , event_name
     , event_type_id
+    , created_at
+    , created_by
     )
     VALUES
     ('{event_date}',
@@ -62,11 +67,14 @@ def CreateEvent(
     {game_id}
     , {format_id}
     , 0
+    , '{event_name}'
     , {event_type_id}
+    , CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York'
+    , {user_id}
     )
     RETURNING id
     '''
-    
+
     cur.execute(command)
     conn.commit()
     event_id = cur.fetchone()

@@ -31,17 +31,15 @@ def ConvertMessageToData(
   pairings_data = None
   
   if game.GameName.upper() == 'MAGIC':
-    print('Attempting to parse Magic - Companion Data')
-    
-    print('Testing magic - companion - standings - 4 spaces')
+    #magic - companion - standings - 4 spaces
     standings_data, errors = CompanionStandings(message, "    ")
     
     if standings_data is None:
-      print('Testing magic - companion - standings - tab')
+      #magic - companion - standings - tab
       standings_data, errors = CompanionStandings(message, "\t")
     
     if standings_data is None:
-      print('Testing magic - companion - pairings')
+      #magic - companion - pairings
       pairings_data, errors, round_number = CompanionPairings(message)
 
   if standings_data is None and pairings_data is None:
