@@ -97,12 +97,12 @@ def ConvertToEvent(
   except Exception as e:
     raise Exception(f"Error converting event object: {e}")
 
-Pairing = namedtuple('Pairing',
-                     ['P1Name',
-                      'P1Wins',
-                      'P2Name',
-                      'P2Wins',
-                      'Round'])
+class Pairing(NamedTuple):
+  P1Name: str
+  P1Wins: int
+  P2Name: str
+  P2Wins: int
+  Round: int
 
 Standing = namedtuple('Standing',
                       ['PlayerName',

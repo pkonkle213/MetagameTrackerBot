@@ -66,7 +66,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
         placeholder='Short Description of Event',
         default=default_event_name,
         required=False,
-        max_length=20)
+        max_length=50)
     )
     self.add_item(self.name_input)
   

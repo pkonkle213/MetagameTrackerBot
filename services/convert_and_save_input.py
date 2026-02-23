@@ -14,13 +14,13 @@ import pytz
 import io
 import settings
 
-#TODO: This needs to know the game and format to be able to save the file in the correct location
 def BuildFilePath(
   store: Store,
   game: Game,
   format: Format,
   prev_filename: str = ''
 ) -> str:
+  """Builds the file path for the file to be saved in App Storage"""
   timezone = pytz.timezone('US/Eastern')
   timestamp = datetime.now(timezone).strftime("%Y%m%d_%H%M%S")
   file_name = f"{timestamp}_{prev_filename}"
@@ -49,6 +49,7 @@ def ConvertMeleeTournamentToDataErrors(
   event_type_id: int,
   json_data: list
 ) -> EventInput:
+  """Takes in Melee.gg tournament data and converts it to a list of Pairing objects"""
   path = BuildFilePath(store, game, format, 'MeleeTournament.json')
   upload_json(json_data, path)
 
@@ -136,7 +137,7 @@ async def ConfirmEventDetails(
 
   selected_event = modal.submitted_event
 
-  return selected_event.Date, selected_event.Name, int(selected_event.ID), int(selected_event.TypeID)
+  return selected_event.Date, selected_event.Name, selected_event.ID, selected_event.TypeID
 
 async def ConvertModalToDataErrors(
   bot: commands.Bot,
@@ -160,7 +161,7 @@ async def ConvertModalToDataErrors(
     [
       f'Date: {selected_event.Date}',
       f'Name: {selected_event.Name}',
-      'Type: Weekly' if selected_event.TypeID == '1' else 'Type: Tournament'
+      'Type: Weekly' if selected_event.TypeID == 1 else 'Type: Tournament'
       f'Message:\n{selected_event.Data}'
     ]
   )

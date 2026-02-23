@@ -15,14 +15,17 @@ def GetMeleeTournamentData(tournament_id:str,
 
   while has_more:
     api_url = f"https://melee.gg/api/match/list/{tournament_id}?variables.page={page}&variables.pageSize={page_size}"
+    print('API URL:', api_url)
     response = requests.get(api_url, auth=(storeInfo.ClientId, storeInfo.ClientSecret))
 
     if response.status_code == 200:
       response_obj = response.json()
+      #print('Response object:', response_obj)
       data += response_obj['Content']
       has_more = response_obj['HasMore']
       page += 1
     else:
       raise Exception("Unable to get data from Melee.gg. Please try again.")
-    
+
+  #print('Data received:', data)
   return data
