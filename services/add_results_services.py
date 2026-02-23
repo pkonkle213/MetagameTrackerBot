@@ -87,7 +87,8 @@ def AddPairingResults(event:Event,
                        table.P2Wins,
                        "Win" if table.P1Wins > table.P2Wins else "Loss" if table.P1Wins < table.P2Wins else "Draw"))
 
-  if len(successes) > 0:
+  #TODO: melee.gg data needs to have the round numbers in the table, not the header, as it's a complete event upload
+  if len(successes) > 0: 
     title = f"{event.event_date.strftime('%B %d')} - {event.event_name} - Round {round_number}"
     headers = ['Player 1', 'P1 Wins', 'Player 2', 'P2 Wins', 'Result']
     output = BuildTableOutput(title, headers, successes)

@@ -44,10 +44,10 @@ def ByeMatch(match: dict) -> Tuple[Pairing, dict[str,str | None]]:
 def PairedMatch(match: dict) -> Tuple[Pairing, dict[str,str | None]]:
   print('Paired match:\n', match)
   p1name = match['Competitors'][0]['Team']['Players'][0]['Name']
-  p1gw = match['Competitors'][0]['GameWins']
+  p1gw = match['Competitors'][0]['GameWins'] if match['Competitors'][0]['GameWins'] else 0
   p1archetype = DetermineAchetype(match['Competitors'][0])
   p2name = match['Competitors'][1]['Team']['Players'][0]['Name']
-  p2gw = match['Competitors'][1]['GameWins']
+  p2gw = match['Competitors'][1]['GameWins'] if match['Competitors'][1]['GameWins'] else 0
   p2archetype = DetermineAchetype(match['Competitors'][1])
   round_number = match['RoundNumber']
   
