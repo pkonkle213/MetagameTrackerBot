@@ -43,4 +43,7 @@ args = "python main.py"
 outputType = "console"
 
 [objectStorage]
+#prod
+#defaultBucketID = "replit-objstore-7f38bbe0-52e1-4e3b-aba8-51bfb65b8dde"
+#dev
 defaultBucketID = "replit-objstore-e28cf2c3-4c3e-4e3b-998d-4cd32f92cee1"

@@ -29,15 +29,12 @@ def GetEvent(
       id = %s"""
     
     criteria = [event_id]
-    print('GetEvent Command:', command, criteria)
     cur.execute(command, criteria)
     row = cur.fetchone()
     if not row:
       raise Exception(f'Cannot find event. ID: {event_id}')
-    print('GetEvent Row:', row)
     return row
 
-#TODO: When I create an event, should I track when and by whom the event was created? (Answer: probably, yes)
 def CreateEvent(
   event_date:date,
   discord_id:int,

@@ -1,16 +1,16 @@
+from typing import NamedTuple
 from custom_errors import KnownError
 from services.date_functions import GetToday
-from collections import namedtuple
 import discord
 from data.data_input_menus import GetPreviousEvents, GetEventTypes
 from tuple_conversions import Format, Game, Store
 
-PredictEvent = namedtuple('PredictEvent', 
-  ['ID',
-   'Date',
-   'Name',
-   'TypeID',
-   'Data'])
+class PredictEvent(NamedTuple):
+  ID: int
+  Date: str
+  Name: str
+  TypeID: int
+  Data: str | None
 
 class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
   is_submitted = False
@@ -93,18 +93,22 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
       self.add_item(self.message_input)
 
   async def on_submit(self, interaction: discord.Interaction):
-    self.submitted_event = SetEventDateAndName(self.continue_event.component.values[0],
-                                               self.previous_events,
-                                               self.date_input.component.value if self.data else None,
-                                               self.name_input.component.value,
-                                               self.event_type.component.values[0],
-                                               self.message_input.component.value
-                                              )
+    self.submitted_event = SetEventDateAndName(
+      self.continue_event.component.values[0],
+      self.previous_events,
+      self.date_input.component.value,
+      self.name_input.component.value,
+      self.event_type.component.values[0] if self.event_type.component.values else None,
+      self.message_input.component.value if self.data else None
+    )
     self.is_submitted = True
     await interaction.response.defer()
   
-  async def on_error(self, interaction: discord.Interaction,
-           error: Exception) -> None:
+  async def on_error(
+    self,
+    interaction: discord.Interaction,
+    error: Exception
+  ) -> None:
     await interaction.followup.send(f'Oops! Something went wrong: {error}',
                     ephemeral=True)
     self.is_submitted = False
@@ -112,11 +116,18 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
   async def on_timeout(self) -> None:
     self.is_submitted = False
 
-def SetEventDateAndName(continued_event, previous_events, date_input, name_input, event_type, data_message) -> PredictEvent:
+def SetEventDateAndName(
+  continued_event,
+  previous_events, 
+  date_input, 
+  name_input, 
+  event_type, 
+  data_message
+) -> PredictEvent:
   event = None
   
   if continued_event == '0':
-    event = PredictEvent('0',
+    event = PredictEvent(0,
                          date_input,
                          name_input,
                          event_type,

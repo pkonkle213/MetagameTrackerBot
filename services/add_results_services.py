@@ -4,7 +4,7 @@ from custom_errors import KnownError
 from data.add_results_data import AddResult, SubmitTable
 from services.input_services import ConvertInput
 from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
-from tuple_conversions import EventInput, Standing, Pairing, Event, Store, Game, Format
+from tuple_conversions import EventInput, Standing, Pairing, Event
 
 def SubmitData(
   submitted_event:EventInput,
@@ -14,14 +14,14 @@ def SubmitData(
   date = ConvertToDate(submitted_event.Date)
 
   event_created = False
-  if submitted_event.ID == '0':
+  if submitted_event.ID == 0:
     event_id = CreateEvent(date,
                            submitted_event.StoreID,
                            submitted_event.GameID, 
                            submitted_event.FormatID,
                            submitted_event.Name,
                            submitted_event.TypeID,
-                          userId)
+                           userId)
     if event_id is None:
       raise KnownError('Unable to create event')
     event_created = True
@@ -88,7 +88,7 @@ def AddPairingResults(event:Event,
                        "Win" if table.P1Wins > table.P2Wins else "Loss" if table.P1Wins < table.P2Wins else "Draw"))
 
   if len(successes) > 0:
-    title = f"{event.event_date.strftime('%B %d')} event - Round {round_number}"
+    title = f"{event.event_date.strftime('%B %d')} - {event.event_name} - Round {round_number}"
     headers = ['Player 1', 'P1 Wins', 'Player 2', 'P2 Wins', 'Result']
     output = BuildTableOutput(title, headers, successes)
     return output

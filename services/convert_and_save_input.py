@@ -32,11 +32,10 @@ def BuildFilePath(
   format_name = format.FormatName
   today = GetToday()
   year = str(today.year)
-  month = str(today.month)
-  day = str(today.day)
+  month = f"{today.month:02d}"
+  day = f"{today.day:02d}"
   
   save_path = "/".join([store_folder, game_name, format_name, year, month, day, file_name])
-  print('Save path: ', save_path)
 
   return save_path
 
@@ -85,7 +84,6 @@ async def ConvertCSVToDataErrors(
   csv_file: Attachment
 ) -> EventInput:
   save_path = BuildFilePath(store, game, format,  csv_file.filename)
-  print('Save path: ', save_path)
   csv_data = await csv_file.read()
   upload_bytes(csv_data, save_path)
 
@@ -155,6 +153,9 @@ async def ConvertModalToDataErrors(
     raise KnownError("SubmitData modal was dismissed or timed out. Please try again.")
 
   selected_event = modal.submitted_event
+  if selected_event.Data is None:
+    raise KnownError("No data was submitted. Please try again.")
+
   submission = '\n'.join(
     [
       f'Date: {selected_event.Date}',
@@ -179,7 +180,7 @@ async def ConvertModalToDataErrors(
 
   standings_data, pairings_data, errors, round_number = ConvertMessageToData(selected_event.Data, game)
   event = EventInput(
-    selected_event.ID,
+    int(selected_event.ID),
     None,
     selected_event.Date,
     selected_event.Name,

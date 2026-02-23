@@ -9,8 +9,6 @@ def ConvertToPairings(dataframe:pd.DataFrame) -> Tuple[list[Pairing] | None, lis
   
   try:
     for index, row in dataframe.iterrows():
-      print('Table number:', row['Table Number'])
-      print('Type of value:', type(row['Table Number']))
       if row['Table Number'] == -1:
         p1name = row['Player 1 First Name'] + ' ' + row['Player 1 Last Name']
         p2name = 'Bye'

@@ -12,7 +12,6 @@ from interaction_objects import GetObjectsFromInteraction
 from services.add_results_services import SubmitData
 from services.command_error_service import Error
 
-
 class SubmitDataChecker(commands.GroupCog, name='submit'):
   """A group of commands to submit data"""
 
@@ -120,8 +119,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
           event_type_id,
           json_dict)
       else:
-        raise Exception('Wait...how did you get here?')
-      #TODO: Confirm the event to add the data to and the event type. The tournament ID should be logged with the event in the database to confirm
+        raise Exception('And you may ask yourself, wait...how did you get here?')
     else: #To reach this means manually submitting data (MTG)
       submitted_event = await ConvertModalToDataErrors(
         self.bot,
