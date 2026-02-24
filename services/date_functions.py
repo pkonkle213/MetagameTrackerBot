@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import pytz
 
 from tuple_conversions import Format
@@ -41,7 +41,7 @@ def GetToday():
   return datetime.now(TIMEZONE).date()
 
 
-def ConvertToDate(date):
+def ConvertToDate(date) -> date:
   if date.count('/') == 1:
     date += '/' + str(GetToday().year)
   newDate = datetime.strptime(date, '%m/%d/%Y').date()

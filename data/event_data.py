@@ -1,106 +1,87 @@
-import os
+from datetime import date
+from typing import Tuple
+import psycopg
 import psycopg2
+from psycopg.rows import class_row
+from settings import DATABASE_URL
+from tuple_conversions import Event
 
-from tuple_conversions import ConvertToEvent
-
-def EventIsComplete(event_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'''
-    UPDATE events
-    SET is_complete = TRUE
-    WHERE id = {event_id}
-    RETURNING *
-    '''
-    cur.execute(command)
-    conn.commit()
-    row = cur.fetchone()
-    return row
-
-def EventIsPosted(event_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'''
-    UPDATE events
-    SET is_posted = TRUE
-    WHERE id = {event_id}
-    RETURNING *
-    '''
-    cur.execute(command)
-    conn.commit()
-    row = cur.fetchone()
-    return row
-    
-def GetEvent(discord_id,
-                date,
-                game,
-                format):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
-    command = f'''
+def GetEvent(
+  event_id: int
+) -> Event:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Event)) as cur:
+    command = """
     SELECT
       id,
+      custom_event_id,
       discord_id,
       event_date,
       game_id,
-      {'format_id,' if format else ''}
+      format_id,
       last_update,
-      event_type,
-      COALESCE(is_posted, {False}) as is_posted,
-      COALESCE(is_complete, {False}) as is_complete
+      event_type_id,
+      event_name,
+      reported_as
     FROM
       events_view
     WHERE
-      discord_id = {discord_id}
-      AND game_id = {game.GameId}
-      {f'AND format_id = {format.FormatId}' if format else ''}
-      AND event_date = '{date}'
-    ORDER BY
-      event_date DESC
-    LIMIT
-      1
-    '''
+      id = %s"""
     
-    cur.execute(command)
+    criteria = [event_id]
+    cur.execute(command, criteria)
     row = cur.fetchone()
-    return ConvertToEvent(row) if row else None
+    if not row:
+      raise Exception(f'Cannot find event. ID: {event_id}')
+    return row
 
-def CreateEvent(event_date,
-  discord_id,
-  game,
-  format):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def CreateEvent(
+  event_date:date,
+  discord_id:int,
+  game_id:int,
+  format_id:int,
+  event_name:str,
+  event_type_id:int,
+  user_id:int
+) -> int:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     INSERT INTO Events
     (event_date,
     discord_id,
     game_id
-    {', format_id' if format else ''}
+    , format_id
     , last_update
-    , is_posted
-    , is_complete
+    , event_name
+    , event_type_id
+    , created_at
+    , created_by
     )
     VALUES
     ('{event_date}',
     {discord_id},
-    {game.GameId}
-    {f' , {format.FormatId}' if format else ''}
+    {game_id}
+    , {format_id}
     , 0
-    , {False}
-    , {False}
+    , '{event_name}'
+    , {event_type_id}
+    , CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York'
+    , {user_id}
     )
-    RETURNING
-    id, discord_id, event_date, game_id, format_id, 0, '{None}', {False}, {False}
+    RETURNING id
     '''
-    
+
     cur.execute(command)
     conn.commit()
-    event = cur.fetchone()
-    return ConvertToEvent(event) if event else None
+    event_id = cur.fetchone()
+    print('Event ID received:', event_id)
+    if not event_id:
+      raise Exception('Unable to create event')
+    return event_id[0]
 
-def GetEventMeta(event_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetEventMeta(event_id) -> list[Tuple[str,int,int,int]]:
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -124,7 +105,7 @@ def GetEventMeta(event_id):
     return rows
 
 def DeleteStandingsFromEvent(event_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     DELETE FROM standings

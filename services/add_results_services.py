@@ -1,49 +1,49 @@
 from services.date_functions import ConvertToDate
-import discord
 from output_builder import BuildTableOutput
 from custom_errors import KnownError
 from data.add_results_data import AddResult, SubmitTable
 from services.input_services import ConvertInput
 from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
-from interaction_objects import GetObjectsFromInteraction
-from tuple_conversions import Standing, Pairing, Event, Store, Game, Format
+from tuple_conversions import EventInput, Standing, Pairing, Event
 
-def SubmitCheck(interaction:discord.Interaction) -> tuple[Store | None, Game | None, Format | None]:
-  """Checks if the user can submit data in this channel"""
-  return GetObjectsFromInteraction(interaction)
-
-def SubmitData(store:Store, game:Game, format:Format, userId:int,
-               data: list[Standing] | list[Pairing],
-               date_str:str,
-               round_number:str,
-               is_complete: bool,
-               whole_event: bool):
+def SubmitData(
+  submitted_event:EventInput,
+  userId:int
+): #TODO: What does this return?
   """Submits an event's data to the database"""
-  date = ConvertToDate(date_str)
-  round_num = int(round_number) if round_number != '' else 0
-  
-  event = GetEvent(store.DiscordId, date, game, format)
+  date = ConvertToDate(submitted_event.Date)
+
   event_created = False
-  if event is None:
-    event = CreateEvent(date, store.DiscordId, game, format)
-    if event is None:
+  if submitted_event.ID == 0:
+    event_id = CreateEvent(date,
+                           submitted_event.StoreID,
+                           submitted_event.GameID, 
+                           submitted_event.FormatID,
+                           submitted_event.Name,
+                           submitted_event.TypeID,
+                           userId)
+    if event_id is None:
       raise KnownError('Unable to create event')
     event_created = True
+  else:
+    event_id = submitted_event.ID
+
+  event = GetEvent(event_id)
 
   #Add the data to the database depending on the type of data
   results = ''
-  if isinstance(data[0], Standing):
-    if event.EventType == 'PAIRINGS' or type(event) is list[Pairing]:
+  if submitted_event.StandingData:
+    if event.reported_as == 'PAIRINGS' or type(event) is list[Pairing]:
       raise KnownError('This event already has pairings submitted')
-    results = AddStandingResults(event, data, userId)
-  elif isinstance(data[0], Pairing):
-    if event.EventType == 'STANDINGS':
+    results = AddStandingResults(event, submitted_event.StandingData, userId)
+  elif submitted_event.PairingData:
+    if event.reported_as == 'STANDINGS':
       #Delete the standings data
-      DeleteStandingsFromEvent(event.ID)
-    results = AddPairingResults(event, data, userId, round_num, whole_event)
+      DeleteStandingsFromEvent(event.id)
+    results = AddPairingResults(event, submitted_event.PairingData, userId, submitted_event.RoundNumber)
   else:
     raise Exception("Congratulations, you've reached the impossible to reach area.")
-  return results, event.EventDate if event_created else None
+  return results, event.event_date if event_created else None
 
 def AddStandingResults(event:Event,
                        data:list[Standing],
@@ -55,11 +55,11 @@ def AddStandingResults(event:Event,
                         person.Wins,
                         person.Losses,
                         person.Draws)
-      output = AddResult(event.ID, person, submitterId)
+      output = AddResult(event.id, person, submitterId)
       if output:
         successes.append(person)
 
-  title = f'{event.EventDate.strftime("%B %d")} event'
+  title = f'{event.event_date.strftime("%B %d")} event'
   headers = ['Player Name', 'Wins', 'Losses', 'Draws']
   output = BuildTableOutput(title, headers, successes)
   return output
@@ -67,13 +67,12 @@ def AddStandingResults(event:Event,
 def AddPairingResults(event:Event,
                       data:list[Pairing],
                       submitterId:int,
-                      round_number:int,
-                      whole_event:bool):
+                      round_number:int):
   round_number = data[0].Round if not round_number else round_number
   successes = []
  
   for table in data:
-    result = SubmitTable(event.ID,
+    result = SubmitTable(event.id,
                          ConvertInput(table.P1Name),
                          table.P1Wins,
                          ConvertInput(table.P2Name),
@@ -88,8 +87,9 @@ def AddPairingResults(event:Event,
                        table.P2Wins,
                        "Win" if table.P1Wins > table.P2Wins else "Loss" if table.P1Wins < table.P2Wins else "Draw"))
 
-  if len(successes) > 0:
-    title = f"{event.EventDate.strftime('%B %d')} event - Round {round_number}"
+  #TODO: melee.gg data needs to have the round numbers in the table, not the header, as it's a complete event upload
+  if len(successes) > 0: 
+    title = f"{event.event_date.strftime('%B %d')} - {event.event_name} - Round {round_number}"
     headers = ['Player 1', 'P1 Wins', 'Player 2', 'P2 Wins', 'Result']
     output = BuildTableOutput(title, headers, successes)
     return output

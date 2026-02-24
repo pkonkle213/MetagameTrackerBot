@@ -9,7 +9,7 @@ from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
 from input_modals.submit_archetype_modal import SubmitArchetypeModal
 from data.archetype_data import AddArchetype
-from data.event_data import EventIsPosted, GetEventMeta
+from data.event_data import GetEventMeta
 from services.input_services import ConvertInput
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from interaction_objects import GetObjectsFromInteraction
@@ -150,7 +150,6 @@ def CheckEventPercentage(event):
       followup = f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!'
       title, headers, data = OneEvent(event)
       final = BuildTableOutput(title, headers, data)
-      EventIsPosted(event.ID)
     return followup, final
   return None, None
 

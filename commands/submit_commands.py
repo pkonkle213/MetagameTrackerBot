@@ -2,17 +2,15 @@ import typing
 from services.claim_result_services import GetUserInput, AddTheArchetype, MessageStoreFeed
 from api_calls.melee_tournaments import GetMeleeTournamentData
 import settings
-from services.convert_and_save_input import ConvertCSVToDataErrors, ConvertModalToDataErrors, ConvertMeleeTournamentToDataErrors
+from services.convert_and_save_input import ConvertCSVToDataErrors, ConvertModalToDataErrors, ConvertMeleeTournamentToDataErrors, ConfirmEventDetails
 from checks import isSubmitter
 from custom_errors import KnownError
-from tuple_conversions import Standing
 from discord import app_commands, Interaction, Attachment
 from discord.ext import commands
 from discord_messages import MessageChannel
 from interaction_objects import GetObjectsFromInteraction
-from services.add_results_services import SubmitCheck, SubmitData
+from services.add_results_services import SubmitData
 from services.command_error_service import Error
-
 
 class SubmitDataChecker(commands.GroupCog, name='submit'):
   """A group of commands to submit data"""
@@ -64,8 +62,10 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
           "The date provided doesn't match the MM/DD/YYYY formatting. Please try again",
           ephemeral=True)
 
-  @app_commands.command(name="data",
-                        description="Submitting your event's data")
+  @app_commands.command(
+    name="data",
+    description="Submitting your event's data"
+  )
   @app_commands.checks.has_role('MTSubmitter')
   @app_commands.guild_only()
   async def SubmitDataCommand(self,
@@ -81,66 +81,83 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     melee_tournament_id: str
       The Melee Tournament ID for the event
     """
-    whole_event = False
-
     #Ensure that only one type of data is being submitted
     if csv_file and melee_tournament_id:
       raise KnownError("You can only submit a CSV file or a Melee Tournament ID, not both.")
 
-    #Get the data source from the user - respond FIRST before any slow operations
-    if csv_file:
-      await interaction.response.defer(ephemeral=True)
-      store, game, format = SubmitCheck(interaction)
-      if not csv_file.filename.endswith('.csv'):
-        raise KnownError("Please upload a file with a '.csv' extension.")
-      data, errors, round_number, date = await ConvertCSVToDataErrors(
-          self.bot, game, interaction, csv_file)
-    elif melee_tournament_id:
-      await interaction.response.defer(ephemeral=True)
-      store, game, format = SubmitCheck(interaction)
-      whole_event = True
-      json_dict = GetMeleeTournamentData(melee_tournament_id, store)
+    store, game, format = GetObjectsFromInteraction(interaction)
+    
+    if not store or not game or not format:
+      raise KnownError('No store, game, or format found.') #TODO Probably needs to be more detailed
+      
+    if csv_file or melee_tournament_id:
+      date, event_name, event_id, event_type_id = await ConfirmEventDetails(self.bot, interaction, store, game, format)
+      if csv_file:
+        if not csv_file.filename.endswith('.csv'):
+          raise KnownError("Please upload a file with a '.csv' extension.")
+        submitted_event = await ConvertCSVToDataErrors(
+          self.bot,
+          store,
+          game,
+          date,
+          format,
+          interaction,
+          event_id,
+          event_name,
+          event_type_id,
+          csv_file
+        )
+      elif melee_tournament_id:
+        json_dict = GetMeleeTournamentData(melee_tournament_id, store)
+        submitted_event = ConvertMeleeTournamentToDataErrors(
+          store,
+          game,
+          format,
+          melee_tournament_id,
+          event_id,
+          event_name,
+          event_type_id,
+          json_dict)
+      else:
+        raise Exception('And you may ask yourself, wait...how did you get here?')
+    else: #To reach this means manually submitting data (MTG)
+      submitted_event = await ConvertModalToDataErrors(
+        self.bot,
+        interaction,
+        store,
+        game,
+        format
+      )
 
-      guild = interaction.guild
-      data, errors, round_number, date = ConvertMeleeTournamentToDataErrors(guild, json_dict)
-    else:
-      # Send modal first, get interaction_objects after modal submits
-      data, errors, round_number, date, store, game, format = await ConvertModalToDataErrors(self.bot, interaction)
-
-    if data is None:
-      print('Data is None')
-      await NewDataMessage(self.bot, interaction, True)
+    #Alert me to a new event either successfull or not
+    failure = False
+    if submitted_event.PairingData is None and submitted_event.StandingData is None:
       raise KnownError("Unable to submit due to not recognizing the data. Please try again.")
+    await NewDataMessage(self.bot, interaction, failure)      
 
     #Advise user of submission process starting
-    message_type = 'standings' if isinstance(data[0], Standing) else 'pairings'
+    message_type = 'standings' if submitted_event.StandingData else 'pairings'
+    length = len(submitted_event.StandingData) if submitted_event.StandingData else len(submitted_event.PairingData) if submitted_event.PairingData else None
     await interaction.followup.send(
-        f"Attempting to add {len(data)} {message_type} to event",
-        ephemeral=True)
+      f"Attempting to add {length} {message_type} to event",
+      ephemeral=True
+    )
 
     #Inform user of any errors in submitted data
-    if len(errors) > 0:
-      await interaction.followup.send('Errors:\n' + '\n'.join(errors),
-                                      ephemeral=True)
-
-    #Inform me of the new event being added
-    await NewDataMessage(self.bot, interaction, False)
+    if submitted_event.Errors is not None and len(submitted_event.Errors) > 0:
+      await interaction.followup.send('Errors:\n' + '\n'.join(submitted_event.Errors), ephemeral=True)
 
     #Submit the data to the database. Returning event for an announcement
     output, event_created = SubmitData(
-        store,
-        game,
-        format,
-        interaction.user.id,
-        data,
-        date,
-        round_number,
-        False,  #modal.submitted_is_event_complete)
-        whole_event)
+      submitted_event,
+      interaction.user.id
+    )
+    
     if output is None:
       raise KnownError("Unable to submit data. Please try again.")
     
     await interaction.followup.send(output, ephemeral=True)
+    
     if event_created:
       await MessageChannel(
           self.bot,
@@ -166,7 +183,10 @@ async def NewDataMessage(bot: commands.Bot, interaction: Interaction,
     Author name: {interaction.user.name}
     Author id: {interaction.user.id}
     """
-  await MessageChannel(bot, message, settings.BOTGUILDID,
+  if interaction.guild.id == 1437606618144444448:
+    print(message)
+  else:
+    await MessageChannel(bot, message, settings.BOTGUILDID,
                        settings.BOTEVENTINPUTID)
 
 

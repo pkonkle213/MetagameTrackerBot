@@ -1,8 +1,6 @@
 from data.archetype_data import GetUnknownArchetypes
-from data.automated_events_data import ThreeDayOldEventsWithUnknown, GetCompletedUnpostedEvents
-from data.event_data import EventIsPosted
+from data.automated_events_data import ThreeDayOldEventsWithUnknown
 from discord_messages import MessageChannel
-from services.claim_result_services import OneEvent
 from services.date_functions import GetDaysAgo, GetToday
 from output_builder import BuildTableOutput
 from discord_messages import MessageUser
@@ -35,9 +33,4 @@ async def GetEventsWithUnkown(bot):
       await MessageChannel(bot, output, channel.DiscordID, channel.ChannelID)
   except Exception as ex:
     await MessageUser(bot, f'Error getting events with unknown archetypes: {ex}\nChannel:{channels}', settings.PHILID)
-  
-  """
-  Other changes: Data input needs a dropdown for IsEventComplete
-               : Claim may need to mark an event as posted
-  """
   

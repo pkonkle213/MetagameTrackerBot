@@ -1,10 +1,9 @@
+from typing import Tuple
 import pytz
 from datetime import datetime
-from custom_errors import KnownError
 from tuple_conversions import Pairing
 
-def MeleeJsonPairings(json_data:list) -> tuple[list[Pairing], list[str], str, str, dict]:
-  print('Welcome to MeleeJsonPairings')
+def MeleeJsonPairings(json_data:list) -> tuple[list[Pairing], list[str], int, str, dict[str,str]]:
   data = []
   errors = []
   archetypes = {}
@@ -15,42 +14,53 @@ def MeleeJsonPairings(json_data:list) -> tuple[list[Pairing], list[str], str, st
   event_date = date_string.astimezone(est).strftime('%m/%d/%Y')
   
   for match in json_data:
-    round_number = int(match['RoundDescription'][6:])
-    table_number = match['TableNumber'] if match['TableNumber'] else 'Bye'
+    print('Match:\n', match)
+    round_number = match['RoundNumber']
     try:
-      p1name = match['Competitors'][0]['Team']['Players'][0]['Name']
-      p1gw_obj = match['Competitors'][0]['GameWins']
-      p1gw = int(p1gw_obj) if p1gw_obj else 2
-      p1byes = int(match['Competitors'][0]['GameByes'])
-      p1archetype = DetermineAchetype(match['Competitors'][0])
-      if archetypes.get(p1name) is None and p1archetype:
-        print('Adding archetype for player 1:', p1name, p1archetype)
-        archetypes[p1name] = p1archetype
-      if p1byes > 0:
-        p2name = 'BYE'
-        p2gw = 0
+      if match['TableNumber']:
+        pairing, player_archetypes = PairedMatch(match)
+        archetypes = archetypes | player_archetypes
       else:
-        p2name = match['Competitors'][1]['Team']['Players'][0]['Name']
-        p2gw_obj = match['Competitors'][1]['GameWins']
-        p2gw = int(p2gw_obj) if p2gw_obj else 0
-        p2archetype = DetermineAchetype(match['Competitors'][1])
-        if archetypes.get(p2name) is None and p2archetype:
-          print('Adding archetype for player 2:', p2name, p2archetype)
-          archetypes[p2name] = p2archetype
-      pairing = Pairing(p1name, p1gw, p2name, p2gw, round_number)
-            
+        pairing, player_archetypes = ByeMatch(match)
+        archetypes = archetypes | player_archetypes        
+      
       data.append(pairing)
     except Exception as e:
-      errors.append(f'Unable to parse round {round_number}, table number {table_number} match due to {e}')
-    
-  return data, errors, '', event_date, archetypes
+      errors.append(f'Unable to parse round {round_number}, due to {e}')
+  return data, errors, 0, event_date, archetypes
+
+def ByeMatch(match: dict) -> Tuple[Pairing, dict[str,str | None]]:
+  print('Bye match:\n', match)
+  p1name = match['Competitors'][0]['Team']['Players'][0]['Name']
+  p1gw = match['Competitors'][0]['GameByes']
+  p1archetype = DetermineAchetype(match['Competitors'][0])
+  p2name = 'BYE'
+  p2gw = 0
+  round_number = match['RoundNumber']
+  pairing = Pairing(p1name, p1gw, p2name, p2gw, round_number)
+  print('Bye match paired:\n', pairing)
+  return pairing, {p1name: p1archetype}
+
+def PairedMatch(match: dict) -> Tuple[Pairing, dict[str,str | None]]:
+  print('Paired match:\n', match)
+  p1name = match['Competitors'][0]['Team']['Players'][0]['Name']
+  p1gw = match['Competitors'][0]['GameWins'] if match['Competitors'][0]['GameWins'] else 0
+  p1archetype = DetermineAchetype(match['Competitors'][0])
+  p2name = match['Competitors'][1]['Team']['Players'][0]['Name']
+  p2gw = match['Competitors'][1]['GameWins'] if match['Competitors'][1]['GameWins'] else 0
+  p2archetype = DetermineAchetype(match['Competitors'][1])
+  round_number = match['RoundNumber']
+  
+  pairing = Pairing(p1name, p1gw, p2name, p2gw, round_number)
+  print('Paired match, paired:\n', pairing)
+  return pairing, {p1name: p1archetype, p2name:p2archetype}
 
 def DetermineAchetype(competitor: dict) -> str | None:
-  decklists = competitor['Decklists'][0]
+  decklists = competitor['Decklists']
   if len(decklists) == 0:
     print('No decklist found')
     return None
 
-  name = decklists['DecklistName']
+  name = decklists['DecklistName'] #TODO: Does this work!?
   return name
   

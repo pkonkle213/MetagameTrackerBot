@@ -1,10 +1,10 @@
-from interaction_objects import GetObjectsFromInteraction
 from discord.ext import commands
 from discord_messages import MessageChannel
 from incoming_message_conversions.melee import MeleeJsonPairings
-from discord import Guild, Interaction, Attachment
+from discord import Interaction, Attachment
 from input_modals.submit_data_modal import SubmitDataModal
-from tuple_conversions import Game, Pairing, Standing
+from services.date_functions import GetToday
+from tuple_conversions import EventInput, Store, Format, Game
 from data_translation import ConvertCSVToData, ConvertMessageToData
 from datetime import datetime
 from custom_errors import KnownError
@@ -14,34 +14,77 @@ import pytz
 import io
 import settings
 
-
-def BuildFilePath(guild: Guild, prev_filename: str = ''):
+def BuildFilePath(
+  store: Store,
+  game: Game,
+  format: Format,
+  prev_filename: str = ''
+) -> str:
+  """Builds the file path for the file to be saved in App Storage"""
   timezone = pytz.timezone('US/Eastern')
   timestamp = datetime.now(timezone).strftime("%Y%m%d_%H%M%S")
   file_name = f"{timestamp}_{prev_filename}"
-
-  save_path = f"{guild.id} - {guild.name}/{file_name}"
+  
+  store_name = store.StoreName if store.StoreName else store.DiscordName
+  store_folder = f"{store.DiscordId} - {store_name}"
+  
+  game_name = game.GameName
+  format_name = format.FormatName
+  today = GetToday()
+  year = str(today.year)
+  month = f"{today.month:02d}"
+  day = f"{today.day:02d}"
+  
+  save_path = "/".join([store_folder, game_name, format_name, year, month, day, file_name])
 
   return save_path
 
-
 def ConvertMeleeTournamentToDataErrors(
-    guild: Guild, json_data: list
-) -> tuple[list[Pairing] | list[Standing], list[str], str, str]:
-  path = BuildFilePath(guild, 'MeleeTournament.json')
+  store: Store,
+  game: Game,
+  format: Format,
+  melee_tournament_id: str,
+  event_id: int,
+  event_name: str,
+  event_type_id: int,
+  json_data: list
+) -> EventInput:
+  """Takes in Melee.gg tournament data and converts it to a list of Pairing objects"""
+  path = BuildFilePath(store, game, format, 'MeleeTournament.json')
   upload_json(json_data, path)
 
   data, errors, round_number, date, archetypes = MeleeJsonPairings(json_data)
 
-  #TODO: Do something with archetypes
-  return data, errors, round_number, date
+  event = EventInput(
+    event_id,
+    int(melee_tournament_id),
+    date,
+    event_name,
+    event_type_id,
+    round_number,
+    data,
+    None,
+    archetypes,
+    errors,
+    store.DiscordId,
+    game.GameId,
+    format.FormatId
+  )
+  return event
 
-
-async def ConvertCSVToDataErrors(bot: commands.Bot, game: Game,
-                                 interaction: Interaction,
-                                 csv_file: Attachment):
-  save_path = BuildFilePath(interaction.guild, csv_file.filename)
-  print('Save path: ', save_path)
+async def ConvertCSVToDataErrors(
+  bot: commands.Bot,
+  store: Store,
+  game: Game,
+  date: str,
+  format: Format,
+  interaction: Interaction,
+  event_id: int,
+  event_name: str,
+  event_type_id: int,
+  csv_file: Attachment
+) -> EventInput:
+  save_path = BuildFilePath(store, game, format,  csv_file.filename)
   csv_data = await csv_file.read()
   upload_bytes(csv_data, save_path)
 
@@ -50,45 +93,106 @@ async def ConvertCSVToDataErrors(bot: commands.Bot, game: Game,
   if df is None or df.empty:
     raise KnownError("The file is empty or unreadable. Please try again.")
 
-  data, errors = ConvertCSVToData(df, game)
+  standings_data, pairings_data, errors = ConvertCSVToData(df, game)
 
   filename_split = csv_file.filename.split('-')
   if filename_split[0].upper() == 'STANDINGS':
-    round_number = '0'
-  else:  #if filename_split[0].upper() == 'MATCHES'
-    round_number = filename_split[4]
+    round_number = 0
+  else:
+    round_number = int(filename_split[4])
 
-  date = datetime.now(pytz.timezone('US/Eastern')).strftime("%m/%d/%Y")
-  return data, errors, round_number, date
+  custom_event_id = int(filename_split[2])
+  
+  event = EventInput(
+    event_id,
+    custom_event_id,
+    date,
+    event_name,
+    event_type_id,
+    round_number,
+    pairings_data,
+    standings_data,
+    None,
+    errors,
+    store.DiscordId,
+    game.GameId,
+    format.FormatId
+  )
+  
+  return event
 
-
-async def ConvertModalToDataErrors(bot: commands.Bot,
-                                   interaction: Interaction):
-  #Get the data from the user - send modal FIRST before any database operations
-  modal = SubmitDataModal()
+async def ConfirmEventDetails(
+  bot: commands.Bot,
+  interaction: Interaction,
+  store:Store,
+  game:Game,
+  format:Format
+) -> tuple[str, str, int, int]:
+  modal = SubmitDataModal(store, game, format, False)
   await interaction.response.send_modal(modal)
   await modal.wait()
 
   if not modal.is_submitted:
-    raise KnownError(
-        "SubmitData modal was dismissed or timed out. Please try again.")
+    raise KnownError("SubmitData modal was dismissed or timed out. Please try again.")
 
-  # Now that modal is submitted, get interaction objects (database operations)
-  store, game, format = GetObjectsFromInteraction(interaction)
+  selected_event = modal.submitted_event
 
-  submission = '\n'.join([
-      f'Date:{modal.submitted_date}', f'Round:{modal.submitted_round}',
-      f'Message:\n{modal.submitted_message}'
-  ])
+  return selected_event.Date, selected_event.Name, selected_event.ID, selected_event.TypeID
 
-  save_path = BuildFilePath(interaction.guild, 'ModalInput.txt')
+async def ConvertModalToDataErrors(
+  bot: commands.Bot,
+  interaction: Interaction,
+  store:Store,
+  game:Game,
+  format:Format,
+) -> EventInput:
+  modal = SubmitDataModal(store, game, format)
+  await interaction.response.send_modal(modal)
+  await modal.wait()
+
+  if not modal.is_submitted:
+    raise KnownError("SubmitData modal was dismissed or timed out. Please try again.")
+
+  selected_event = modal.submitted_event
+  if selected_event.Data is None:
+    raise KnownError("No data was submitted. Please try again.")
+
+  submission = '\n'.join(
+    [
+      f'Date: {selected_event.Date}',
+      f'Name: {selected_event.Name}',
+      'Type: Weekly' if selected_event.TypeID == 1 else 'Type: Tournament'
+      f'Message:\n{selected_event.Data}'
+    ]
+  )
+
+  save_path = BuildFilePath(store, game, format, 'ModalInput.txt')
   upload_string(submission, save_path)
-  message = f'Attempting to add new event data from {store.StoreName if store.StoreName else store.DiscordName}:\n{modal.submitted_message}'
-  await MessageChannel(bot, message, settings.BOTGUILDID,
-                       settings.BOTEVENTINPUTID)
+  try:
+    message = f'Attempting to add new event data from {store.StoreName if store.StoreName else store.DiscordName}:\n{selected_event.Data}'
+    await MessageChannel(
+      bot,
+      message, 
+      settings.BOTGUILDID,
+      settings.BOTEVENTINPUTID
+    )
+  except Exception as e:
+    print('Error sending message to channel:', e)
 
-  #Convert the data to the appropriate format
-  data, errors = ConvertMessageToData(modal.submitted_message, game)
-  round_number = modal.submitted_round
-  date = modal.submitted_date
-  return data, errors, round_number, date, store, game, format
+  standings_data, pairings_data, errors, round_number = ConvertMessageToData(selected_event.Data, game)
+  event = EventInput(
+    int(selected_event.ID),
+    None,
+    selected_event.Date,
+    selected_event.Name,
+    int(selected_event.TypeID),
+    round_number,
+    pairings_data,
+    standings_data,
+    None,
+    errors,
+    store.DiscordId,
+    game.GameId,
+    format.FormatId
+  )
+  return event

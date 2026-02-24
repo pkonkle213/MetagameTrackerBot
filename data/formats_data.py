@@ -27,13 +27,13 @@ def AddFormatMap(discord_id:int,
     row = cur.fetchone()
     return row
 
-def GetFormatsByGameId(game_id):
+def GetFormatsByGameId(game):
   conn = psycopg2.connect(os.environ['DATABASE_URL'])
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT id, name, last_ban_update, is_limited
     FROM formats
-    WHERE game_id = {game_id}
+    WHERE game_id = {game.GameId}
     ORDER BY name
     '''
     cur.execute(command)

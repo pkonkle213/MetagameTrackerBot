@@ -1,15 +1,14 @@
+from typing import Tuple
 import pandas as pd
-from tuple_conversions import Pairing, Standing, Result
+from tuple_conversions import Pairing, Standing
 
-def Pairings(dataframe:pd.DataFrame):
+def ConvertToPairings(dataframe:pd.DataFrame) -> Tuple[list[Pairing] | None, list[str] | None]:
   """Takes a provided dataframe and attempts to make it into a Pairing object"""
   data = []
   errors = []
   
   try:
     for index, row in dataframe.iterrows():
-      print('Table number:', row['Table Number'])
-      print('Type of value:', type(row['Table Number']))
       if row['Table Number'] == -1:
         p1name = row['Player 1 First Name'] + ' ' + row['Player 1 Last Name']
         p2name = 'Bye'
@@ -23,14 +22,14 @@ def Pairings(dataframe:pd.DataFrame):
       result = Pairing(p1name, p1gw, p2name, p2gw, 0)
       data.append(result)    
     
-    return Result(data if len(data) > 0 else None, errors)
+    return data if len(data) > 0 else None, errors
     
   except Exception as exception:
     print('Carde.io Pairing DataFrame:\n', dataframe)
     print('Carde.io Official Pairing Exception:', exception)
-    return Result(None, None)
+    return None, None
 
-def Standings(dataframe:pd.DataFrame):
+def ConvertToStandings(dataframe:pd.DataFrame) -> Tuple[list[Standing] | None, list[str] | None]:
   """Takes a provided dataframe and attempts to make it into a Standing object"""
   data = []
   errors = []
@@ -47,8 +46,8 @@ def Standings(dataframe:pd.DataFrame):
                              draws)
       data.append(participant)
 
-    return Result(data if len(data) > 0 else None, errors)
+    return data if len(data) > 0 else None, errors
   except Exception as exception:
     print('Lorcana Official Standing Rows:\n', dataframe)
     print('Lorcana Official Standing Exception:', exception)
-    return Result(None, None)
+    return None, None
