@@ -14,8 +14,13 @@ def GetAreaForMeta(store: Store) -> str:
   return f'AND s.discord_id = {store.DiscordId}'
 
 
-def GetMetagame(game: Game, format: Format, start_date: date, end_date: date,
-                store: Store) -> list:
+def GetMetagame(
+  game: Game,
+  format: Format,
+  start_date: date,
+  end_date: date,
+  store: Store
+) -> list:
   conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''

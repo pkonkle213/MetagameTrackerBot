@@ -1,10 +1,8 @@
-from replit import db
+from datetime import datetime
+from typing import Tuple
 import settings
-from checks import isSubmitter
 from custom_errors import KnownError
-from data.claim_data import GetEventAndPlayerName
 from data.store_data import GetClaimFeed
-from services.date_functions import ConvertToDate, GetToday, DateDifference
 from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
 from input_modals.submit_archetype_modal import SubmitArchetypeModal
@@ -12,33 +10,18 @@ from data.archetype_data import AddArchetype
 from data.event_data import GetEventMeta
 from services.input_services import ConvertInput
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
-from interaction_objects import GetObjectsFromInteraction
 from output_builder import BuildTableOutput
 from discord_messages import MessageChannel
+from tuple_conversions import Event, Format, Store, Game
 
-#TODO: This many imports makes me feel like this should be broken up into multiple files, methods, or cleaned up in general
-
-async def GetUserInput(interaction:Interaction) -> tuple[str, str, str]:
-  store, game, format = GetObjectsFromInteraction(interaction)
-  """
-  Use this if a database call causes a delay in retrieving the game and format for the modal
-  
-  try:
-    game = ConvertToGame(db[f'{interaction.guild_id}'][f'{interaction.channel.category_id}']['game'])
-  except Exception:
-  raise KnownError('This category is not mapped to a game. Please contact your store owner to have them map the category.')
-  
-  try:
-    format_obj = db[f'{interaction.guild_id}'][f'{interaction.channel.category_id}']['formats'][f'{interaction.channel_id}']
-    format = ConvertToFormat((format_obj[0], format_obj[1], None, format_obj[2]))
-  except Exception:
-    raise KnownError('This channel is not mapped to a format. Please contact your store owner to have them map the channel.')
-    """
-  if game is None:
-    raise KnownError('This category is not mapped to a game. Please contact your store owner to have them map the category.')
-  if format is None:
-    raise KnownError('This channel is not mapped to a format. Please contact your store owner to have them map the channel.')
-  modal = SubmitArchetypeModal(game, format)
+async def GetUserInput(
+  store:Store,
+  game:Game,
+  format:Format,
+  userId:int,
+  interaction:Interaction
+) -> Tuple[str, Event, str]:
+  modal = SubmitArchetypeModal(store, game, format, userId)
   await interaction.response.send_modal(modal)
   await modal.wait()
 
@@ -50,7 +33,11 @@ async def GetUserInput(interaction:Interaction) -> tuple[str, str, str]:
   #TODO: Makes more sense for this to be handled in the modal?
     if game.GameName.upper() == 'LORCANA':
       archetype = f'{modal.submitted_inks[0]}/{modal.submitted_inks[1]} - {archetype}'
-  return modal.submitted_player_name, modal.submitted_date, archetype
+
+  if not modal.submitted_event:
+    raise KnownError('No event selected. Please try again.')
+  
+  return modal.submitted_player_name, modal.submitted_event, archetype
 
 async def MessageStoreFeed(bot, message, interaction):
   try:
@@ -68,42 +55,58 @@ async def MessageStoreFeed(bot, message, interaction):
                          settings.BOTGUILDID,
                          settings.CLAIMCHANNEL)
 
-async def AddTheArchetype(interaction, player_name, date, archetype):
-  archetype_submitted, event = await ClaimResult(interaction,
-                                                 player_name,
-                                                 archetype,
-                                                 date)
+async def AddTheArchetype(
+  interaction:Interaction,
+  player_name:str,
+  event:Event,
+  archetype:str,
+  store:Store,
+  game:Game,
+  format:Format
+) -> Tuple[str, str, str|None, str|None]:
+  player_name = ConvertInput(player_name)
+  archetype_submitted = await ClaimResult(interaction,
+                                          player_name,
+                                          archetype,
+                                          event,
+                                          store,
+                                          game,
+                                          format)
   if archetype_submitted is None:
     raise KnownError('Unable to submit the archetype. Please try again later.')
   else:
-    message = BuildMessage(interaction, date, archetype_submitted)
+    message = BuildMessage(interaction, event, archetype, player_name)
     feed_output = message
-    private_output = f"Thank you for submitting the archetype for {event.EventDate.strftime('%B %d')}'s event!"
+    private_output = f"Thank you for submitting the archetype for {event.event_name}!"
     public_output, event_full = CheckEventPercentage(event)
     return private_output, feed_output, public_output, event_full
 
-def BuildMessage(interaction, date, archetype_submitted=None, error_message=None, player_name='', archetype=''):
+def BuildMessage(
+  interaction:Interaction,
+  event:Event,
+  archetype:str,
+  player_name:str
+) -> str:
   message_parts = []
   message_parts.append(f'Submitter: {interaction.user.display_name}')
   message_parts.append(f'Submitter id: {interaction.user.id}')
-  if not archetype_submitted:
-    message_parts.append(f'Ran into an error: {error_message}')
-  message_parts.append(f'Archetype submitted: {archetype_submitted[2] if archetype_submitted else archetype}')
-  message_parts.append(f'For player name: {player_name if not archetype_submitted else archetype_submitted[1]}')
-  message_parts.append(f'For date: {date}')
+  message_parts.append(f'Archetype submitted: {archetype}')
+  message_parts.append(f'For player name: {player_name}')
+  message_parts.append(f'For event name: {event.event_name}')
   message_parts.append(f'For channel name: {interaction.channel.name}')
   return '\n'.join(message_parts)  
 
-async def ClaimResult(interaction:Interaction,
-                      player_name:str,
-                      archetype:str,
-                      date:str):
-  date_used = ConvertToDate(date)
-  if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter') and DateDifference(GetToday(), date_used) > 14:
-    raise KnownError('You can only claim archetypes for events within the last 14 days. Please contact your store owner to have them submit the archetype.')
+async def ClaimResult(
+  interaction:Interaction,
+  player_name:str,
+  archetype:str,
+  event:Event,
+  store:Store,
+  game:Game,
+  format:Format
+) -> int:
+  #TODO: Using event_id eliminates the need for checking if the user is a submitter. Check other references to ensure this is the same in other areas
 
-  #TODO: This is a duplicate call and should be removed
-  store, game, format = GetObjectsFromInteraction(interaction)
   userId = interaction.user.id
   
   if ContainsBadWord(store.DiscordId, archetype):
@@ -111,39 +114,27 @@ async def ClaimResult(interaction:Interaction,
   if not CanSubmitArchetypes(store.DiscordId, userId):
     raise KnownError('You have submitted too many bad archetypes. Please contact your store owner to have them submit the archetype.')
 
-  player_name = ConvertInput(player_name)
-
-  event, name_check = GetEventAndPlayerName(store.DiscordId,
-                                             date_used,
-                                             game,
-                                             format,
-                                             player_name)
-  
-  if event is None:
-    raise KnownError('Event not found. Please check the date provided. If date is correct, the event has yet to be submitted. Please alert your store owner.')
-  if name_check is None:
-    raise KnownError('Player not found. Please check the name provided.')
-
   updater_name = interaction.user.display_name
-  archetype_added = AddArchetype(event.ID,
+
+  archetype_added = AddArchetype(event[0],
                                  player_name,
                                  archetype,
                                  userId,
                                  updater_name)
   if archetype_added is None:
     raise Exception('Unable to submit the archetype. Please try again later.')
-  return archetype_added, event
+  return archetype_added
 
-def CheckEventPercentage(event):
-  percent_reported = GetEventReportedPercentage(event.ID)
+def CheckEventPercentage(event:Event) -> Tuple[str | None, str | None]:
+  percent_reported = GetEventReportedPercentage(event.id)
   if percent_reported is None:
-    raise Exception('Unable to find event by ID: ' + event.ID)
-  if percent_reported >= (event.LastUpdate + 1) / 4:
-    check = UpdateEvent(event.ID)
+    raise Exception(f'Unable to find event by ID: {event.id}')
+  if percent_reported >= (event.last_update + 1) / 4:
+    check = UpdateEvent(event.id)
     if check is None:
-      raise Exception('Unable to update event: ' + event.ID)
-    str_date = event.EventDate.strftime('%B %d')
-    if event.LastUpdate + 1 < 4:
+      raise Exception(f'Unable to update event: {event.id}')
+    str_date = event.event_date.strftime('%B %d')
+    if event.last_update + 1 < 4:
       followup = f'Congratulations! The {str_date} event is now {percent_reported:.0%} reported!'
       final = None
     else:

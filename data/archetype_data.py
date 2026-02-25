@@ -17,11 +17,13 @@ class UnknownArchetype:
   event_date: str
   player_name: str
 
-def AddArchetype(event_id,
-  player_name,
-  archetype_played,
-  submitter_id,
-  submitter_name):
+def AddArchetype(
+  event_id:int,
+  player_name:str,
+  archetype_played:str,
+  submitter_id:int,
+  submitter_name:str
+) -> int | None:
   criteria = [player_name, archetype_played]
   with psycopg.connect(DATABASE_URL) as conn:
     with conn.cursor() as cur:
@@ -42,18 +44,16 @@ def AddArchetype(event_id,
       {submitter_id},
       '{submitter_name}',
       {False})
-      RETURNING event_id,
-      player_name,
-      archetype_played,
-      submitter_id,
-      submitter_username
+      RETURNING id
       '''
-      
+
+      #TODO: I can probably inject everything...
       cur.execute(command, criteria)  # type: ignore[arg-type]
       conn.commit()
       row = cur.fetchone()
-      print(row)
-      return row
+      print('Added archetype ID:', row)
+      print('Row type:', type(row))
+      return row[0] if row else None
 
 def GetUnknownArchetypes(discord_id,
                          game_id,
