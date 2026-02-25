@@ -78,7 +78,8 @@ class Event(NamedTuple):
   event_type_id: int
   event_name: str
   reported_as: str
-  
+
+#TODO: Can I delete this yet??
 def ConvertToEvent(
   event_obj: tuple[int, int | None, str, int, int, int, str, str, str, bool, bool, int]
 ) -> Event:

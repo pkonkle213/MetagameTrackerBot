@@ -18,12 +18,12 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
   def __init__(self, store:Store, game:Game, format:Format, data:bool = True):
     super().__init__()
     today = GetToday().strftime('%m/%d/%Y')
-    self.previous_events = GetPreviousEvents(store, game, format)
     self.data = data
     event_types = GetEventTypes()
       
     default_event_name = f'{format.FormatName}'
   
+    self.previous_events = GetPreviousEvents(store, game, format)
     past_events = []
     for i in range(len(self.previous_events)):
       option = self.previous_events[i]
