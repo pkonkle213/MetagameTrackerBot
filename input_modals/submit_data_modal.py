@@ -3,7 +3,7 @@ from custom_errors import KnownError
 from services.date_functions import GetToday
 import discord
 from data.data_input_menus import GetPreviousEvents, GetEventTypes
-from tuple_conversions import Format, Game, Store
+from tuple_conversions import Event, Format, Game, Store
 
 class PredictEvent(NamedTuple):
   ID: int
@@ -27,11 +27,12 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
     past_events = []
     for i in range(len(self.previous_events)):
       option = self.previous_events[i]
-      label = f"{option[1]} - {option[2]}"
+      label = f"{option.event_date.strftime('%m/%d')} - {option.event_name}"
+      value = str(option.id)
       if i == 0:
-        past_events.append(discord.SelectOption(label=label, value=option[0], default=True))
+        past_events.append(discord.SelectOption(label=label, value=value, default=True))
       else:
-        past_events.append(discord.SelectOption(label=label, value=option[0]))
+        past_events.append(discord.SelectOption(label=label, value=value))
     past_events.append(discord.SelectOption(label='Create A New Event', value='0'))
     
     event_types = [
