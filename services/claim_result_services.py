@@ -146,7 +146,7 @@ def CheckEventPercentage(event:Event) -> Tuple[str | None, str | None]:
 
 def OneEvent(event:Event) -> Tuple[str,list[str],list[Tuple[str, int, int, int]]]:
   data = GetEventMeta(event.id)
-  title = f"{event.event_name} Meta ({len(data)} attended)"
+  title = f"{event.event_name} Results ({len(data)} attended)"
   headers = ['Archetype', 'Wins', 'Losses', 'Draws']
   return title, headers, data
 
