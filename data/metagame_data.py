@@ -3,7 +3,7 @@ import settings
 import os
 import psycopg2
 from settings import DATABASE_URL
-from tuple_conversions import Format, Game, Store
+from tuple_conversions import Event, Format, Game, Store
 
 
 def GetAreaForMeta(store: Store) -> str:
@@ -15,11 +15,12 @@ def GetAreaForMeta(store: Store) -> str:
 
 
 def GetMetagame(
+  store: Store,
   game: Game,
   format: Format,
-  start_date: date,
-  end_date: date,
-  store: Store
+  start_date: date | None = None,
+  end_date: date | None = None,
+  event: Event | None = None
 ) -> list:
   conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
@@ -39,7 +40,7 @@ def GetMetagame(
         INNER JOIN events e ON fp.event_id = e.id
         INNER JOIN stores s ON e.discord_id = s.discord_id
       WHERE
-        e.event_date BETWEEN '{start_date}' AND '{end_date}'
+        {f"e.id = {event.id}" if event else f"e.event_date BETWEEN '{start_date}' AND '{end_date}'"}
         {GetAreaForMeta(store)}
         AND e.format_id = {format.FormatId}
         AND e.game_id = {game.GameId}
