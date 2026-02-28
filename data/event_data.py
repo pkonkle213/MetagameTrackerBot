@@ -80,7 +80,7 @@ def CreateEvent(
       raise Exception('Unable to create event')
     return event_id[0]
 
-def GetEventMeta(event_id:int) -> list[Tuple[str,int,int,int]]:
+def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
   conn = psycopg2.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''

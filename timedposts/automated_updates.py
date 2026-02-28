@@ -11,10 +11,17 @@ async def UpdateDataGuild(bot):
   for channel in target_channels:
     game = GetGame(channel[1], True)
     format = GetFormat(game, channel[0], True)
+    if not store or not game or not format:
+      continue
     channel = bot.get_channel(channel[0])
     date_start, date_end = BuildDateRange('', '', format)
     title_name = format.FormatName.title() if format else game.GameName.title()
-    data = GetMetagame(game, format, date_start, date_end, store)
+    data = GetMetagame(
+      store,
+      game,
+      format,
+      date_start,
+      date_end)
     if data is not None and len(data) > 0:
       title = f'{title_name} metagame from {date_start} to {date_end}'
       headers = ['Deck Archetype', 'Meta %', 'Win %']

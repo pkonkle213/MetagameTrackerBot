@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Tuple
+from typing import Tuple, Any
 import settings
 from custom_errors import KnownError
 from data.store_data import GetClaimFeed
@@ -7,10 +7,11 @@ from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
 from input_modals.submit_archetype_modal import SubmitArchetypeModal
 from data.archetype_data import AddArchetype
-from data.event_data import GetEventMeta
+from data.event_data import GetEventDetails
 from services.input_services import ConvertInput
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from output_builder import BuildTableOutput
+from data.metagame_data import OneEventMetagame
 from discord_messages import MessageChannel
 from tuple_conversions import Event, Format, Store, Game
 
@@ -139,14 +140,20 @@ def CheckEventPercentage(event:Event) -> Tuple[str | None, str | None]:
       final = None
     else:
       followup = f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!'
-      title, headers, data = OneEvent(event)
+      title, headers, data = OneEventDetails(event)
       final = BuildTableOutput(title, headers, data)
     return followup, final
   return None, None
 
-def OneEvent(event:Event) -> Tuple[str,list[str],list[Tuple[str, int, int, int]]]:
-  data = GetEventMeta(event.id)
-  title = f"{event.event_name} Meta ({len(data)} attended)"
+def OneEventMeta(event:Event) -> Tuple[str,list[str],list[Tuple[str, float, float]]]:
+  data = OneEventMetagame(event)
+  title = f"{event.event_name}'s Metagame"
+  headers = ['Archetype', 'Metagame %', 'Win %']
+  return title, headers, data
+
+def OneEventDetails(event:Event) -> Tuple[str,list[str],list[Tuple[str, int, int, int]]]:
+  data = GetEventDetails(event.id)
+  title = f"{event.event_name} Results ({len(data)} attended)"
   headers = ['Archetype', 'Wins', 'Losses', 'Draws']
   return title, headers, data
 
