@@ -1,8 +1,17 @@
-import os
-import psycopg2
+from datetime import datetime
+from settings import DATABASE_URL
+import psycopg
 
-def GetStoreStandingData(store, game, format, start_date, end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+from tuple_conversions import Format, Game, Store
+
+def GetStoreStandingData(
+  store:Store,
+  game:Game,
+  format:Format,
+  start_date:datetime,
+  end_date:datetime
+) -> list:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT
@@ -39,8 +48,14 @@ def GetStoreStandingData(store, game, format, start_date, end_date):
     rows = cur.fetchall()
     return rows
 
-def GetStorePairingData(store, game, format, start_date, end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetStorePairingData(
+  store:Store,
+  game:Game,
+  format:Format,
+  start_date:datetime,
+  end_date:datetime
+) -> list:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -80,8 +95,15 @@ def GetStorePairingData(store, game, format, start_date, end_date):
     rows = cur.fetchall()
     return rows
 
-def GetPlayerPairingData(store, game, format, start_date, end_date, user_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetPlayerPairingData(
+  store:Store,
+  game:Game,
+  format:Format,
+  start_date:datetime,
+  end_date:datetime,
+  user_id:int
+) -> list:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -119,8 +141,14 @@ def GetPlayerPairingData(store, game, format, start_date, end_date, user_id):
     rows = cur.fetchall()
     return rows
 
-def GetPlayerStandingData(store, game, format, start_date, end_date, user_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetPlayerStandingData(
+  store:Store,
+  game:Game,
+  format:Format,
+  start_date:datetime,
+  end_date:datetime, user_id
+) -> list:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT

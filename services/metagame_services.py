@@ -15,5 +15,4 @@ def GetMyMetagame(interaction:Interaction,
   data = GetMetagame(store, game, format, date_start, date_end)
   title = f'{title_name} metagame from {date_start} to {date_end}'
   headers = ['Deck Archetype', 'Meta %', 'Win %']
-  archetype_column = 0 if format and format.IsLimited else None
-  return data, title, headers, archetype_column
+  return data, title, headers

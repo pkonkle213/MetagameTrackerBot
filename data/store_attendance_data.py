@@ -1,13 +1,17 @@
-from settings import DATAGUILDID
-import os
-import psycopg2
+from datetime import date
+from settings import DATAGUILDID, DATABASE_URL
+import psycopg
 
-def GetAttendance(store,
-                  game,
-                  format,
-                  start_date,
-                  end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+from tuple_conversions import Format, Game, Store
+
+def GetAttendance(
+  store:Store,
+  game:Game,
+  format:Format,
+  start_date:date,
+  end_date:date
+):
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT

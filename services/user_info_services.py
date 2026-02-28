@@ -8,6 +8,8 @@ def GetUserData(interaction: Interaction,
                member: Member):
   """Gets the player name, win percent, last played, and top decks for a user"""
   store, game, format = GetObjectsFromInteraction(interaction)
+  if not store or not game or not format:
+    raise Exception('Unable to get store, game, or format')
 
   player_name = GetUserName(store.DiscordId,
                             member.id)

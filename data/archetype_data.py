@@ -1,21 +1,5 @@
 from settings import DATABASE_URL
 import psycopg
-from dataclasses import dataclass
-
-@dataclass
-class Archetype:
-  """Represents a submitted archetype"""
-  EventId: int
-  PlayerName: str
-  Archetype: str
-  SubmitterId: str
-  SubmitterName: str
-
-@dataclass
-class UnknownArchetype:
-  """Represents an unknown archetype"""
-  event_date: str
-  player_name: str
 
 def AddArchetype(
   event_id:int,
@@ -23,7 +7,7 @@ def AddArchetype(
   archetype_played:str,
   submitter_id:int,
   submitter_name:str
-) -> int | None:
+) -> int:
   criteria = [player_name, archetype_played]
   with psycopg.connect(DATABASE_URL) as conn:
     with conn.cursor() as cur:
@@ -47,13 +31,12 @@ def AddArchetype(
       RETURNING id
       '''
 
-      #TODO: I can probably inject everything...
       cur.execute(command, criteria)  # type: ignore[arg-type]
       conn.commit()
       row = cur.fetchone()
-      print('Added archetype ID:', row)
-      print('Row type:', type(row))
-      return row[0] if row else None
+      if not row:
+        raise Exception('Unable to add archetype')
+      return row[0]
 
 def GetUnknownArchetypes(discord_id,
                          game_id,

@@ -1,13 +1,18 @@
 from datetime import date
-import os
-import psycopg2
+from settings import DATABASE_URL
+import psycopg
 from settings import DATAGUILDID
-
 from tuple_conversions import Format, Game, Store
 
-def GetPairingsHistory(user_id: int, game: Game, format: Format,
-                       start_date: date, end_date: date, store: Store):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetPairingsHistory(
+  user_id: int,
+  game: Game,
+  format: Format,
+  start_date: date,
+  end_date: date,
+  store: Store
+):
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -44,9 +49,15 @@ def GetPairingsHistory(user_id: int, game: Game, format: Format,
     return rows
     
 
-def GetStandingsHistory(user_id: int, game: Game, format: Format,
-                       start_date: date, end_date: date, store: Store):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetStandingsHistory(
+  user_id: int,
+  game: Game,
+  format: Format,
+  start_date: date,
+  end_date: date,
+  store: Store
+):
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT

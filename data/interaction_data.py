@@ -1,14 +1,15 @@
+from typing import Tuple
+from psycopg.rows import class_row
 from custom_errors import KnownError
-from services.date_functions import ConvertToDate
 from settings import DATABASE_URL
-import psycopg2
-from tuple_conversions import ConvertToGame, ConvertToFormat, ConvertToStore
+import psycopg
+from tuple_conversions import Format, Game, Store
 
 
 #TODO: Why are these in here and not in their corresponding data files?
-def GetFormatByMap(channel_id):
-  conn = psycopg2.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+def GetFormatByMap(channel_id:int) -> Format | None:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Format)) as cur:
     command = f'''
     SELECT f.id, f.name, f.last_ban_update, f.is_limited
     FROM formatchannelmaps fc
@@ -17,12 +18,12 @@ def GetFormatByMap(channel_id):
     '''
     cur.execute(command)
     row = cur.fetchone()
-    return ConvertToFormat(row) if row else None
+    return row
 
 
-def GetStoreByDiscord(discord_id):
-  conn = psycopg2.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+def GetStoreByDiscord(discord_id:int) -> Store | None:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Store)) as cur:
     command = f'''
     SELECT
       discord_id,
@@ -44,12 +45,12 @@ def GetStoreByDiscord(discord_id):
 
     cur.execute(command)
     row = cur.fetchone()
-    return ConvertToStore(row) if row else None
+    return row
 
 
-def GetGameByMap(category_id: int):
-  conn = psycopg2.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+def GetGameByMap(category_id: int) -> Game | None:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Game)) as cur:
     command = f'''
     SELECT id, name
     FROM Games g
@@ -59,12 +60,14 @@ def GetGameByMap(category_id: int):
 
     cur.execute(command)
     row = cur.fetchone()
-    return ConvertToGame(row) if row else None
+    return row
 
-def GetInteractionDetails(discord_id: int,
-                          category_id: int,
-                          channel_id: int):
-  conn = psycopg2.connect(DATABASE_URL)
+def GetInteractionDetails(
+  discord_id: int,
+  category_id: int,
+  channel_id: int
+) -> Tuple[Store | None, Game | None, Format | None]:
+  conn = psycopg.connect(DATABASE_URL)
   with  conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -121,7 +124,7 @@ def GetInteractionDetails(discord_id: int,
     row = cur.fetchone()
     if not row:
       raise KnownError('Nothing found for data provided')
-    store = ConvertToStore(row[0:11]) if row[0] else None
-    game = ConvertToGame(row[11:13]) if row[11] else None
-    format = ConvertToFormat((row[13:17])) if row[13] else None
-    return [store, game, format]
+    store = Store(*row[0:11]) if row[0] else None
+    game = Game(*row[11:13]) if row[11] else None
+    format = Format(*row[13:17]) if row[13] else None
+    return store, game, format

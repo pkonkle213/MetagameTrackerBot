@@ -1,14 +1,17 @@
-import os
-import psycopg2
+from datetime import date
+from settings import DATABASE_URL
+import psycopg
 from settings import BOTGUILDID
+from tuple_conversions import Format, Game, Store
 
-def GetStats(discord_id,
-             game,
-             format,
-             user_id,
-             start_date,
-             end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetStats(
+  discord_id:int,
+  game:Game,
+  format:Format,
+  user_id:int,
+  start_date:date,
+  end_date:date):
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -82,12 +85,14 @@ def GetStats(discord_id,
     rows = cur.fetchall()
     return rows
 
-def GetTopPlayerData(store,
-                     game,
-                     format,
-                     start_date,
-                     end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetTopPlayerData(
+  store:Store,
+  game:Game,
+  format:Format,
+  start_date:date,
+  end_date:date
+):
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
     SELECT

@@ -15,8 +15,7 @@ def MaxLength(headers, collection):
 
 def BuildTableOutput(title,
                      headers,
-                     items,
-                     archetype_column = None):
+                     items):
   column_widths = MaxLength(headers, items)
   align = ''
   output = f'```{title}\n\n'
@@ -33,10 +32,8 @@ def BuildTableOutput(title,
       column_format = '{:' + align + str(column_widths[i]) + 's}'
       if element[0] == '-':
         output = output[:-1]
-      if archetype_column is not None and i == archetype_column and element != 'UNKNOWN':
-        output += column_format.format(element)
-      else:
-        output += column_format.format(element.title())
+      output += column_format.format(element)
+      
     output += '\n'
 
   if len(output) > 1994:

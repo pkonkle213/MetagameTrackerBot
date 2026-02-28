@@ -1,7 +1,7 @@
 from services.date_functions import ConvertToDate
 from output_builder import BuildTableOutput
 from custom_errors import KnownError
-from data.add_results_data import AddResult, SubmitTable
+from data.add_results_data import InsertStanding, InsertPairing
 from services.input_services import ConvertInput
 from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
 from tuple_conversions import EventInput, Standing, Pairing, Event
@@ -55,7 +55,7 @@ def AddStandingResults(event:Event,
                         person.Wins,
                         person.Losses,
                         person.Draws)
-      output = AddResult(event.id, person, submitterId)
+      output = InsertStanding(event.id, person, submitterId)
       if output:
         successes.append(person)
 
@@ -72,7 +72,7 @@ def AddPairingResults(event:Event,
   successes = []
  
   for table in data:
-    result = SubmitTable(event.id,
+    result = InsertPairing(event.id,
                          ConvertInput(table.P1Name),
                          table.P1Wins,
                          ConvertInput(table.P2Name),

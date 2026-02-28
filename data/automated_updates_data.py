@@ -1,10 +1,11 @@
-import os
-import psycopg2
+from typing import Tuple
+from settings import DATABASE_URL
+import psycopg
 
-def GetDataChannels(data_guild_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetDataChannels(data_guild_id) -> list[Tuple[int, int]]:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
-    command = f'''
+    command = '''
     SELECT
       channel_id,
       category_id
@@ -16,8 +17,10 @@ def GetDataChannels(data_guild_id):
         gcm.game_id = g.id
         AND gcm.discord_id = fcm.discord_id
       )
-    WHERE fcm.discord_id = {data_guild_id}
+    WHERE fcm.discord_id = %s
     '''
-    cur.execute(command)
+
+    criteria = [data_guild_id]
+    cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows

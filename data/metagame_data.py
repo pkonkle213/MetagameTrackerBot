@@ -5,7 +5,6 @@ from typing import Tuple
 from settings import DATABASE_URL
 from tuple_conversions import Event, Format, Game, Store
 
-
 def GetAreaForMeta(store: Store) -> str:
   if store.IsHub:
     return f'AND s.region = {store.Region}'

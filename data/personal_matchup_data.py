@@ -1,8 +1,18 @@
-import os
-import psycopg2
+from datetime import date
+from settings import DATABASE_URL
+import psycopg
 
-def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+from tuple_conversions import Format, Game
+
+def GetPersonalMatchups(
+  discord_id:int,
+  game:Game,
+  format:Format,
+  start_date:date,
+  end_date:date,
+  user_id:int
+):
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT

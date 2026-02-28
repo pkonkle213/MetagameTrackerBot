@@ -25,5 +25,5 @@ async def UpdateDataGuild(bot):
     if data is not None and len(data) > 0:
       title = f'{title_name} metagame from {date_start} to {date_end}'
       headers = ['Deck Archetype', 'Meta %', 'Win %']
-      output = BuildTableOutput(title, headers, data, 0 if format.IsLimited else None)
+      output = BuildTableOutput(title, headers, data)
       await channel.send(output)

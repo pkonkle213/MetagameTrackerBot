@@ -1,30 +1,37 @@
 from collections import namedtuple
-import os
-import psycopg2
-from psycopg2.errors import UniqueViolation
+from typing import NamedTuple
+from settings import DATABASE_URL
+import psycopg
+from psycopg.errors import UniqueViolation
+from psycopg.rows import class_row
+
+class Word(NamedTuple):
+  ID: int
+  Word: str
 
 def AddWord(word):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg.connect(DATABASE_URL)
   try:
-    with conn, conn.cursor() as cur:
+    with conn, conn.cursor(row_factory=class_row(Word)) as cur:
       criteria = [word]
       command = '''
       INSERT INTO BadWords (badword)
       VALUES (%s)
-      RETURNING *
+      RETURNING id, word
       '''
 
       cur.execute(command, criteria)
       conn.commit()
       row = cur.fetchall()
-      Word = namedtuple("Word", ["ID", "Word"])
-      return Word(row[0], row[1])
+      if not row:
+        raise Exception('Unable to add word')
+      return row
   except UniqueViolation:
     return None
 
 def GetWord(word):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Word)) as cur:
     command = '''
     SELECT id, badword
     FROM BadWords
@@ -34,13 +41,14 @@ def GetWord(word):
     criteria = [word]
     cur.execute(command, criteria)
     row = cur.fetchone()
-    
-    Word = namedtuple("Word", ["ID", "Word"])
-    return Word(row[0], row[1]) if row else None
+
+    if not row:
+      raise Exception('Unable to find the word')
+    return row
 
 def MatchDisabledArchetypes(discord_id, user_id):
   days = 30
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT e.event_date, asu.player_name, asu.archetype_played, asu.date_submitted, asu.submitter_username
@@ -51,46 +59,50 @@ def MatchDisabledArchetypes(discord_id, user_id):
       AND asu.reported = {True}
       AND e.event_date BETWEEN current_date - {days} AND current_date
     '''
+    
     cur.execute(command)
     rows = cur.fetchall()
     return rows
 
 def DisableMatchingWords(discord_id, word):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     word_inject = "%" + word + "%"
-    criteria = [word_inject]
-    command = f'''
+    command = '''
     UPDATE ArchetypeSubmissions
     SET reported = True
     WHERE event_id IN (
       SELECT id
       FROM events
-      WHERE discord_id = {discord_id}
+      WHERE discord_id = %s
     )
     AND archetype_played LIKE %s
     RETURNING *
     '''
+    
+    criteria = [discord_id, word_inject]
     cur.execute(command, criteria)
     conn.commit()
     row = cur.fetchone()
     return row
 
 def AddBadWordBridge(discord_id, word_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
-    command = f'''
+    command = '''
     INSERT INTO badwords_stores (discord_id, badword_id)
-    VALUES ({discord_id}, {word_id})
+    VALUES (%s, %s)
     RETURNING *
     '''
-    cur.execute(command)
+
+    criteria = [discord_id, word_id]
+    cur.execute(command, criteria)
     conn.commit()
     row = cur.fetchone()
     return row
 
 def CheckStoreBannedWords(discord_id, archetype):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = '''
     SELECT
@@ -109,11 +121,11 @@ def CheckStoreBannedWords(discord_id, archetype):
     return rows
 
 def GetOffenders(game, format, store):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT 
-      CAST(asu.date_submitted AS DATE) as date_submitted,
+      asu.date_submitted::date as date_submitted,
       asu.submitter_username,
       asu.submitter_id,
       e.event_date,

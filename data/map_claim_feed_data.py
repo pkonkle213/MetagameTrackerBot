@@ -1,8 +1,12 @@
-import os
-import psycopg2
+from settings import DATABASE_URL
+import psycopg
 
-def AddClaimFeedMap(discord_id, channel_id, game_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def AddClaimFeedMap(
+  discord_id:int,
+  channel_id:int,
+  game_id:int
+):
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     INSERT INTO claimchannels (discord_id, channel_id, game_id)
