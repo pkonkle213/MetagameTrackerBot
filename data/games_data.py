@@ -24,7 +24,7 @@ def AddGameMap(
     RETURNING *
     '''
     
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     conn.commit()
     row = cur.fetchone()
     return row

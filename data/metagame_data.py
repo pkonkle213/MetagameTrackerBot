@@ -24,7 +24,7 @@ def OneEventMetagame(
       ROUND(win_percent * 100, 2) AS win_percent
     FROM (
       SELECT
-        COALESCE(INITCAP(ua.archetype_played), 'UNKNOWN') AS archetype_played,
+        COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,
         1.0 * sum(fp.wins) / (sum(fp.wins) + sum(fp.losses) + sum(fp.draws)) AS win_percent,
         COUNT(*) * 1.0 / SUM(count(*)) OVER () AS Metagame_Percent
       FROM
@@ -64,7 +64,7 @@ def GetMetagame(
       ROUND(win_percent * 100, 2) AS win_percent
     FROM (
       SELECT
-        COALESCE(UPPER(ua.archetype_played), 'UNKNOWN') AS archetype_played,
+        COALESCE(INITCAP(ua.archetype_played), 'UNKNOWN') AS archetype_played,
         1.0 * sum(fp.wins) / (sum(fp.wins) + sum(fp.losses) + sum(fp.draws)) AS win_percent,
         COUNT(*) * 1.0 / SUM(count(*)) OVER () AS Metagame_Percent
       FROM
@@ -78,7 +78,7 @@ def GetMetagame(
         AND e.format_id = {format.FormatId}
         AND e.game_id = {game.GameId}
       GROUP BY
-        UPPER(ua.archetype_played)
+        INITCAP(ua.archetype_played)
       )
     WHERE
     metagame_percent >= 0.02
@@ -87,6 +87,6 @@ def GetMetagame(
     3 DESC
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows

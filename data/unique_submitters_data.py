@@ -41,6 +41,6 @@ def GetUniqueSubmittersPercentage(discord_id:int):
       p.event_id DESC
     """
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows

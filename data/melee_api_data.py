@@ -20,6 +20,6 @@ def GetStoreMeleeInfo(store) -> Details | None:
       discord_id = {store.DiscordId}
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     row = cur.fetchone()
     return row

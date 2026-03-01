@@ -39,6 +39,6 @@ def GetAttendance(
       e.event_date DESC
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows

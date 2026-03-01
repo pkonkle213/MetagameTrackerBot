@@ -15,7 +15,7 @@ def AddClaimFeedMap(
     SET channel_id = {channel_id}
     RETURNING *
     '''
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     conn.commit()
     row = cur.fetchone()
     return row

@@ -60,7 +60,7 @@ def MatchDisabledArchetypes(discord_id, user_id):
       AND e.event_date BETWEEN current_date - {days} AND current_date
     '''
     
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows
 
@@ -144,6 +144,6 @@ def GetOffenders(game, format, store):
     ORDER BY asu.date_submitted DESC
     '''
     
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows

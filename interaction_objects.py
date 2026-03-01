@@ -1,9 +1,7 @@
-from collections import namedtuple
 from custom_errors import KnownError
 import discord
 import data.interaction_data as db
-from tuple_conversions import Game, Data, Format, Store
-
+from tuple_conversions import Game, Format, Store
 
 def GetObjectsFromInteraction(
     interaction: discord.Interaction
@@ -59,8 +57,7 @@ def SplitInteractionData(interaction: discord.Interaction):
   else:
     raise KnownError('No user found!?')
 
-  Data = namedtuple("Data", ["DiscordId", "CategoryId", "ChannelId", "UserId"])
-  return Data(discord_id, category_id, channel_id, user_id)
+  return discord_id, category_id, channel_id, user_id
 
 
 def GetGame(category_id: int, required: bool):
@@ -102,11 +99,3 @@ def GetStore(discord_id: int, required: bool = True):
   if store is None and required:
     raise KnownError('Store not found. Please register your store.')
   return store
-
-
-def FormatInteractionData(data, requirements):
-  """Formats the interaction data into the appropriate objects"""
-  game = GetGame(data.CategoryId, requirements.Game)
-  format = GetFormat(game, data.ChannelId, requirements.Format)
-  store = GetStore(data.DiscordId, requirements.Store)
-  return Data(game, format, store, data.UserId)

@@ -16,7 +16,7 @@ def GetFormatByMap(channel_id:int) -> Format | None:
     INNER JOIN formats f ON f.id = fc.format_id
     WHERE fc.channel_id = {channel_id}
     '''
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     row = cur.fetchone()
     return row
 
@@ -43,7 +43,7 @@ def GetStoreByDiscord(discord_id:int) -> Store | None:
       discord_id = {discord_id}
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     row = cur.fetchone()
     return row
 
@@ -58,7 +58,7 @@ def GetGameByMap(category_id: int) -> Game | None:
     WHERE gc.category_id = {category_id}
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     row = cur.fetchone()
     return row
 
@@ -120,7 +120,7 @@ def GetInteractionDetails(
       s.discord_id = {discord_id}
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     row = cur.fetchone()
     if not row:
       raise KnownError('Nothing found for data provided')

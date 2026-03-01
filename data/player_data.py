@@ -57,7 +57,7 @@ def GetStats(
         SELECT
           '1' AS rank,
           ' ' AS format_name,
-          'OVERALL' AS archetype_played,
+          'Overall' AS archetype_played,
           SUM(wins) AS wins,
           SUM(losses) AS losses,
           SUM(draws) AS draws,
@@ -68,7 +68,7 @@ def GetStats(
         SELECT
           '2' AS rank,
           format_name,
-          COALESCE(UPPER(archetype_played), 'UNKNOWN') AS archetype_played,
+          COALESCE(INITCAP(archetype_played), 'UNKNOWN') AS archetype_played,
           SUM(wins) AS wins,
           SUM(losses) AS losses,
           SUM(draws) AS draws,
@@ -76,12 +76,12 @@ def GetStats(
         FROM
           X
         GROUP BY
-          UPPER(archetype_played),
+          INITCAP(archetype_played),
           X.format_name
       )
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows
 
@@ -170,6 +170,6 @@ def GetTopPlayerData(
       player_rank
     """
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows
