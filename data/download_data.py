@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 from settings import DATABASE_URL
 import psycopg
 
@@ -6,10 +6,10 @@ from tuple_conversions import Format, Game, Store
 
 def GetStoreStandingData(
   store:Store,
-  game:Game,
-  format:Format,
-  start_date:datetime,
-  end_date:datetime
+  game:Game | None,
+  format:Format | None,
+  start_date:date,
+  end_date:date
 ) -> list:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
@@ -50,10 +50,10 @@ def GetStoreStandingData(
 
 def GetStorePairingData(
   store:Store,
-  game:Game,
-  format:Format,
-  start_date:datetime,
-  end_date:datetime
+  game:Game | None,
+  format:Format | None,
+  start_date:date,
+  end_date:date
 ) -> list:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
@@ -97,10 +97,10 @@ def GetStorePairingData(
 
 def GetPlayerPairingData(
   store:Store,
-  game:Game,
-  format:Format,
-  start_date:datetime,
-  end_date:datetime,
+  game:Game | None,
+  format:Format | None,
+  start_date:date,
+  end_date:date,
   user_id:int
 ) -> list:
   conn = psycopg.connect(DATABASE_URL)
@@ -143,10 +143,11 @@ def GetPlayerPairingData(
 
 def GetPlayerStandingData(
   store:Store,
-  game:Game,
-  format:Format,
-  start_date:datetime,
-  end_date:datetime, user_id
+  game:Game | None,
+  format:Format | None,
+  start_date:date,
+  end_date:date,
+  user_id:int
 ) -> list:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
@@ -155,6 +156,7 @@ def GetPlayerStandingData(
       INITCAP(g.name) AS Game_Name,
       INITCAP(f.name) AS Format_name,
       e.event_date,
+      e.event_name,
       INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
       fp.wins,
       fp.losses,

@@ -33,8 +33,7 @@ class UnknownArchetypes(commands.Cog):
     await interaction.response.defer()
     data, title, headers = GetAllUnknown(interaction, start_date, end_date)
     if data is None or len(data) == 0:
-      await interaction.followup.send(
-          'Congratulations! No unknown archetypes found for this format')
+      await interaction.followup.send('Congratulations! No unknown archetypes found for this format')
     else:
       output = BuildTableOutput(title, headers, data)
       output = output[:-3] + '\nTo submit yours, type and enter: /submit archetype```'

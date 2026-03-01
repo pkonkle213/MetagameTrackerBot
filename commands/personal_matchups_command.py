@@ -23,10 +23,13 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
                                   interaction: Interaction,
                 start_date: str = '',
                 end_date: str = ''):
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=True)
     data, title, headers = PersonalMatchups(interaction, start_date, end_date)
-    output = BuildTableOutput(title, headers, data)
-    await interaction.followup.send(output)
+    if data is None or len(data) == 0:
+      await interaction.followup.send('No matchup data found for this store and/or format', ephemeral=True)
+    else:
+      output = BuildTableOutput(title, headers, data)
+      await interaction.followup.send(output, ephemeral=True)
 
 
   @app_commands.command(name="wlrecord",
@@ -47,10 +50,13 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
     end_date: string
       End of Date Range (MM/DD/YYYY)
     """
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=True)
     data, title, header = PlayRecord(interaction, start_date, end_date)
-    output = BuildTableOutput(title, header, data)
-    await interaction.followup.send(output)
+    if data is None or len(data) == 1:
+      await interaction.followup.send('No matchup data found for this store and/or format', ephemeral=True)
+    else:
+      output = BuildTableOutput(title, header, data)
+      await interaction.followup.send(output, ephemeral=True)
   
   @PersonalMatchupReport.error
   @WLDRecord.error

@@ -3,15 +3,19 @@ from io import BytesIO
 from services.date_functions import BuildDateRange
 from data.download_data import GetStoreStandingData, GetStorePairingData, GetPlayerPairingData, GetPlayerStandingData
 from interaction_objects import GetObjectsFromInteraction
+from services.command_error_service import KnownError
 
 def GetStoreData(interaction, start_date, end_date):
   store, game, format = GetObjectsFromInteraction(interaction)
-  
+  if not store:
+    raise KnownError('No store found')
+
   date_start, date_end = BuildDateRange(start_date, end_date, format)
 
-  message = f'Here is the data for {store.StoreName.title()} between {date_start} and {date_end}:'
+  name = store.StoreName if store.StoreName else store.DiscordName
+  message = f'Here is the data for {name.title()} between {date_start.strftime("%m/%d/%Y")} and {date_end.strftime("%m/%d/%Y")}:'
   files = []
-  
+
   participant_data = GetStoreStandingData(store, game, format, date_start, date_end)
   if len(participant_data) != 0:
     header = 'GAME,FORMAT,DATE,PLAYER_NAME,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS'
@@ -23,14 +27,20 @@ def GetStoreData(interaction, start_date, end_date):
     header = 'GAME,FORMAT,DATE,ROUND,PLAYER_NAME,ARCHETYPE_PLAYED,OPPONENT_NAME,OPPONENT_ARCHETYPE,RESULT'
     files.append(ConvertRowsToFile(round_data, 'MyStoreRoundByRoundData', header))
     message += ' Round by round data is attached.'
-    
+
   return message, files
 
 def GetPlayerData(interaction, start_date, end_date):
-  game, format, store, user_id = GetObjectsFromInteraction(interaction)
+  store, game, format = GetObjectsFromInteraction(interaction)
+  if not store:
+    raise KnownError('No store found')
+    
+  user_id = interaction.user.id
+
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   
-  message = f'Here is your data from {store.StoreName.title()} between {date_start} and {date_end}:'
+  name = store.StoreName if store.StoreName else store.DiscordName
+  message = f'Here is the data for {name.title()} between {date_start.strftime("%m/%d/%Y")} and {date_end.strftime("%m/%d/%Y")}:'
   files = []
 
   participant_data = GetPlayerStandingData(store, game, format, date_start, date_end, user_id)

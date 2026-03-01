@@ -88,7 +88,7 @@ def GetStats(
 def GetTopPlayerData(
   store:Store,
   game:Game,
-  format:Format,
+  format:Format | None,
   start_date:date,
   end_date:date
 ):
@@ -120,7 +120,7 @@ def GetTopPlayerData(
             FROM
               (
                 SELECT
-                  UPPER(player_name) as player_name,
+                  INITCAP(player_name) as player_name,
                   sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percentage,
                   1.0 * count(*) / (
                     SELECT
@@ -142,7 +142,7 @@ def GetTopPlayerData(
                   AND game_id = {game.GameId}
                   {f'AND format_id = {format.FormatId}' if format else ''}
                 GROUP BY
-                  UPPER(player_name)
+                  INITCAP(player_name)
               )
           )
       )

@@ -16,7 +16,7 @@ def GetPersonalMatchups(
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      COALESCE(INITCAP(ua.archetype_played), 'UNKNOWN') AS archetype_played,
+      INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
       COUNT(CASE WHEN result = 'WIN' THEN 1 END) as wins,
       COUNT(CASE WHEN result = 'LOSS' THEN 1 END) as losses,
       COUNT(CASE WHEN result = 'DRAW' THEN 1 END) as draws,
@@ -36,9 +36,10 @@ def GetPersonalMatchups(
       AND e.game_id = {game.GameId}
       AND e.format_id = {format.FormatId}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-    GROUP BY UPPER(ua.archetype_played)
+    GROUP BY
+      INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN'))
     ORDER BY COUNT(*) DESC, 
-      INITCAP(ua.archetype_played)
+      INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN'))
     '''
     
     cur.execute(command)  # type: ignore[arg-type]
