@@ -72,7 +72,7 @@ class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
     self.submitted_melee_id =  self.melee_id.component.value if self.melee_id.component.value else None
     self.submitted_melee_secret = self.melee_secret.value if self.melee_secret.component.value else None
     self.is_submitted = True
-    await interaction.response.defer()
+    await interaction.response.defer(thinking=False)
 
   async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
     await interaction.followup.send(f'Oops! Something went wrong: {error}', ephemeral=True)

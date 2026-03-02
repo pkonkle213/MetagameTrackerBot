@@ -140,7 +140,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     self.submitted_event:Event = GetEvent(self.previous_events, self.event_select.component.values[0])
     self.submitted_player_name:str = self.player_name.component.value
     self.is_submitted:bool = True
-    await interaction.response.defer()
+    await interaction.response.defer(thinking=False)
 
   async def on_error(self, interaction: Interaction, error: Exception) -> None:
     await interaction.followup.send(f'Oops! Something went wrong: {error}', ephemeral=True)

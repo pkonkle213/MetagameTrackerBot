@@ -19,7 +19,7 @@ class UserInfoCommand(commands.Cog):
   @app_commands.guild_only()
   async def GetUserInfo(self, interaction: Interaction, member: Member):
     """Callback for the 'Get User Info' context menu command."""
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
     try:
       (player_name,
        win_percent,

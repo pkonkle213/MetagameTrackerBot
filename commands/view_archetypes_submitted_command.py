@@ -28,7 +28,7 @@ class ArchetypeSubmittedCommand(commands.Cog):
     event_date: string
       The date of the event (MM/DD/YYYY)
     """
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
     data, headers, title = SubmittedArchetypesReport(interaction,
                                                                        player_name,
                                                                        event_date)

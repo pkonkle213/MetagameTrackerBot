@@ -33,7 +33,7 @@ class EventSelector(discord.ui.Modal, title='Select Event'):
   async def on_submit(self, interaction: discord.Interaction):
     self.event = GetEvent(self.selected_event.component.values[0], self.previous_events)
     self.is_submitted = True
-    await interaction.response.defer()
+    await interaction.response.defer(thinking=False)
 
   async def on_error(
     self,

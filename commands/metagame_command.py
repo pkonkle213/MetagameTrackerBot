@@ -23,7 +23,7 @@ class MetagameCommand(commands.Cog):
     end_date: string
       The end date of the metagame (MM/DD/YYYY)
     """
-    await interaction.response.defer()
+    await interaction.response.defer(thinking=False)
     data, title, headers = GetMyMetagame(interaction, start_date, end_date)
     if data is None or len(data) == 0:
       await interaction.followup.send('No metagame data found for this store and format')
