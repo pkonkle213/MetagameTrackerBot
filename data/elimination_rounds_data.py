@@ -1,12 +1,7 @@
 import psycopg
 from psycopg.rows import TupleRow
 from settings import DATABASE_URL
-from tuple_conversions import Event, Format, Game, Store
-
-
-def GetTournaments(store:Store, game:Game, format:Format) -> list[Event]:
-  """Gets tournaments for the matching store, game, and format and returns them in reverse chronological order"""
-  ...
+from tuple_conversions import Event
 
 def GetEliminationStandings(event:Event) -> list[TupleRow]:
   """Gets the elimination rounds for events submitting with Standings"""
@@ -24,7 +19,6 @@ def GetEliminationStandings(event:Event) -> list[TupleRow]:
           event_id = {event.id}
       )
     SELECT
-      fs.event_id,
       INITCAP(COALESCE(ua1.archetype_played, 'Unknown')) AS archetype_played,
       wins,
       losses,
@@ -52,9 +46,10 @@ def GetEliminationStandings(event:Event) -> list[TupleRow]:
       END
     """
 
-    cur.execute(command)
-    standings = cur.fetchall()
-    return standings
+    cur.execute(command)  # type: ignore[arg-type]
+    rows = cur.fetchall()
+    
+    return rows
 
 def GetEliminationPairings(event:Event) -> list[TupleRow]:
   """Gets the elimination rounds for events submitting with Pairings"""
@@ -81,7 +76,7 @@ def GetEliminationPairings(event:Event) -> list[TupleRow]:
       LEFT JOIN unique_archetypes ua1 ON ua1.event_id = fp.event_id
       AND UPPER(ua1.player_name) = UPPER(fp.player_name)
       LEFT JOIN unique_archetypes ua2 ON ua2.event_id = fp.event_id
-      AND UPPER(ua2.player_name) = UPPER(fp.player_name)
+      AND UPPER(ua2.player_name) = UPPER(fp.opponent_name)
     WHERE
       fp.event_id = {event.id}
       AND result != 'LOSS'
@@ -110,6 +105,7 @@ def GetEliminationPairings(event:Event) -> list[TupleRow]:
       fp.round_number DESC
     """
 
-  cur.execute(command)
-  rows = cur.fetchall()
-  return rows
+    cur.execute(command)  # type: ignore[arg-type]
+    rows = cur.fetchall()
+
+    return rows
