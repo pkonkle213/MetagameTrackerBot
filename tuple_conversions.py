@@ -1,5 +1,15 @@
 from typing import NamedTuple
 from datetime import date
+from enum import Enum
+
+class EventType(Enum):
+  Weekly = 1
+  Tournament = 2
+
+class GameEnum(Enum):
+  Magic = 1
+  Lorcana = 2
+  StarWarsUnlimited = 3
 
 class Archetype(NamedTuple):
   EventID: int
