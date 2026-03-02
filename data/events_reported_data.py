@@ -26,6 +26,6 @@ def GetStoreReportedPercentage(discord_id:int):
       f.name
     '''
     
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     rows = cur.fetchall()
     return rows

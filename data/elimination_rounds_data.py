@@ -110,6 +110,6 @@ def GetEliminationPairings(event:Event) -> list[TupleRow]:
       fp.round_number DESC
     """
 
-  cur.execute(command)  # type: ignore[arg-type]
+  cur.execute(command)
   rows = cur.fetchall()
   return rows

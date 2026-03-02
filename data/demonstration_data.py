@@ -11,12 +11,12 @@ def UpdateDemo(event_id, event_date):
     WHERE id = {event_id}
     '''
     
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     conn.commit()
 
 def DeleteDemo():
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'DELETE FROM Events WHERE discord_id = {TESTGUILDID} and id > 12;'
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     conn.commit()

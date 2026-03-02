@@ -42,6 +42,6 @@ def GetPersonalMatchups(
       INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN'))
     '''
     
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     rows = cur.fetchall()
     return rows

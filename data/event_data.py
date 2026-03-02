@@ -71,7 +71,7 @@ def CreateEvent(
     RETURNING id
     '''
 
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     conn.commit()
     event_id = cur.fetchone()
     print('Event ID received:', event_id)
@@ -99,7 +99,7 @@ def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
       draws DESC
     '''
     
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     rows = cur.fetchall()
     return rows
 
@@ -111,7 +111,7 @@ def DeleteStandingsFromEvent(event_id):
     WHERE event_id = {event_id}
     '''
 
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     conn.commit()
     return True
   

@@ -30,7 +30,7 @@ def UpdateStore(
     if melee_secret:
       criteria.append(melee_secret)
       
-    cur.execute(command, criteria)  # type: ignore[arg-type]
+    cur.execute(command, criteria)
     conn.commit()
     row = cur.fetchone()
     if not row:
@@ -45,7 +45,7 @@ def DeleteStore(discord_id) -> bool:
     WHERE discord_id = {discord_id}
     RETURNING TRUE
     '''
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     conn.commit()
     success = cur.fetchone()
     return True if success else False
@@ -65,7 +65,7 @@ def AddStore(discord_id,
     RETURNING discord_id
     '''
 
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     conn.commit()
     row = cur.fetchone()
     if not row:
@@ -98,7 +98,7 @@ def GetClaimFeed(discord_id, category_id):
       AND gcm.category_id = {category_id}
     '''
 
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     row = cur.fetchone()
     return row[0] if row else None
 

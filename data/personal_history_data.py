@@ -46,7 +46,7 @@ def GetPairingsHistory(
       fp.round_number
     '''
 
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     rows = cur.fetchall()
     return rows
     
@@ -88,6 +88,6 @@ def GetStandingsHistory(
       e.event_date DESC
     '''
 
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     rows = cur.fetchall()
     return rows

@@ -81,7 +81,7 @@ def GetStats(
       )
     '''
 
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     rows = cur.fetchall()
     return rows
 
@@ -170,6 +170,6 @@ def GetTopPlayerData(
       player_rank
     """
 
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     rows = cur.fetchall()
     return rows

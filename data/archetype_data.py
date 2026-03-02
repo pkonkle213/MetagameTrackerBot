@@ -34,7 +34,7 @@ def AddArchetype(
       RETURNING id
       '''
 
-      cur.execute(command, criteria)  # type: ignore[arg-type]
+      cur.execute(command, criteria)
       conn.commit()
       row = cur.fetchone()
       if not row:
@@ -65,6 +65,6 @@ def GetUnknownArchetypes(store:Store,
         INITCAP(player_name)
       '''
 
-      cur.execute(command)  # type: ignore[arg-type]
+      cur.execute(command)
       rows = cur.fetchall()
       return rows
