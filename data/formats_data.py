@@ -1,12 +1,14 @@
-import os
-import psycopg2
+from settings import DATABASE_URL
+import psycopg
+from psycopg.rows import class_row
+from tuple_conversions import Format, Game
 
-from tuple_conversions import ConvertToFormat
-
-def AddFormatMap(discord_id:int,
-   format_id:int,
-   channel_id:int):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def AddFormatMap(
+  discord_id:int,
+  format_id:int,
+  channel_id:int
+):
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     INSERT INTO FormatChannelMaps
@@ -22,20 +24,20 @@ def AddFormatMap(discord_id:int,
     RETURNING *
     '''
     
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     conn.commit()
     row = cur.fetchone()
     return row
 
-def GetFormatsByGameId(game):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
+def GetFormatsByGameId(game:Game) -> list[Format]:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Format)) as cur:
     command = f'''
     SELECT id, name, last_ban_update, is_limited
     FROM formats
     WHERE game_id = {game.GameId}
     ORDER BY name
     '''
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
-    return [ConvertToFormat(row) for row in rows] if rows else None
+    return rows

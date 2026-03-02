@@ -103,7 +103,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
       self.message_input.component.value if self.data else None
     )
     self.is_submitted = True
-    await interaction.response.defer()
+    await interaction.response.defer(thinking=False)
   
   async def on_error(
     self,

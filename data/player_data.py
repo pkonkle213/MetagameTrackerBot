@@ -1,14 +1,17 @@
-import os
-import psycopg2
+from datetime import date
+from settings import DATABASE_URL
+import psycopg
 from settings import BOTGUILDID
+from tuple_conversions import Format, Game, Store
 
-def GetStats(discord_id,
-             game,
-             format,
-             user_id,
-             start_date,
-             end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetStats(
+  discord_id:int,
+  game:Game,
+  format:Format,
+  user_id:int,
+  start_date:date,
+  end_date:date):
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -54,7 +57,7 @@ def GetStats(discord_id,
         SELECT
           '1' AS rank,
           ' ' AS format_name,
-          'OVERALL' AS archetype_played,
+          'Overall' AS archetype_played,
           SUM(wins) AS wins,
           SUM(losses) AS losses,
           SUM(draws) AS draws,
@@ -65,7 +68,7 @@ def GetStats(discord_id,
         SELECT
           '2' AS rank,
           format_name,
-          COALESCE(UPPER(archetype_played), 'UNKNOWN') AS archetype_played,
+          COALESCE(INITCAP(archetype_played), 'UNKNOWN') AS archetype_played,
           SUM(wins) AS wins,
           SUM(losses) AS losses,
           SUM(draws) AS draws,
@@ -73,21 +76,23 @@ def GetStats(discord_id,
         FROM
           X
         GROUP BY
-          UPPER(archetype_played),
+          INITCAP(archetype_played),
           X.format_name
       )
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows
 
-def GetTopPlayerData(store,
-                     game,
-                     format,
-                     start_date,
-                     end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetTopPlayerData(
+  store:Store,
+  game:Game,
+  format:Format | None,
+  start_date:date,
+  end_date:date
+):
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
     SELECT
@@ -115,7 +120,7 @@ def GetTopPlayerData(store,
             FROM
               (
                 SELECT
-                  UPPER(player_name) as player_name,
+                  INITCAP(player_name) as player_name,
                   sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percentage,
                   1.0 * count(*) / (
                     SELECT
@@ -137,7 +142,7 @@ def GetTopPlayerData(store,
                   AND game_id = {game.GameId}
                   {f'AND format_id = {format.FormatId}' if format else ''}
                 GROUP BY
-                  UPPER(player_name)
+                  INITCAP(player_name)
               )
           )
       )
@@ -165,6 +170,6 @@ def GetTopPlayerData(store,
       player_rank
     """
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows

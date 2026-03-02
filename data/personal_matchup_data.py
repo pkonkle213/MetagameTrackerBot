@@ -1,12 +1,22 @@
-import os
-import psycopg2
+from datetime import date
+from settings import DATABASE_URL
+import psycopg
 
-def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+from tuple_conversions import Format, Game
+
+def GetPersonalMatchups(
+  discord_id:int,
+  game:Game,
+  format:Format,
+  start_date:date,
+  end_date:date,
+  user_id:int
+):
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      COALESCE(UPPER(ua.archetype_played), 'UNKNOWN') AS archetype_played,
+      INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
       COUNT(CASE WHEN result = 'WIN' THEN 1 END) as wins,
       COUNT(CASE WHEN result = 'LOSS' THEN 1 END) as losses,
       COUNT(CASE WHEN result = 'DRAW' THEN 1 END) as draws,
@@ -26,11 +36,12 @@ def GetPersonalMatchups(discord_id, game, format, start_date, end_date, user_id)
       AND e.game_id = {game.GameId}
       AND e.format_id = {format.FormatId}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-    GROUP BY UPPER(ua.archetype_played)
+    GROUP BY
+      INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN'))
     ORDER BY COUNT(*) DESC, 
-      UPPER(ua.archetype_played)
+      INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN'))
     '''
     
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows

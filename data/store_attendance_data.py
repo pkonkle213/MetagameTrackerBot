@@ -1,19 +1,24 @@
-from settings import DATAGUILDID
-import os
-import psycopg2
+from datetime import date
+from settings import DATAGUILDID, DATABASE_URL
+import psycopg
 
-def GetAttendance(store,
-                  game,
-                  format,
-                  start_date,
-                  end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+from tuple_conversions import Format, Game, Store
+
+def GetAttendance(
+  store:Store,
+  game:Game,
+  format:Format | None,
+  start_date:date,
+  end_date:date
+):
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      e.event_date,
+      TO_CHAR(e.event_date, 'MM/DD') as event_date,
       {'s.store_name,' if store.DiscordId == DATAGUILDID else ''}
       {'f.name,' if not format else ''}
+      e.event_name,
       COUNT(*)
     FROM
       full_standings fp
@@ -23,18 +28,20 @@ def GetAttendance(store,
     WHERE
       e.event_date BETWEEN '{start_date}' AND '{end_date}'
       AND e.game_id = {game.GameId}
-      AND e.format_id = {format.FormatId}
+      {f'AND e.format_id = {format.FormatId}' if format else ''}
       AND s.used_for_data = TRUE
       {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != DATAGUILDID else ''}
     GROUP BY
       {'e.format_id,' if not format else ''}
       {'s.store_name,' if store.DiscordId == DATAGUILDID else ''}
+      {'f.name,' if not format else ''}
       e.event_date,
-      e.game_id
+      e.game_id,
+      e.event_name
     ORDER BY
       e.event_date DESC
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows

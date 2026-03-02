@@ -1,7 +1,6 @@
 from datetime import date
 from typing import Tuple
 import psycopg
-import psycopg2
 from psycopg.rows import class_row
 from settings import DATABASE_URL
 from tuple_conversions import Event
@@ -44,7 +43,7 @@ def CreateEvent(
   event_type_id:int,
   user_id:int
 ) -> int:
-  conn = psycopg2.connect(DATABASE_URL)
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     INSERT INTO Events
@@ -72,7 +71,7 @@ def CreateEvent(
     RETURNING id
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     conn.commit()
     event_id = cur.fetchone()
     print('Event ID received:', event_id)
@@ -81,7 +80,7 @@ def CreateEvent(
     return event_id[0]
 
 def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
-  conn = psycopg2.connect(DATABASE_URL)
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -100,19 +99,19 @@ def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
       draws DESC
     '''
     
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows
 
 def DeleteStandingsFromEvent(event_id):
-  conn = psycopg2.connect(DATABASE_URL)
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     DELETE FROM standings
     WHERE event_id = {event_id}
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     conn.commit()
     return True
   

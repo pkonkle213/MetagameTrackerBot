@@ -1,8 +1,17 @@
-import os
-import psycopg2
+from datetime import date
+from settings import DATABASE_URL
+import psycopg
 
-def GetStoreStandingData(store, game, format, start_date, end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+from tuple_conversions import Format, Game, Store
+
+def GetStoreStandingData(
+  store:Store,
+  game:Game | None,
+  format:Format | None,
+  start_date:date,
+  end_date:date
+) -> list:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT
@@ -35,12 +44,18 @@ def GetStoreStandingData(store, game, format, start_date, end_date):
       draws desc
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows
 
-def GetStorePairingData(store, game, format, start_date, end_date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetStorePairingData(
+  store:Store,
+  game:Game | None,
+  format:Format | None,
+  start_date:date,
+  end_date:date
+) -> list:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -76,12 +91,19 @@ def GetStorePairingData(store, game, format, start_date, end_date):
       frr.player_name
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows
 
-def GetPlayerPairingData(store, game, format, start_date, end_date, user_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetPlayerPairingData(
+  store:Store,
+  game:Game | None,
+  format:Format | None,
+  start_date:date,
+  end_date:date,
+  user_id:int
+) -> list:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -115,18 +137,26 @@ def GetPlayerPairingData(store, game, format, start_date, end_date, user_id):
       round_number
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows
 
-def GetPlayerStandingData(store, game, format, start_date, end_date, user_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetPlayerStandingData(
+  store:Store,
+  game:Game | None,
+  format:Format | None,
+  start_date:date,
+  end_date:date,
+  user_id:int
+) -> list:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT
       INITCAP(g.name) AS Game_Name,
       INITCAP(f.name) AS Format_name,
       e.event_date,
+      e.event_name,
       INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
       fp.wins,
       fp.losses,
@@ -155,7 +185,7 @@ def GetPlayerStandingData(store, game, format, start_date, end_date, user_id):
       draws desc
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows
     

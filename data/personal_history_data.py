@@ -1,23 +1,30 @@
 from datetime import date
-import os
-import psycopg2
-from settings import DATAGUILDID
 
+from psycopg.rows import TupleRow
+from settings import DATABASE_URL
+import psycopg
+from settings import DATAGUILDID
 from tuple_conversions import Format, Game, Store
 
-def GetPairingsHistory(user_id: int, game: Game, format: Format,
-                       start_date: date, end_date: date, store: Store):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetPairingsHistory(
+  user_id: int,
+  game: Game | None,
+  format: Format | None,
+  start_date: date,
+  end_date: date,
+  store: Store
+) -> list[TupleRow]:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      e.event_date,
+      TO_CHAR(e.event_date, 'MM/DD') as event_date,
       {'s.discord_name,' if store.DiscordId == DATAGUILDID else ''}
-      {'g.name AS game_name,' if not game else ''}
-      {'f.name AS format_name,' if not format else ''}
+      {'INITCAP(g.name) AS game_name,' if not game else ''}
+      {'INITCAP(f.name) AS format_name,' if not format else ''}
       fp.round_number,
-      COALESCE(uap.archetype_played, 'Unknown') as players_archetype,
-      COALESCE(uao.archetype_played, 'BYE') as opponents_archetype,
+      INITCAP(COALESCE(uap.archetype_played, 'Unknown')) as players_archetype,
+      INITCAP(COALESCE(uao.archetype_played, 'BYE')) as opponents_archetype,
       fp.result
     FROM
       full_pairings fp
@@ -39,22 +46,28 @@ def GetPairingsHistory(user_id: int, game: Game, format: Format,
       fp.round_number
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows
     
 
-def GetStandingsHistory(user_id: int, game: Game, format: Format,
-                       start_date: date, end_date: date, store: Store):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetStandingsHistory(
+  user_id: int,
+  game: Game | None,
+  format: Format | None,
+  start_date: date,
+  end_date: date,
+  store: Store
+) -> list[TupleRow]:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      event_date,
+      TO_CHAR(event_date, 'MM/DD') as event_date,
       {'s.discord_name,' if store.DiscordId == DATAGUILDID else ''}
-      {'g.name AS game_name,' if not game else ''}
-      {'f.name AS format_name,' if not format else ''}
-      archetype_played,
+      {'INITCAP(g.name) AS game_name,' if not game else ''}
+      {'INITCAP(f.name) AS format_name,' if not format else ''}
+      INITCAP(archetype_played) as archetype_played,
       wins,
       losses,
       draws
@@ -75,6 +88,6 @@ def GetStandingsHistory(user_id: int, game: Game, format: Format,
       e.event_date DESC
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows

@@ -23,7 +23,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
   @app_commands.guild_only()
   @app_commands.checks.has_role('MTSubmitter')
   async def SubmitCheck(self, interaction: Interaction):
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
     issues = ['Issues I detect:']
     store, game, format = GetObjectsFromInteraction(interaction)
 

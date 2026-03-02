@@ -15,7 +15,7 @@ class NewDemoCommand(commands.Cog):
                         description="Set up the database for a demonstration")
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   async def Demo(self, interaction: Interaction):
-    await interaction.response.defer()
+    await interaction.response.defer(thinking=False)
     NewDemo()
     await interaction.followup.send('All set up!')
     

@@ -3,7 +3,12 @@ from settings import DATABASE_URL
 from tuple_conversions import Format, Game, Store
 
 #TODO: I would love to give the top 5 previous archetypes of the player as well as the top 10 in general, but I need to find a awy to UNION the two lists without removing the sorting
-def GetUserArchetypes(store: Store, userId: int, game:Game, format:Format) -> list[str]:
+def GetUserArchetypes(
+  store: Store,
+  userId: int,
+  game:Game,
+  format:Format
+) -> list[str]:
   """Get's a suggested list of archetypes for the user"""
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
@@ -43,7 +48,11 @@ def GetUserArchetypes(store: Store, userId: int, game:Game, format:Format) -> li
     rows = cur.fetchall()
     return [row[0] for row in rows]
 
-def GetUserName(store: Store, userId: int) -> str | None:
+#TODO: I think this is duplicate code....GetPlayerName
+def GetUserName(
+  store: Store,
+  userId: int
+) -> str | None:
   """Gets the user's name from the database"""
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:

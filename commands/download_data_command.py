@@ -32,7 +32,7 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
     end_date: string
       End of Date Range (MM/DD/YYYY)
     """
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
     message, files = GetStoreData(interaction, start_date, end_date)
     if len(files) == 0:
       await interaction.followup.send('No data found for this store')
@@ -61,7 +61,7 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
     end_date: string
       End of Date Range (MM/DD/YYYY)
     """
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
     title, files = GetPlayerData(interaction, start_date, end_date)
     if len(files) == 0:
       await interaction.followup.send('No data found for this player')

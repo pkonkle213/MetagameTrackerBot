@@ -1,8 +1,8 @@
 from settings import DATABASE_URL
-import psycopg2
+import psycopg
 
 def GetUniqueSubmittersPercentage(discord_id:int):
-  conn = psycopg2.connect(DATABASE_URL)
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
     SELECT
@@ -41,6 +41,6 @@ def GetUniqueSubmittersPercentage(discord_id:int):
       p.event_id DESC
     """
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows

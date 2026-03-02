@@ -26,7 +26,7 @@ class BannedWordCommands(commands.GroupCog, name='bannedwords'):
     word: string
       The inappropriate word or phrase to ban
     """
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
     if len(word) < 3:
       await interaction.followup.send('Word must be at least 3 characters long')
     else:
@@ -42,7 +42,7 @@ class BannedWordCommands(commands.GroupCog, name='bannedwords'):
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in PAIDSTORES])
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def StoreOffenders(self, interaction: Interaction):
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
     data, title, headers = Offenders(interaction)
     output = BuildTableOutput(title, headers, data)
     await interaction.followup.send(output)

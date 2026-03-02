@@ -22,7 +22,7 @@ class UniqueSubmitters(commands.Cog):
     discord_id: string
       The discord id of the store to check
     '''
-    await interaction.response.defer()
+    await interaction.response.defer(thinking=False)
     discord_id_int = 0
     if discord_id != '':
       discord_id_int = int(discord_id)

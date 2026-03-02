@@ -1,8 +1,8 @@
-import os
-import psycopg2
+from settings import DATABASE_URL
+import psycopg
 
 def GetSubmittedArchetypes(game, format, store, player_name, date):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     criteria = [player_name] if player_name != '' else []
     command = f'''
@@ -27,7 +27,7 @@ def GetSubmittedArchetypes(game, format, store, player_name, date):
     LIMIT 15
     '''
 
-    cur.execute(command, criteria)
+    cur.execute(command, criteria)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows
     

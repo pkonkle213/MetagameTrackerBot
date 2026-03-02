@@ -33,7 +33,7 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
       End of Date Range (MM/DD/YYYY)
     """
 
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
     output = GetPersonalStandingsHistory(interaction, start_date, end_date)
     await interaction.followup.send(output, ephemeral=True)
 
@@ -57,7 +57,7 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
       End of Date Range (MM/DD/YYYY)
     """
 
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
     output = GetPersonalPairingsHistory(interaction, start_date, end_date)
     await interaction.followup.send(output, ephemeral=True)
 
