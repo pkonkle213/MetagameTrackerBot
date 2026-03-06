@@ -1,13 +1,17 @@
 import discord
 
+from custom_errors import KnownError
 from data.data_input_menus import GetPreviousEvents
 from tuple_conversions import Event, Format, Game, Store
 
 class EventSelector(discord.ui.Modal, title='Select Event'):
-  def __init__(self, store:Store, game:Game, format:Format):
+  def __init__(self, store:Store, game:Game, format:Format, event_type: int = 0):
     super().__init__()
-    self.previous_events = GetPreviousEvents(store, game, format, archetypes=True)
+    self.previous_events = GetPreviousEvents(store, game, format, event_type=event_type, archetypes=True)
 
+    if len(self.previous_events) == 0:
+      raise KnownError('No events submitted in the last 2 weeks.')
+    
     past_events = []
     for i in range(len(self.previous_events)):
       option = self.previous_events[i]

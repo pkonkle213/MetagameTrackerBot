@@ -4,18 +4,23 @@ def MaxLength(headers, collection):
   for header in headers:
     maxLengths.append(len(header) + buffer)
 
+  
   for item in collection:
     for i in range(len(headers)):
       length = len(str(item[i])) + buffer
       if length > maxLengths[i]:
         maxLengths[i] = length
 
+  print('Headers:', headers)
+  print('Max lengths:', maxLengths)
   maxLengths[len(maxLengths) - 1] -= 2
   return maxLengths
 
-def BuildTableOutput(title,
-                     headers,
-                     items):
+def BuildTableOutput(title: str,
+                     headers: list[str],
+                     items: list):
+  if headers == []:
+    raise Exception('No headers provided')
   column_widths = MaxLength(headers, items)
   align = ''
   output = f'```{title}\n\n'

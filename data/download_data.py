@@ -44,7 +44,7 @@ def GetStoreStandingData(
       draws desc
     '''
 
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     rows = cur.fetchall()
     return rows
 
@@ -91,7 +91,7 @@ def GetStorePairingData(
       frr.player_name
     '''
 
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     rows = cur.fetchall()
     return rows
 
@@ -137,7 +137,7 @@ def GetPlayerPairingData(
       round_number
     '''
 
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     rows = cur.fetchall()
     return rows
 
@@ -185,7 +185,7 @@ def GetPlayerStandingData(
       draws desc
     '''
 
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     rows = cur.fetchall()
     return rows
     

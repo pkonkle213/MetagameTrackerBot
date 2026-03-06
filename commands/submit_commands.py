@@ -175,7 +175,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     await Error(self.bot, interaction, error)
 
 
-async def NewDataMessage(bot: commands.Bot, interaction: Interaction,
+async def NewDataMessage(bot: commands.Bot,
+                         interaction: Interaction,
                          isError: bool):
   message = f"""
   {'Could not submit data due to error' if isError else 'Successfully received new data'}

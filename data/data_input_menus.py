@@ -1,3 +1,4 @@
+from typing import Tuple
 from psycopg.rows import class_row
 from settings import DATABASE_URL
 import psycopg
@@ -7,6 +8,7 @@ def GetPreviousEvents(
   store:Store,
   game:Game,
   format:Format,
+  event_type:int = 0,
   interval:int=2,
   archetypes=False
 ) -> list[Event]:
@@ -34,16 +36,18 @@ def GetPreviousEvents(
       AND e.game_id = {game.GameId}
       AND e.format_id = {format.FormatId}
       AND e.event_date >= CURRENT_DATE - INTERVAL '{interval} weeks'
+      {f'AND e.event_type_id = {event_type}' if event_type else ''}
     ORDER BY
-      {'e.event_date DESC' if archetypes else 'e.created_at DESC'}
-    LIMIT 25
+      {'e.event_date DESC' if archetypes or event_type else 'e.created_at DESC'}
+    LIMIT 24
     '''
 
-    cur.execute(command) # type: ignore[arg-type]
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
+    
     return rows
 
-def GetEventTypes():
+def GetEventTypes() -> list[Tuple[int, str]]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = '''

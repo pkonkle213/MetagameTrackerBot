@@ -10,6 +10,6 @@ def GetFive6Users() -> list[int]:
     WHERE discord_id = {FIVE6STOREID}
     '''
 
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     results = cur.fetchall()
     return [result[0] for result in results]

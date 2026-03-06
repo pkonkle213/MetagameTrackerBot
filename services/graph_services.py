@@ -33,7 +33,7 @@ def MetagameScatterPlot(interaction: Interaction, start_date: str,
 
   dataframe = pd.DataFrame(
       data, columns=['Archetype', 'Metagame Percent',
-                     'Win Percent'])  # type: ignore[arg-type]
+                     'Win Percent'])
 
   fig = plt.figure()
   ax = fig.add_subplot()

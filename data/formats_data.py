@@ -24,7 +24,7 @@ def AddFormatMap(
     RETURNING *
     '''
     
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     conn.commit()
     row = cur.fetchone()
     return row
@@ -38,6 +38,6 @@ def GetFormatsByGameId(game:Game) -> list[Format]:
     WHERE game_id = {game.GameId}
     ORDER BY name
     '''
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     rows = cur.fetchall()
     return rows

@@ -27,7 +27,7 @@ def GetSubmittedArchetypes(game, format, store, player_name, date):
     LIMIT 15
     '''
 
-    cur.execute(command, criteria)  # type: ignore[arg-type]
+    cur.execute(command, criteria)
     rows = cur.fetchall()
     return rows
     

@@ -23,7 +23,7 @@ def GetPlayerName(
       AND submitter_id = {user_id}
     """
     
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     row = cur.fetchone()
     if not row:
       raise Exception('Unable to get player name')
@@ -51,7 +51,7 @@ def GetWinPercentage(
       AND e.format_id = {format.FormatId}
       AND e.game_id = {game.GameId}
     """
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     row = cur.fetchone()
     if not row:
       raise Exception('Unable to get win percentage')
@@ -89,7 +89,7 @@ def GetLastArchetype(
     LIMIT 1
     """
     
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     row = cur.fetchone()
     if not row:
       raise Exception('Unable to get last archetype')
@@ -133,6 +133,6 @@ def GetMostPlayed(user_id: int,
       3
     """
 
-    cur.execute(command)  # type: ignore[arg-type]
+    cur.execute(command)
     rows = cur.fetchall()
     return rows
