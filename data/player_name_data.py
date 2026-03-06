@@ -13,37 +13,27 @@ def GetUserArchetypes(
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = """
-    WITH
-      X AS (
-        SELECT
-          ua.event_id,
-          ua.player_name,
-          pn.submitter_id,
-          ua.archetype_played
-        FROM
-          unique_archetypes ua
-          INNER JOIN player_names pn ON INITCAP(ua.player_name) = INITCAP(pn.player_name)
-          INNER JOIN events e ON e.id = ua.event_id
-        WHERE
-          e.discord_id = %s
-          AND e.game_id = %s
-          AND e.format_id = %s
-      )
     SELECT
-      INITCAP(archetype_played) AS archetype_played
+      INITCAP(ua.archetype_played) AS archetype_played
     FROM
-      X
+      unique_archetypes ua
+      INNER JOIN events e ON e.id = ua.event_id
+      INNER JOIN player_names pn ON e.discord_id = pn.discord_id
+      AND upper(ua.player_name) = upper(pn.player_name)
     WHERE
-      X.submitter_id = %s
+      pn.submitter_id = %s
+      AND pn.discord_id = %s
+      AND e.game_id = %s
+      AND e.format_id = %s
     GROUP BY
-      INITCAP(archetype_played)
+      INITCAP(ua.archetype_played)
     ORDER BY
-      1.0 * COUNT(*) / SUM(COUNT(*)) OVER () DESC
+      COUNT(*) DESC
     LIMIT
-      5
+      10
     """
 
-    criteria = [store.DiscordId, game.GameId, format.FormatId, userId]
+    criteria = [userId, store.DiscordId, game.GameId, format.FormatId]
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return [row[0] for row in rows]
