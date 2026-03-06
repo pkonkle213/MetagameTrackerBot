@@ -16,7 +16,7 @@ class MappingCommands(commands.GroupCog, name='map'):
   @app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
   async def AddClaimFeedMap(self, interaction: Interaction):
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
     output = MapClaimFeed(interaction)
     await interaction.followup.send(output, ephemeral=True)
   
@@ -25,7 +25,7 @@ class MappingCommands(commands.GroupCog, name='map'):
   @app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
   async def AddGameMap(self, interaction: Interaction):
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
     message = 'Please select a game'
     placeholder = 'Choose a game'
     dynamic_options = GetGameOptions()
@@ -44,7 +44,7 @@ class MappingCommands(commands.GroupCog, name='map'):
   @app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
   async def AddFormatMap(self, interaction: Interaction):
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
     dynamic_options = GetFormatOptions(interaction)
     if dynamic_options is None or len(dynamic_options) == 0:
       await interaction.followup.send('No formats found for this game')

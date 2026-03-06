@@ -1,8 +1,8 @@
-import os
-import psycopg2
+from settings import DATABASE_URL
+import psycopg
 
-def GetEventReportedPercentage(event_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetEventReportedPercentage(event_id:int) -> float:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
     SELECT
@@ -21,19 +21,23 @@ def GetEventReportedPercentage(event_id):
     
     cur.execute(command)
     row = cur.fetchone()
-    return row[0] if row else None
+    if not row:
+      raise Exception('Unable to get event reported percentage')
+    return row[0]
 
-def UpdateEvent(event_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def UpdateEvent(event_id:int) -> int:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     UPDATE events
     SET last_update = last_update + 1
     WHERE id = {event_id}
-    RETURNING *
+    RETURNING id
     '''
     
     cur.execute(command)
     conn.commit()
     row = cur.fetchone()
-    return row
+    if not row:
+      raise Exception('Unable to update event')
+    return row[0]

@@ -18,21 +18,24 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
   def __init__(self, store:Store, game:Game, format:Format, data:bool = True):
     super().__init__()
     today = GetToday().strftime('%m/%d/%Y')
-    self.previous_events = GetPreviousEvents(store, game, format)
     self.data = data
     event_types = GetEventTypes()
       
-    default_event_name = f'{format.FormatName}'
-  
+    default_event_name = f'{format.FormatName.title()}'
+
+    self.previous_events = GetPreviousEvents(store, game, format)
+    default_id = FindDefaultEvent(self.previous_events)
     past_events = []
     for i in range(len(self.previous_events)):
       option = self.previous_events[i]
-      label = f"{option[1]} - {option[2]}"
-      if i == 0:
-        past_events.append(discord.SelectOption(label=label, value=option[0], default=True))
+      label = f"{option.event_date.strftime('%m/%d')} - {option.event_name}"
+      value = str(option.id)
+      if option.id == default_id:
+        past_events.append(discord.SelectOption(label=label, value=value, default=True))
       else:
-        past_events.append(discord.SelectOption(label=label, value=option[0]))
-    past_events.append(discord.SelectOption(label='Create A New Event', value='0'))
+        past_events.append(discord.SelectOption(label=label, value=value))
+
+    past_events.append(discord.SelectOption(label='Create A New Event', value='0', default=True if default_id == 0 else False))
     
     event_types = [
       discord.SelectOption(label=type[1], value=type[0]) for type in event_types
@@ -102,7 +105,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
       self.message_input.component.value if self.data else None
     )
     self.is_submitted = True
-    await interaction.response.defer()
+    await interaction.response.defer(thinking=False)
   
   async def on_error(
     self,
@@ -143,3 +146,11 @@ def SetEventDateAndName(
   if not event:
     raise KnownError('Event not found')
   return event
+
+def FindDefaultEvent(previous_events) -> int:
+  today = GetToday().strftime('%m/%d/%Y')
+  for event in previous_events:
+    if event.event_date.strftime('%m/%d/%Y') == today:
+      return event.id
+  
+  return 0

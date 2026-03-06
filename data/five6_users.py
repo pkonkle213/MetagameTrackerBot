@@ -1,8 +1,8 @@
 from settings import FIVE6STOREID, DATABASE_URL
-import psycopg2
+import psycopg
 
 def GetFive6Users() -> list[int]:
-  conn = psycopg2.connect(DATABASE_URL)
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT DISTINCT submitter_id

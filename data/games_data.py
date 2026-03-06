@@ -1,11 +1,14 @@
+from psycopg.rows import class_row
 from settings import DATABASE_URL
-import psycopg2
-from tuple_conversions import ConvertToGame
+import psycopg
+from tuple_conversions import Game
 
-def AddGameMap(discord_id:int,
-   game_id:int,
-   category_id:int):
-  conn = psycopg2.connect(DATABASE_URL)
+def AddGameMap(
+  discord_id:int,
+  game_id:int,
+  category_id:int
+):
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     INSERT INTO GameCategoryMaps
@@ -26,9 +29,9 @@ def AddGameMap(discord_id:int,
     row = cur.fetchone()
     return row
 
-def GetAllGames():
-  conn = psycopg2.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+def GetAllGames() -> list[Game]:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Game)) as cur:
     command = '''
     SELECT id, name
     FROM Games
@@ -36,5 +39,5 @@ def GetAllGames():
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    return [ConvertToGame(row) for row in rows]
+    return rows
     

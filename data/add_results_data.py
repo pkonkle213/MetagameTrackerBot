@@ -1,12 +1,18 @@
-from typing import Any
 from settings import DATABASE_URL
-import psycopg2
+import psycopg
+from tuple_conversions import Standing
 
-
-def SubmitTable(event_id: int, p1name: str, p1wins: int, p2name: str,
-                p2wins: int, round_number: int,
-                submitter_id: int) -> int | None:
-  conn = psycopg2.connect(DATABASE_URL)
+#TODO: Why am is this not receiving a Pairing object?
+def InsertPairing(
+  event_id: int,
+  p1name: str,
+  p1wins: int,
+  p2name: str,
+  p2wins: int,
+  round_number: int,
+  submitter_id: int
+) -> int | None:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     try:
       command = '''
@@ -29,18 +35,28 @@ def SubmitTable(event_id: int, p1name: str, p1wins: int, p2name: str,
       '''
 
       criteria = [
-          event_id, round_number, p1wins, p2wins, p1name, p2name, submitter_id
+        event_id,
+        round_number,
+        p1wins,
+        p2wins,
+        p1name,
+        p2name,
+        submitter_id
       ]
       cur.execute(command, criteria)
       conn.commit()
       row = cur.fetchone()
       return row[0] if row else None
-    except psycopg2.errors.UniqueViolation:
+    except psycopg.errors.UniqueViolation:
       return None
 
 
-def AddResult(event_id, player, submitter_id) -> int | None:
-  conn = psycopg2.connect(DATABASE_URL)
+def InsertStanding(
+  event_id:int,
+  player:Standing,
+  submitter_id:int
+) -> int | None:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     try:
       command = '''
@@ -62,13 +78,17 @@ def AddResult(event_id, player, submitter_id) -> int | None:
       '''
 
       criteria = [
-          event_id, player.PlayerName, player.Wins, player.Losses,
-          player.Draws, submitter_id
+        event_id,
+        player.PlayerName,
+        player.Wins,
+        player.Losses,
+        player.Draws,
+        submitter_id
       ]
       cur.execute(command, criteria)
 
       conn.commit()
       row = cur.fetchone()
       return row[0] if row else None
-    except psycopg2.errors.UniqueViolation:
+    except psycopg.errors.UniqueViolation:
       return None

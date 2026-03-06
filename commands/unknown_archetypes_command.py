@@ -30,11 +30,10 @@ class UnknownArchetypes(commands.Cog):
     end_date: string
       End of Date Range (MM/DD/YYYY)
     """
-    await interaction.response.defer()
+    await interaction.response.defer(thinking=False)
     data, title, headers = GetAllUnknown(interaction, start_date, end_date)
     if data is None or len(data) == 0:
-      await interaction.followup.send(
-          'Congratulations! No unknown archetypes found for this format')
+      await interaction.followup.send('Congratulations! No unknown archetypes found for this format')
     else:
       output = BuildTableOutput(title, headers, data)
       output = output[:-3] + '\nTo submit yours, type and enter: /submit archetype```'

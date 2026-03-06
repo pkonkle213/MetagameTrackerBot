@@ -1,27 +1,16 @@
+from datetime import date
 from settings import DATABASE_URL
 import psycopg
-from dataclasses import dataclass
 
-@dataclass
-class Archetype:
-  """Represents a submitted archetype"""
-  EventId: int
-  PlayerName: str
-  Archetype: str
-  SubmitterId: str
-  SubmitterName: str
+from tuple_conversions import Format, Store, Game
 
-@dataclass
-class UnknownArchetype:
-  """Represents an unknown archetype"""
-  event_date: str
-  player_name: str
-
-def AddArchetype(event_id,
-  player_name,
-  archetype_played,
-  submitter_id,
-  submitter_name):
+def AddArchetype(
+  event_id:int,
+  player_name:str,
+  archetype_played:str,
+  submitter_id:int,
+  submitter_name:str
+) -> int:
   criteria = [player_name, archetype_played]
   with psycopg.connect(DATABASE_URL) as conn:
     with conn.cursor() as cur:
@@ -42,42 +31,40 @@ def AddArchetype(event_id,
       {submitter_id},
       '{submitter_name}',
       {False})
-      RETURNING event_id,
-      player_name,
-      archetype_played,
-      submitter_id,
-      submitter_username
+      RETURNING id
       '''
-      
-      cur.execute(command, criteria)  # type: ignore[arg-type]
+
+      cur.execute(command, criteria)
       conn.commit()
       row = cur.fetchone()
-      print(row)
-      return row
+      if not row:
+        raise Exception('Unable to add archetype')
+      return row[0]
 
-def GetUnknownArchetypes(discord_id,
-                         game_id,
-                         format_id,
-                         start_date,
-                         end_date) -> list:
+def GetUnknownArchetypes(store:Store,
+                         game:Game,
+                         format:Format,
+                         start_date:date,
+                         end_date:date) -> list:
   with psycopg.connect(DATABASE_URL) as conn:
     with conn.cursor() as cur:
       command = f'''
       SELECT
-        event_date,
-        player_name
+        TO_CHAR(event_date,'MM/DD') as event_date,
+        event_name,
+        INITCAP(player_name) as player_name
       FROM
-        unknown_archetypes
+        unknown_archetypes ua
       WHERE
         event_date BETWEEN '{start_date}' AND '{end_date}'
-        AND game_id = {game_id}
-        AND format_id = {format_id}
-        AND discord_id = {discord_id}
+        AND game_id = {game.GameId}
+        AND format_id = {format.FormatId}
+        AND discord_id = {store.DiscordId}
       ORDER BY
         event_date desc,
-        player_name
+        INITCAP(player_name)
       '''
 
-      cur.execute(command)  # type: ignore[arg-type]
+      cur.execute(command)
       rows = cur.fetchall()
       return rows

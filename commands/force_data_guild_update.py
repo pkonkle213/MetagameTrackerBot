@@ -13,7 +13,7 @@ class ForceDataGuildUpdate(commands.Cog):
                                 description="Force an update of the data guild")
   @discord.app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in TARGET_GUILDS])
   async def ForceUpdate(self, interaction: discord.Interaction):
-    await interaction.response.defer()
+    await interaction.response.defer(thinking=False)
     try:
       await UpdateDataGuild(self.bot)
       await interaction.followup.send("Data guild updated!")

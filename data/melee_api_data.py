@@ -1,10 +1,15 @@
-import psycopg2
-import os
-from collections import namedtuple
+from typing import NamedTuple
+import psycopg
+from psycopg.rows import class_row
+from settings import DATABASE_URL
 
-def GetStoreMeleeInfo(store):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
+class Details(NamedTuple):
+  ClientId: str
+  ClientSecret: str
+
+def GetStoreMeleeInfo(store) -> Details | None:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Details)) as cur:
     command =  f'''
     SELECT
       melee_client_id,
@@ -15,10 +20,6 @@ def GetStoreMeleeInfo(store):
       discord_id = {store.DiscordId}
     '''
 
-    Details = namedtuple('ApiDetail',
-                         ['ClientId',
-                          'ClientSecret']
-                        )
     cur.execute(command)
     row = cur.fetchone()
-    return Details(row[0],row[1]) if row else Details(None, None)
+    return row

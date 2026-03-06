@@ -23,7 +23,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
   @app_commands.guild_only()
   @app_commands.checks.has_role('MTSubmitter')
   async def SubmitCheck(self, interaction: Interaction):
-    await interaction.response.defer(ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
     issues = ['Issues I detect:']
     store, game, format = GetObjectsFromInteraction(interaction)
 
@@ -46,21 +46,24 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
                         description="Submit a player's archetype for an event")
   @app_commands.guild_only()
   async def SubmitArchetypeCommand(self, interaction: Interaction):
-    try:
-      player_name, date, archetype = await GetUserInput(interaction)
-      private_output, feed_output, public_output, full_event = await AddTheArchetype(interaction, player_name, date, archetype)
-      await interaction.followup.send(private_output, ephemeral=True)
-      await MessageStoreFeed(self.bot, feed_output, interaction)
-      if public_output:
-        await MessageChannel(self.bot, public_output, interaction.guild_id,
-                             interaction.channel_id)
-      if full_event:
-        await MessageChannel(self.bot, full_event, interaction.guild_id,
-                             interaction.channel_id)
-    except ValueError:
-      await interaction.followup.send(
-          "The date provided doesn't match the MM/DD/YYYY formatting. Please try again",
-          ephemeral=True)
+    store, game, format = GetObjectsFromInteraction(interaction)
+    userId = interaction.user.id
+
+    if not store or not game or not format:
+      raise KnownError('No store, game, or format found.')
+
+    #TODO: I would like to keep messages to the user in the command layer. The service should just return the data or throw errors
+    player_name, event, archetype = await GetUserInput(store, game, format, userId, interaction)
+    private_output, feed_output, public_output, full_event = await AddTheArchetype(interaction, player_name, event, archetype, store, game, format)
+    await interaction.followup.send(private_output, ephemeral=True)
+    await MessageStoreFeed(self.bot, feed_output, interaction)
+    if public_output:
+      await MessageChannel(self.bot, public_output, interaction.guild_id,
+                           interaction.channel_id)
+    if full_event:
+      await MessageChannel(self.bot, full_event, interaction.guild_id,
+                           interaction.channel_id)
+
 
   @app_commands.command(
     name="data",
@@ -172,7 +175,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     await Error(self.bot, interaction, error)
 
 
-async def NewDataMessage(bot: commands.Bot, interaction: Interaction,
+async def NewDataMessage(bot: commands.Bot,
+                         interaction: Interaction,
                          isError: bool):
   message = f"""
   {'Could not submit data due to error' if isError else 'Successfully received new data'}

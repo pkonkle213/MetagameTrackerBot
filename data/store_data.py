@@ -1,16 +1,18 @@
-import os
-import psycopg2
-from tuple_conversions import ConvertToStore, Store
+from psycopg.rows import class_row
+from settings import DATABASE_URL
+import psycopg
+from tuple_conversions import Store
 
-def UpdateStore(discord_id
-                , owner_name
-                , store_name
-                , store_address
-                , melee_id
-                , melee_secret
-               ) -> Store | None:
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
+def UpdateStore(
+  discord_id:int,
+  owner_name:str,
+  store_name:str,
+  store_address:str,
+  melee_id:str | None,
+  melee_secret:str | None
+) -> Store:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Store)) as cur:
     command = f'''
     UPDATE Stores
     SET store_name = %s
@@ -31,10 +33,12 @@ def UpdateStore(discord_id
     cur.execute(command, criteria)
     conn.commit()
     row = cur.fetchone()
-    return ConvertToStore(row) if row else None
+    if not row:
+      raise Exception(f'Unable to update store: {discord_id}')
+    return row
 
 def DeleteStore(discord_id) -> bool:
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     DELETE FROM Stores
@@ -50,7 +54,7 @@ def AddStore(discord_id,
   discord_name,
   owner_id,
   owner_name) -> int:
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg.connect(DATABASE_URL)
   discord_name = discord_name.replace("'","")
   with conn, conn.cursor() as cur:
     command = f'''
@@ -69,7 +73,7 @@ def AddStore(discord_id,
     return row[0] 
 
 def GetAllStoreDiscordIds():
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = '''
     SELECT discord_id
@@ -80,7 +84,7 @@ def GetAllStoreDiscordIds():
     return [row[0] for row in rows]
 
 def GetClaimFeed(discord_id, category_id):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -99,7 +103,7 @@ def GetClaimFeed(discord_id, category_id):
     return row[0] if row else None
 
 def GetPaidStoreIds():
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = '''
     SELECT

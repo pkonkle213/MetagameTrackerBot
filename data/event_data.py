@@ -1,7 +1,6 @@
 from datetime import date
 from typing import Tuple
 import psycopg
-import psycopg2
 from psycopg.rows import class_row
 from settings import DATABASE_URL
 from tuple_conversions import Event
@@ -44,7 +43,7 @@ def CreateEvent(
   event_type_id:int,
   user_id:int
 ) -> int:
-  conn = psycopg2.connect(DATABASE_URL)
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     INSERT INTO Events
@@ -80,8 +79,8 @@ def CreateEvent(
       raise Exception('Unable to create event')
     return event_id[0]
 
-def GetEventMeta(event_id) -> list[Tuple[str,int,int,int]]:
-  conn = psycopg2.connect(DATABASE_URL)
+def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
@@ -105,7 +104,7 @@ def GetEventMeta(event_id) -> list[Tuple[str,int,int,int]]:
     return rows
 
 def DeleteStandingsFromEvent(event_id):
-  conn = psycopg2.connect(DATABASE_URL)
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     DELETE FROM standings

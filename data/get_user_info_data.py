@@ -1,14 +1,17 @@
-from collections import namedtuple
-import os
-import psycopg2
-
+from psycopg.rows import class_row
+from datetime import date
+from typing import NamedTuple
+from settings import DATABASE_URL
+import psycopg
 from tuple_conversions import Format, Game, Store
 
 
-def GetPlayerName(user_id: int,
-                  discord_id: int):
+def GetPlayerName(
+  user_id: int,
+  discord_id: int
+) -> str:
   """Pulls the player name for a userId and a discordId from the database"""
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
     SELECT
@@ -22,13 +25,17 @@ def GetPlayerName(user_id: int,
     
     cur.execute(command)
     row = cur.fetchone()
-    return row[0] if row else None
+    if not row:
+      raise Exception('Unable to get player name')
+    return row[0]
 
-def GetWinPercentage(user_id: int,
-                     store: Store,
-                     game: Game,
-                     format: Format):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
+def GetWinPercentage(
+  user_id: int,
+  store: Store,
+  game: Game,
+  format: Format
+) -> float:
+  conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
     SELECT
@@ -46,20 +53,27 @@ def GetWinPercentage(user_id: int,
     """
     cur.execute(command)
     row = cur.fetchone()
-    return row[0] if row else None
+    if not row:
+      raise Exception('Unable to get win percentage')
+    return row[0]
 
-LastArchetype = namedtuple('LastArchetype',['Date','Archetype'])
+#TODO: I'm anticipating this throws an error because the attributes are not 1:1 to the column names in the database
+class LastArchetype(NamedTuple):
+  EventDate: date
+  Archetype: str
 
-def GetLastArchetype(user_id: int,
-                  store: Store,
-                  game: Game,
-                  format: Format):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
+def GetLastArchetype(
+  user_id: int,
+  store: Store,
+  game: Game,
+  format: Format
+) -> LastArchetype:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(LastArchetype)) as cur:
     command = f"""
     SELECT
       e.event_date,
-      archetype_played
+      INITCAP(archetype_played) as archetype_played
     FROM
       full_standings fs
       INNER JOIN events e ON fs.event_id = e.id
@@ -77,16 +91,22 @@ def GetLastArchetype(user_id: int,
     
     cur.execute(command)
     row = cur.fetchone()
-    return LastArchetype(row[0], row[1].title()) if row else None
+    if not row:
+      raise Exception('Unable to get last archetype')
+    return row
 
-TopDeck = namedtuple('TopDecks',['Archetype','WinPercentage','ChancePlayed'])
-
+#TODO: I'm anticipating this throws an error because the attributes are not 1:1 to the column names in the database
+class TopDeck(NamedTuple):
+  Archetype: str
+  WinPercentage: float
+  ChancePlayed: float
+  
 def GetMostPlayed(user_id: int,
                   store: Store,
                   game: Game,
-                  format: Format):
-  conn = psycopg2.connect(os.environ['DATABASE_URL'])
-  with conn, conn.cursor() as cur:
+                  format: Format) -> list[TopDeck]:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(TopDeck)) as cur:
     command = f"""
     SELECT
       UPPER(archetype_played) AS archetype_played,
@@ -115,4 +135,4 @@ def GetMostPlayed(user_id: int,
 
     cur.execute(command)
     rows = cur.fetchall()
-    return [TopDeck(row[0].title(), row[1], row[2]) for row in rows] if rows else None
+    return rows

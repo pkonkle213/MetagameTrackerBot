@@ -14,7 +14,7 @@ FROM
   INNER JOIN formats f ON f.id = e.format_id
   INNER JOIN cardgames g ON g.id = e.game_id
   INNER JOIN player_names pn ON s.discord_id = pn.discord_id
-  AND pn.player_name = frr.player_name
+  AND UPPER(pn.player_name) = UPPER(frr.player_name)
 WHERE
   pn.submitter_id = {submitter_id}
 ORDER BY
