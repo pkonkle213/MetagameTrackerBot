@@ -1,3 +1,4 @@
+from typing import Tuple
 from psycopg.rows import class_row
 from settings import DATABASE_URL
 import psycopg
@@ -38,7 +39,7 @@ def GetPreviousEvents(
       {f'AND e.event_type_id = {event_type}' if event_type else ''}
     ORDER BY
       {'e.event_date DESC' if archetypes or event_type else 'e.created_at DESC'}
-    LIMIT 25
+    LIMIT 24
     '''
 
     cur.execute(command)  # type: ignore[arg-type]
@@ -46,7 +47,7 @@ def GetPreviousEvents(
     
     return rows
 
-def GetEventTypes():
+def GetEventTypes() -> list[Tuple[int, str]]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = '''

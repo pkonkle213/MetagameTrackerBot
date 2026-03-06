@@ -2,7 +2,6 @@ from discord import app_commands, Interaction
 from discord.ext import commands
 from interaction_objects import GetObjectsFromInteraction
 from input_modals.event_selector import EventSelector
-from output_builder import BuildTableOutput
 from services.command_error_service import KnownError
 from services.elimination_rounds_services import GetEliminationRoundData
 from services.command_error_service import Error

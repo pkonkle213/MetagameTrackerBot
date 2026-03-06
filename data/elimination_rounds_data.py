@@ -56,53 +56,35 @@ def GetEliminationPairings(event:Event) -> list[TupleRow]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
-    WITH
-      X AS (
-        SELECT
-          MAX(round_number) AS max_rounds,
-          COUNT(DISTINCT player_name) AS players
-        FROM
-          full_pairings
-        WHERE
-          event_id = {event.id}
-      )
     SELECT
-      fp.round_number,
-      INITCAP(COALESCE(ua1.archetype_played, 'Unknown')) AS p1_archetype_played,
-      INITCAP(COALESCE(ua2.archetype_played, 'Unknown')) AS p2_archetype_played,
-      fp.result
+      round_number,
+      INITCAP(COALESCE(ua1.archetype_played, 'Unknown')) AS player1_archetype,
+      player1_game_wins,
+      INITCAP(COALESCE(ua2.archetype_played, 'Unknown')) AS player2_archetype,
+      player2_game_wins
     FROM
-      full_pairings fp
-      LEFT JOIN unique_archetypes ua1 ON ua1.event_id = fp.event_id
-      AND UPPER(ua1.player_name) = UPPER(fp.player_name)
-      LEFT JOIN unique_archetypes ua2 ON ua2.event_id = fp.event_id
-      AND UPPER(ua2.player_name) = UPPER(fp.opponent_name)
+      pairings p
+      LEFT JOIN unique_archetypes ua1 ON ua1.event_id = p.event_id
+      AND UPPER(ua1.player_name) = UPPER(p.player1_name)
+      LEFT JOIN unique_archetypes ua2 ON ua2.event_id = p.event_id
+      AND UPPER(ua2.player_name) = UPPER(p.player2_name)
     WHERE
-      fp.event_id = {event.id}
-      AND result != 'LOSS'
-      AND fp.round_number > (
-        SELECT
-          max_rounds
-        FROM
-          X
-        LIMIT
-          1
-      ) - (
-        SELECT
-          CASE
-            WHEN (
-              SELECT
-                players
-              FROM
-                X
-              LIMIT
-                1
-            ) < 17 THEN 2
-            ELSE 3
-          END
+      p.event_id = {event.id}
+      AND round_number > CEIL(
+        LOG(
+          2,
+          (
+            SELECT
+              COUNT(*)
+            FROM
+              full_standings
+            WHERE
+              event_id = {event.id}
+          )
+        )
       )
     ORDER BY
-      fp.round_number DESC
+      round_number DESC
     """
 
     cur.execute(command)  # type: ignore[arg-type]
