@@ -54,7 +54,6 @@ async def sync_paid_users():
   with contextlib.suppress(Exception):
     UpdatePaidUsers()
 
-
 @sync_paid_users.before_loop
 async def before_sync_paid_users():
   await bot.wait_until_ready()

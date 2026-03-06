@@ -97,77 +97,59 @@ def GetTopPlayerData(
     command = f"""
     SELECT
       player_name,
-      attendance_percentage,
-      win_percentage
+      round(attendance_percentage * 100, 2) AS attendance_percentage,
+      round(win_percentage * 100, 2) AS win_percentage
     FROM
       (
         SELECT
-          ROW_NUMBER() OVER (
-            ORDER BY
-              Combined DESC
-          ) AS player_rank,
-          player_name,
-          round(attendance_percentage * 100, 2) AS attendance_percentage,
-          round(win_percentage * 100, 2) AS win_percentage,
-          round(attendance_percentage * win_percentage * 100, 2) AS Combined
-        FROM
-          (
+          INITCAP(player_name) AS player_name,
+          sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percentage,
+          1.0 * count(*) / (
             SELECT
-              player_name,
-              attendance_percentage,
-              win_percentage,
-              attendance_percentage * win_percentage AS Combined
+              COUNT(*)
             FROM
-              (
-                SELECT
-                  INITCAP(player_name) as player_name,
-                  sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percentage,
-                  1.0 * count(*) / (
-                    SELECT
-                      COUNT(*)
-                    FROM
-                      events
-                    WHERE
-                      event_date BETWEEN '{start_date}' AND '{end_date}'
-                      {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILDID else ''}
-                      AND game_id = {game.GameId}
-                      {f'AND format_id = {format.FormatId}' if format else ''}
-                  ) AS attendance_percentage
-                FROM
-                  events e
-                  INNER JOIN full_standings fp ON fp.event_id = e.id
-                WHERE
-                  event_date BETWEEN '{start_date}' AND '{end_date}'
-                  {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILDID else ''}
-                  AND game_id = {game.GameId}
-                  {f'AND format_id = {format.FormatId}' if format else ''}
-                GROUP BY
-                  INITCAP(player_name)
-              )
-          )
-      )
-    WHERE
-      player_rank < .5 * (
-        SELECT
-          AVG(participants) AS average_participants
-        FROM
-          (
-            SELECT
-              count(*) AS participants
-            FROM
-              events e
-              LEFT JOIN full_standings fp ON fp.event_id = e.id
+              events
             WHERE
               event_date BETWEEN '{start_date}' AND '{end_date}'
               {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILDID else ''}
               AND game_id = {game.GameId}
               {f'AND format_id = {format.FormatId}' if format else ''}
-            GROUP BY
-              e.id
-          )
+          ) AS attendance_percentage
+        FROM
+          events e
+          INNER JOIN full_standings fp ON fp.event_id = e.id
+        WHERE
+          event_date BETWEEN '{start_date}' AND '{end_date}'
+          {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILDID else ''}
+          AND game_id = {game.GameId}
+          {f'AND format_id = {format.FormatId}' if format else ''}
+        GROUP BY
+          INITCAP(player_name)
       )
     ORDER BY
-      player_rank
+      attendance_percentage * win_percentage DESC
+    LIMIT
+      CEIL(
+        .5 * (
+          SELECT
+            AVG(participants) AS average_participants
+          FROM
+            (
+              SELECT
+                count(*) AS participants
+              FROM
+                events e
+                LEFT JOIN full_standings fp ON fp.event_id = e.id
+              WHERE
+                event_date BETWEEN '{start_date}' AND '{end_date}'
+                {f'AND discord_id = {store.DiscordId}' if store.DiscordId != BOTGUILDID else ''}
+                AND game_id = {game.GameId}
+                {f'AND format_id = {format.FormatId}' if format else ''}
+              GROUP BY
+                e.id
+            )
+        )
+      )
     """
 
     cur.execute(command)
