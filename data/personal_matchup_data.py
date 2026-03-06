@@ -1,7 +1,6 @@
 from datetime import date
 from settings import DATABASE_URL
 import psycopg
-
 from tuple_conversions import Format, Game
 
 def GetPersonalMatchups(
@@ -43,36 +42,6 @@ def GetPersonalMatchups(
       1
     '''
 
-"""
-SELECT
-  COALESCE(INITCAP(ua.archetype_played), 'UNKNOWN') AS archetype_played,
-  COUNT(*) as total_matches,
-  COUNT(CASE WHEN result = 'WIN' THEN 1 END) as wins,
-  COUNT(CASE WHEN result = 'LOSS' THEN 1 END) as losses,
-  COUNT(CASE WHEN result = 'DRAW' THEN 1 END) as draws,
-  ROUND(1.0 * COUNT(CASE WHEN result = 'WIN' THEN 1 END) / (COUNT(CASE WHEN result = 'WIN' THEN 1 END) + COUNT(CASE WHEN result = 'LOSS' THEN 1 END) + COUNT(CASE WHEN result = 'DRAW' THEN 1 END)) * 100, 2) as win_percent
-FROM
-  full_pairings fp
-  INNER JOIN events e ON fp.event_id = e.id
-  LEFT JOIN unique_archetypes ua ON UPPER(fp.opponent_name) = UPPER(ua.player_name)
-    AND ua.event_id = fp.event_id
-  INNER JOIN player_names pn ON pn.discord_id = e.discord_id
-    AND UPPER(fp.player_name) = UPPER(pn.player_name)
-WHERE
-  pn.submitter_id = 153591222148136970
-  AND UPPER(fp.opponent_name) != 'BYE'
-  AND e.discord_id = 1210746744602890310
-  AND e.game_id = 1
-  AND e.format_id = 1
-  AND e.event_date >= '1/1/2026'
-GROUP BY
-  INITCAP(ua.archetype_played)
-ORDER BY
-  2 DESC,
-  1
-"""
-    
-    
     cur.execute(command)
     rows = cur.fetchall()
     return rows
