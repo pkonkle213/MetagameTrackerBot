@@ -1,15 +1,16 @@
+from psycopg.rows import TupleRow
 from settings import DATABASE_URL
 import psycopg
 
-def GetStoreReportedPercentage(discord_id:int):
+def GetStoreReportedPercentage(discord_id:int) -> list[TupleRow]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
       e.event_date,
       s.store_name,
-      g.name as game_name,
-      f.name as format_name,
+      g.game_name as game_name,
+      f.format_name as format_name,
       er.reported,
       er.total_attended,
       ROUND(100.0 * reported_percent, 2) AS reported_percent
@@ -23,7 +24,7 @@ def GetStoreReportedPercentage(discord_id:int):
     ORDER BY
       e.event_date DESC,
       s.store_name,
-      f.name
+      f.format_name
     '''
     
     cur.execute(command)

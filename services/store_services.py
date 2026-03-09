@@ -22,7 +22,7 @@ async def UpdateStoreDetails(interaction: discord.Interaction):
   # Now get store from database after modal is submitted
   store = GetObjectsFromInteraction(interaction)[0]
   
-  result = UpdateStore(store.DiscordId,
+  result = UpdateStore(store.discord_id,
                        modal.submitted_owners_name,
                        modal.submitted_store_name,
                        modal.submitted_store_address,
@@ -85,13 +85,13 @@ def AddStoreToDatabase(guild: discord.Guild) -> int:
 def MatchGame(category_name: str, games: list[Game]):
   """Matches the category name to a game"""
   for game in games:
-    if game.GameName.lower() in category_name.lower():
+    if game.game_name.lower() in category_name.lower():
       return game
 
 def MatchFormat(channel_name: str, formats: list[Format]):
   """Matches the channel name to a format"""
   for format in formats:
-    if format.FormatName.lower() in channel_name.lower():
+    if format.format_name.lower() in channel_name.lower():
       return format
 
 def MapCategoriesAndChannels(guild: discord.Guild):
@@ -105,19 +105,19 @@ def MapCategoriesAndChannels(guild: discord.Guild):
   for category in guild.categories:
     game = MatchGame(category.name, games)
     if game:
-      result = AddGameMap(guild.id, game.GameId, category.id)
+      result = AddGameMap(guild.id, game.game_id, category.id)
       mapping = True
       if result:
-        output += f'Game: {game.GameName.title()}, Category: {category.name} ({category.id})\n'
+        output += f'Game: {game.game_name.title()}, Category: {category.name} ({category.id})\n'
     
-      formats = GetFormatsByGameId(game.GameId)
+      formats = GetFormatsByGameId(game.game_id)
       if formats:
         for channel in category.channels:
           format = MatchFormat(channel.name, formats)
           if format:
-            result = AddFormatMap(guild.id, format.FormatId, channel.id)
+            result = AddFormatMap(guild.id, format.format_id, channel.id)
             if result:
-              output += f'Format: {format.FormatName.title()}, Channel: {channel.name} ({channel.id})\n'
+              output += f'Format: {format.format_name.title()}, Channel: {channel.name} ({channel.id})\n'
 
       output += '\n'
 

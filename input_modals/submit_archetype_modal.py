@@ -73,7 +73,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     )
     self.add_item(self.player_name)
   
-    if self.game.GameName.upper() == 'LORCANA':
+    if self.game.game_name.upper() == 'LORCANA':
       self.inks = ui.Label(
         text="Deck Inks",
         component=ui.Select(
@@ -129,7 +129,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
 
   # handling the submission
   async def on_submit(self, interaction: Interaction) -> None:
-    if self.game.GameName.upper() == 'LORCANA':
+    if self.game.game_name.upper() == 'LORCANA':
       self.submitted_inks = self.inks.component.values
     if IsMagicLimited(self):
       self.submitted_main_colors = self.main_colors.component.values

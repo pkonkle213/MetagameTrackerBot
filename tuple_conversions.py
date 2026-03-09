@@ -17,34 +17,34 @@ class GameEnum(Enum):
   StarWarsUnlimited = 3
 
 class Archetype(NamedTuple):
-  EventID: int
-  PlayerName: str
-  Archetype: str
-  SubmitterID: int
-  SubmitterName: str
+  event_id: int
+  player_name: str
+  archetype: str
+  submitter_id: int
+  submitter_name: str
 
 class Format(NamedTuple):
-  FormatId: int
-  FormatName: str
-  LastBanUpdate: date
-  IsLimited: bool
+  format_id: int
+  format_name: str
+  last_ban_update: date
+  is_limited: bool
 
 class Game(NamedTuple):
-  GameId: int
-  GameName: str
+  game_id: int
+  game_name: str
 
 class Store(NamedTuple):
-  DiscordId: int
-  DiscordName: str
-  StoreName: str
-  OwnerId: int
-  OwnerName: str
-  Address: str
-  UsedForData: bool
-  IsPaid: bool
-  State: str
-  Region: int
-  IsHub: bool
+  discord_id: int
+  discord_name: str
+  store_name: str
+  owner_id: int
+  owner_name: str
+  address: str
+  used_for_data: bool
+  is_paid: bool
+  state: str
+  region: str
+  is_hub: bool
 
 class Event(NamedTuple):
   id: int

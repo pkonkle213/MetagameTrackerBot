@@ -11,7 +11,7 @@ def AddFormatMap(
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
-    INSERT INTO FormatChannelMaps
+    INSERT INTO format_channel_maps
       (discord_id,
       format_id,
       channel_id)
@@ -33,10 +33,17 @@ def GetFormatsByGameId(game:Game) -> list[Format]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(Format)) as cur:
     command = f'''
-    SELECT id, name, last_ban_update, is_limited
-    FROM formats
-    WHERE game_id = {game.GameId}
-    ORDER BY name
+    SELECT
+      id as format_id,
+      format_name,
+      last_ban_update,
+      is_limited
+    FROM
+      formats
+    WHERE
+      game_id = {game.game_id}
+    ORDER BY
+      format_name
     '''
     cur.execute(command)
     rows = cur.fetchall()

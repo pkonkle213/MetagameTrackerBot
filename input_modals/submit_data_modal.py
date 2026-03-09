@@ -21,7 +21,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
     self.data = data
     event_types = GetEventTypes()
       
-    default_event_name = f'{format.FormatName.title()}'
+    default_event_name = f'{format.format_name.title()}'
 
     self.previous_events = GetPreviousEvents(store, game, format)
     default_id = FindDefaultEvent(self.previous_events)

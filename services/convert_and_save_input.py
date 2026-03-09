@@ -25,11 +25,11 @@ def BuildFilePath(
   timestamp = datetime.now(timezone).strftime("%Y%m%d_%H%M%S")
   file_name = f"{timestamp}_{prev_filename}"
   
-  store_name = store.StoreName if store.StoreName else store.DiscordName
-  store_folder = f"{store.DiscordId} - {store_name}"
+  store_name = store.store_name if store.store_name else store.discord_name
+  store_folder = f"{store.discord_id} - {store_name}"
   
-  game_name = game.GameName
-  format_name = format.FormatName
+  game_name = game.game_name
+  format_name = format.format_name
   today = GetToday()
   year = str(today.year)
   month = f"{today.month:02d}"
@@ -66,9 +66,9 @@ def ConvertMeleeTournamentToDataErrors(
     None,
     archetypes,
     errors,
-    store.DiscordId,
-    game.GameId,
-    format.FormatId
+    store.discord_id,
+    game.game_id,
+    format.format_id
   )
   return event
 
@@ -114,9 +114,9 @@ async def ConvertCSVToDataErrors(
     standings_data,
     None,
     errors,
-    store.DiscordId,
-    game.GameId,
-    format.FormatId
+    store.discord_id,
+    game.game_id,
+    format.format_id
   )
   
   return event
@@ -169,7 +169,7 @@ async def ConvertModalToDataErrors(
   save_path = BuildFilePath(store, game, format, 'ModalInput.txt')
   upload_string(submission, save_path)
   try:
-    message = f'Attempting to add new event data from {store.StoreName if store.StoreName else store.DiscordName}:\n{selected_event.Data}'
+    message = f'Attempting to add new event data from {store.store_name if store.store_name else store.discord_name}:\n{selected_event.Data}'
     await MessageChannel(
       bot,
       message, 
@@ -191,8 +191,8 @@ async def ConvertModalToDataErrors(
     standings_data,
     None,
     errors,
-    store.DiscordId,
-    game.GameId,
-    format.FormatId
+    store.discord_id,
+    game.game_id,
+    format.format_id
   )
   return event

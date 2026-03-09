@@ -16,8 +16,8 @@ def GetAttendance(
     command = f'''
     SELECT
       TO_CHAR(e.event_date, 'MM/DD') as event_date,
-      {'s.store_name,' if store.DiscordId == DATAGUILDID else ''}
-      {'f.name,' if not format else ''}
+      {'s.store_name,' if store.discord_id == DATAGUILDID else ''}
+      {'f.format_name,' if not format else ''}
       e.event_name,
       COUNT(*)
     FROM
@@ -27,14 +27,14 @@ def GetAttendance(
       INNER JOIN Formats f ON f.id = e.format_id
     WHERE
       e.event_date BETWEEN '{start_date}' AND '{end_date}'
-      AND e.game_id = {game.GameId}
-      {f'AND e.format_id = {format.FormatId}' if format else ''}
+      AND e.game_id = {game.game_id}
+      {f'AND e.format_id = {format.format_id}' if format else ''}
       AND s.used_for_data = TRUE
-      {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != DATAGUILDID else ''}
+      {f'AND e.discord_id = {store.discord_id}' if store.discord_id != DATAGUILDID else ''}
     GROUP BY
       {'e.format_id,' if not format else ''}
-      {'s.store_name,' if store.DiscordId == DATAGUILDID else ''}
-      {'f.name,' if not format else ''}
+      {'s.store_name,' if store.discord_id == DATAGUILDID else ''}
+      {'f.format_name,' if not format else ''}
       e.event_date,
       e.game_id,
       e.event_name

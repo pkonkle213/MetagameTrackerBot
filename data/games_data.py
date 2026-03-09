@@ -11,7 +11,7 @@ def AddGameMap(
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
-    INSERT INTO GameCategoryMaps
+    INSERT INTO game_category_maps
     (discord_id,
     game_id,
     category_id)
@@ -33,9 +33,13 @@ def GetAllGames() -> list[Game]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(Game)) as cur:
     command = '''
-    SELECT id, name
-    FROM Games
-    ORDER BY name
+    SELECT
+      id as game_id,
+      game_name
+    FROM
+      games
+    ORDER BY
+      game_name
     '''
     cur.execute(command)
     rows = cur.fetchall()

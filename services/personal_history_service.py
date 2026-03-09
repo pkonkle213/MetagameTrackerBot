@@ -10,14 +10,14 @@ def GetPersonalStandingsHistory(interaction: discord.Interaction, start_date: st
   store, game, format = GetObjectsFromInteraction(interaction)
   if not store:
     raise KnownError('No Store Found')
-    
+
   user_id = interaction.user.id
   
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   data = GetStandingsHistory(user_id, game, format, date_start, date_end, store)
   if data is None or len(data) == 0:
     return 'No history found.'
-  name = store.StoreName if store.StoreName else store.DiscordName
+  name = store.store_name if store.store_name else store.discord_name
   title = f'Personal History for {name.title()}'
   headers = ['Date', 'Archetype', 'Wins', 'Losses', 'Draws']
   if not format:
@@ -37,12 +37,13 @@ def GetPersonalPairingsHistory(
   store, game, format = GetObjectsFromInteraction(interaction)
   if not store:
     raise KnownError('No Store Found')
+  
   user_id = interaction.user.id
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   data = GetPairingsHistory(user_id, game, format, date_start, date_end, store)
   if data is None or len(data) == 0:
     return 'No history found.'
-  name = store.StoreName if store.StoreName else store.DiscordName
+  name = store.store_name if store.store_name else store.discord_name
   title = f'Personal History for {name.title()}'
   headers = ['Date', 'Round', 'Your Archetype', "Opponent's Archetype", 'Result']
   if not format:

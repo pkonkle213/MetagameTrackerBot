@@ -6,11 +6,11 @@ from settings import DATABASE_URL
 from tuple_conversions import Event, Format, Game, Store
 
 def GetAreaForMeta(store: Store) -> str:
-  if store.IsHub:
-    return f'AND s.region = {store.Region}'
-  if store.DiscordId == settings.DATAGUILDID:
+  if store.is_hub:
+    return f'AND s.region = {store.region}'
+  if store.discord_id == settings.DATAGUILDID:
     return f'AND s.used_for_data = {True}'
-  return f'AND s.discord_id = {store.DiscordId}'
+  return f'AND s.discord_id = {store.discord_id}'
 
 def OneEventMetagame(
   event: Event
@@ -75,8 +75,8 @@ def GetMetagame(
       WHERE
         e.event_date BETWEEN '{start_date}' AND '{end_date}'
         {GetAreaForMeta(store)}
-        AND e.format_id = {format.FormatId}
-        AND e.game_id = {game.GameId}
+        AND e.format_id = {format.format_id}
+        AND e.game_id = {game.game_id}
       GROUP BY
         INITCAP(ua.archetype_played)
       )

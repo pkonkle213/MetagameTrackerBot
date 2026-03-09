@@ -8,6 +8,8 @@ def SubmittedArchetypesReport(interaction: discord.Interaction, player_name, eve
   date_used = ConvertToDate(event_date) if event_date != '' else None
 
   store, game, format = GetObjectsFromInteraction(interaction)
+  if not store or not game:
+    raise Exception('No store, game, or format found')
   player_name = ConvertInput(player_name)
   data = GetSubmittedArchetypes(game, format, store, player_name, date_used)
   headers = ['Event Date',

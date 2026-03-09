@@ -73,7 +73,7 @@ def AddPairingResults(event:Event,
  
   for table in data:
     result = InsertPairing(event.id,
-                         ConvertInput(table.P1Name),
+                         ConvertInput(table.player1_name),
                          table.P1Wins,
                          ConvertInput(table.P2Name),
                          table.P2Wins,
@@ -81,7 +81,7 @@ def AddPairingResults(event:Event,
                          submitterId)
     
     if result:
-      successes.append((ConvertInput(table.P1Name),
+      successes.append((ConvertInput(table.player1_name),
                        table.P1Wins,
                        ConvertInput(table.P2Name),
                        table.P2Wins,

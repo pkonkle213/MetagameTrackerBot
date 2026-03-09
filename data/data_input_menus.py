@@ -9,8 +9,8 @@ def GetPreviousEvents(
   game:Game,
   format:Format,
   event_type:int = 0,
-  interval:int=2,
-  archetypes=False
+  interval:int = 2,
+  archetypes:bool = False
 ) -> list[Event]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(Event)) as cur:
@@ -32,9 +32,9 @@ def GetPreviousEvents(
       INNER JOIN games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
     WHERE
-      s.discord_id = {store.DiscordId}
-      AND e.game_id = {game.GameId}
-      AND e.format_id = {format.FormatId}
+      s.discord_id = {store.discord_id}
+      AND e.game_id = {game.game_id}
+      AND e.format_id = {format.format_id}
       AND e.event_date >= CURRENT_DATE - INTERVAL '{interval} weeks'
       {f'AND e.event_type_id = {event_type}' if event_type else ''}
     ORDER BY
@@ -52,8 +52,8 @@ def GetEventTypes() -> list[Tuple[int, str]]:
   with conn, conn.cursor() as cur:
     command = '''
     SELECT
-       id,  
-       event_type
+      id,  
+      event_type
     FROM
       event_types
     '''

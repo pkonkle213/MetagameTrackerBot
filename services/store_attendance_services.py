@@ -16,12 +16,12 @@ def GetStoreAttendance(interaction:Interaction, start_date, end_date):
                        format,
                        date_start,
                        date_end)
-  subject = format.FormatName.title() if format else game.GameName.title()
+  subject = format.format_name.title() if format else game.game_name.title()
   title = f'{subject} attendance from {date_start} to {date_end}'
   headers = ['Date', 'Event Name', 'Players']
   if not format:
     headers.insert(1, 'Format')
-  if store.DiscordId == DATAGUILDID:
+  if store.discord_id == DATAGUILDID:
     headers.insert(1, 'Store')
   
   return (data, title, headers)

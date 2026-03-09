@@ -11,8 +11,6 @@ def MaxLength(headers, collection):
       if length > maxLengths[i]:
         maxLengths[i] = length
 
-  print('Headers:', headers)
-  print('Max lengths:', maxLengths)
   maxLengths[len(maxLengths) - 1] -= 2
   return maxLengths
 

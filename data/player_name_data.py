@@ -33,7 +33,7 @@ def GetUserArchetypes(
       10
     """
 
-    criteria = [userId, store.DiscordId, game.GameId, format.FormatId]
+    criteria = [userId, store.discord_id, game.game_id, format.format_id]
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return [row[0] for row in rows]
@@ -56,7 +56,7 @@ def GetUserName(
       AND submitter_id = %s
     """
 
-    criteria = [store.DiscordId, userId]
+    criteria = [store.discord_id, userId]
     cur.execute(command, criteria)
     row = cur.fetchone()
     return row[0] if row else None

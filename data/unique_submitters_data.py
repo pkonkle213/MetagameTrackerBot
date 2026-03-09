@@ -8,8 +8,8 @@ def GetUniqueSubmittersPercentage(discord_id:int):
     SELECT
       e.event_date,
       {'s.store_name,' if not discord_id else ''}
-      g.name AS game,
-      f.name AS format,
+      g.game_name AS game,
+      f.format_name AS format,
       a.submitters,
       p.players,
       round(100.0 * a.submitters / p.players, 2) AS percent_unique
@@ -28,7 +28,7 @@ def GetUniqueSubmittersPercentage(discord_id:int):
           event_id,
           count(DISTINCT submitter_id) AS submitters
         FROM
-          archetypesubmissions
+          archetype_submissions
         GROUP BY
           event_id
       ) a ON p.event_id = a.event_id

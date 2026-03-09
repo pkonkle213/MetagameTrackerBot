@@ -22,7 +22,7 @@ def GetEventReportedPercentage(event_id:int) -> float:
     cur.execute(command)
     row = cur.fetchone()
     if not row:
-      raise Exception('Unable to get event reported percentage')
+      raise Exception(f"Unable to get event {event_id}'s reported percentage")
     return row[0]
 
 def UpdateEvent(event_id:int) -> int:
@@ -39,5 +39,5 @@ def UpdateEvent(event_id:int) -> int:
     conn.commit()
     row = cur.fetchone()
     if not row:
-      raise Exception('Unable to update event')
+      raise Exception(f'Unable to update event {event_id}')
     return row[0]

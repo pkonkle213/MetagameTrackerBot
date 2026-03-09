@@ -15,7 +15,7 @@ async def UpdateDataGuild(bot):
       continue
     channel = bot.get_channel(channel[0])
     date_start, date_end = BuildDateRange('', '', format)
-    title_name = format.FormatName.title() if format else game.GameName.title()
+    title_name = format.format_name.title() if format else game.game_name.title()
     data = GetMetagame(
       store,
       game,

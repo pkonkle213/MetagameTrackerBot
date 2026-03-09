@@ -30,7 +30,7 @@ def ConvertMessageToData(
   standings_data = None
   pairings_data = None
   
-  if game.GameName.upper() == 'MAGIC':
+  if game.game_name.upper() == 'MAGIC':
     #magic - companion - standings - 4 spaces
     standings_data, errors = CompanionStandings(message, "    ")
     

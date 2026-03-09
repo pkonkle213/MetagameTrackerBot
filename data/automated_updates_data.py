@@ -10,10 +10,10 @@ def GetDataChannels(data_guild_id) -> list[Tuple[int, int]]:
       channel_id,
       category_id
     FROM
-      formatchannelmaps fcm
+      format_channel_maps fcm
       INNER JOIN formats f ON fcm.format_id = f.id
       INNER JOIN Games g ON g.id = f.game_id
-      INNER JOIN gamecategorymaps gcm ON (
+      INNER JOIN game_category_maps gcm ON (
         gcm.game_id = g.id
         AND gcm.discord_id = fcm.discord_id
       )

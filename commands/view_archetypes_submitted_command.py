@@ -30,8 +30,8 @@ class ArchetypeSubmittedCommand(commands.Cog):
     """
     await interaction.response.defer(ephemeral=True, thinking=False)
     data, headers, title = SubmittedArchetypesReport(interaction,
-                                                                       player_name,
-                                                                       event_date)
+                                                     player_name,
+                                                     event_date)
     if data is None or len(data) == 0:
       await interaction.followup.send('No archetypes submitted for this store or format')
     else:

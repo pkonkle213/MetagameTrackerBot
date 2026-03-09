@@ -5,11 +5,11 @@ from psycopg.rows import class_row
 
 
 class Message(NamedTuple):
-  DiscordID: int
-  GameID: int
-  CategoryID: int
-  FormatID: int
-  ChannelID: int
+  discord_id: int
+  game_id: int
+  category_id: int
+  format_id: int
+  channel_id: int
 
 
 def ThreeDayOldEventsWithUnknown():
@@ -25,9 +25,9 @@ def ThreeDayOldEventsWithUnknown():
     FROM
       events_reported er
       INNER JOIN events e ON e.id = er.id
-      INNER JOIN gamecategorymaps gm ON gm.game_id = e.game_id
+      INNER JOIN game_category_maps gm ON gm.game_id = e.game_id
       AND gm.discord_id = e.discord_id
-      INNER JOIN formatchannelmaps fm ON fm.format_id = e.format_id
+      INNER JOIN format_channel_maps fm ON fm.format_id = e.format_id
       AND fm.discord_id = e.discord_id
     WHERE
       e.event_date = NOW()::date - INTERVAL '3 days'

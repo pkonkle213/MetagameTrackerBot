@@ -11,10 +11,16 @@ def GetFormatByMap(channel_id:int) -> Format | None:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(Format)) as cur:
     command = f'''
-    SELECT f.id, f.name, f.last_ban_update, f.is_limited
-    FROM formatchannelmaps fc
-    INNER JOIN formats f ON f.id = fc.format_id
-    WHERE fc.channel_id = {channel_id}
+    SELECT
+      f.id,
+      f.format_name,
+      f.last_ban_update,
+      f.is_limited
+    FROM
+      format_channel_maps fc
+      INNER JOIN formats f ON f.id = fc.format_id
+    WHERE
+      fc.channel_id = {channel_id}
     '''
     cur.execute(command)
     row = cur.fetchone()
@@ -54,7 +60,7 @@ def GetGameByMap(category_id: int) -> Game | None:
     command = f'''
     SELECT id, name
     FROM Games g
-    INNER JOIN gamecategorymaps gc ON g.id = gc.game_id
+    INNER JOIN game_category_maps gc ON g.id = gc.game_id
     WHERE gc.category_id = {category_id}
     '''
 
@@ -94,9 +100,9 @@ def GetInteractionDetails(
         SELECT
           gcm.discord_id,
           g.id AS game_id,
-          g.name AS game_name
+          g.game_name AS game_name
         FROM
-          gamecategorymaps gcm
+          game_category_maps gcm
           INNER JOIN games g ON g.id = gcm.game_id
         WHERE
           gcm.category_id = {category_id}
@@ -106,11 +112,11 @@ def GetInteractionDetails(
           fcm.discord_id,
           f.game_id AS game_id,
           f.id AS format_id,
-          f.name AS format_name,
+          f.format_name AS format_name,
           f.last_ban_update,
           f.is_limited
         FROM
-          formatchannelmaps fcm
+          format_channel_maps fcm
           INNER JOIN formats f ON f.id = fcm.format_id
         WHERE
           fcm.channel_id = {channel_id}
@@ -124,7 +130,25 @@ def GetInteractionDetails(
     row = cur.fetchone()
     if not row:
       raise KnownError('Nothing found for data provided')
+    
     store = Store(*row[0:11]) if row[0] else None
+    if store and store.discord_id == 1437606618144444448:
+      store = FakingIt()
     game = Game(*row[11:13]) if row[11] else None
     format = Format(*row[13:17]) if row[13] else None
     return store, game, format
+
+def FakingIt() -> Store:
+    return Store(
+      1210746744602890310,
+      'My Test Guild',
+      'My Test Store',
+      505548744444477441,
+      'Test Owner',
+      '123 Test Street',
+      True,
+      True,
+      'CA',
+      'CBUS',
+      False
+    )

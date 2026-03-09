@@ -91,7 +91,7 @@ def GetClaimFeed(discord_id, category_id):
       channel_id
     FROM
       claimchannels cc
-      INNER JOIN gamecategorymaps gcm ON cc.discord_id = gcm.discord_id
+      INNER JOIN game_category_maps gcm ON cc.discord_id = gcm.discord_id
       AND cc.game_id = gcm.game_id
     WHERE
       cc.discord_id = {discord_id}

@@ -16,8 +16,8 @@ def BuildDateRange(
   date_start = GetStartDate(date_end, weeks)
   if start_date != '':
     date_start = ConvertToDate(start_date)
-  elif format and format.LastBanUpdate and format.LastBanUpdate > date_start:
-    date_start = format.LastBanUpdate
+  elif format and format.last_ban_update and format.last_ban_update > date_start:
+    date_start = format.last_ban_update
   return date_start, date_end
 
 

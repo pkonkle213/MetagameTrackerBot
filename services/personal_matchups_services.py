@@ -9,7 +9,7 @@ def PersonalMatchups(interaction, start_date, end_date):
     raise KnownError('No Store, Game, or Format Found')
   user_id = interaction.user.id
   start_date, end_date = BuildDateRange(start_date, end_date, format)
-  data = GetPersonalMatchups(store.DiscordId, game, format, start_date,
+  data = GetPersonalMatchups(store.discord_id, game, format, start_date,
     end_date, user_id)
   title = f'Personal Matchup Results between {start_date.strftime("%m/%d/%Y")} and {end_date.strftime("%m/%d/%Y")}'
   headers = [

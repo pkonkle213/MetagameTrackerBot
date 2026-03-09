@@ -12,7 +12,7 @@ def GetStoreData(interaction, start_date, end_date):
 
   date_start, date_end = BuildDateRange(start_date, end_date, format)
 
-  name = store.StoreName if store.StoreName else store.DiscordName
+  name = store.store_name if store.store_name else store.discord_name
   message = f'Here is the data for {name.title()} between {date_start.strftime("%m/%d/%Y")} and {date_end.strftime("%m/%d/%Y")}:'
   files = []
 
@@ -40,7 +40,7 @@ def GetPlayerData(interaction, start_date, end_date):
 
   date_start, date_end = BuildDateRange(start_date, end_date, format)
   
-  name = store.StoreName if store.StoreName else store.DiscordName
+  name = store.store_name if store.store_name else store.discord_name
   message = f'Here is the data for {name.title()} between {date_start.strftime("%m/%d/%Y")} and {date_end.strftime("%m/%d/%Y")}:'
   files = []
 

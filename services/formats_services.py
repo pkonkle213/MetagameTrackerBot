@@ -11,14 +11,14 @@ async def AddStoreFormatMap(interaction: Interaction,
                             chosen_format: Format) -> str:
   discord_id, category_id, channel_id, user_id = SplitInteractionData(interaction)
 
-  rows = AddFormatMap(discord_id, chosen_format.FormatId, channel_id)
+  rows = AddFormatMap(discord_id, chosen_format.format_id, channel_id)
   if rows is None:
     return 'Unable to add game map to database'
   try:
     await SetChannelMessagePermissions(interaction)
-    return f'Success! This channel ({channel_id}) is now mapped to {chosen_format.FormatName.title()}'
+    return f'Success! This channel ({interaction.channel}) is now mapped to {chosen_format.format_name.title()}'
   except Exception:
-    return f'Successfully mapped the channel ({channel_id}) to {chosen_format.FormatName.title()}, but failed to give the bot permissions to send messages in this channel. Please give the bot permissions manually.'
+    return f'Successfully mapped the channel ({channel_id}) to {chosen_format.format_name.title()}, but failed to give the bot permissions to send messages in this channel. Please give the bot permissions manually.'
 
 async def SetChannelMessagePermissions(interaction: Interaction):
   guild = interaction.guild

@@ -15,7 +15,7 @@ def AddArchetype(
   with psycopg.connect(DATABASE_URL) as conn:
     with conn.cursor() as cur:
       command = f'''
-      INSERT INTO ArchetypeSubmissions
+      INSERT INTO archetype_submissions
       (event_id,
       player_name,
       archetype_played,
@@ -57,9 +57,9 @@ def GetUnknownArchetypes(store:Store,
         unknown_archetypes ua
       WHERE
         event_date BETWEEN '{start_date}' AND '{end_date}'
-        AND game_id = {game.GameId}
-        AND format_id = {format.FormatId}
-        AND discord_id = {store.DiscordId}
+        AND game_id = {game.game_id}
+        AND format_id = {format.format_id}
+        AND discord_id = {store.discord_id}
       ORDER BY
         event_date desc,
         INITCAP(player_name)

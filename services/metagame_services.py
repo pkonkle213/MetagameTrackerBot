@@ -11,7 +11,7 @@ def GetMyMetagame(interaction:Interaction,
   if not store or not game or not format:
     raise KnownError('No store, game, or format found.')
   date_start, date_end = BuildDateRange(start_date, end_date, format)
-  title_name = format.FormatName.title() if format else game.GameName.title()
+  title_name = format.format_name.title() if format else game.game_name.title()
   data = GetMetagame(store, game, format, date_start, date_end)
   title = f'{title_name} metagame from {date_start} to {date_end}'
   headers = ['Deck Archetype', 'Meta %', 'Win %']

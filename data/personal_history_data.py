@@ -19,13 +19,13 @@ def GetPairingsHistory(
     command = f'''
     SELECT
       TO_CHAR(e.event_date, 'MM/DD') as event_date,
-      {'s.discord_name,' if store.DiscordId == DATAGUILDID else ''}
-      {'INITCAP(g.name) AS game_name,' if not game else ''}
-      {'INITCAP(f.name) AS format_name,' if not format else ''}
+      {'s.discord_name,' if store.discord_id == DATAGUILDID else ''}
+      {'INITCAP(g.game_name) AS game_name,' if not game else ''}
+      {'INITCAP(f.format_name) AS format_name,' if not format else ''}
       fp.round_number,
       INITCAP(COALESCE(uap.archetype_played, 'Unknown')) as players_archetype,
       INITCAP(COALESCE(uao.archetype_played, 'BYE')) as opponents_archetype,
-      fp.result
+      INITCAP(fp.result) as result
     FROM
       full_pairings fp
       INNER JOIN events e ON e.id = fp.event_id
@@ -37,9 +37,9 @@ def GetPairingsHistory(
       INNER JOIN formats f ON f.id = e.format_id
     WHERE
       pn.submitter_id = {user_id}
-      {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != DATAGUILDID else ''}
-      {f'AND e.game_id = {game.GameId}' if game else ''}
-      {f'AND e.format_id = {format.FormatId}' if format else ''}
+      {f'AND e.discord_id = {store.discord_id}' if store.discord_id != DATAGUILDID else ''}
+      {f'AND e.game_id = {game.game_id}' if game else ''}
+      {f'AND e.format_id = {format.format_id}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     ORDER BY
       e.event_date DESC,
@@ -64,9 +64,9 @@ def GetStandingsHistory(
     command = f'''
     SELECT
       TO_CHAR(event_date, 'MM/DD') as event_date,
-      {'s.discord_name,' if store.DiscordId == DATAGUILDID else ''}
-      {'INITCAP(g.name) AS game_name,' if not game else ''}
-      {'INITCAP(f.name) AS format_name,' if not format else ''}
+      {'s.discord_name,' if store.discord_id == DATAGUILDID else ''}
+      {'INITCAP(g.game_name) AS game_name,' if not game else ''}
+      {'INITCAP(f.format_name) AS format_name,' if not format else ''}
       INITCAP(archetype_played) as archetype_played,
       wins,
       losses,
@@ -80,9 +80,9 @@ def GetStandingsHistory(
       INNER JOIN unique_archetypes uar ON uar.event_id = e.id AND UPPER(uar.player_name) = UPPER(pn.player_name)
     WHERE
       pn.submitter_id = {user_id}
-      {f'AND e.discord_id = {store.DiscordId}' if store.DiscordId != DATAGUILDID else ''}
-      {f'AND e.game_id = {game.GameId}' if game else ''}
-      {f'AND e.format_id = {format.FormatId}' if format else ''}
+      {f'AND e.discord_id = {store.discord_id}' if store.discord_id != DATAGUILDID else ''}
+      {f'AND e.game_id = {game.game_id}' if game else ''}
+      {f'AND e.format_id = {format.format_id}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     ORDER BY
       e.event_date DESC

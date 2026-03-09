@@ -11,7 +11,7 @@ def GetUserData(interaction: Interaction,
   if not store or not game or not format:
     raise Exception('Unable to get store, game, or format')
 
-  player_name = GetUserName(store.DiscordId,
+  player_name = GetUserName(store.discord_id,
                             member.id)
   win_percent = GetWinPercent(member.id,
                               store,

@@ -26,13 +26,13 @@ async def GetUserInput(
   await interaction.response.send_modal(modal)
   await modal.wait()
 
-  if game.GameName.upper() == 'MAGIC' and format.IsLimited:
+  if game.game_name.upper() == 'MAGIC' and format.is_limited:
     archetype = MagicLimited(modal.submitted_main_colors,
                              modal.submitted_splash_colors)
   else:
     archetype = ConvertInput(modal.submitted_archetype)
   #TODO: Makes more sense for this to be handled in the modal?
-    if game.GameName.upper() == 'LORCANA':
+    if game.game_name.upper() == 'LORCANA':
       archetype = f'{modal.submitted_inks[0]}/{modal.submitted_inks[1]} - {archetype}'
 
   if not modal.submitted_event:
@@ -110,9 +110,9 @@ async def ClaimResult(
 
   userId = interaction.user.id
   
-  if ContainsBadWord(store.DiscordId, archetype):
+  if ContainsBadWord(store.discord_id, archetype):
     raise KnownError('Archetype contains a banned word')
-  if not CanSubmitArchetypes(store.DiscordId, userId):
+  if not CanSubmitArchetypes(store.discord_id, userId):
     raise KnownError('You have submitted too many bad archetypes. Please contact your store owner to have them submit the archetype.')
 
   updater_name = interaction.user.display_name

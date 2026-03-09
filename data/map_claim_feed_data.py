@@ -1,6 +1,7 @@
 from settings import DATABASE_URL
 import psycopg
 
+#TODO: Fix this so the conflicts work again
 def AddClaimFeedMap(
   discord_id:int,
   channel_id:int,
@@ -9,10 +10,12 @@ def AddClaimFeedMap(
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
-    INSERT INTO claimchannels (discord_id, channel_id, game_id)
+    INSERT INTO archetype_feeds (discord_id, channel_id, game_id)
     VALUES ({discord_id}, {channel_id}, {game_id})
-    ON CONFLICT (discord_id, game_id) DO UPDATE
-    SET channel_id = {channel_id}
+    --ON CONFLICT (discord_id, game_id) DO UPDATE
+    --SET channel_id = {channel_id}
+    --ON CONFLICT (discord_id, channel_id) DO UPDATE
+    --SET game_id = {game_id}
     RETURNING *
     '''
     cur.execute(command)

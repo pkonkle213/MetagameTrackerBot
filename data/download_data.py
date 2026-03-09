@@ -15,8 +15,8 @@ def GetStoreStandingData(
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT
-      INITCAP(g.name) AS Game_Name,
-      INITCAP(f.name) AS Format_Name,
+      INITCAP(g.game_name) AS Game_Name,
+      INITCAP(f.format_name) AS Format_Name,
       DATE(e.event_date) AS Event_Date,
       INITCAP(fp.Player_Name) AS player_name,
       INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
@@ -32,9 +32,9 @@ def GetStoreStandingData(
       INNER JOIN games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
     WHERE
-      e.discord_id = {store.DiscordId}
-      {f'AND e.game_id = {game.GameId}' if game else ''}
-      {f'AND e.format_id = {format.FormatId}' if format else ''}
+      e.discord_id = {store.discord_id}
+      {f'AND e.game_id = {game.game_id}' if game else ''}
+      {f'AND e.format_id = {format.format_id}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     ORDER BY
       event_date DESC,
@@ -59,8 +59,8 @@ def GetStorePairingData(
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      INITCAP(g.name) AS Game_Name,
-      INITCAP(f.name) AS Format_name,
+      INITCAP(g.game_name) AS Game_Name,
+      INITCAP(f.format_name) AS Format_name,
       e.event_date,
       frr.round_number,
       INITCAP(frr.player_name) as player_name,
@@ -79,13 +79,13 @@ def GetStorePairingData(
       LEFT JOIN unique_archetypes ua2 ON ua2.event_id = e.id
       AND upper(ua2.player_name) = upper(frr.opponent_name)
     WHERE
-      s.discord_id = {store.DiscordId}  
-      {f'AND e.game_id = {game.GameId}' if game else ''}
-      {f'AND e.format_id = {format.FormatId}' if format else ''}
+      s.discord_id = {store.discord_id}  
+      {f'AND e.game_id = {game.game_id}' if game else ''}
+      {f'AND e.format_id = {format.format_id}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     ORDER BY
-      g.name,
-      f.name,
+      g.game_name,
+      f.format_name,
       e.event_date DESC,
       round_number,
       frr.player_name
@@ -107,8 +107,8 @@ def GetPlayerPairingData(
   with conn, conn.cursor() as cur:
     command = f'''
     SELECT
-      INITCAP(g.name) AS Game_Name,
-      INITCAP(f.name) AS Format_name,
+      INITCAP(g.game_name) AS Game_Name,
+      INITCAP(f.format_name) AS Format_name,
       e.event_date,
       frr.round_number,
       INITCAP(COALESCE(ua1.archetype_played, 'UNKNOWN')) as your_archetype,
@@ -125,14 +125,14 @@ def GetPlayerPairingData(
       INNER JOIN player_names pn ON pn.discord_id = e.discord_id
       AND UPPER(pn.player_name) = UPPER(frr.player_name)
     WHERE
-      s.discord_id = {store.DiscordId}
+      s.discord_id = {store.discord_id}
       AND pn.submitter_id = {user_id}
-      {f'AND e.game_id = {game.GameId}' if game else ''}
-      {f'AND e.format_id = {format.FormatId}' if format else ''}
+      {f'AND e.game_id = {game.game_id}' if game else ''}
+      {f'AND e.format_id = {format.format_id}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     ORDER BY
-      g.name,
-      f.name,
+      g.game_name,
+      f.format_name,
       e.event_date DESC,
       round_number
     '''
@@ -153,8 +153,8 @@ def GetPlayerStandingData(
   with conn, conn.cursor() as cur:
     command =  f'''
     SELECT
-      INITCAP(g.name) AS Game_Name,
-      INITCAP(f.name) AS Format_name,
+      INITCAP(g.game_name) AS Game_Name,
+      INITCAP(f.format_name) AS Format_name,
       e.event_date,
       e.event_name,
       INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
@@ -172,9 +172,9 @@ def GetPlayerStandingData(
       INNER JOIN player_names pn ON pn.discord_id = e.discord_id
       AND UPPER(pn.player_name) = UPPER(fp.player_name)
     WHERE
-      e.discord_id = {store.DiscordId}
-      {f'AND e.game_id = {game.GameId}' if game else ''}
-      {f'AND e.format_id = {format.FormatId}' if format else ''}
+      e.discord_id = {store.discord_id}
+      {f'AND e.game_id = {game.game_id}' if game else ''}
+      {f'AND e.format_id = {format.format_id}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
       AND pn.submitter_id = {user_id}
     ORDER BY

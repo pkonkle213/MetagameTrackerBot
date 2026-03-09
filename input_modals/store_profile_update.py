@@ -12,7 +12,7 @@ class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
       text="Store Name",
       component=discord.ui.TextInput(
         placeholder="Store name",
-        default=store.StoreName if store else "",
+        default=store.store_name if store else "",
         required=True
       )
     )
@@ -31,7 +31,7 @@ class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
       text="Owner's Name",
       component=discord.ui.TextInput(
         placeholder="Owner's name",
-        default=store.OwnerName if store else "",
+        default=store.owner_name if store else "",
         required=True
       )
     )
