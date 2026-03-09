@@ -20,8 +20,8 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
     today = GetToday().strftime('%m/%d/%Y')
     self.data = data
     event_types = GetEventTypes()
-      
-    default_event_name = f'{format.format_name.title()}'
+
+    default_event_name = f'{format.format_name.title()} Weekly'
 
     self.previous_events = GetPreviousEvents(store, game, format)
     default_id = FindDefaultEvent(self.previous_events)
@@ -37,9 +37,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
 
     past_events.append(discord.SelectOption(label='Create A New Event', value='0', default=True if default_id == 0 else False))
     
-    event_types = [
-      discord.SelectOption(label=type[1], value=type[0]) for type in event_types
-    ]
+    list_event_types = SetEventTypes(event_types)
   
     self.continue_event = discord.ui.Label(
       text="Continue?",
@@ -78,7 +76,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
       component=discord.ui.Select(
         placeholder="What type of event",
         required=False,
-        options=event_types,
+        options=list_event_types,
         max_values=1,
         min_values=1)
     )
@@ -146,6 +144,17 @@ def SetEventDateAndName(
   if not event:
     raise KnownError('Event not found')
   return event
+
+def SetEventTypes(event_types) -> list[discord.SelectOption]:
+  types = []
+  for i in range(len(event_types)):
+    if i == 0:
+      types.append(discord.SelectOption(label=event_types[i][1], value=str(event_types[i][0]), default=True))
+    else:
+      types.append(discord.SelectOption(label=event_types[i][1], value=str(event_types[i][0])))
+  
+  return types
+      
 
 def FindDefaultEvent(previous_events) -> int:
   today = GetToday().strftime('%m/%d/%Y')
