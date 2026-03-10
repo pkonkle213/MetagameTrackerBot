@@ -10,7 +10,7 @@ class ArchetypeSubmittedCommand(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
-  @app_commands.command(name='viewsubmissions',
+  @app_commands.command(name='view_submissions',
                         description='Generate a report of the archetypes submitted and by whom')
   @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in PAIDSTORES])
   @app_commands.guild_only()

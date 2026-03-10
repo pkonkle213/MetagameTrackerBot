@@ -8,7 +8,7 @@ from services.command_error_service import Error
 from paid_stores import PAIDSTORES
 from checks import isPaidUser
 
-class PersonalStatisticsGroup(commands.GroupCog, name='personalstats'):
+class PersonalStatisticsGroup(commands.GroupCog, name='personal_stats'):
   """A group of commands to get personal statistics"""
   def __init__(self, bot):
     self.bot = bot

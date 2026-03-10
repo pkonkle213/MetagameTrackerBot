@@ -7,7 +7,7 @@ from services.command_error_service import Error
 from services.claim_result_services import OneEventDetails, OneEventMeta
 from output_builder import BuildTableOutput
 
-class OneEventCommands(commands.GroupCog, name='oneevent'):
+class OneEventCommands(commands.GroupCog, name='one_event'):
   def __init__(self, bot):
     self.bot = bot
 

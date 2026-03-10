@@ -9,7 +9,7 @@ class Links(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
-  @app_commands.command(name="getbot",
+  @app_commands.command(name="get_bot",
                         description="Display the url to install the bot")
   @app_commands.guilds(settings.BOTGUILDID)
   @app_commands.guild_only()
@@ -19,14 +19,14 @@ class Links(commands.Cog):
         f'Here is the link to install the bot: {settings.MYBOTURL}')
 
   @app_commands.command(
-      name='viewalldata',
+      name='view_all_data',
       description='Get an invite to my data hub with more stores')
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def ViewAllData(self, interaction: Interaction):
     await interaction.response.send_message(
         f'Here is the link to my data hub: {settings.DATAHUBINVITE}')
 
-  @app_commands.command(name="getsop",
+  @app_commands.command(name="get_sop",
                         description="Display the url to get the SOP")
   @app_commands.guild_only()
   @app_commands.guilds(settings.BOTGUILDID)
