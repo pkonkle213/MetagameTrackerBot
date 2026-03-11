@@ -31,7 +31,7 @@ def AddArchetype(
       {submitter_id},
       '{submitter_name}',
       {False})
-      RETURNING id
+      RETURNING *
       '''
 
       cur.execute(command, criteria)
