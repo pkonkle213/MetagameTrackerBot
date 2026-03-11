@@ -1,8 +1,6 @@
-from typing import Tuple
 import discord
 from tuple_conversions import Event, Game, Format, Store
 from discord import ui, Interaction
-from services.date_functions import GetToday
 from data.data_input_menus import GetPreviousEvents
 from data.player_name_data import GetUserArchetypes, GetUserName
 
@@ -86,7 +84,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
       )
       self.add_item(self.inks)
     
-    if IsMagicLimited(self):
+    if IsMagicLimited(self.game, self.format):
       self.main_colors = ui.Label(
         text="Main Colors",
         component=ui.Select(
@@ -174,5 +172,5 @@ def GetEvent(
       return event
   raise Exception('No event found?')
 
-def IsMagicLimited(self) -> bool:
-  return self.game.GameName.upper() == 'MAGIC' and self.format and self.format.IsLimited
+def IsMagicLimited(game: Game, format:Format) -> bool:
+  return game.game_name.upper() == 'MAGIC' and format and format.is_limited

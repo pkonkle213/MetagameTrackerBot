@@ -14,7 +14,9 @@ class ReportedAs(Enum):
 class GameEnum(Enum):
   Magic = 1
   Lorcana = 2
-  StarWarsUnlimited = 3
+  OnePiece = 3
+  StarWarsUnlimited = 4
+  Riftbound = 5
 
 class Archetype(NamedTuple):
   event_id: int
