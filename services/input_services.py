@@ -1,5 +1,6 @@
 import unicodedata
 
+#TODO: Add a trim()
 def ConvertInput(oldInput:str) -> str:
   nfkd_form = unicodedata.normalize('NFKD', oldInput)
   combined = ''.join([c for c in nfkd_form if not unicodedata.combining(c)])

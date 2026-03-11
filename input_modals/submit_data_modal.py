@@ -1,13 +1,14 @@
+from datetime import date
 from typing import NamedTuple
 from custom_errors import KnownError
-from services.date_functions import GetToday
+from services.date_functions import ConvertToDate, GetToday
 import discord
 from data.data_input_menus import GetPreviousEvents, GetEventTypes
-from tuple_conversions import Format, Game, Store
+from tuple_conversions import Event, Format, Game, Store
 
 class PredictEvent(NamedTuple):
   ID: int
-  Date: str
+  Date: date
   Name: str
   TypeID: int
   Data: str | None
@@ -119,27 +120,29 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
 
 def SetEventDateAndName(
   continued_event,
-  previous_events, 
-  date_input, 
-  name_input, 
-  event_type, 
-  data_message
+  previous_events: list[Event], 
+  date_input:str, 
+  name_input:str, 
+  event_type:int, 
+  data_message:str
 ) -> PredictEvent:
   event = None
   
   if continued_event == '0':
+    date = ConvertToDate(date_input)
+    #TODO: Clean up name_input here to remove special characters
     event = PredictEvent(0,
-                         date_input,
+                         date,
                          name_input,
                          event_type,
                          data_message)
   else:
     for prev_event in previous_events:
       if prev_event[0] == int(continued_event):
-        event = PredictEvent(prev_event[0],
-                             prev_event[1],
-                             prev_event[2],
-                             event_type,
+        event = PredictEvent(prev_event.id,
+                             prev_event.event_date,
+                             prev_event.event_name,
+                             prev_event.event_type_id,
                              data_message)
   if not event:
     raise KnownError('Event not found')

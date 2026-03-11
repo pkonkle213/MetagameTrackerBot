@@ -11,11 +11,9 @@ def SubmitData(
   userId:int
 ): #TODO: What does this return?
   """Submits an event's data to the database"""
-  date = ConvertToDate(submitted_event.event_date)
-
   event_created = False
   if submitted_event.id == 0:
-    event_id = CreateEvent(date,
+    event_id = CreateEvent(submitted_event.event_date,
                            submitted_event.StoreID,
                            submitted_event.GameID, 
                            submitted_event.FormatID,

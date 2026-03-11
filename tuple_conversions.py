@@ -74,7 +74,7 @@ class Standing(NamedTuple):
 class EventInput(NamedTuple):
   id: int
   custom_event_id: int | None
-  event_date: str
+  event_date: date
   event_name: str
   event_type_id: int
   round_number: int
