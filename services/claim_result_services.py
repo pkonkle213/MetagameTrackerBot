@@ -40,6 +40,7 @@ async def GetUserInput(
   
   return modal.submitted_player_name, modal.submitted_event, archetype
 
+#TODO: This isn't working for some odd reason
 async def MessageStoreFeed(bot, message, interaction):
   try:
     #Message the store feed channel specific to the game
