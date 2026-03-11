@@ -79,10 +79,10 @@ def InsertStanding(
 
       criteria = [
         event_id,
-        player.PlayerName,
-        player.Wins,
-        player.Losses,
-        player.Draws,
+        player.player_name,
+        player.wins,
+        player.losses,
+        player.draws,
         submitter_id
       ]
       cur.execute(command, criteria)

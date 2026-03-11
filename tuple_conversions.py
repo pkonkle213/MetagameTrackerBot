@@ -59,25 +59,25 @@ class Event(NamedTuple):
   reported_as: str
 
 class Pairing(NamedTuple):
-  P1Name: str
-  P1Wins: int
-  P2Name: str
-  P2Wins: int
-  Round: int
+  player1_name: str
+  player1_game_wins: int
+  player2_name: str
+  player2_game_wins: int
+  round_number: int
 
 class Standing(NamedTuple):
-  PlayerName: str
-  Wins: int
-  Losses: int
-  Draws: int
+  player_name: str
+  wins: int
+  losses: int
+  draws: int
 
 class EventInput(NamedTuple):
-  ID: int
-  CustomID: int | None
-  Date: str
-  Name: str
-  TypeID: int
-  RoundNumber: int
+  id: int
+  custom_event_id: int | None
+  event_date: str
+  event_name: str
+  event_type_id: int
+  round_number: int
   PairingData: list[Pairing] | None
   StandingData: list[Standing] | None
   ArchetypeData: dict[str, str] | None

@@ -11,22 +11,22 @@ def SubmitData(
   userId:int
 ): #TODO: What does this return?
   """Submits an event's data to the database"""
-  date = ConvertToDate(submitted_event.Date)
+  date = ConvertToDate(submitted_event.event_date)
 
   event_created = False
-  if submitted_event.ID == 0:
+  if submitted_event.id == 0:
     event_id = CreateEvent(date,
                            submitted_event.StoreID,
                            submitted_event.GameID, 
                            submitted_event.FormatID,
-                           submitted_event.Name,
-                           submitted_event.TypeID,
+                           submitted_event.event_name,
+                           submitted_event.event_type_id,
                            userId)
     if event_id is None:
       raise KnownError('Unable to create event')
     event_created = True
   else:
-    event_id = submitted_event.ID
+    event_id = submitted_event.id
 
   event = GetEvent(event_id)
 
@@ -40,7 +40,7 @@ def SubmitData(
     if event.reported_as == 'STANDINGS':
       #Delete the standings data
       DeleteStandingsFromEvent(event.id)
-    results = AddPairingResults(event, submitted_event.PairingData, userId, submitted_event.RoundNumber)
+    results = AddPairingResults(event, submitted_event.PairingData, userId, submitted_event.round_number)
   else:
     raise Exception("Congratulations, you've reached the impossible to reach area.")
   return results, event.event_date if event_created else None
@@ -50,11 +50,11 @@ def AddStandingResults(event:Event,
                        submitterId:int) -> str:
   successes = []
   for person in data:
-    if person.PlayerName != '':
-      person = Standing(ConvertInput(person.PlayerName),
-                        person.Wins,
-                        person.Losses,
-                        person.Draws)
+    if person.player_name != '':
+      person = Standing(ConvertInput(person.player_name),
+                        person.wins,
+                        person.losses,
+                        person.draws)
       output = InsertStanding(event.id, person, submitterId)
       if output:
         successes.append(person)
@@ -68,24 +68,24 @@ def AddPairingResults(event:Event,
                       data:list[Pairing],
                       submitterId:int,
                       round_number:int):
-  round_number = data[0].Round if not round_number else round_number
+  round_number = data[0].round_number if not round_number else round_number
   successes = []
  
   for table in data:
     result = InsertPairing(event.id,
                          ConvertInput(table.player1_name),
-                         table.P1Wins,
-                         ConvertInput(table.P2Name),
-                         table.P2Wins,
+                         table.player1_game_wins,
+                         ConvertInput(table.player2_name),
+                         table.player2_game_wins,
                          round_number,
                          submitterId)
     
     if result:
       successes.append((ConvertInput(table.player1_name),
-                       table.P1Wins,
-                       ConvertInput(table.P2Name),
-                       table.P2Wins,
-                       "Win" if table.P1Wins > table.P2Wins else "Loss" if table.P1Wins < table.P2Wins else "Draw"))
+                       table.player1_game_wins,
+                       ConvertInput(table.player2_name),
+                       table.player2_game_wins,
+                       "Win" if table.player1_game_wins > table.player2_game_wins else "Loss" if table.player1_game_wins < table.player2_game_wins else "Draw"))
 
   #TODO: melee.gg data needs to have the round numbers in the table, not the header, as it's a complete event upload
   if len(successes) > 0: 
