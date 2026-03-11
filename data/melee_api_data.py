@@ -5,8 +5,8 @@ from settings import DATABASE_URL
 from tuple_conversions import Store
 
 class Details(NamedTuple):
-  ClientId: str
-  ClientSecret: str
+  melee_client_id: str
+  melee_client_secret: str
 
 def GetStoreMeleeInfo(store:Store) -> Details | None:
   conn = psycopg.connect(DATABASE_URL)
