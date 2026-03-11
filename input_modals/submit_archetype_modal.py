@@ -43,14 +43,13 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
         past_events.append(discord.SelectOption(label=label, value=value))
 
     self.archetypes = GetUserArchetypes(store, userId, game, format)
-    archetype_options = []
-    for i in range(len(self.archetypes)):
+    archetype_options = [discord.SelectOption(label=archetype, value=archetype) for archetype in self.archetypes]
+    """for i in range(len(self.archetypes)):
       option = self.archetypes[i]
       if i == 0:
-        archetype_options.append(discord.SelectOption(label=option, value=option, default=True))
-      else:
         archetype_options.append(discord.SelectOption(label=option, value=option))
-    archetype_options.append(discord.SelectOption(label='New Archetype', value='0'))
+      else:
+        archetype_options.append(discord.SelectOption(label=option, value=option))"""
     
     self.event_select = ui.Label(
         text="Event",
