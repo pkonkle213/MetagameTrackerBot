@@ -119,7 +119,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
       self.new_archetype = ui.Label(
         text="Or...",
         component=ui.TextInput(
-          placeholder="Enter A New One",
+          placeholder="Enter A New Archetype",
           required=False
         )
       )
@@ -129,7 +129,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
   async def on_submit(self, interaction: Interaction) -> None:
     if self.game.game_name.upper() == 'LORCANA':
       self.submitted_inks = self.inks.component.values
-    if IsMagicLimited(self):
+    if IsMagicLimited(self.game, self.format):
       self.submitted_main_colors = self.main_colors.component.values
       self.submitted_splash_colors = self.splash_colors.component.values
     else:
