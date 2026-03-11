@@ -2,12 +2,13 @@ from typing import NamedTuple
 import psycopg
 from psycopg.rows import class_row
 from settings import DATABASE_URL
+from tuple_conversions import Store
 
 class Details(NamedTuple):
   ClientId: str
   ClientSecret: str
 
-def GetStoreMeleeInfo(store) -> Details | None:
+def GetStoreMeleeInfo(store:Store) -> Details | None:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(Details)) as cur:
     command =  f'''
@@ -17,7 +18,7 @@ def GetStoreMeleeInfo(store) -> Details | None:
     FROM
       stores
     WHERE
-      discord_id = {store.DiscordId}
+      discord_id = {store.discord_id}
     '''
 
     cur.execute(command)
