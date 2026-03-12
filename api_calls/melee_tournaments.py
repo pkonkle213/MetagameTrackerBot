@@ -15,7 +15,7 @@ def GetMeleeTournamentData(tournament_id:str,
 
   while has_more:
     api_url = f"https://melee.gg/api/match/list/{tournament_id}?variables.page={page}&variables.pageSize={page_size}"
-    print('API URL:', api_url)
+    #print('API URL:', api_url)
     response = requests.get(api_url, auth=(storeInfo.melee_client_id, storeInfo.melee_client_secret))
 
     if response.status_code == 200:
@@ -28,4 +28,6 @@ def GetMeleeTournamentData(tournament_id:str,
       raise Exception("Unable to get data from Melee.gg. Please try again.")
 
   #print('Data received:', data)
+  if not data or data == []:
+    raise KnownError("No data found for this tournament. Please try again.")
   return data

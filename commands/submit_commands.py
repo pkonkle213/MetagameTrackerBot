@@ -136,7 +136,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     failure = False
     if submitted_event.PairingData is None and submitted_event.StandingData is None:
       raise KnownError("Unable to submit due to not recognizing the data. Please try again.")
-    await NewDataMessage(self.bot, interaction, failure)      
+    await NewDataMessage(self.bot, interaction, failure)
+    print('Notified of event')
 
     #Advise user of submission process starting
     message_type = 'standings' if submitted_event.StandingData else 'pairings'

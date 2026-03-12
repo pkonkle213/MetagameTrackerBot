@@ -127,7 +127,7 @@ async def ConfirmEventDetails(
   store:Store,
   game:Game,
   format:Format
-) -> tuple[str, str, int, int]:
+) -> tuple[date, str, int, int]:
   modal = SubmitDataModal(store, game, format, False)
   await interaction.response.send_modal(modal)
   await modal.wait()
