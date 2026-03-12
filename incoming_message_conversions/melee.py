@@ -1,17 +1,17 @@
 from typing import Tuple
 import pytz
-from datetime import datetime
+from datetime import date, datetime
 from tuple_conversions import Pairing
 
-def MeleeJsonPairings(json_data:list) -> tuple[list[Pairing], list[str], int, str, dict[str,str]]:
+def MeleeJsonPairings(json_data:list) -> tuple[list[Pairing], list[str], int, date, dict[str,str]]:
   data = []
   errors = []
   archetypes = {}
 
   date_created = json_data[0]['DateCreated']
-  date_string = datetime.fromisoformat(date_created)
-  est = pytz.timezone('US/Eastern')
-  event_date = date_string.astimezone(est).strftime('%m/%d/%Y')
+  date = datetime.fromisoformat(date_created)
+  #est = pytz.timezone('US/Eastern')
+  #event_date = date_string.astimezone(est).strftime('%m/%d/%Y')
   
   for match in json_data:
     print('Match:\n', match)
@@ -27,7 +27,7 @@ def MeleeJsonPairings(json_data:list) -> tuple[list[Pairing], list[str], int, st
       data.append(pairing)
     except Exception as e:
       errors.append(f'Unable to parse round {round_number}, due to {e}')
-  return data, errors, 0, event_date, archetypes
+  return data, errors, 0, date, archetypes
 
 def ByeMatch(match: dict) -> Tuple[Pairing, dict[str,str | None]]:
   print('Bye match:\n', match)

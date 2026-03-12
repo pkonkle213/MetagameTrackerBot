@@ -6,7 +6,7 @@ from input_modals.submit_data_modal import SubmitDataModal
 from services.date_functions import GetToday
 from tuple_conversions import EventInput, Store, Format, Game
 from data_translation import ConvertCSVToData, ConvertMessageToData
-from datetime import datetime
+from datetime import date, datetime
 from custom_errors import KnownError
 from services.object_storage_service import upload_bytes, upload_json, upload_string
 import pandas as pd
@@ -76,7 +76,7 @@ async def ConvertCSVToDataErrors(
   bot: commands.Bot,
   store: Store,
   game: Game,
-  date: str,
+  date: date,
   format: Format,
   interaction: Interaction,
   event_id: int,
