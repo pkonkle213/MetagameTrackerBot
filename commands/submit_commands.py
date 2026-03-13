@@ -1,3 +1,4 @@
+from input_modals.submit_file_modal import SubmitFileModal
 import typing
 from services.claim_result_services import GetUserInput, AddTheArchetype, MessageStoreFeed
 from api_calls.melee_tournaments import GetMeleeTournamentData
@@ -63,7 +64,6 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     if full_event:
       await MessageChannel(self.bot, full_event, interaction.guild_id,
                            interaction.channel_id)
-
 
   @app_commands.command(
     name="data",
