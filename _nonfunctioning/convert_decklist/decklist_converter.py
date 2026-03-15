@@ -3,8 +3,10 @@ My thoughts on how to convert a decklist:
   1. Get the decklist from the user
   2. Convert the decklist to a format that can be used by the bot
   3. Retrieve the rules for archetypes
-  4. Go through each card (name?) and see what the deck could be
-  5. After determining the archetype, save the decklist to the database linked to the archetype submission by ID (which I just removed, great)
+  4. Go through each archetype 
+    4.1. Does the list of cards contain the cards the archetype IS 
+    4.2. Does the list of cards not contain the cards the archetype IS NOT
+  5. After determining the archetype (or label it as 'OTHER'), save the decklist to the database linked to the archetype submission by ID (which I just removed, great)
 """
 
 """
