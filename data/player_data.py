@@ -85,7 +85,6 @@ def GetStats(
     rows = cur.fetchall()
     return rows
 
-#TODO: Can this be simpler?
 def GetTopPlayerData(
   store:Store,
   game:Game,

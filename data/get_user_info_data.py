@@ -57,7 +57,6 @@ def GetWinPercentage(
       raise Exception('Unable to get win percentage')
     return row[0]
 
-#TODO: I'm anticipating this throws an error because the attributes are not 1:1 to the column names in the database
 class LastArchetype(NamedTuple):
   event_date: date
   archetype_played: str
@@ -95,7 +94,6 @@ def GetLastArchetype(
       raise Exception('Unable to get last archetype')
     return row
 
-#TODO: I'm anticipating this throws an error because the attributes are not 1:1 to the column names in the database
 class TopDeck(NamedTuple):
   archetype_played: str
   win_percentage: float

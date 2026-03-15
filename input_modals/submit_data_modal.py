@@ -130,7 +130,7 @@ def SetEventDateAndName(
   
   if continued_event == '0':
     date = ConvertToDate(date_input)
-    #TODO: Clean up name_input here to remove special characters
+
     event = PredictEvent(0,
                          date,
                          name_input,

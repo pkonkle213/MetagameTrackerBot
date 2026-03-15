@@ -1,3 +1,5 @@
+from typing import Tuple
+from datetime import date
 from services.date_functions import ConvertToDate
 from output_builder import BuildTableOutput
 from custom_errors import KnownError
@@ -9,7 +11,7 @@ from tuple_conversions import EventInput, Standing, Pairing, Event
 def SubmitData(
   submitted_event:EventInput,
   userId:int
-): #TODO: What does this return?
+) -> Tuple[str|None, date|None]:
   """Submits an event's data to the database"""
   event_created = False
   if submitted_event.id == 0:
@@ -85,7 +87,6 @@ def AddPairingResults(event:Event,
                        table.player2_game_wins,
                        "Win" if table.player1_game_wins > table.player2_game_wins else "Loss" if table.player1_game_wins < table.player2_game_wins else "Draw"))
 
-  #TODO: melee.gg data needs to have the round numbers in the table, not the header, as it's a complete event upload
   if len(successes) > 0: 
     title = f"{event.event_date.strftime('%B %d')} - {event.event_name} - Round {round_number}"
     headers = ['Player 1', 'P1 Wins', 'Player 2', 'P2 Wins', 'Result']

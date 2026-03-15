@@ -19,7 +19,6 @@ def GetEliminationRoundData(event:Event) -> str:
   
   return output
 
-#TODO: This needs to take into account draws...but how when I don't know their records heading into the elimination rounds? (OR DO I?)
 def BuildEliminationStandingOutput(data: list[Tuple[int, str, int, str, int]]) -> str:
   """Builds the output for the elimination rounds when the event is submitted via standings"""
   output = f'''
