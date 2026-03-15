@@ -1,0 +1,29 @@
+4 Balustrade Spy
+2 Dread Return
+2 Forest
+4 Gatecreeper Vine
+3 Generous Ent
+4 Land Grant
+4 Lead the Stampede
+2 Lotleth Giant
+4 Lotus Petal
+2 Masked Vandal
+2 Mesmeric Fiend
+4 Overgrown Battlement
+3 Quirion Ranger
+4 Sagu Wildling
+4 Saruli Caretaker
+2 Swamp
+3 Troll of Khazad-dûm
+3 Wall of Roots
+4 Winding Way
+
+SIDEBOARD:
+1 Acorn Harvest
+2 Faerie Macabre
+1 Forest
+2 Haunting Misery
+2 Masked Vandal
+2 Mesmeric Fiend
+1 Undergrowth Leopard
+4 Weather the Storm
