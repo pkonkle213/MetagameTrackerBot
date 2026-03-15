@@ -39,7 +39,6 @@ def GetStoreByDiscord(discord_id:int) -> Store | None:
       owner_name,
       store_address,
       used_for_data,
-      isPaid,
       state,
       region,
       is_data_hub
@@ -86,7 +85,6 @@ def GetInteractionDetails(
       s.used_for_data,
       s.state,
       s.region,
-      s.isPaid,
       s.is_data_hub,
       g.game_id,
       g.game_name,
@@ -131,11 +129,11 @@ def GetInteractionDetails(
     if not row:
       raise KnownError('Nothing found for data provided')
     
-    store = Store(*row[0:11]) if row[0] else None
+    store = Store(*row[0:10]) if row[0] else None
     if store and store.discord_id == 1437606618144444448:
       store = FakingIt()
-    game = Game(*row[11:13]) if row[11] else None
-    format = Format(*row[13:17]) if row[13] else None
+    game = Game(*row[10:12]) if row[11] else None
+    format = Format(*row[12:16]) if row[13] else None
     return store, game, format
 
 def FakingIt() -> Store:
@@ -146,7 +144,6 @@ def FakingIt() -> Store:
       505548744444477441,
       'Test Owner',
       '123 Test Street',
-      True,
       True,
       'CA',
       'CBUS',

@@ -43,7 +43,6 @@ class Store(NamedTuple):
   owner_name: str
   address: str
   used_for_data: bool
-  is_paid: bool
   state: str
   region: str
   is_hub: bool

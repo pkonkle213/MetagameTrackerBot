@@ -5,7 +5,6 @@ from services.personal_matchups_services import PersonalMatchups
 from services.player_win_record_services import PlayRecord
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
-from paid_stores import PAIDSTORES
 from checks import isPaidUser
 
 class PersonalStatisticsGroup(commands.GroupCog, name='personal_stats'):
@@ -18,7 +17,6 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personal_stats'):
   @app_commands.guild_only()
   @isPaidUser()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-  @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in PAIDSTORES])
   async def PersonalMatchupReport(self,
                                   interaction: Interaction,
                 start_date: str = '',
@@ -37,7 +35,6 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personal_stats'):
   @app_commands.guild_only()
   @isPaidUser()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-  @app_commands.guilds(*[discord.Object(id=guild_id) for guild_id in PAIDSTORES])
   async def WLDRecord(self,
                       interaction: Interaction,
                       start_date: str = '',
