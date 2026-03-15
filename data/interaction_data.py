@@ -6,11 +6,11 @@ import psycopg
 from tuple_conversions import Format, Game, Store
 
 
-#TODO: Why are these in here and not in their corresponding data files?
-def GetFormatByMap(channel_id:int) -> Format | None:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Format)) as cur:
-    command = f'''
+# TODO: Why are these in here and not in their corresponding data files?
+def GetFormatByMap(channel_id: int) -> Format | None:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(Format)) as cur:
+        command = f"""
     SELECT
       f.id,
       f.format_name,
@@ -21,16 +21,16 @@ def GetFormatByMap(channel_id:int) -> Format | None:
       INNER JOIN formats f ON f.id = fc.format_id
     WHERE
       fc.channel_id = {channel_id}
-    '''
-    cur.execute(command)
-    row = cur.fetchone()
-    return row
+    """
+        cur.execute(command)
+        row = cur.fetchone()
+        return row
 
 
-def GetStoreByDiscord(discord_id:int) -> Store | None:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Store)) as cur:
-    command = f'''
+def GetStoreByDiscord(discord_id: int) -> Store | None:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(Store)) as cur:
+        command = f"""
     SELECT
       discord_id,
       discord_name,
@@ -46,35 +46,34 @@ def GetStoreByDiscord(discord_id:int) -> Store | None:
       stores_view
     WHERE
       discord_id = {discord_id}
-    '''
+    """
 
-    cur.execute(command)
-    row = cur.fetchone()
-    return row
+        cur.execute(command)
+        row = cur.fetchone()
+        return row
 
 
 def GetGameByMap(category_id: int) -> Game | None:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Game)) as cur:
-    command = f'''
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(Game)) as cur:
+        command = f"""
     SELECT id, name
     FROM Games g
     INNER JOIN game_category_maps gc ON g.id = gc.game_id
     WHERE gc.category_id = {category_id}
-    '''
+    """
 
-    cur.execute(command)
-    row = cur.fetchone()
-    return row
+        cur.execute(command)
+        row = cur.fetchone()
+        return row
+
 
 def GetInteractionDetails(
-  discord_id: int,
-  category_id: int,
-  channel_id: int
+    discord_id: int, category_id: int, channel_id: int
 ) -> Tuple[Store | None, Game | None, Format | None]:
-  conn = psycopg.connect(DATABASE_URL)
-  with  conn, conn.cursor() as cur:
-    command = f'''
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor() as cur:
+        command = f"""
     SELECT
       s.discord_id,
       s.discord_name,
@@ -122,30 +121,14 @@ def GetInteractionDetails(
       AND f.game_id = g.game_id
     WHERE
       s.discord_id = {discord_id}
-    '''
+    """
 
-    cur.execute(command)
-    row = cur.fetchone()
-    if not row:
-      raise KnownError('Nothing found for data provided')
-    
-    store = Store(*row[0:10]) if row[0] else None
-    if store and store.discord_id == 1437606618144444448:
-      store = FakingIt()
-    game = Game(*row[10:12]) if row[11] else None
-    format = Format(*row[12:16]) if row[13] else None
-    return store, game, format
+        cur.execute(command)
+        row = cur.fetchone()
+        if not row:
+            raise KnownError("Nothing found for data provided")
 
-def FakingIt() -> Store:
-    return Store(
-      1210746744602890310,
-      'My Test Guild',
-      'My Test Store',
-      505548744444477441,
-      'Test Owner',
-      '123 Test Street',
-      True,
-      'CA',
-      'CBUS',
-      False
-    )
+        store = Store(*row[0:10]) if row[0] else None
+        game = Game(*row[10:12]) if row[11] else None
+        format = Format(*row[12:16]) if row[13] else None
+        return store, game, format
