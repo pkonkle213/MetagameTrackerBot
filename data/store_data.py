@@ -101,19 +101,3 @@ def GetClaimFeed(discord_id, category_id):
     cur.execute(command)
     row = cur.fetchone()
     return row[0] if row else None
-
-def GetPaidStoreIds():
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
-    command = '''
-    SELECT
-      discord_id
-    FROM
-      stores_view
-    WHERE
-      isPaid = TRUE
-    '''
-    cur.execute(command)
-    rows = cur.fetchall()
-    return [row[0] for row in rows]
-    

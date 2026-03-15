@@ -18,15 +18,6 @@ class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
     )
     self.add_item(self.store_name)
 
-    self.fantastic = discord.ui.Label(
-      text="Fantastic",
-      component=discord.ui.AutoComplete(
-        placeholder="Fantastic",
-        default=store.Fantastic if store else "",
-        required=False,
-        options=["High", "Medium","Low"])
-    )
-
     self.owners_name = discord.ui.Label(
       text="Owner's Name",
       component=discord.ui.TextInput(
