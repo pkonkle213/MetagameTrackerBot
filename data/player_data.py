@@ -85,10 +85,9 @@ def GetStats(
     rows = cur.fetchall()
     return rows
 
-#TODO: Can this be simpler?
 def GetTopPlayerData(
   store:Store,
-  game:Game,
+  game:Game | None,
   format:Format | None,
   start_date:date,
   end_date:date
@@ -96,39 +95,33 @@ def GetTopPlayerData(
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
+    WITH
+      X AS (
+        SELECT
+          fs.event_id,
+          INITCAP(player_name) AS player_name,
+          wins,
+          losses,
+          draws
+        FROM
+          full_standings fs
+          INNER JOIN events e ON fs.event_id = e.id
+        WHERE
+          e.event_date BETWEEN {start_date} AND {end_date}
+          {f'AND e.format_id = {format.format_id}' if format else ''}
+          {f'AND e.game_id = {game.game_id}' if game else ''}
+          AND e.discord_id = {store.discord_id}
+      )
     SELECT
       player_name,
-      round(attendance_percentage * 100, 2) AS attendance_percentage,
-      round(win_percentage * 100, 2) AS win_percentage
+      (3 * SUM(wins) + SUM(draws)) AS points,
+      ROUND(100.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)), 2) AS win_percent
     FROM
-      (
-        SELECT
-          INITCAP(player_name) AS player_name,
-          sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percentage,
-          1.0 * COUNT(*) / (
-            SELECT
-              COUNT(*)
-            FROM
-              events
-            WHERE
-              event_date BETWEEN '2026-01-01' AND '2026-04-01'
-              AND discord_id = 1210746744602890310
-              AND game_id = 1
-              AND format_id = 1
-          ) AS attendance_percentage
-        FROM
-          events e
-          INNER JOIN full_standings fp ON fp.event_id = e.id
-        WHERE
-          event_date BETWEEN '{start_date}' AND '{end_date}'
-          {f'AND discord_id = {store.discord_id}' if store.discord_id != BOTGUILDID else ''}
-          AND game_id = {game.game_id}
-          {f'AND format_id = {format.format_id}' if format else ''}
-        GROUP BY
-          INITCAP(player_name)
-      )
+      X
+    GROUP BY
+      player_name
     ORDER BY
-      attendance_percentage * win_percentage DESC
+      (3 * SUM(wins) + SUM(draws)) DESC
     LIMIT
       CEIL(
         .5 * (
@@ -139,15 +132,9 @@ def GetTopPlayerData(
               SELECT
                 count(*) AS participants
               FROM
-                events e
-                LEFT JOIN full_standings fp ON fp.event_id = e.id
-              WHERE
-                event_date BETWEEN '{start_date}' AND '{end_date}'
-                {f'AND discord_id = {store.discord_id}' if store.discord_id != BOTGUILDID else ''}
-                AND game_id = {game.game_id}
-                {f'AND format_id = {format.format_id}' if format else ''}
+                X
               GROUP BY
-                e.id
+                event_id
             )
         )
       )
