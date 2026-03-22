@@ -53,7 +53,6 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     if not store or not game or not format:
       raise KnownError('No store, game, or format found.')
 
-    #TODO: I would like to keep messages to the user in the command layer. The service should just return the data or throw errors
     player_name, event, archetype = await GetUserInput(store, game, format, userId, interaction)
     private_output, feed_output, public_output, full_event = await AddTheArchetype(interaction, player_name, event, archetype, store, game, format)
     await interaction.followup.send(private_output, ephemeral=True)

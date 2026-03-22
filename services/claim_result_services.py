@@ -31,7 +31,7 @@ async def GetUserInput(
                              modal.submitted_splash_colors)
   else:
     archetype = ConvertInput(modal.submitted_archetype)
-  #TODO: Makes more sense for this to be handled in the modal?
+
     if game.game_name.upper() == 'LORCANA':
       archetype = f'{modal.submitted_inks[0]}/{modal.submitted_inks[1]} - {archetype}'
 
@@ -40,7 +40,6 @@ async def GetUserInput(
   
   return modal.submitted_player_name, modal.submitted_event, archetype
 
-#TODO: This isn't working for some odd reason
 async def MessageStoreFeed(bot, message, interaction):
   try:
     #Message the store feed channel specific to the game
@@ -107,8 +106,6 @@ async def ClaimResult(
   game:Game,
   format:Format
 ) -> int:
-  #TODO: Using event_id eliminates the need for checking if the user is a submitter. Check other references to ensure this is the same in other areas
-
   userId = interaction.user.id
   
   if ContainsBadWord(store.discord_id, archetype):

@@ -2,7 +2,6 @@ import psycopg
 from settings import DATABASE_URL
 from tuple_conversions import Format, Game, Store
 
-#TODO: I would love to give the top 5 previous archetypes of the player as well as the top 10 in general, but I need to find a awy to UNION the two lists without removing the sorting
 def GetUserArchetypes(
   store: Store,
   userId: int,

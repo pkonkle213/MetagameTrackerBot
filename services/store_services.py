@@ -130,7 +130,6 @@ async def CreateMTSubmitterRole(guild:discord.Guild):
     raise KnownError('No owner found')
   mtsubmitter_role = discord.utils.get(guild.roles, name="MTSubmitter")
 
-  #TODO: This isn't work again. Y U NO WORK?
   if mtsubmitter_role is None:
     print("Attempting to create and add the MTSubmitter role")
     try:
