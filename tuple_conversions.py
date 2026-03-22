@@ -45,8 +45,9 @@ class Store(NamedTuple):
   used_for_data: bool
   is_paid: bool
   state: str
-  region: str
+  region_id: str
   is_hub: bool
+  hub_format_lock: int
 
 class Event(NamedTuple):
   id: int

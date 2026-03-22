@@ -7,7 +7,7 @@ from tuple_conversions import Event, Format, Game, Store
 
 def GetAreaForMeta(store: Store) -> str:
   if store.is_hub:
-    return f'AND s.region = {store.region}'
+    return f'AND s.region = {store.region_id}'
   if store.discord_id == settings.DATAGUILDID:
     return f'AND s.used_for_data = {True}'
   return f'AND s.discord_id = {store.discord_id}'
