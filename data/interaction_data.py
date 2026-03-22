@@ -39,7 +39,7 @@ def GetStoreByDiscord(discord_id:int) -> Store | None:
       owner_name,
       store_address,
       used_for_data,
-      isPaid,
+      is_paid,
       state,
       region,
       is_data_hub
@@ -86,7 +86,7 @@ def GetInteractionDetails(
       s.used_for_data,
       s.state,
       s.region,
-      s.isPaid,
+      s.is_paid,
       s.is_data_hub,
       g.game_id,
       g.game_name,

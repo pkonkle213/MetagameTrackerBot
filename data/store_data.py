@@ -111,7 +111,7 @@ def GetPaidStoreIds():
     FROM
       stores_view
     WHERE
-      isPaid = TRUE
+      is_paid = TRUE
     '''
     cur.execute(command)
     rows = cur.fetchall()
