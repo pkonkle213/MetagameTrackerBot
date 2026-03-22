@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "discord-py",
     "matplotlib",
+    "mtgjson>=0.4.0",
     "numpy",
     "pandas",
     "psycopg",

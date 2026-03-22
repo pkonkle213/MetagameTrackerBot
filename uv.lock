@@ -541,6 +541,15 @@ wheels = [
 ]
 
 [[package]]
+name = "docutils"
+version = "0.22.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ae/b6/03bb70946330e88ffec97aefd3ea75ba575cb2e762061e0e62a213befee8/docutils-0.22.4.tar.gz", hash = "sha256:4db53b1fde9abecbb74d91230d32ab626d94f6badfc575d6db9194a49df29968", size = 2291750, upload-time = "2025-12-18T19:00:26.443Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/02/10/5da547df7a391dcde17f59520a231527b8571e6f46fc8efb02ccb370ab12/docutils-0.22.4-py3-none-any.whl", hash = "sha256:d0013f540772d1420576855455d050a2180186c91c15779301ac2ccb3eeb68de", size = 633196, upload-time = "2025-12-18T19:00:18.077Z" },
+]
+
+[[package]]
 name = "flask"
 version = "3.1.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1001,6 +1010,17 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/de/ad/213eee624feadba7b77e881c9d2c04c1e036efe69d19031e3fa927fdb5dc/matplotlib-3.9.3-cp313-cp313t-musllinux_1_2_x86_64.whl", hash = "sha256:a42b9dc42de2cfe357efa27d9c50c7833fc5ab9b2eb7252ccd5d5f836a84e1e4", size = 9094075, upload-time = "2024-11-30T10:25:28.423Z" },
     { url = "https://files.pythonhosted.org/packages/19/1b/cb8e99a5fe2e2b14e3b8234cb1649a675be63f74a5224a648ae4ab61f60c/matplotlib-3.9.3-cp313-cp313t-win_amd64.whl", hash = "sha256:e0fcb7da73fbf67b5f4bdaa57d85bb585a4e913d4a10f3e15b32baea56a67f0a", size = 7888937, upload-time = "2024-11-30T10:25:46.096Z" },
 ]
+
+[[package]]
+name = "mtgjson"
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "docutils" },
+    { name = "requests" },
+    { name = "six" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/bd/34/ac7612113d2c3deac7ab775f98d5dc7803016a19cd91c562ed22b7a9b8da/mtgjson-0.4.0.tar.gz", hash = "sha256:8b6fd03bd166a59ac4b601573b1a4468bdc66c10ba933e6f41125ab34582137c", size = 3647, upload-time = "2015-12-09T09:00:28.836Z" }
 
 [[package]]
 name = "multidict"
@@ -1496,6 +1516,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "discord-py" },
     { name = "matplotlib" },
+    { name = "mtgjson" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "psycopg" },
@@ -1511,6 +1532,7 @@ dependencies = [
 requires-dist = [
     { name = "discord-py" },
     { name = "matplotlib" },
+    { name = "mtgjson", specifier = ">=0.4.0" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "psycopg" },

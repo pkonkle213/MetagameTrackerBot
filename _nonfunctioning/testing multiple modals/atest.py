@@ -4,6 +4,7 @@ from discord import app_commands, Interaction
 import settings
 from discord.ext import commands
 from services.btest import send_survey
+import mtgjson
 
 TESTGUILD = [settings.TESTGUILDID]
 
