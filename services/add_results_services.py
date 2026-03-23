@@ -11,7 +11,7 @@ from tuple_conversions import EventInput, Standing, Pairing, Event
 def SubmitData(
   submitted_event:EventInput,
   userId:int
-) -> Tuple[str|None, date|None]:
+) -> Tuple[str | None, Event | None]:
   """Submits an event's data to the database"""
   event_created = False
   if submitted_event.id == 0:
@@ -43,7 +43,7 @@ def SubmitData(
     results = AddPairingResults(event, submitted_event.PairingData, userId, submitted_event.round_number)
   else:
     raise Exception("Congratulations, you've reached the impossible to reach area.")
-  return results, event.event_date if event_created else None
+  return results, event if event_created else None
 
 def AddStandingResults(event:Event,
                        data:list[Standing],
@@ -67,7 +67,7 @@ def AddStandingResults(event:Event,
 def AddPairingResults(event:Event,
                       data:list[Pairing],
                       submitterId:int,
-                      round_number:int):
+                      round_number:int) -> str:
   round_number = data[0].round_number if not round_number else round_number
   successes = []
  

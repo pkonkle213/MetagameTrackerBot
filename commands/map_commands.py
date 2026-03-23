@@ -5,6 +5,7 @@ from services.game_mapper_services import AddStoreGameMap, GetGameOptions
 from select_menu_bones import SelectMenu
 from services.command_error_service import Error
 from services.map_claim_feed import MapClaimFeed
+from checks import isPhil
 
 class MappingCommands(commands.GroupCog, name='map'):
   """A group of commands for mapping channels to games, formats, and claim feeds"""
@@ -49,7 +50,6 @@ class MappingCommands(commands.GroupCog, name='map'):
       result = await SelectMenu(interaction, message, placeholder, dynamic_options)
       output = await AddStoreFormatMap(interaction, result[0])
       await interaction.followup.send(output, ephemeral=True)
-
 
   @AddClaimFeedMap.error
   @AddGameMap.error

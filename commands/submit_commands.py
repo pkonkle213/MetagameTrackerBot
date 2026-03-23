@@ -1,4 +1,3 @@
-from input_modals.submit_file_modal import SubmitFileModal
 import typing
 from services.claim_result_services import GetUserInput, AddTheArchetype, MessageStoreFeed
 from api_calls.melee_tournaments import GetMeleeTournamentData
@@ -12,6 +11,7 @@ from discord_messages import MessageChannel
 from interaction_objects import GetObjectsFromInteraction
 from services.add_results_services import SubmitData
 from services.command_error_service import Error
+from services.message_hubs_services import MessageHubs
 
 class SubmitDataChecker(commands.GroupCog, name='submit'):
   """A group of commands to submit data"""
@@ -63,6 +63,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     if full_event:
       await MessageChannel(self.bot, full_event, interaction.guild_id,
                            interaction.channel_id)
+      await MessageHubs(self.bot, store, event, full_event)
 
   @app_commands.command(
     name="data",
@@ -70,10 +71,12 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
   )
   @app_commands.checks.has_role('MTSubmitter')
   @app_commands.guild_only()
-  async def SubmitDataCommand(self,
-                              interaction: Interaction,
-                              csv_file: typing.Optional[Attachment] = None,
-                              melee_tournament_id: str = ''):
+  async def SubmitDataCommand(
+    self,
+    interaction: Interaction,
+    csv_file: typing.Optional[Attachment] = None,
+    melee_tournament_id: str = ''
+  ) -> None:
     """
     Parameters
     ----------    
@@ -151,7 +154,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       await interaction.followup.send('Errors:\n' + '\n'.join(submitted_event.Errors), ephemeral=True)
 
     #Submit the data to the database. Returning event for an announcement
-    output, event_created = SubmitData(
+    output, event = SubmitData(
       submitted_event,
       interaction.user.id
     )
@@ -161,11 +164,17 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     
     await interaction.followup.send(output, ephemeral=True)
     
-    if event_created:
+    if event:
       await MessageChannel(
-          self.bot,
-          f"New data for {event_created.strftime('%B %-d')}'s event has been submitted! Use the `/submit archetype` command to input your archetype!",
-          interaction.guild_id, interaction.channel_id)
+        self.bot,
+        f"New data for {event.event_date.strftime('%B %-d')}'s {event.event_name} event has been submitted! Use the `/submit archetype` command to input your archetype!",
+        interaction.guild_id,
+        interaction.channel_id
+      )
+      try:
+        await MessageHubs(self.bot, store, event)
+      except Exception as e:
+        await MessageChannel(self.bot, f"Issue messaging hubs: {e}", settings.BOTGUILDID, settings.ERRORCHANNELID)
 
   @SubmitCheck.error
   @SubmitDataCommand.error
@@ -178,6 +187,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
 async def NewDataMessage(bot: commands.Bot,
                          interaction: Interaction,
                          isError: bool):
+  if not interaction.guild or not interaction.channel:
+    raise Exception("No guild or channel to this interaction??")
   message = f"""
   {'Could not submit data due to error' if isError else 'Successfully received new data'}
     Guild name: {interaction.guild.name}
