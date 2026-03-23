@@ -1,7 +1,6 @@
 from settings import DATABASE_URL
 import psycopg
 
-#TODO: Fix this so the conflicts work again
 def AddClaimFeedMap(
   discord_id:int,
   channel_id:int,

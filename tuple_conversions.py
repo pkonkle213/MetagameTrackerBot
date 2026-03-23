@@ -2,7 +2,6 @@ from typing import NamedTuple
 from datetime import date
 from enum import Enum
 
-#TODO: Implement these so that I'm not testing against "magic" strings
 class EventType(Enum):
   Weekly = 1
   Tournament = 2
