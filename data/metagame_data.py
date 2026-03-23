@@ -6,8 +6,8 @@ from settings import DATABASE_URL
 from tuple_conversions import Event, Format, Game, Store
 
 def GetAreaForMeta(store: Store) -> str:
-  if store.is_hub:
-    return f'AND s.region = {store.region_id}'
+  if store.is_data_hub:
+    return f'AND s.region_id = {store.region_id}'
   if store.discord_id == settings.DATAGUILDID:
     return f'AND s.used_for_data = {True}'
   return f'AND s.discord_id = {store.discord_id}'

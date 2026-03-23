@@ -74,7 +74,7 @@ def GetInteractionDetails(
       s.store_address,
       s.used_for_data,
       s.state,
-      s.region,
+      s.region_id,
       s.is_data_hub,
       s.hub_format_lock,
       g.game_id,
