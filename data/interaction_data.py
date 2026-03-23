@@ -76,6 +76,7 @@ def GetInteractionDetails(
       s.state,
       s.region,
       s.is_data_hub,
+      s.hub_format_lock,
       g.game_id,
       g.game_name,
       f.format_id,
@@ -119,7 +120,7 @@ def GetInteractionDetails(
     if not row:
         raise KnownError("Nothing found for data provided")
 
-    store = Store(*row[0:10]) if row[0] else None
-    game = Game(*row[10:12]) if row[11] else None
-    format = Format(*row[12:16]) if row[13] else None
+    store = Store(*row[0:11]) if row[0] else None
+    game = Game(*row[11:13]) if row[11] else None
+    format = Format(*row[13:17]) if row[13] else None
     return store, game, format
