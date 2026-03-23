@@ -42,9 +42,10 @@ class Store(NamedTuple):
   owner_name: str
   address: str
   used_for_data: bool
-  state: str
-  region: str
+  state: int
+  region_id: str
   is_hub: bool
+  hub_format_lock: int
 
 class Event(NamedTuple):
   id: int

@@ -14,9 +14,11 @@ def MaxLength(headers, collection):
   maxLengths[len(maxLengths) - 1] -= 2
   return maxLengths
 
-def BuildTableOutput(title: str,
-                     headers: list[str],
-                     items: list):
+def BuildTableOutput(
+  title: str,
+  headers: list[str],
+  items: list
+) -> str:
   if headers == []:
     raise Exception('No headers provided')
   column_widths = MaxLength(headers, items)
