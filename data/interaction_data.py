@@ -32,7 +32,17 @@ def GetStoreByDiscord(discord_id: int) -> Store | None:
   with conn, conn.cursor(row_factory=class_row(Store)) as cur:
     command = f'''
     SELECT
-      *
+      discord_id,
+      discord_name,
+      store_name,
+      owner_id,
+      owner_name,
+      store_address,
+      used_for_data,
+      state,
+      region_id,
+      is_data_hub,
+      hub_format_lock
     FROM
       stores_view
     WHERE
@@ -48,10 +58,14 @@ def GetGameByMap(category_id: int) -> Game | None:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(Game)) as cur:
     command = f"""
-  SELECT id, name
-  FROM Games g
-  INNER JOIN game_category_maps gc ON g.id = gc.game_id
-  WHERE gc.category_id = {category_id}
+  SELECT
+    id,
+    game_name
+  FROM
+    games g
+    INNER JOIN game_category_maps gc ON g.id = gc.game_id
+  WHERE
+    gc.category_id = {category_id}
   """
 
     cur.execute(command)
