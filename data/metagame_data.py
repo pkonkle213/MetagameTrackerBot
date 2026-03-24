@@ -78,7 +78,7 @@ def GetMetagame(
         AND e.format_id = {format.id}
         AND e.game_id = {game.id}
       GROUP BY
-        INITCAP(ua.archetype_played)
+        INITCAP(COALESCE(ua.archetype_played), 'UNKNOWN')
       )
     WHERE
     metagame_percent >= 0.02
