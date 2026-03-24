@@ -32,7 +32,7 @@ def GetUserArchetypes(
       10
     """
 
-    criteria = [userId, store.discord_id, game.id, format.formaid
+    criteria = [userId, store.discord_id, game.id, format.id]
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return [row[0] for row in rows]
