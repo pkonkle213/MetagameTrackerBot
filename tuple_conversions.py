@@ -25,13 +25,13 @@ class Archetype(NamedTuple):
   submitter_name: str
 
 class Format(NamedTuple):
-  format_id: int
+  id: int
   format_name: str
   last_ban_update: date
   is_limited: bool
 
 class Game(NamedTuple):
-  game_id: int
+  id: int
   game_name: str
 
 class Store(NamedTuple):

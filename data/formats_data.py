@@ -41,7 +41,7 @@ def GetFormatsByGameId(game:Game) -> list[Format]:
     FROM
       formats
     WHERE
-      game_id = {game.game_id}
+      game_id = {game.id}
     ORDER BY
       format_name
     '''

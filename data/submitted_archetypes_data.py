@@ -24,8 +24,8 @@ def GetSubmittedArchetypes(
       INNER JOIN formats f on f.id = e.format_id
     WHERE ua.reported = FALSE
       AND e.discord_id = {store.discord_id}
-      AND e.game_id = {game.game_id}
-      {f'AND e.format_id = {format.format_id}' if format is not None else ''}
+      AND e.game_id = {game.id}
+      {f'AND e.format_id = {format.id}' if format is not None else ''}
       {f"AND e.event_date = '{date}'" if date is not None else ''}
       {f"AND UPPER(ua.player_name) = UPPER('{player_name}')" if player_name != '' else ''}
     ORDER BY

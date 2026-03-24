@@ -75,8 +75,8 @@ def GetMetagame(
       WHERE
         e.event_date BETWEEN '{start_date}' AND '{end_date}'
         {GetAreaForMeta(store)}
-        AND e.format_id = {format.format_id}
-        AND e.game_id = {game.game_id}
+        AND e.format_id = {format.id}
+        AND e.game_id = {game.id}
       GROUP BY
         INITCAP(ua.archetype_played)
       )

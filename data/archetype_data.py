@@ -57,8 +57,8 @@ def GetUnknownArchetypes(store:Store,
         unknown_archetypes ua
       WHERE
         event_date BETWEEN '{start_date}' AND '{end_date}'
-        AND game_id = {game.game_id}
-        AND format_id = {format.format_id}
+        AND game_id = {game.id}
+        AND format_id = {format.id}
         AND discord_id = {store.discord_id}
       ORDER BY
         event_date desc,

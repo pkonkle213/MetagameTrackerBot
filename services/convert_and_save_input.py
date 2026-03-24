@@ -67,8 +67,8 @@ def ConvertMeleeTournamentToDataErrors(
     archetypes,
     errors,
     store.discord_id,
-    game.game_id,
-    format.format_id
+    game.id,
+    format.id
   )
   return event
 
@@ -115,8 +115,8 @@ async def ConvertCSVToDataErrors(
     None,
     errors,
     store.discord_id,
-    game.game_id,
-    format.format_id
+    game.id,
+    format.id
   )
   
   return event
@@ -192,7 +192,7 @@ async def ConvertModalToDataErrors(
     None,
     errors,
     store.discord_id,
-    game.game_id,
-    format.format_id
+    game.id,
+    format.id
   )
   return event

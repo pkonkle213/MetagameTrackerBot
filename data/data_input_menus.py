@@ -33,8 +33,8 @@ def GetPreviousEvents(
       INNER JOIN formats f ON f.id = e.format_id
     WHERE
       s.discord_id = {store.discord_id}
-      AND e.game_id = {game.game_id}
-      AND e.format_id = {format.format_id}
+      AND e.game_id = {game.id}
+      AND e.format_id = {format.id}
       AND e.event_date >= CURRENT_DATE - INTERVAL '{interval} weeks'
       {f'AND e.event_type_id = {event_type}' if event_type else ''}
     ORDER BY

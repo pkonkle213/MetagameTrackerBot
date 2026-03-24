@@ -49,8 +49,8 @@ def GetStats(
                   discord_id = {discord_id}
                   AND submitter_id = {user_id}
               )
-              {f'AND e.format_id = {format.format_id}' if format else ''}
-              AND e.game_id = {game.game_id}
+              {f'AND e.format_id = {format.id}' if format else ''}
+              AND e.game_id = {game.id}
               AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
               AND e.discord_id = {discord_id}
           )
@@ -108,8 +108,8 @@ def GetTopPlayerData(
           INNER JOIN events e ON fs.event_id = e.id
         WHERE
           e.event_date BETWEEN '{start_date}' AND '{end_date}'
-          {f'AND e.format_id = {format.format_id}' if format else ''}
-          {f'AND e.game_id = {game.game_id}' if game else ''}
+          {f'AND e.format_id = {format.id}' if format else ''}
+          {f'AND e.game_id = {game.id}' if game else ''}
           AND e.discord_id = {store.discord_id}
       )
     SELECT

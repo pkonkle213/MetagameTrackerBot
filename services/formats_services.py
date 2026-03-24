@@ -11,7 +11,7 @@ async def AddStoreFormatMap(interaction: Interaction,
                             chosen_format: Format) -> str:
   discord_id, category_id, channel_id, user_id = SplitInteractionData(interaction)
 
-  rows = AddFormatMap(discord_id, chosen_format.format_id, channel_id)
+  rows = AddFormatMap(discord_id, chosen_format.id, channel_id)
   if rows is None:
     return 'Unable to add game map to database'
   try:

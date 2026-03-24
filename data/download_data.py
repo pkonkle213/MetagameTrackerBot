@@ -33,8 +33,8 @@ def GetStoreStandingData(
       INNER JOIN formats f ON f.id = e.format_id
     WHERE
       e.discord_id = {store.discord_id}
-      {f'AND e.game_id = {game.game_id}' if game else ''}
-      {f'AND e.format_id = {format.format_id}' if format else ''}
+      {f'AND e.game_id = {game.id}' if game else ''}
+      {f'AND e.format_id = {format.id}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     ORDER BY
       event_date DESC,
@@ -80,8 +80,8 @@ def GetStorePairingData(
       AND upper(ua2.player_name) = upper(frr.opponent_name)
     WHERE
       s.discord_id = {store.discord_id}  
-      {f'AND e.game_id = {game.game_id}' if game else ''}
-      {f'AND e.format_id = {format.format_id}' if format else ''}
+      {f'AND e.game_id = {game.id}' if game else ''}
+      {f'AND e.format_id = {format.id}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     ORDER BY
       g.game_name,
@@ -127,8 +127,8 @@ def GetPlayerPairingData(
     WHERE
       s.discord_id = {store.discord_id}
       AND pn.submitter_id = {user_id}
-      {f'AND e.game_id = {game.game_id}' if game else ''}
-      {f'AND e.format_id = {format.format_id}' if format else ''}
+      {f'AND e.game_id = {game.id}' if game else ''}
+      {f'AND e.format_id = {format.id}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
     ORDER BY
       g.game_name,
@@ -173,8 +173,8 @@ def GetPlayerStandingData(
       AND UPPER(pn.player_name) = UPPER(fp.player_name)
     WHERE
       e.discord_id = {store.discord_id}
-      {f'AND e.game_id = {game.game_id}' if game else ''}
-      {f'AND e.format_id = {format.format_id}' if format else ''}
+      {f'AND e.game_id = {game.id}' if game else ''}
+      {f'AND e.format_id = {format.id}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
       AND pn.submitter_id = {user_id}
     ORDER BY

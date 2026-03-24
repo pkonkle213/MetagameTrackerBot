@@ -48,8 +48,8 @@ def GetWinPercentage(
       e.discord_id = {store.discord_id}
       AND pn.submitter_id = {user_id}
       AND e.event_date >= CURRENT_DATE - INTERVAL '1 year'
-      AND e.format_id = {format.format_id}
-      AND e.game_id = {game.game_id}
+      AND e.format_id = {format.id}
+      AND e.game_id = {game.id}
     """
     cur.execute(command)
     row = cur.fetchone()
@@ -82,8 +82,8 @@ def GetLastArchetype(
       e.discord_id = {store.discord_id}
       AND e.event_date < CURRENT_DATE
       AND pn.submitter_id = {user_id}
-      AND e.format_id = {format.format_id}
-      AND e.game_id = {game.game_id}
+      AND e.format_id = {format.id}
+      AND e.game_id = {game.id}
     ORDER BY e.event_date DESC
     LIMIT 1
     """
@@ -122,8 +122,8 @@ def GetMostPlayed(
     WHERE
       e.discord_id = {store.discord_id}
       AND pn.submitter_id = {user_id}
-      AND e.format_id = {format.format_id}
-      AND e.game_id = {game.game_id}
+      AND e.format_id = {format.id}
+      AND e.game_id = {game.id}
       AND e.event_date >= CURRENT_DATE - INTERVAL '1 year'
     GROUP BY
       INITCAP(archetype_played)
