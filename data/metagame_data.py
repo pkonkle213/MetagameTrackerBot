@@ -48,6 +48,7 @@ def OneEventMetagame(
     rows = cur.fetchall()
     return rows
 
+#TODO: Why doesn't this work with the data guild???
 def GetMetagame(
   store: Store,
   game: Game,
