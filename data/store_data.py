@@ -50,13 +50,15 @@ def DeleteStore(discord_id) -> bool:
     success = cur.fetchone()
     return True if success else False
 
-def AddStore(discord_id,
+def AddStore(
+  discord_id,
   discord_name,
   owner_id,
-  owner_name) -> int:
+  owner_name
+) -> int:
   conn = psycopg.connect(DATABASE_URL)
   discord_name = discord_name.replace("'","")
-  with conn, conn.cursor() as cur:
+  with conn, conn.cursor(row_factory=class_row(int)) as cur:
     command = f'''
     INSERT INTO Stores (discord_id, discord_name, owner_id, owner_name, used_for_data, is_data_hub)
     VALUES ({discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True}, {False})
@@ -70,27 +72,30 @@ def AddStore(discord_id,
     row = cur.fetchone()
     if not row:
       raise Exception(f'Unable to add store: {discord_id}')
-    return row[0] 
+    return row
 
 def GetAllStoreDiscordIds():
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+  with conn, conn.cursor(row_factory=class_row(list[int])) as cur:
     command = '''
     SELECT discord_id
     FROM Stores
     '''
     cur.execute(command)
     rows = cur.fetchall()
-    return [row[0] for row in rows]
+    return rows
 
-def GetClaimFeed(discord_id, category_id):
+def GetClaimFeed(
+  discord_id,
+  category_id
+) -> int:
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+  with conn, conn.cursor(row_factory=class_row(int)) as cur:
     command = f'''
     SELECT
       channel_id
     FROM
-      claimchannels cc
+      archetype_feeds cc
       INNER JOIN game_category_maps gcm ON cc.discord_id = gcm.discord_id
       AND cc.game_id = gcm.game_id
     WHERE
@@ -100,4 +105,6 @@ def GetClaimFeed(discord_id, category_id):
 
     cur.execute(command)
     row = cur.fetchone()
-    return row[0] if row else None
+    if not row:
+      raise Exception(f'Unable to find claim feed for store: {discord_id}')
+    return row

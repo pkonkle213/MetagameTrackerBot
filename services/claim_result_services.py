@@ -40,7 +40,9 @@ async def GetUserInput(
   
   return modal.submitted_player_name, modal.submitted_event, archetype
 
-async def MessageStoreFeed(bot, message, interaction):
+async def MessageStoreFeed(bot,
+                           message:str,
+                           interaction:Interaction):
   try:
     #Message the store feed channel specific to the game
     channel_id = GetClaimFeed(interaction.guild_id,
@@ -56,7 +58,7 @@ async def MessageStoreFeed(bot, message, interaction):
                          settings.BOTGUILDID,
                          settings.CLAIMCHANNEL)
 
-async def AddTheArchetype(
+def AddTheArchetype(
   interaction:Interaction,
   player_name:str,
   event:Event,
@@ -66,21 +68,21 @@ async def AddTheArchetype(
   format:Format
 ) -> Tuple[str, str, str|None, str|None]:
   player_name = ConvertInput(player_name)
-  archetype_submitted = await ClaimResult(interaction,
-                                          player_name,
-                                          archetype,
-                                          event,
-                                          store,
-                                          game,
-                                          format)
+  archetype_submitted = ClaimResult(interaction,
+                                    player_name,
+                                    archetype,
+                                    event,
+                                    store,
+                                    game,
+                                    format)
   if archetype_submitted is None:
     raise KnownError('Unable to submit the archetype. Please try again later.')
-  else:
-    message = BuildMessage(interaction, event, archetype, player_name)
-    feed_output = message
-    private_output = f"Thank you for submitting the archetype for {event.event_name}!"
-    public_output, event_full = CheckEventPercentage(event)
-    return private_output, feed_output, public_output, event_full
+  
+  message = BuildMessage(interaction, event, archetype, player_name)
+  feed_output = message
+  private_output = f"Thank you for submitting the archetype for {event.event_name}!"
+  public_output, event_full = CheckEventPercentage(event)
+  return private_output, feed_output, public_output, event_full
 
 def BuildMessage(
   interaction:Interaction,
@@ -97,7 +99,7 @@ def BuildMessage(
   message_parts.append(f'For channel name: {interaction.channel.name}')
   return '\n'.join(message_parts)  
 
-async def ClaimResult(
+def ClaimResult(
   interaction:Interaction,
   player_name:str,
   archetype:str,

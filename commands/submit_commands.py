@@ -54,7 +54,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       raise KnownError('No store, game, or format found.')
 
     player_name, event, archetype = await GetUserInput(store, game, format, userId, interaction)
-    private_output, feed_output, public_output, full_event = await AddTheArchetype(interaction, player_name, event, archetype, store, game, format)
+    private_output, feed_output, public_output, full_event = AddTheArchetype(interaction, player_name, event, archetype, store, game, format)
     await interaction.followup.send(private_output, ephemeral=True)
     await MessageStoreFeed(self.bot, feed_output, interaction)
     if public_output:
