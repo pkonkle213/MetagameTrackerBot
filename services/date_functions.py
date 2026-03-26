@@ -1,10 +1,10 @@
+from custom_errors import KnownError
 from datetime import datetime, timedelta, date
 from typing import Tuple
 import pytz
 from tuple_conversions import Format
 
 TIMEZONE = pytz.timezone('America/New_York')
-
 
 def BuildDateRange(
   start_date: str,
@@ -18,30 +18,26 @@ def BuildDateRange(
     date_start = ConvertToDate(start_date)
   elif format and format.last_ban_update and format.last_ban_update > date_start:
     date_start = format.last_ban_update
+  if date_start > date_end:
+    raise KnownError("The start date cannot be after the end date")
   return date_start, date_end
-
 
 def DateDifference(date1, date2) -> int:
   return abs((date1 - date2).days)
-
 
 def GetStartDate(end_date, weeks) -> date:
   start = end_date - timedelta(days=end_date.weekday()) - timedelta(
       weeks=weeks)
   return start
 
-
 def GetWeeksAgo(date, weeks) -> date:
   return date - timedelta(weeks=weeks)
-
 
 def GetDaysAgo(date, days) -> date:
   return date - timedelta(days=days)
 
-
 def GetToday() -> date:
   return datetime.now(TIMEZONE).date()
-
 
 def ConvertToDate(date) -> date:
   if date.count('/') == 1:

@@ -1,3 +1,4 @@
+from services.input_services import ConvertInput
 import discord
 from tuple_conversions import Event, Game, Format, Store
 from discord import ui, Interaction
@@ -44,12 +45,6 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
 
     self.archetypes = GetUserArchetypes(store, userId, game, format)
     archetype_options = [discord.SelectOption(label=archetype, value=archetype) for archetype in self.archetypes]
-    """for i in range(len(self.archetypes)):
-      option = self.archetypes[i]
-      if i == 0:
-        archetype_options.append(discord.SelectOption(label=option, value=option))
-      else:
-        archetype_options.append(discord.SelectOption(label=option, value=option))"""
     
     self.event_select = ui.Label(
         text="Event",
@@ -135,7 +130,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
       self.submitted_archetype:str = DetermineArchetype(self)
 
     self.submitted_event:Event = GetEvent(self.previous_events, self.event_select.component.values[0])
-    self.submitted_player_name:str = self.player_name.component.value
+    self.submitted_player_name:str = ConvertInput(self.player_name.component.value)
     self.is_submitted:bool = True
     await interaction.response.defer(thinking=False)
 
@@ -147,9 +142,6 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     self.is_submitted = False
 
 def DetermineArchetype(self) -> str:
-  print("Archetype_select values:", self.archetype_select.component.values)
-  print("New archetype value:", self.new_archetype.component.value)
-
   archetype = ''
   if not self.archetype_select.component.values:
     archetype = self.new_archetype.component.value
@@ -158,7 +150,7 @@ def DetermineArchetype(self) -> str:
   else:
     archetype = self.archetype_select.component.values[0]
 
-  print('Archetype selected:', archetype)
+  archetype = ConvertInput(archetype)
   return archetype
 
 def GetEvent(
@@ -167,7 +159,6 @@ def GetEvent(
 ) -> Event:
   for event in past_events:
     if event.id == int(event_id):
-      print('Event selected:', event)
       return event
   raise Exception('No event found?')
 
