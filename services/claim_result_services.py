@@ -12,7 +12,7 @@ from services.input_services import ConvertInput
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from output_builder import BuildTableOutput
 from data.metagame_data import OneEventMetagame
-from discord_messages import MessageChannel
+from discord_messages import MessageChannel, MessageUser
 from tuple_conversions import Event, Format, Store, Game
 
 async def GetUserInput(
@@ -47,16 +47,18 @@ async def MessageStoreFeed(bot,
     #Message the store feed channel specific to the game
     channel_id = GetClaimFeed(interaction.guild_id,
                               interaction.channel.category.id)
+    await MessageUser(bot, message + f"\nChannel ID:{channel_id}", settings.PHILID)
     await MessageChannel(bot,
                          message,
                          interaction.guild_id,
                          channel_id)
-  except Exception:
+  except Exception as e:
     #If none listed or found, message the bot guild
     await MessageChannel(bot,
                          message,
                          settings.BOTGUILDID,
                          settings.CLAIMCHANNEL)
+    await MessageUser(bot, message + f"\nError: {e}", settings.PHILID)
 
 def AddTheArchetype(
   interaction:Interaction,
