@@ -40,7 +40,10 @@ def GetToday() -> date:
   return datetime.now(TIMEZONE).date()
 
 def ConvertToDate(date) -> date:
-  if date.count('/') == 1:
-    date += '/' + str(GetToday().year)
-  newDate = datetime.strptime(date, '%m/%d/%Y').date()
-  return newDate
+  try:
+    if date.count('/') == 1:
+      date += '/' + str(GetToday().year)
+    newDate = datetime.strptime(date, '%m/%d/%Y').date()
+    return newDate
+  except Exception as e:
+    raise KnownError(f'Unable to convert "{date}" to a date. Please use the format MM/DD/YYYY.')

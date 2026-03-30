@@ -1,11 +1,10 @@
 from data.data_hubs_data import GetHubs
-from discord_messages import MessageChannel
+from discord_messages import MessageChannel, MessageUser
 from tuple_conversions import Event, Store
 from discord.ext import commands
 from data.data_hubs_data import GetChannelFormatLocked, GetChannelGeneralHub
 from services.command_error_service import Error
 import settings
-
 
 async def MessageHubs(bot: commands.Bot, store: Store, event: Event, message:str ='') -> None:
     """Sends a message to the hubs that a new event has been added"""
@@ -29,4 +28,4 @@ async def MessageHubs(bot: commands.Bot, store: Store, event: Event, message:str
                 )
         except Exception as e:
             await MessageChannel(bot, e, settings.BOTGUILDID, settings.ERRORCHANNELID)
-            print(f"Error messaging hub {hub.discord_name}: {e}")
+            await MessageUser(bot, f"Error messaging hub {hub.discord_name}: {e}", settings.PHILID)

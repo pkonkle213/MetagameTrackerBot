@@ -40,6 +40,7 @@ async def GetUserInput(
   
   return modal.submitted_player_name, modal.submitted_event, archetype
 
+#TODO: Why aren't these working??
 async def MessageStoreFeed(bot,
                            message:str,
                            interaction:Interaction):
