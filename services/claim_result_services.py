@@ -59,7 +59,7 @@ async def MessageStoreFeed(bot,
                          message,
                          settings.BOTGUILDID,
                          settings.CLAIMCHANNEL)
-    await MessageUser(bot, message + f"\nError: {e}", settings.PHILID)
+    await MessageUser(bot, message + f"\nError: {e}\nChannel_id: {channel_id}\nChannel_id type: {type(channel_id)}", settings.PHILID)
 
 def AddTheArchetype(
   interaction:Interaction,

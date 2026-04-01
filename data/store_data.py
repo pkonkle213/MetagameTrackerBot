@@ -86,8 +86,8 @@ def GetAllStoreDiscordIds():
     return rows
 
 def GetClaimFeed(
-  discord_id,
-  category_id
+  discord_id: int,
+  category_id: int
 ) -> int:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(int)) as cur:
