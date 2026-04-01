@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Tuple, Any
 import settings
 from custom_errors import KnownError
-from data.store_data import GetClaimFeed
+from data.store_data import GetArchetypeFeed
 from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
 from input_modals.submit_archetype_modal import SubmitArchetypeModal
@@ -41,13 +41,16 @@ async def GetUserInput(
   return modal.submitted_player_name, modal.submitted_event, archetype
 
 #TODO: Why aren't these working??
-async def MessageStoreFeed(bot,
-                           message:str,
-                           interaction:Interaction):
+async def MessageStoreFeed(
+  bot,
+  message:str,
+  interaction:Interaction
+) -> None:
+  await MessageUser(bot, "In MessageStoreFeed, trying to get channel_id", settings.PHILID)
   #Message the store feed channel specific to the game
-  channel_id = GetClaimFeed(interaction.guild_id,
-                            interaction.channel.category.id)
   try:
+    channel_id = GetArchetypeFeed(interaction.guild_id,
+                                  interaction.channel.category.id)
     await MessageUser(bot, message + f"\nChannel ID:{channel_id}", settings.PHILID)
     await MessageChannel(bot,
                          message,
@@ -59,7 +62,7 @@ async def MessageStoreFeed(bot,
                          message,
                          settings.BOTGUILDID,
                          settings.CLAIMCHANNEL)
-    await MessageUser(bot, message + f"\nError: {e}\nChannel_id: {channel_id}\nChannel_id type: {type(channel_id)}", settings.PHILID)
+    await MessageUser(bot, message + f"\nError: {e}", settings.PHILID)
 
 def AddTheArchetype(
   interaction:Interaction,

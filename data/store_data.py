@@ -85,7 +85,7 @@ def GetAllStoreDiscordIds():
     rows = cur.fetchall()
     return rows
 
-def GetClaimFeed(
+def GetArchetypeFeed(
   discord_id: int,
   category_id: int
 ) -> int:
@@ -106,5 +106,5 @@ def GetClaimFeed(
     cur.execute(command)
     row = cur.fetchone()
     if not row:
-      raise Exception(f'Unable to find claim feed for store: {discord_id}')
+      raise Exception(f'Unable to find archetype submission feed for store: {discord_id}')
     return row
