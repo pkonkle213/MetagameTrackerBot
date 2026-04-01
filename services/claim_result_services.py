@@ -44,10 +44,10 @@ async def GetUserInput(
 async def MessageStoreFeed(bot,
                            message:str,
                            interaction:Interaction):
+  #Message the store feed channel specific to the game
+  channel_id = GetClaimFeed(interaction.guild_id,
+                            interaction.channel.category.id)
   try:
-    #Message the store feed channel specific to the game
-    channel_id = GetClaimFeed(interaction.guild_id,
-                              interaction.channel.category.id)
     await MessageUser(bot, message + f"\nChannel ID:{channel_id}", settings.PHILID)
     await MessageChannel(bot,
                          message,
