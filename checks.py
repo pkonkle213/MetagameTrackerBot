@@ -2,6 +2,7 @@ from discord import utils, Interaction, app_commands
 from settings import PHILID
 from timedposts.automated_paid_users import PAID_USERS
 
+#TODO: Unify the style of how these checks work. For consistency's sake
 def isPaidUser():
   async def predicate(interaction: Interaction) -> bool:
     return interaction.user.id in PAID_USERS  

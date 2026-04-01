@@ -28,6 +28,7 @@ async def on_ready():
   data_guild_update.start()
   find_the_unknown.start()
   sync_paid_users.start()
+  #sync_paid_stores.start()
   await SyncCommands(bot, CMDS_DIR)
   print('Synced commands. Good to go')
 
