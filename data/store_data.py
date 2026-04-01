@@ -1,4 +1,4 @@
-from psycopg.rows import class_row
+from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
 import psycopg
 from tuple_conversions import Store
@@ -90,7 +90,7 @@ def GetArchetypeFeed(
   category_id: int
 ) -> int:
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(int)) as cur:
+  with conn, conn.cursor(row_factory=scalar_row) as cur:
     command = f'''
     SELECT
       channel_id
