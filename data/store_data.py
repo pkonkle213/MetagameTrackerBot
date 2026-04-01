@@ -58,7 +58,7 @@ def AddStore(
 ) -> int:
   conn = psycopg.connect(DATABASE_URL)
   discord_name = discord_name.replace("'","")
-  with conn, conn.cursor(row_factory=class_row(int)) as cur:
+  with conn, conn.cursor(row_factory=scalar_row) as cur:
     command = f'''
     INSERT INTO Stores (discord_id, discord_name, owner_id, owner_name, used_for_data, is_data_hub)
     VALUES ({discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True}, {False})

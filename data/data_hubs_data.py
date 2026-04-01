@@ -1,4 +1,4 @@
-from psycopg.rows import class_row
+from psycopg.rows import class_row, scalar_row
 from tuple_conversions import Store, Event
 import psycopg
 from settings import DATABASE_URL
@@ -44,7 +44,7 @@ def GetHubs(store: Store, event: Event) -> list[Store]:
 def GetChannelGeneralHub(hub: Store, event: Event) -> int:
     """Gets the discordIds and channelIds for general hubs"""
     conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(int)) as cur:
+    with conn, conn.cursor(row_factory=scalar_row) as cur:
       command = f"""
       SELECT
         channel_id
@@ -67,7 +67,7 @@ def GetChannelGeneralHub(hub: Store, event: Event) -> int:
 def GetChannelFormatLocked(hub: Store, store: Store) -> int:
     """Gets the channel id for the format of the event"""
     conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(int)) as cur:
+    with conn, conn.cursor(row_factory=scalar_row) as cur:
       command = f"""
       SELECT
         channel_id
