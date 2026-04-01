@@ -46,12 +46,10 @@ async def MessageStoreFeed(
   message:str,
   interaction:Interaction
 ) -> None:
-  await MessageUser(bot, "In MessageStoreFeed, trying to get channel_id", settings.PHILID)
   #Message the store feed channel specific to the game
   try:
     channel_id = GetArchetypeFeed(interaction.guild_id,
                                   interaction.channel.category.id)
-    await MessageUser(bot, message + f"\nChannel ID:{channel_id}", settings.PHILID)
     await MessageChannel(bot,
                          message,
                          interaction.guild_id,

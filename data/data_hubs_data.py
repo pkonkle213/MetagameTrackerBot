@@ -10,6 +10,8 @@ def GetHubs(store: Store, event: Event) -> list[Store]:
     with conn, conn.cursor(row_factory=class_row(Store)) as cur:
       command = f"""
       SELECT
+        discord_id,
+        discord_name,
         store_name,
         owner_id,
         owner_name,
