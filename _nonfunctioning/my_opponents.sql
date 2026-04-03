@@ -12,7 +12,7 @@ SELECT
 FROM
   full_pairings
 WHERE
-  UPPER(player_name) = 'PHILLIP KONKLE'
+  UPPER(player_name) = UPPER('PHILLIP KONKLE')
   AND INITCAP(opponent_name) != 'Bye'
 GROUP BY
   INITCAP(opponent_name)

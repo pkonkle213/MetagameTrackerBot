@@ -63,7 +63,10 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     if full_event:
       await MessageChannel(self.bot, full_event, interaction.guild_id,
                            interaction.channel_id)
-      await MessageHubs(self.bot, store, event, full_event)
+      name = store.store_name if store.store_name else store.discord_name
+      output = f"```{name} - " + full_event[3:]
+      await MessageHubs(self.bot, store, event, output)
+      #TODO: Get the updated metagame for hubs and message that as well
 
   @app_commands.command(
     name="data",
