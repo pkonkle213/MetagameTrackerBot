@@ -63,7 +63,10 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     if full_event:
       await MessageChannel(self.bot, full_event, interaction.guild_id,
                            interaction.channel_id)
-      await MessageHubs(self.bot, store, event, full_event)
+      name = store.store_name if store.store_name else store.discord_name
+      output = f"```{name} - " + full_event[3:]
+      await MessageHubs(self.bot, store, event, output)
+      #TODO: Get the updated metagame for hubs and message that as well
 
   @app_commands.command(
     name="data",
@@ -139,7 +142,6 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     if submitted_event.PairingData is None and submitted_event.StandingData is None:
       raise KnownError("Unable to submit due to not recognizing the data. Please try again.")
     await NewDataMessage(self.bot, interaction, failure)
-    print('Notified of event')
 
     #Advise user of submission process starting
     message_type = 'standings' if submitted_event.StandingData else 'pairings'
@@ -198,10 +200,10 @@ async def NewDataMessage(bot: commands.Bot,
     Author name: {interaction.user.name}
     Author id: {interaction.user.id}
     """
-  if interaction.guild.id == 1437606618144444448:
-    print(message)
-  else:
-    await MessageChannel(bot, message, settings.BOTGUILDID,
+  
+  await MessageChannel(bot,
+                       message,
+                       settings.BOTGUILDID,
                        settings.BOTEVENTINPUTID)
 
 
