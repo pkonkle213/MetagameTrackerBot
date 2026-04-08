@@ -1,9 +1,9 @@
 from data.sync_check_data import GetFive6Users, GetStores, GetHubs
 from settings import PHILID
 
-PAID_USERS: list[int]
-STORES: list[int]
-HUBS: list[int]
+PAID_USERS: list[int] = [PHILID] + GetFive6Users()
+STORES: list[int] = GetStores()
+HUBS: list[int] = GetHubs()
 
 def UpdatePaidUsers() -> None:
   global PAID_USERS
