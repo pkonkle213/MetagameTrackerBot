@@ -44,7 +44,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
         past_events.append(discord.SelectOption(label=label, value=value))
 
     self.archetypes = GetUserArchetypes(store, userId, game, format)
-    archetype_options = [discord.SelectOption(label=archetype, value=archetype) for archetype in self.archetypes]
+    archetype_options = [discord.SelectOption(label="Please enter an archetype", value="0")] + [discord.SelectOption(label=archetype, value=archetype) for archetype in self.archetypes]
     
     self.event_select = ui.Label(
         text="Event",
@@ -55,15 +55,15 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     )
     self.add_item(self.event_select)
   
-    self.player_name = ui.Label(
+    self.player_name_input = ui.Label(
       text="Player Name",
       component=ui.TextInput(
         placeholder="Player name",
-        default=self.player_name,
+        default=self.player_name if self.player_name else '',
         required=True
       )
     )
-    self.add_item(self.player_name)
+    self.add_item(self.player_name_input)
   
     if self.game.game_name.upper() == 'LORCANA':
       self.inks = ui.Label(
@@ -130,7 +130,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
       self.submitted_archetype:str = DetermineArchetype(self)
 
     self.submitted_event:Event = GetEvent(self.previous_events, self.event_select.component.values[0])
-    self.submitted_player_name:str = ConvertInput(self.player_name.component.value)
+    self.submitted_player_name:str = ConvertInput(self.player_name_input.component.value)
     self.is_submitted:bool = True
     await interaction.response.defer(thinking=False)
 
@@ -162,5 +162,8 @@ def GetEvent(
       return event
   raise Exception('No event found?')
 
-def IsMagicLimited(game: Game, format:Format) -> bool:
+def IsMagicLimited(
+  game: Game,
+  format:Format
+) -> bool:
   return game.game_name.upper() == 'MAGIC' and format and format.is_limited
