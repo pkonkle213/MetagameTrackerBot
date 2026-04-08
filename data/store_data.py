@@ -74,9 +74,9 @@ def AddStore(
       raise Exception(f'Unable to add store: {discord_id}')
     return row
 
-def GetAllStoreDiscordIds():
+def GetAllStoreDiscordIds() -> list[int]:
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(list[int])) as cur:
+  with conn, conn.cursor(row_factory=scalar_row) as cur:
     command = '''
     SELECT discord_id
     FROM Stores

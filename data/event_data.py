@@ -96,7 +96,8 @@ def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
       fp.event_id = {event_id}
     ORDER BY
       wins DESC,
-      draws DESC
+      draws DESC,
+      1 DESC
     '''
     
     cur.execute(command)

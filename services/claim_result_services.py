@@ -137,12 +137,12 @@ def CheckEventPercentage(event:Event) -> Tuple[str | None, str | None]:
     check = UpdateEvent(event.id)
     if check is None:
       raise Exception(f'Unable to update event: {event.id}')
-    str_date = event.event_date.strftime('%B %d')
+    str_date = event.event_date.strftime('%B %-d')
     if event.last_update + 1 < 4:
-      followup = f'Congratulations! The {str_date} event is now {percent_reported:.0%} reported!'
+      followup = f"Congratulations! {str_date}'s {event.event_name} is now {percent_reported:.0%} reported!"
       final = None
     else:
-      followup = f'Congratulations! The {str_date} event is now fully reported! Thank you to all who reported their archetypes!'
+      followup = f"Congratulations! {str_date}'s {event.event_name} is now fully reported! Thank you to all who reported their archetypes!"
       title, headers, data = OneEventDetails(event)
       final = BuildTableOutput(title, headers, data)
     return followup, final
