@@ -34,7 +34,7 @@ def GetAllGames() -> list[Game]:
   with conn, conn.cursor(row_factory=class_row(Game)) as cur:
     command = '''
     SELECT
-      id as game_id,
+      id,
       game_name
     FROM
       games

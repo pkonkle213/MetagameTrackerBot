@@ -25,24 +25,26 @@ async def UpdateStoreDetails(interaction: discord.Interaction):
   result = UpdateStore(store.discord_id,
                        modal.submitted_owners_name,
                        modal.submitted_store_name,
-                       modal.submitted_store_address,
+                       '', #modal.submitted_store_address,
                        modal.submitted_melee_id,
                        modal.submitted_melee_secret)
   
   if result:
     return 'Store profile updated'
 
+#TODO: Make smaller methods with try/except blocks so that registration isn't stopped by one error, if appropriate
 async def NewStoreRegistration(bot:discord.Client,
                                guild: discord.Guild):
   """Goes through steps to register a new store and automap categories and channels"""
   try:
     if guild is None:
-      raise Exception('A guild added the bot, unable to unable to find it')
-    print('Adding store to database')
+      raise Exception('Was unable to find the guild')
     AddStoreToDatabase(guild)
-    print('Creating mappings')
     message, mappings = MapCategoriesAndChannels(guild)
     await MessageOwnerMappings(guild, message, mappings)
+
+    #Create and assign MTSubmitter role in guild
+    print('Creating MTSubmitter role')
     output = await CreateMTSubmitterRole(guild)
     owner = guild.owner
     if owner is None:
@@ -94,34 +96,38 @@ def MatchFormat(channel_name: str, formats: list[Format]):
     if format.format_name.lower() in channel_name.lower():
       return format
 
-def MapCategoriesAndChannels(guild: discord.Guild):
+def MapCategoriesAndChannels(guild: discord.Guild) -> tuple[str, bool]:
   """Sequentially maps the categories and channels in the guild"""
-  output = ''
-  mapping = False
-  games = GetGameOptions()
-  if games is None:
-    raise Exception('No games found to automap')
-
-  for category in guild.categories:
-    game = MatchGame(category.name, games)
-    if game:
-      result = AddGameMap(guild.id, game.game_id, category.id)
-      mapping = True
-      if result:
-        output += f'Game: {game.game_name.title()}, Category: {category.name} ({category.id})\n'
-    
-      formats = GetFormatsByGameId(game.game_id)
-      if formats:
-        for channel in category.channels:
-          format = MatchFormat(channel.name, formats)
-          if format:
-            result = AddFormatMap(guild.id, format.format_id, channel.id)
-            if result:
-              output += f'Format: {format.format_name.title()}, Channel: {channel.name} ({channel.id})\n'
-
-      output += '\n'
-
-  return output, mapping
+  try:
+    output = ''
+    mapping = False
+    games = GetGameOptions()
+    if games is None:
+      raise Exception('No games found to automap')
+  
+    for category in guild.categories:
+      game = MatchGame(category.name, games)
+      if game:
+        result = AddGameMap(guild.id, game.game_id, category.id)
+        mapping = True
+        if result:
+          output += f'Game: {game.game_name.title()}, Category: {category.name} ({category.id})\n'
+      
+        formats = GetFormatsByGameId(game.game_id)
+        if formats:
+          for channel in category.channels:
+            format = MatchFormat(channel.name, formats)
+            if format:
+              result = AddFormatMap(guild.id, format.format_id, channel.id)
+              if result:
+                output += f'Format: {format.format_name.title()}, Channel: {channel.name} ({channel.id})\n'
+  
+        output += '\n'
+  
+    return output, mapping
+  except Exception as e:
+    print('Error mapping categories and channels:', e)
+    return '', False
 
 async def CreateMTSubmitterRole(guild:discord.Guild):
   """Creates the MTSubmitter role and assigns it to the owner"""
@@ -135,11 +141,12 @@ async def CreateMTSubmitterRole(guild:discord.Guild):
     try:
       perms = discord.Permissions(manage_messages=True)
       mtsubmitter_role = await guild.create_role(name="MTSubmitter", permissions=perms)
+      print('MTSubmitter role created')
       await owner.add_roles(mtsubmitter_role)
-      print('Success!')
+      print('MTSubmitter role assigned!')
       return 'MTSubmitter role created and assigned to owner.'
-    except Exception:
-      print('Failure to create or assign MTSubmitter role')
+    except Exception as e:
+      print('Failure to create or assign MTSubmitter role:', e)
       return 'Unable to create MTSubmitter role. Please create and assign manually.'
 
 async def AssignStoreOwnerRoleInBotGuild(bot:discord.Client, owner_id: int):
