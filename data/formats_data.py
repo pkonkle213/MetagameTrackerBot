@@ -34,7 +34,7 @@ def GetFormatsByGameId(game:Game) -> list[Format]:
   with conn, conn.cursor(row_factory=class_row(Format)) as cur:
     command = f'''
     SELECT
-      id as format_id,
+      id,
       format_name,
       last_ban_update,
       is_limited
