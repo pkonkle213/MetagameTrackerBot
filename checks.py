@@ -3,6 +3,7 @@ from settings import PHILID
 from timedposts.automated_paid_users import PAID_USERS
 
 def isPaidUser():
+  """Check to see if the user is a paid user"""
   async def predicate(interaction: Interaction) -> bool:
     return interaction.user.id in PAID_USERS  
   return app_commands.check(predicate)

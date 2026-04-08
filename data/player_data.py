@@ -1,8 +1,33 @@
+from custom_errors import KnownError
+from psycopg.rows import scalar_row
 from datetime import date
 from settings import DATABASE_URL
 import psycopg
 from settings import BOTGUILDID
 from tuple_conversions import Format, Game, Store
+
+def GetPlayerWinPercentage(submitter_id:int) -> float:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=scalar_row) as cur:
+    command = f'''
+    SELECT
+      SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)) AS win_rate
+    FROM
+      player_names pn
+      INNER JOIN stores s ON s.discord_id = pn.discord_id
+      INNER JOIN events e ON e.discord_id = s.discord_id
+      INNER JOIN full_standings fs ON fs.event_id = e.id
+      AND UPPER(pn.player_name) = UPPER(fs.player_name)
+    WHERE
+      submitter_id = {submitter_id}
+    '''
+
+    cur.execute(command)
+    row = cur.fetchone()
+    if not row:
+      raise KnownError('No data found for this player')
+    return row
+    
 
 def GetStats(
   discord_id:int,
