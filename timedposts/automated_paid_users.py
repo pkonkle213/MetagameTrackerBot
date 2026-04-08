@@ -1,4 +1,3 @@
-from discord.types.invite import GatewayInvite
 from data.sync_check_data import GetFive6Users, GetStores, GetHubs
 from settings import PHILID
 
