@@ -95,8 +95,8 @@ def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
     WHERE
       fp.event_id = {event_id}
     ORDER BY
-      wins DESC,
-      draws DESC,
+      2 DESC,
+      4 DESC,
       1 DESC
     '''
     
