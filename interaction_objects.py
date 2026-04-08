@@ -5,7 +5,7 @@ from tuple_conversions import Game, Format, Store
 
 def GetObjectsFromInteraction(
     interaction: discord.Interaction
-) -> tuple[Store | None, Game | None, Format | None]:
+) -> tuple[Store, Game | None, Format | None]:
   """Gets the game, format, store, and user_id from the interaction"""
   discord_id = interaction.guild_id
   if not discord_id:

@@ -121,7 +121,8 @@ def GetTopPlayerData(
     GROUP BY
       player_name
     ORDER BY
-      (3 * SUM(wins) + SUM(draws)) DESC
+      2 DESC,
+      3 DESC
     LIMIT
       CEIL(
         .5 * (

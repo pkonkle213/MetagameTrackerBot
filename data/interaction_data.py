@@ -75,7 +75,7 @@ def GetGameByMap(category_id: int) -> Game | None:
 
 def GetInteractionDetails(
   discord_id: int, category_id: int, channel_id: int
-) -> Tuple[Store | None, Game | None, Format | None]:
+) -> Tuple[Store, Game | None, Format | None]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
@@ -137,4 +137,7 @@ def GetInteractionDetails(
     store = Store(*row[0:11]) if row[0] else None
     game = Game(*row[11:13]) if row[11] else None
     format = Format(*row[13:17]) if row[13] else None
+
+    if store is None:
+      raise KnownError("Store not found")
     return store, game, format
