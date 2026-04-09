@@ -124,7 +124,10 @@ def GetTopPlayerData(
     SELECT
       player_name,
       (3 * SUM(wins) + SUM(draws)) AS points,
-      ROUND(100.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)), 2) AS win_percent
+      ROUND(
+        100.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)),
+        2
+      ) AS win_percent
     FROM
       X
     GROUP BY
