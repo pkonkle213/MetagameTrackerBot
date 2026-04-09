@@ -135,7 +135,8 @@ def GetTopPlayerData(
       player_name
     ORDER BY
       2 DESC,
-      3 DESC
+      3 DESC,
+      1
     LIMIT
       CEIL(
         .5 * (
