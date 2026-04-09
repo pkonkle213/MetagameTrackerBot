@@ -29,7 +29,7 @@ class UserInfoCommand(commands.Cog):
       output =  f"Player Name: {player_name}\n"
       #output += f"Win %: {win_percent}\n"
       output += f"Last Played: {last_played.archetype_played} ({last_played.event_date})\n"
-      output += "Most Played Decks:\n"
+      output += "Most Played Decks - % played:\n"
       for deck in top_decks:
         output += f"\t{deck[0]} - {deck[2]}%\n"
       await interaction.followup.send(output, ephemeral=True)
