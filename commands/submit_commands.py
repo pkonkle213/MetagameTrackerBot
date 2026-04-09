@@ -56,12 +56,18 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     player_name, event, archetype = await GetUserInput(store, game, format, userId, interaction)
     private_output, feed_output, public_output, full_event = AddTheArchetype(interaction, player_name, event, archetype, store, game, format)
     await interaction.followup.send(private_output, ephemeral=True)
-    await MessageStoreFeed(self.bot, feed_output, interaction)
+    await MessageStoreFeed(self.bot,
+                           feed_output,
+                           interaction)
     if public_output:
-      await MessageChannel(self.bot, public_output, interaction.guild_id,
+      await MessageChannel(self.bot,
+                           public_output,
+                           interaction.guild_id,
                            interaction.channel_id)
     if full_event:
-      await MessageChannel(self.bot, full_event, interaction.guild_id,
+      await MessageChannel(self.bot,
+                           full_event,
+                           interaction.guild_id,
                            interaction.channel_id)
       name = store.store_name if store.store_name else store.discord_name
       output = f"```{name} - " + full_event[3:]
