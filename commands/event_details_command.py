@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 from settings import BOTGUILDID
-from services.unique_submitter_service import GetUniqueSubmitters
+from services.event_details_services import GetEventStats
 from output_builder import BuildTableOutput
 from checks import isPhil
 from services.command_error_service import Error
@@ -11,8 +11,8 @@ class UniqueSubmitters(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
-  @app_commands.command(name='uniquesubmitters',
-                        description='See how many unique submitters there are')
+  @app_commands.command(name='events_statistics',
+                        description='See unique submitters and percent reported for all events')
   @app_commands.guilds(discord.Object(id=BOTGUILDID))
   @app_commands.check(isPhil)
   async def MyEventsReported(self, interaction: Interaction, discord_id:str = ''):
@@ -22,11 +22,11 @@ class UniqueSubmitters(commands.Cog):
     discord_id: string
       The discord id of the store to check
     '''
-    await interaction.response.defer(thinking=False)
+    await interaction.response.defer(thinking=True)
     discord_id_int = 0
     if discord_id != '':
       discord_id_int = int(discord_id)
-    data, title, headers = GetUniqueSubmitters(interaction, discord_id_int)
+    data, title, headers = GetEventStats(interaction, discord_id_int)
     output = BuildTableOutput(title, headers, data)
     await interaction.followup.send(output)
 

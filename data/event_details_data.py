@@ -1,7 +1,7 @@
 from settings import DATABASE_URL
 import psycopg
 
-def GetUniqueSubmittersPercentage(discord_id:int):
+def GetAllEventsStats(discord_id:int):
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f"""
@@ -10,8 +10,10 @@ def GetUniqueSubmittersPercentage(discord_id:int):
       {'s.store_name,' if not discord_id else ''}
       g.game_name AS game,
       f.format_name AS format,
-      a.submitters,
       p.players,
+      er.reported,
+      round(100.0 * reported_percent, 2) AS percent_reported,
+      a.submitters,
       round(100.0 * a.submitters / p.players, 2) AS percent_unique
     FROM
       (
@@ -23,6 +25,7 @@ def GetUniqueSubmittersPercentage(discord_id:int):
         GROUP BY
           event_id
       ) p
+      INNER JOIN events_reported er ON er.id = p.event_id
       INNER JOIN (
         SELECT
           event_id,
