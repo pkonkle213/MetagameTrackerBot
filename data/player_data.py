@@ -119,7 +119,7 @@ def GetTopPlayerData(
           e.event_date BETWEEN '{start_date}' AND '{end_date}'
           {f'AND e.format_id = {format.id}' if format else ''}
           {f'AND e.game_id = {game.id}' if game else ''}
-          AND s.discord_id = {store.discord_id}
+          {store_restriction}
       )
     SELECT
       player_name,
