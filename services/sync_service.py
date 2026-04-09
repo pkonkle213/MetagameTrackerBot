@@ -30,7 +30,6 @@ async def SyncCommands(bot, commands_directory):
       print(f'Unable to sync commands globally:\n{error}')
 
     try:
-      bot.tree.clear_commands(guild=discord.Object(settings.BOTGUILDID))
       sync_my_bot = await bot.tree.sync(guild=discord.Object(settings.BOTGUILDID))
       print(f'Synced {len(sync_my_bot)} command(s) to guild My Bot -> {settings.BOTGUILDID}')
     except Exception as error:
