@@ -1,5 +1,5 @@
 from datetime import date
-from settings import DATABASE_URL
+from settings import DATABASE_URL, DATAGUILDID
 import psycopg
 from settings import BOTGUILDID
 from tuple_conversions import Format, Game, Store
@@ -86,7 +86,7 @@ def GetStats(
     return rows
 
 def DetermineStoreRestriction(store:Store) -> str:
-  if store.discord_id == BOTGUILDID:
+  if store.discord_id == DATAGUILDID:
     return ''
   if store.is_data_hub:
     return f'AND s.region_id = {store.region_id}'
@@ -101,6 +101,7 @@ def GetTopPlayerData(
 ):
   conn = psycopg.connect(DATABASE_URL)
   store_restriction = DetermineStoreRestriction(store)
+  print('Store restriction:', store_restriction)
   with conn, conn.cursor() as cur:
     command = f"""
     WITH
@@ -152,7 +153,7 @@ def GetTopPlayerData(
         )
       )
     """
-    
+
     cur.execute(command)
     rows = cur.fetchall()
     return rows
