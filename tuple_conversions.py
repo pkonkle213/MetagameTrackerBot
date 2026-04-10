@@ -5,6 +5,7 @@ from enum import Enum
 class EventType(Enum):
   Weekly = 1
   Tournament = 2
+  League = 3
 
 class ReportedAs(Enum):
   Pairings = 1
