@@ -51,11 +51,31 @@ def GetEventTypes() -> list[Tuple[int, str]]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = '''
-    SELECT
-      id,  
-      event_type
-    FROM
-      event_types
+    (
+      SELECT
+        id,
+        event_type
+      FROM
+        event_types
+      WHERE
+        id NOT IN (3)
+      ORDER BY
+        id
+    )
+    UNION ALL
+    (
+      SELECT
+        - id AS id,
+        name
+      FROM
+        leagues
+      WHERE
+        end_date > NOW()
+      ORDER BY
+        end_date DESC,
+        start_date DESC
+    )
+    LIMIT 25
     '''
 
     cur.execute(command)

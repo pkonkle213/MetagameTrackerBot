@@ -15,12 +15,7 @@ def SubmitData(
   """Submits an event's data to the database"""
   event_created = False
   if submitted_event.id == 0:
-    event_id = CreateEvent(submitted_event.event_date,
-                           submitted_event.StoreID,
-                           submitted_event.GameID, 
-                           submitted_event.FormatID,
-                           submitted_event.event_name,
-                           submitted_event.event_type_id,
+    event_id = CreateEvent(submitted_event,
                            userId)
     if event_id is None:
       raise KnownError('Unable to create event')

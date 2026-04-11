@@ -25,10 +25,10 @@ async def Error(bot:Bot,
     feedback = 'You do not have the required role to use this command.'
   elif isinstance(error, app_commands.errors.CommandOnCooldown):
     feedback = str(error)
+  elif isinstance(error, app_commands.errors.CheckFailure):
+    feedback = str(error)
   elif isinstance(error, KnownError):
     feedback = error.message
-  elif isinstance(error, app_commands.errors.CheckFailure):
-    feedback = 'You do not have has access to this command.'
   else:
     print("Error received:", error)
     feedback = "Something unexpected went wrong. It's been reported. Please try again in a few hours."
