@@ -4,6 +4,47 @@ from settings import DATABASE_URL
 from tuple_conversions import League
 from datetime import date
 from psycopg.rows import class_row
+from tuple_conversions import TopPlayers
+
+def GetLeagueLeaderboard(league:League) -> list[TopPlayers]:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
+    command = f'''
+    WITH
+      X AS (
+        SELECT
+          INITCAP(player_name) AS player_name,
+          wins,
+          losses,
+          draws
+        FROM
+          full_standings fs
+          INNER JOIN events e ON fs.event_id = e.id
+          INNER JOIN stores_view s ON e.discord_id = s.discord_id
+        WHERE
+          e.league_id = {league.id}
+      )
+    SELECT
+      player_name,
+      (3 * SUM(wins) + SUM(draws)) AS points,
+      ROUND(
+        100.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)),
+        2
+      ) AS win_percent
+    FROM
+      X
+    GROUP BY
+      player_name
+    ORDER BY
+      2 DESC,
+      3 DESC,
+      1
+    LIMIT
+      {league.top_cut}
+    '''
+    cur.execute(command)
+    rows = cur.fetchall()
+    return rows
 
 def GetLeagues(discord_id:int, game_id:int, format_id:int) -> list[League]:
   conn =  psycopg.connect(DATABASE_URL)

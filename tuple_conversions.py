@@ -18,6 +18,16 @@ class GameEnum(Enum):
   StarWarsUnlimited = 4
   Riftbound = 5
 
+class TopPlayers(NamedTuple):
+  player_name: str
+  points: int
+  win_percent: float
+  
+class MetagameResult(NamedTuple):
+  archetype_played: str
+  metagame_percent: float
+  win_percent: float
+
 class League(NamedTuple):
   id: int
   name: str

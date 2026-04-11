@@ -3,7 +3,8 @@ from discord_messages import MessageChannel
 from services.command_error_service import Error
 from discord.ext import commands
 from discord import app_commands, Interaction
-from services.league_services import CreateLeague, EditLeague
+from services.league_services import CreateLeague, EditLeague, SelectLeague, LeagueMetagame, LeagueLeaderboard
+from output_builder import BuildTableOutput
 from checks import isStore
 
 class LeaguesCommands(commands.GroupCog, name='league'):
@@ -43,17 +44,29 @@ class LeaguesCommands(commands.GroupCog, name='league'):
     print('League:', league)
     await self.OutputLeagueDetails(interaction, league, True)
   
-  @app_commands.command(name='top',
+  @app_commands.command(name='leaderboard',
                        description='Display the top players in a league')
   @app_commands.guild_only()
   async def TopPlayers(self, interaction: Interaction):
-    ...
+    await interaction.response.defer(ephemeral=True, thinking=True)
+    store, game, format, league = await SelectLeague(self.bot, interaction)
+    data = LeagueLeaderboard(league)
+    title = f"Top Players for {league.name}"
+    headers = ["Player Name","Points","Win %"]
+    output = BuildTableOutput(title, headers, data)
+    await interaction.followup.send(output)
   
   @app_commands.command(name='metagame',
                        description='Display the metagame of a league')
   @app_commands.guild_only()
   async def LeagueMeta(self, interaction: Interaction):
-    ...
+    await interaction.response.defer(ephemeral=True, thinking=True)
+    store, game, format, league = await SelectLeague(self.bot, interaction)
+    data = LeagueMetagame(league)
+    title = f"Metagame for {league.name}"
+    headers = ["Archetype Name","Meta %","Win %"]
+    output = BuildTableOutput(title, headers, data)
+    await interaction.followup.send(output)
 
 
   @app_commands.command(name='my_status',

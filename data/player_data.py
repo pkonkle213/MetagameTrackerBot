@@ -1,9 +1,20 @@
+from psycopg.rows import class_row
+from typing import NamedTuple
 from datetime import date
 from settings import DATABASE_URL, DATAGUILDID
 import psycopg
 from settings import BOTGUILDID
-from tuple_conversions import Format, Game, Store
+from tuple_conversions import Format, Game, Store, League, TopPlayers
 
+#TODO: Implement this for cleaner code
+class PersonalStats(NamedTuple):
+  format_name: str
+  archetype_played: str
+  wins: int
+  losses: int
+  draws: int
+  win_percentage: float
+  
 def GetStats(
   discord_id:int,
   game:Game,
@@ -85,6 +96,8 @@ def GetStats(
     rows = cur.fetchall()
     return rows
 
+
+
 def DetermineStoreRestriction(store:Store) -> str:
   if store.discord_id == DATAGUILDID:
     return ''
@@ -101,8 +114,7 @@ def GetTopPlayerData(
 ):
   conn = psycopg.connect(DATABASE_URL)
   store_restriction = DetermineStoreRestriction(store)
-  print('Store restriction:', store_restriction)
-  with conn, conn.cursor() as cur:
+  with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
     command = f"""
     WITH
       X AS (
