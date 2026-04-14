@@ -41,7 +41,7 @@ def GetEvent(
 def CreateEvent(
   event:EventInput,
   user_id:int
-) -> Event:
+) -> int:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=scalar_row) as cur:
     command = f'''
@@ -72,11 +72,10 @@ def CreateEvent(
     RETURNING id
     '''
 
-    print('Create Event Command:', command)
     cur.execute(command)
     conn.commit()
     event_id = cur.fetchone()
-    print('Event ID received:', event_id)
+    
     if not event_id:
       raise Exception('Unable to create event')
     return event_id
