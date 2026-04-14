@@ -1,9 +1,22 @@
 import discord
-from tuple_conversions import League
+from discord_messages import MessageChannel
+from discord.ext import commands
+from tuple_conversions import League, Store, Game, Format
+from services.league_input_modal_services import CreateLeagueInput, UpdateLeagueInput
 
 class LeagueInputModal(discord.ui.Modal, title="League Input"):
-  def __init__(self, league:League | None = None):
+  def __init__(self,
+               bot:commands.Bot,
+               store:Store,
+               game:Game,
+               format:Format,
+               league:League | None = None):
     super().__init__()
+    self.bot = bot
+    self.league = league
+    self.store = store
+    self.game = game
+    self.format = format
 
     self.league_name = discord.ui.Label(
       text="League Name",
@@ -63,14 +76,48 @@ class LeagueInputModal(discord.ui.Modal, title="League Input"):
     self.add_item(self.description)
 
   async def on_submit(self, interaction: discord.Interaction):
-    self.submitted_name = self.league_name.component.value
-    self.submitted_start_date = self.start_date.component.value
-    self.submitted_end_date = self.end_date.component.value
-    self.submitted_top_cut = self.top_cut.component.value
-    self.submitted_description = self.description.component.value
-    self.is_submitted = True
-    await interaction.response.defer(thinking=True)
+    league_name = self.league_name.component.value
+    start_date = self.start_date.component.value
+    end_date = self.end_date.component.value
+    top_cut = self.top_cut.component.value
+    description = self.description.component.value
+    
+    if self.league:
+      league = UpdateLeagueInput(
+        self.league,
+        league_name,
+        start_date,
+        end_date,
+        top_cut,
+        description,
+        interaction.user.id
+      )
+    else:
+      league = CreateLeagueInput(
+        self.store,
+        self.game,
+        self.format,
+        league_name,
+        start_date,
+        end_date,
+        top_cut,
+        description,
+        interaction.user.id
+      )
+    
+    title = "New league created!" if not self.league else "League updated!"
+    output = f'''{title}
+    -------------------
+    League Name: {league.name}
+    Start Date: {league.start_date.strftime("%m/%d/%Y")}
+    End Date: {league.end_date.strftime("%m/%d/%Y")}
+    Cuts to Top: {league.top_cut}
+    Description: {league.description}'''
 
+    await MessageChannel(self.bot, output, interaction.guild_id, interaction.channel_id)   
+    await interaction.response.send_message(title, ephemeral=True)
+    self.submitted = True
+  
   async def on_error(
     self,
     interaction: discord.Interaction,

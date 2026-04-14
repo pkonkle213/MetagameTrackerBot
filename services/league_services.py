@@ -1,18 +1,22 @@
 from output_builder import BuildTableOutput
 from data.metagame_data import GetLeagueMetagame
+from input_modals.league_selector import LeagueSelector, ConfirmView
 from select_menu_bones import SelectMenu
-from tuple_conversions import Store, Game, Format, League, MetagameResult, TopPlayers
+from tuple_conversions import Store, Game, Format, League, MetagameResult, TopPlayers, PlayerStanding
 from services.date_functions import ConvertToDate
 from interaction_objects import GetObjectsFromInteraction
-from data.league_data import InsertLeague, GetLeagues, GetLeagueLeaderboard
+from data.league_data import InsertLeague, GetLeagues, GetLeagueLeaderboard, GetPlayerStanding
 from custom_errors import KnownError
 from discord.ext import commands
 from discord import Interaction
 from typing import Tuple
 from input_modals.league_input_modal import LeagueInputModal
 
-#TODO: Upgrade the select menu to be league specific.
-async def SelectLeague(bot: commands.Bot, interaction: Interaction) -> Tuple[Store, Game, Format, League]:
+async def SelectLeague(
+  bot:commands.Bot,
+  interaction: Interaction,
+  isEdit:bool = False
+) -> Tuple[Store, Game, Format, League]:
   """Selects a league from the database"""
   store, game, format = GetObjectsFromInteraction(interaction)
 
@@ -23,9 +27,20 @@ async def SelectLeague(bot: commands.Bot, interaction: Interaction) -> Tuple[Sto
   if not leagues or len(leagues) == 0:
     raise KnownError("No leagues found for this game and format")
 
-  league = await SelectMenu(interaction, "Please select a league", "Choose a league", leagues)
+  modal = LeagueSelector(bot, store, game, format, leagues, isEdit=isEdit)
+  await interaction.response.send_modal(modal)
+  await modal.wait()
+
+  if not modal.is_submitted:
+    raise KnownError("League Selector modal was dismissed or timed out. Please try again.")
+
+  league = modal.league
   
-  return store, game, format, league[0]
+  return store, game, format, league
+
+def PlayerStanding(league:League, user_id:int, discord_id:int) -> PlayerStanding:
+  """Displays the player's standing in a league"""
+  return GetPlayerStanding(league, user_id, discord_id)
 
 def LeagueLeaderboard(league:League) -> list[TopPlayers]:
   """Displays the leaderboard of a league"""
@@ -35,50 +50,18 @@ def LeagueMetagame(league:League) -> list[MetagameResult]:
   """Displays the metagame of a league"""
   return GetLeagueMetagame(league)
 
-async def EditLeague(bot: commands.Bot, interaction: Interaction) -> League:
+async def EditLeague(bot:commands.Bot, interaction: Interaction):
   """Helps the store edit a league"""
-  store, game, format, league = await SelectLeague(bot, interaction)
+  await SelectLeague(bot, interaction, isEdit=True)
+  
 
-  #TODO: Can't send a modal after the SelectMenu is done. Need to figure out how to do this.
-  modal = LeagueInputModal(league)
-  await interaction.response.send_modal(modal)
-  await modal.wait()
-
-  if not modal.is_submitted:
-    raise KnownError("LeagueInput modal was dismissed or timed out. Please try again.")
-
-  league_name = modal.submitted_name
-  description = modal.submitted_description
-  print('League name:', league_name)
-
-  return modal  
-
-async def CreateLeague(bot: commands.Bot, interaction: Interaction) -> League:
+async def CreateLeague(bot: commands.Bot, interaction: Interaction):
   """Helps the store create a league"""
   store, game, format = GetObjectsFromInteraction(interaction)
 
   if not store or not game or not format:
     raise KnownError("No store, game, or format found. Leagues must be created in a format mapped channel")
 
-  modal = LeagueInputModal()
+  modal = LeagueInputModal(bot, store, game, format)
   await interaction.response.send_modal(modal)
-  await modal.wait()
-
-  if not modal.is_submitted:
-    raise KnownError("LeagueInput modal was dismissed or timed out. Please try again.")
-
-  league_name = modal.submitted_name
-  description = modal.submitted_description
   
-  try:
-    start_date = ConvertToDate(modal.submitted_start_date)
-    end_date = ConvertToDate(modal.submitted_end_date)
-    top_cut = int(modal.submitted_top_cut)
-  except Exception as e:
-    raise KnownError('Error creating league. Please ensure all fields are filled out with the correct formatting.')
-    
-  if start_date > end_date:
-    raise KnownError('Start date must be before end date')
-
-  league = InsertLeague(league_name, description, start_date, end_date, top_cut, store.discord_id, game.id, format.id, interaction.user.id)
-  return league

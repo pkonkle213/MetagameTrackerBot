@@ -3,10 +3,11 @@ from settings import PHILID
 from timedposts.automated_paid_users import PAID_USERS
 from timedposts.automated_paid_users import STORES
 
-#TODO: Unify the style of how these checks work. For consistency's sake
 def isPaidUser():
   async def predicate(interaction: Interaction) -> bool:
-    return interaction.user.id in PAID_USERS  
+    if interaction.user.id in PAID_USERS:
+      return True
+    raise app_commands.CheckFailure("This command is only available to paid users")
   return app_commands.check(predicate)
 
 def isStore():

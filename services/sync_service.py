@@ -9,7 +9,7 @@ async def SyncCommands(bot, commands_directory):
     for file in commands_directory.glob("*.py"):
       if file.name != "__init__.py":
         await bot.load_extension(f'commands.{file.name[:-3]}')
-
+    """ I'm not sure this is needed anymore
     stores = GetAllStoreDiscordIds()
     if stores is None:
       raise KnownError("No stores found?")
@@ -22,7 +22,7 @@ async def SyncCommands(bot, commands_directory):
                           f'Unable to sync commands to guild {guild_id}: {error}. Deleting store from database.',
                           settings.PHILID)
         DeleteStore(guild_id)
-
+    """
     try:
       sync_global = await bot.tree.sync()
       print(f'Synced {len(sync_global)} commands globally')
