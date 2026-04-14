@@ -74,6 +74,7 @@ def GetEventTypes() -> list[Tuple[int, str]]:
         leagues
       WHERE
         end_date > NOW()
+        AND start_date < NOW()
       ORDER BY
         end_date DESC,
         start_date DESC
