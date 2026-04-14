@@ -1,11 +1,20 @@
 from discord import utils, Interaction, app_commands
 from settings import PHILID
 from timedposts.automated_paid_users import PAID_USERS
+from timedposts.automated_paid_users import STORES
 
-#TODO: Unify the style of how these checks work. For consistency's sake
 def isPaidUser():
   async def predicate(interaction: Interaction) -> bool:
-    return interaction.user.id in PAID_USERS  
+    if interaction.user.id in PAID_USERS:
+      return True
+    raise app_commands.CheckFailure("This command is only available to paid users")
+  return app_commands.check(predicate)
+
+def isStore():
+  async def predicate(interaction: Interaction) -> bool:
+    if interaction.guild_id in STORES:
+      return True
+    raise app_commands.CheckFailure("This command must be executed in a store guild")
   return app_commands.check(predicate)
 
 def isSubmitter(guild, author, role_name):

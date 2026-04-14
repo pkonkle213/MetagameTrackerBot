@@ -1,9 +1,9 @@
 from datetime import date
 from typing import Tuple
 import psycopg
-from psycopg.rows import class_row
+from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
-from tuple_conversions import Event
+from tuple_conversions import Event, EventInput
 
 def GetEvent(
   event_id: int
@@ -21,11 +21,15 @@ def GetEvent(
       last_update,
       event_type_id,
       event_name,
-      reported_as
+      reported_as,
+      league_id,
+      created_by,
+      created_at
     FROM
       events_view
     WHERE
-      id = %s"""
+      id = %s
+    """
     
     criteria = [event_id]
     cur.execute(command, criteria)
@@ -35,16 +39,11 @@ def GetEvent(
     return row
 
 def CreateEvent(
-  event_date:date,
-  discord_id:int,
-  game_id:int,
-  format_id:int,
-  event_name:str,
-  event_type_id:int,
+  event:EventInput,
   user_id:int
 ) -> int:
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+  with conn, conn.cursor(row_factory=scalar_row) as cur:
     command = f'''
     INSERT INTO Events
     (event_date,
@@ -56,17 +55,19 @@ def CreateEvent(
     , event_type_id
     , created_at
     , created_by
+    , league_id
     )
     VALUES
-    ('{event_date}',
-    {discord_id},
-    {game_id}
-    , {format_id}
+    ('{event.event_date}',
+    {event.StoreID},
+    {event.GameID}
+    , {event.FormatID}
     , 0
-    , '{event_name}'
-    , {event_type_id}
+    , '{event.event_name}'
+    , {event.event_type_id if event.event_type_id > 0 else 3}
     , CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York'
     , {user_id}
+    {f', {-event.event_type_id}' if event.event_type_id < 0 else ', NULL'}
     )
     RETURNING id
     '''
@@ -74,10 +75,10 @@ def CreateEvent(
     cur.execute(command)
     conn.commit()
     event_id = cur.fetchone()
-    print('Event ID received:', event_id)
+    
     if not event_id:
       raise Exception('Unable to create event')
-    return event_id[0]
+    return event_id
 
 def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
   conn = psycopg.connect(DATABASE_URL)

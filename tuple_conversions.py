@@ -1,10 +1,11 @@
 from typing import NamedTuple
-from datetime import date
+from datetime import date, datetime
 from enum import Enum
 
 class EventType(Enum):
   Weekly = 1
   Tournament = 2
+  League = 3
 
 class ReportedAs(Enum):
   Pairings = 1
@@ -16,6 +17,36 @@ class GameEnum(Enum):
   OnePiece = 3
   StarWarsUnlimited = 4
   Riftbound = 5
+
+class PlayerStanding(NamedTuple):
+  points: int
+  win_percent: float
+  rank: int
+
+class TopPlayers(NamedTuple):
+  player_name: str
+  points: int
+  win_percent: float
+  
+class MetagameResult(NamedTuple):
+  archetype_played: str
+  metagame_percent: float
+  win_percent: float
+
+class League(NamedTuple):
+  id: int
+  name: str
+  description: str
+  start_date: date
+  end_date: date
+  top_cut: int
+  discord_id: int
+  game_id: int
+  format_id: int
+  created_by: int
+  last_updated: date
+  date_created: date
+  updated_by: int
 
 class Archetype(NamedTuple):
   event_id: int
@@ -50,6 +81,7 @@ class Store(NamedTuple):
 class Event(NamedTuple):
   id: int
   custom_event_id: int | None
+  league_id: int | None
   discord_id: int
   event_date: date
   game_id: int
@@ -58,6 +90,8 @@ class Event(NamedTuple):
   event_type_id: int
   event_name: str
   reported_as: str
+  created_by: int
+  created_at: datetime  
 
 class Pairing(NamedTuple):
   player1_name: str

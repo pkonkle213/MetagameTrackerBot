@@ -157,11 +157,19 @@ async def ConvertModalToDataErrors(
   if selected_event.Data is None:
     raise KnownError("No data was submitted. Please try again.")
 
+  match selected_event.TypeID:
+    case 1:
+      event_type = 'Weekly'
+    case 2:
+      event_type = 'Tournament'
+    case _:
+      event_type = 'League'
+      
   submission = '\n'.join(
     [
       f'Date: {selected_event.Date}',
       f'Name: {selected_event.Name}',
-      'Type: Weekly' if selected_event.TypeID == 1 else 'Type: Tournament'
+      f'Type: {event_type}',
       f'Message:\n{selected_event.Data}'
     ]
   )
@@ -180,6 +188,7 @@ async def ConvertModalToDataErrors(
     print('Error sending message to channel:', e)
 
   standings_data, pairings_data, errors, round_number = ConvertMessageToData(selected_event.Data, game)
+  
   event = EventInput(
     int(selected_event.ID),
     None,

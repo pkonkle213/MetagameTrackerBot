@@ -5,7 +5,7 @@ import datetime
 import discord
 from discord.ext import commands, tasks
 import settings
-from timedposts.automated_paid_users import UpdatePaidUsers
+from timedposts.automated_paid_users import UpdatePaidUsers, UpdateStores
 from timedposts.automated_check_events import EventCheck
 from services.store_services import NewStoreRegistration
 from timedposts.automated_updates import UpdateDataGuild
@@ -37,6 +37,7 @@ async def on_guild_join(guild: discord.Guild):
   """This event triggers when the bot joins a new guild (server)."""
   print(f'Joined guild: {guild.name}')
   await NewStoreRegistration(bot, guild)
+  UpdateStores()
 
 @tasks.loop(time=datetime.time(hour=18, minute=00, tzinfo=TIME_ZONE))
 async def find_the_unknown():

@@ -4,8 +4,8 @@ import discord
 async def SelectMenu(interaction:discord.Interaction,
                      message:str,
                      placeholder:str,
-                     dynamic_options,
-                     max_options = 1):
+                     dynamic_options:list,
+                     max_options:int = 1):
   allowed_options = dynamic_options[:25]
   
   select = Select(
