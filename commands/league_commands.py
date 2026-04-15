@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord import app_commands, Interaction
 from services.league_services import CreateLeague, EditLeague, SelectLeague, LeagueMetagame, LeagueLeaderboard, PlayerStanding
 from output_builder import BuildTableOutput
-from checks import isStore
+from checks import IsStore, IsPaidStore
 
 
 class LeaguesCommands(commands.GroupCog, name='league'):
@@ -18,7 +18,7 @@ class LeaguesCommands(commands.GroupCog, name='league'):
   @app_commands.command(name='create',
                        description='Create a new league')
   @app_commands.guild_only()
-  @isStore()
+  @IsPaidStore()
   @app_commands.checks.has_role('MTSubmitter')
   async def CreateLeague(self, interaction: Interaction):
     await CreateLeague(self.bot, interaction)
@@ -26,7 +26,7 @@ class LeaguesCommands(commands.GroupCog, name='league'):
   @app_commands.command(name='edit',
                        description='Exit an existing league')
   @app_commands.guild_only()
-  @isStore()
+  @IsPaidStore()
   @app_commands.checks.has_role('MTSubmitter')
   async def EditLeague(self, interaction: Interaction):
     await EditLeague(self.bot, interaction)
@@ -34,7 +34,7 @@ class LeaguesCommands(commands.GroupCog, name='league'):
   @app_commands.command(name='leaderboard',
                        description='Display the top players in a league')
   @app_commands.guild_only()
-  @isStore()
+  @IsPaidStore()
   async def TopPlayers(self, interaction: Interaction):
     store, game, format, league = await SelectLeague(self.bot, interaction)
     data = LeagueLeaderboard(league)
@@ -46,7 +46,7 @@ class LeaguesCommands(commands.GroupCog, name='league'):
   @app_commands.command(name='metagame',
                        description='Display the metagame of a league')
   @app_commands.guild_only()
-  @isStore()
+  @IsPaidStore()
   async def LeagueMeta(self, interaction: Interaction):
     store, game, format, league = await SelectLeague(self.bot, interaction)
     data = LeagueMetagame(league)
@@ -58,7 +58,7 @@ class LeaguesCommands(commands.GroupCog, name='league'):
 
   @app_commands.command(name='my_status',
                        description='Shows how you compare to the top players in a league')
-  @isStore()
+  @IsPaidStore()
   @app_commands.guild_only()
   async def MyStatus(self, interaction: Interaction):
     store, game, format, league = await SelectLeague(self.bot, interaction)

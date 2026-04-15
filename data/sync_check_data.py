@@ -15,7 +15,7 @@ def GetFive6Users() -> list[int]:
     results = cur.fetchall()
     return results
 
-def GetStores() -> list[int]:
+def GetStores(paid:bool = False) -> list[int]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=scalar_row) as cur:
     command = f'''
@@ -23,24 +23,22 @@ def GetStores() -> list[int]:
       discord_id
     FROM
       stores_view
-    WHERE
-      is_data_hub = {False}
+    {f'WHERE isPaid = true' if paid else ''}
     '''
 
     cur.execute(command)
     results = cur.fetchall()
     return results
 
-def GetHubs() -> list[int]:
+def GetHubs(paid:bool = False) -> list[int]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=scalar_row) as cur:
     command = f'''
     SELECT
       discord_id
     FROM
-      stores_view
-    WHERE
-      is_data_hub = {True}
+      hubs_view
+    {f'WHERE isPaid = true' if paid else ''}
     '''
 
     cur.execute(command)

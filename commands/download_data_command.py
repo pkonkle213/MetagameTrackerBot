@@ -1,11 +1,10 @@
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
-from checks import isOwner
+from checks import isOwner, IsPaidStore, IsPaidUser
 from services.download_data_services import GetStoreData, GetPlayerData
 from discord_messages import MessageUser
 from services.command_error_service import Error
-from checks import isPaidUser
 
 #TODO: This should be a command in the bot guild that allows me to enter a store's discordId and then send the owner the data
 class DownloadDataGroup(commands.GroupCog, name='download'):
@@ -16,6 +15,7 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
   @app_commands.command(name='store',
   description='Download the store data for a date range')
   @app_commands.check(isOwner)
+  @IsPaidStore()
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def StoreDownload(self,
@@ -44,7 +44,7 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
   @app_commands.command(name='player',
                         description="Download the player's data for a store for a date range")
   @app_commands.guild_only()
-  @isPaidUser()
+  @IsPaidUser()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def PlayerDownload(self,
                            interaction: Interaction,

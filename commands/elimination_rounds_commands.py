@@ -1,3 +1,4 @@
+from checks import IsStore
 from discord import app_commands, Interaction
 from discord.ext import commands
 from interaction_objects import GetObjectsFromInteraction
@@ -14,6 +15,9 @@ class EliminationRoundsCommands(commands.GroupCog, name='elimination_rounds'):
 
   @app_commands.command(name="view",
                         description="View the elimination rounds for an event")
+  @app_commands.guild_only()
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
+  @IsStore()
   async def EliminationRounds(self,
                               interaction:Interaction):
     #Get the tournaments

@@ -6,7 +6,7 @@ from custom_errors import KnownError
 from data.add_results_data import InsertStanding, InsertPairing
 from services.input_services import ConvertInput
 from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
-from tuple_conversions import EventInput, Standing, Pairing, Event
+from tuple_conversions import EventInput, Standing, Pairing, Event, ReportedAs
 
 def SubmitData(
   submitted_event:EventInput,
@@ -28,11 +28,12 @@ def SubmitData(
   #Add the data to the database depending on the type of data
   results = ''
   if submitted_event.StandingData:
-    if event.reported_as == 'PAIRINGS' or type(event) is list[Pairing]:
+    if event.reported_as == ReportedAs.Pairings.value:
       raise KnownError('This event already has pairings submitted')
+    #TODO: Put a button here to confirm that they actually want to submit standings results, as it's less gooder data
     results = AddStandingResults(event, submitted_event.StandingData, userId)
   elif submitted_event.PairingData:
-    if event.reported_as == 'STANDINGS':
+    if event.reported_as == ReportedAs.Standings.value:
       #Delete the standings data
       DeleteStandingsFromEvent(event.id)
     results = AddPairingResults(event, submitted_event.PairingData, userId, submitted_event.round_number)

@@ -1,3 +1,4 @@
+from checks import IsStore
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
@@ -14,6 +15,7 @@ class UnknownArchetypes(commands.Cog):
       name='unknown',
       description='See what archetypes still need submitted for a date range')
   @app_commands.guild_only()
+  @IsStore()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def IntoTheUnknown(self,
                            interaction: Interaction,

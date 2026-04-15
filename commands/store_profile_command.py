@@ -1,6 +1,6 @@
 from discord.ext import commands
 from discord import app_commands, Interaction
-from checks import isOwner
+from checks import isOwner, IsStore
 from services.command_error_service import Error
 from services.store_services import UpdateStoreDetails
 
@@ -14,6 +14,7 @@ class StoreProfile(commands.Cog):
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   #@app_commands.check(isOwner)
   @app_commands.checks.has_role('MTSubmitter')
+  @IsStore()
   async def UpdateProfile(self,
                           interaction: Interaction):
     """Updates all info in the store profile"""

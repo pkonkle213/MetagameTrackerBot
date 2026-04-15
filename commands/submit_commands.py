@@ -3,7 +3,7 @@ from services.claim_result_services import GetUserInput, AddTheArchetype, Messag
 from api_calls.melee_tournaments import GetMeleeTournamentData
 import settings
 from services.convert_and_save_input import ConvertCSVToDataErrors, ConvertModalToDataErrors, ConvertMeleeTournamentToDataErrors, ConfirmEventDetails
-from checks import isSubmitter
+from checks import isSubmitter, IsStore
 from custom_errors import KnownError
 from discord import app_commands, Interaction, Attachment
 from discord.ext import commands
@@ -22,7 +22,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
   @app_commands.command(name="check",
                         description="To test if you can submit data")
   @app_commands.guild_only()
-  @app_commands.checks.has_role('MTSubmitter')
+  @IsStore()
+  @app_commands.checks.cooldown(1, 300.0, key=lambda i: (i.guild_id, i.user.id))
   async def SubmitCheck(self, interaction: Interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
     issues = ['Issues I detect:']
@@ -46,6 +47,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
   @app_commands.command(name="archetype",
                         description="Submit a player's archetype for an event")
   @app_commands.guild_only()
+  @IsStore()
   async def SubmitArchetypeCommand(self, interaction: Interaction):
     store, game, format = GetObjectsFromInteraction(interaction)
     userId = interaction.user.id
@@ -79,6 +81,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
   )
   @app_commands.checks.has_role('MTSubmitter')
   @app_commands.guild_only()
+  @IsStore()
   async def SubmitDataCommand(
     self,
     interaction: Interaction,

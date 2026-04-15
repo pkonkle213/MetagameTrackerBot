@@ -5,6 +5,7 @@ from custom_errors import KnownError
 from services.ban_word_services import AddBadWord, Offenders
 from services.command_error_service import Error
 from output_builder import BuildTableOutput
+from checks import IsPaidStore
 
 class BannedWordCommands(commands.GroupCog, name='banned_words'):
   """A group of commands for managing banned words"""
@@ -14,6 +15,7 @@ class BannedWordCommands(commands.GroupCog, name='banned_words'):
   @app_commands.command(name='add',
                         description='Add a banned word')
   @app_commands.guild_only()
+  @IsPaidStore()
   @app_commands.checks.has_role('MTSubmitter')
   async def BadWord(self,
                     interaction: Interaction,
@@ -37,6 +39,8 @@ class BannedWordCommands(commands.GroupCog, name='banned_words'):
   @app_commands.command(name='offenders',
                         description='See who has been flagged for bad words/phrases')
   @app_commands.checks.has_role('MTSubmitter')
+  @app_commands.guild_only()
+  @IsPaidStore()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def StoreOffenders(self, interaction: Interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
