@@ -48,6 +48,10 @@ class League(NamedTuple):
   date_created: date
   updated_by: int
 
+class HubsChannels(NamedTuple):
+  discord_id: int
+  channel_id: int
+
 class Archetype(NamedTuple):
   event_id: int
   player_name: str
