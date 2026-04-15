@@ -23,6 +23,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
                         description="To test if you can submit data")
   @app_commands.guild_only()
   @IsStore()
+  @app_commands.checks.cooldown(1, 300.0, key=lambda i: (i.guild_id, i.user.id))
   async def SubmitCheck(self, interaction: Interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
     issues = ['Issues I detect:']

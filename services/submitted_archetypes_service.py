@@ -4,7 +4,7 @@ from interaction_objects import GetObjectsFromInteraction
 from services.date_functions import ConvertToDate
 from services.input_services import ConvertInput
 
-def SubmittedArchetypesReport(interaction: discord.Interaction, player_name, event_date):
+def SubmittedArchetypesReport(interaction: discord.Interaction, player_name, event_date) -> tuple[list, list[str], str]:
   date_used = ConvertToDate(event_date) if event_date != '' else None
 
   store, game, format = GetObjectsFromInteraction(interaction)
