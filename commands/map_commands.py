@@ -5,7 +5,7 @@ from services.game_mapper_services import AddStoreGameMap, GetGameOptions
 from select_menu_bones import SelectMenu
 from services.command_error_service import Error
 from services.map_claim_feed import MapClaimFeed
-from checks import isPhil
+from checks import isPhil, IsStore
 
 class MappingCommands(commands.GroupCog, name='map'):
   """A group of commands for mapping channels to games, formats, and claim feeds"""
@@ -16,6 +16,7 @@ class MappingCommands(commands.GroupCog, name='map'):
                         description='Map this channel as feed for submitted archetypes in this game')
   @app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
+  @IsStore()
   async def AddClaimFeedMap(self, interaction: Interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
     output = MapClaimFeed(interaction)
@@ -25,6 +26,7 @@ class MappingCommands(commands.GroupCog, name='map'):
                         description='Map your category to a game')
   @app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
+  @IsStore()
   async def AddGameMap(self, interaction: Interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
     message = 'Please select a game'
@@ -39,6 +41,7 @@ class MappingCommands(commands.GroupCog, name='map'):
                     description='Map your channel to a format')
   @app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
+  @IsStore()
   async def AddFormatMap(self, interaction: Interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
     dynamic_options = GetFormatOptions(interaction)

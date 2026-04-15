@@ -3,18 +3,39 @@ from settings import PHILID
 from timedposts.automated_paid_users import PAID_USERS
 from timedposts.automated_paid_users import STORES
 
-def isPaidUser():
+def IsPaidUser():
   async def predicate(interaction: Interaction) -> bool:
     if interaction.user.id in PAID_USERS:
       return True
     raise app_commands.CheckFailure("This command is only available to paid users")
   return app_commands.check(predicate)
 
-def isStore():
+def IsPaidStore():
+  async def predicate(interaction: Interaction) -> bool:
+    if interaction.guild_id in PAID_STORES:
+      return True
+    raise app_commands.CheckFailure("This command is only available to paid stores.")
+  return app_commands.check(predicate)
+
+def IsPaidHub():
+  async def predicate(interaction: Interaction) -> bool:
+    if interaction.guild_id in PAID_HUBS:
+      return True
+    raise app_commands.CheckFailure("This command is only available to paid hubs.")
+  return app_commands.check(predicate)
+  
+def IsStore():
   async def predicate(interaction: Interaction) -> bool:
     if interaction.guild_id in STORES:
       return True
     raise app_commands.CheckFailure("This command must be executed in a store guild")
+  return app_commands.check(predicate)
+
+def IsHub():
+  async def predicate(interaction: Interaction) -> bool:
+    if interaction.guild_id in HUBS:
+      return True
+    raise app_commands.CheckFailure("This command must be executed in a hub guild")
   return app_commands.check(predicate)
 
 def isSubmitter(guild, author, role_name):

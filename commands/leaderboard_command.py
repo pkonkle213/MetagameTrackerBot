@@ -4,6 +4,7 @@ from discord import app_commands, Interaction
 from services.top_players_services import GetTopPlayers
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
+from checks import IsStore
 
 class StoreTopPlayers(commands.Cog):
   def __init__(self, bot):
@@ -13,6 +14,7 @@ class StoreTopPlayers(commands.Cog):
                         description="Get the top players of the format")
   #@app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
+  @IsStore()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def Leaderboard(self,
                        interaction: Interaction,

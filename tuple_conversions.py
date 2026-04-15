@@ -93,7 +93,7 @@ class Event(NamedTuple):
   last_update: int
   event_type_id: int
   event_name: str
-  reported_as: str
+  reported_as: int
   created_by: int
   created_at: datetime  
 

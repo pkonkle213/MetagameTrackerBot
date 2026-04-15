@@ -1,3 +1,4 @@
+from checks import IsPaidStore
 import discord
 from discord import Interaction, app_commands
 from discord.ext import commands
@@ -14,6 +15,7 @@ class ArchetypeSubmittedCommand(commands.Cog):
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   @app_commands.checks.has_role('MTSubmitter')
+  @IsPaidStore()
   async def ViewSubmittedArchetypes(self,
                                     interaction: Interaction,
                                     player_name: str = '',

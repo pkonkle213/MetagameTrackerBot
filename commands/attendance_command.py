@@ -1,3 +1,4 @@
+from checks import IsStore
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
@@ -12,6 +13,7 @@ class EventAttendance(commands.Cog):
   @app_commands.command(name="attendance",
                         description="Get the attendance for a date range")
   @app_commands.guild_only()
+  @IsStore()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def Attendance(self,
                        interaction: Interaction,
