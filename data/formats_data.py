@@ -1,6 +1,6 @@
 from settings import DATABASE_URL
 import psycopg
-from psycopg.rows import class_row
+from psycopg.rows import class_row, scalar_row
 from tuple_conversions import Format, Game
 
 def AddFormatMap(
@@ -9,7 +9,7 @@ def AddFormatMap(
   channel_id:int
 ):
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+  with conn, conn.cursor(row_factory=scalar_row) as cur:
     command = f'''
     INSERT INTO format_channel_maps
       (discord_id,
