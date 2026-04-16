@@ -17,7 +17,7 @@ def DatabaseCommandsDownload():
   
     # 3. Create an in-memory buffer for the Excel file
     output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='openpyxl') as writer:  # type: ignore[arg-type]
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
       for table in tables:
           # Load each table into a Pandas DataFrame
           df = pd.read_sql(f"SELECT * FROM {table}", conn)
