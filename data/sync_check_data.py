@@ -23,7 +23,7 @@ def GetStores(paid:bool = False) -> list[int]:
       discord_id
     FROM
       stores_view
-    {f'WHERE isPaid = true' if paid else ''}
+    {f'WHERE is_paid = true' if paid else ''}
     '''
 
     cur.execute(command)
@@ -38,7 +38,7 @@ def GetHubs(paid:bool = False) -> list[int]:
       discord_id
     FROM
       hubs_view
-    {f'WHERE isPaid = true' if paid else ''}
+    {f'WHERE is_paid = true' if paid else ''}
     '''
 
     cur.execute(command)
