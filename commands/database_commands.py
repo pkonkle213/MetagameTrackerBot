@@ -1,0 +1,25 @@
+from discord.ext import commands
+from discord import app_commands, Interaction
+from checks import isPhil
+import discord
+from data.database_commands_data import DatabaseCommandsDownload
+from settings import BOTGUILDID
+
+class DatabaseCommands(commands.GroupCog, name='database'):
+  def __init__(self, bot):
+    self.bot = bot
+
+  @app_commands.command(name='download',
+                       description='Download the database')
+  @app_commands.guilds(discord.Object(id=BOTGUILDID))
+  @app_commands.check(isPhil)
+  async def DownloadDatabase(self, interaction: Interaction):
+    await interaction.response.send_message("Generating spreadsheet, please wait...")
+    try:
+      file = DatabaseCommandsDownload()
+      await interaction.followup.send("Here's the database!", file=file)
+    except Exception as e:
+      await interaction.followup.send(f"An error occurred: {e}")
+
+async def setup(bot):
+  await bot.add_cog(DatabaseCommands(bot))
