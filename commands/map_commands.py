@@ -1,3 +1,5 @@
+from input_modals.map_game_modal import MapGameModal
+from interaction_objects import GetObjectsFromInteraction
 from discord.ext import commands
 from discord import app_commands, Interaction
 from services.formats_services import AddStoreFormatMap, GetFormatOptions
@@ -28,13 +30,18 @@ class MappingCommands(commands.GroupCog, name='map'):
   @app_commands.guild_only()
   @IsStore()
   async def AddGameMap(self, interaction: Interaction):
-    await interaction.response.defer(ephemeral=True, thinking=False)
+    store, game, format = GetObjectsFromInteraction(interaction)
+    modal = MapGameModal(store)
+    await interaction.response.send_modal(modal)
+    await modal.wait()
+    
+    """await interaction.response.defer(ephemeral=True, thinking=False)
     message = 'Please select a game'
     placeholder = 'Choose a game'
     dynamic_options = GetGameOptions()
     result = await SelectMenu(interaction, message, placeholder, dynamic_options)
     output = AddStoreGameMap(interaction, result[0])
-    await interaction.followup.send(output, ephemeral=True)
+    await interaction.followup.send(output, ephemeral=True)"""
 
 
   @app_commands.command(name='format',
