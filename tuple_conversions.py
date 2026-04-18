@@ -45,7 +45,7 @@ class League(NamedTuple):
   format_id: int
   created_by: int
   last_updated: date
-  date_created: date
+  created_date: date
   updated_by: int
 
 class HubsChannels(NamedTuple):
