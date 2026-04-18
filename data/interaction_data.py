@@ -72,7 +72,7 @@ def GetGameByMap(category_id: int) -> Game | None:
     row = cur.fetchone()
     return row
 
-
+#TODO: I hate this and want to revert it to getting the three things separately
 def GetInteractionDetails(
   discord_id: int, category_id: int, channel_id: int
 ) -> Tuple[Store, Game | None, Format | None]:
@@ -87,7 +87,6 @@ def GetInteractionDetails(
       s.owner_name,
       s.store_address,
       s.used_for_data,
-      s.state,
       s.region_id,
       s.is_data_hub,
       s.hub_format_lock,
@@ -134,9 +133,9 @@ def GetInteractionDetails(
     if not row:
         raise KnownError("Nothing found for data provided")
     
-    store = Store(*row[0:11]) if row[0] else None
-    game = Game(*row[11:13]) if row[11] else None
-    format = Format(*row[13:17]) if row[13] else None
+    store = Store(*row[0:10]) if row[0] else None
+    game = Game(*row[10:12]) if row[10] else None
+    format = Format(*row[12:16]) if row[12] else None
 
     if store is None:
       raise KnownError("Store not found")
