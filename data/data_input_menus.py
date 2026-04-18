@@ -50,7 +50,7 @@ def GetPreviousEvents(
     
     return rows
 
-def GetEventTypes() -> list[Tuple[int, str]]:
+def GetEventTypes(discord_id: int) -> list[Tuple[int, str]]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = '''
@@ -75,6 +75,7 @@ def GetEventTypes() -> list[Tuple[int, str]]:
       WHERE
         end_date > NOW()
         AND start_date < NOW()
+        AND discord_id = %s
       ORDER BY
         end_date DESC,
         start_date DESC
@@ -82,6 +83,6 @@ def GetEventTypes() -> list[Tuple[int, str]]:
     LIMIT 25
     '''
 
-    cur.execute(command)
+    cur.execute(command, [discord_id])
     rows = cur.fetchall()
     return rows
