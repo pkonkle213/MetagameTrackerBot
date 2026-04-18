@@ -1,7 +1,6 @@
 from discord import utils, Interaction, app_commands
 from settings import PHILID
-from timedposts.automated_paid_users import PAID_USERS
-from timedposts.automated_paid_users import STORES
+from timedposts.automated_paid_users import PAID_USERS, STORES, PAID_STORES, HUBS, PAID_HUBS
 
 def IsPaidUser():
   async def predicate(interaction: Interaction) -> bool:
