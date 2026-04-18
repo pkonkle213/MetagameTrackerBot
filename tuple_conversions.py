@@ -77,7 +77,7 @@ class Store(NamedTuple):
   owner_name: str
   store_address: str
   used_for_data: bool
-  region_id: str
+  region_id: int
 
 class Event(NamedTuple):
   id: int
