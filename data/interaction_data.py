@@ -131,9 +131,9 @@ def GetInteractionDetails(
     if not row:
         raise KnownError("Nothing found for data provided")
     
-    store = Store(*row[0:7]) if row[0] else None
-    game = Game(*row[7:9]) if row[7] else None
-    format = Format(*row[9:13]) if row[9] else None
+    store = Store(*row[0:8]) if row[0] else None
+    game = Game(*row[8:10]) if row[8] else None
+    format = Format(*row[10:14]) if row[10] else None
 
     if store is None:
       raise KnownError("Store not found")
