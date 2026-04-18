@@ -53,7 +53,6 @@ def LeagueMetagame(league:League) -> list[MetagameResult]:
 async def EditLeague(bot:commands.Bot, interaction: Interaction):
   """Helps the store edit a league"""
   await SelectLeague(bot, interaction, isEdit=True)
-  
 
 async def CreateLeague(bot: commands.Bot, interaction: Interaction):
   """Helps the store create a league"""
