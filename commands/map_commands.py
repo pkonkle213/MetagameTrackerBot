@@ -1,10 +1,11 @@
+from custom_errors import KnownError
 from input_modals.map_game_modal import MapGameModal
+from input_modals.map_format_modal import MapFormatModal
 from interaction_objects import GetObjectsFromInteraction
 from discord.ext import commands
 from discord import app_commands, Interaction
 from services.formats_services import AddStoreFormatMap, GetFormatOptions
 from services.game_mapper_services import AddStoreGameMap, GetGameOptions
-from select_menu_bones import SelectMenu
 from services.command_error_service import Error
 from services.map_claim_feed import MapClaimFeed
 from checks import isPhil, IsStore
@@ -14,7 +15,7 @@ class MappingCommands(commands.GroupCog, name='map'):
   def __init__(self, bot):
     self.bot = bot
 
-  @app_commands.command(name='archetypefeed',
+  @app_commands.command(name='archetype_feed',
                         description='Map this channel as feed for submitted archetypes in this game')
   @app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
@@ -35,31 +36,18 @@ class MappingCommands(commands.GroupCog, name='map'):
     await interaction.response.send_modal(modal)
     await modal.wait()
     
-    """await interaction.response.defer(ephemeral=True, thinking=False)
-    message = 'Please select a game'
-    placeholder = 'Choose a game'
-    dynamic_options = GetGameOptions()
-    result = await SelectMenu(interaction, message, placeholder, dynamic_options)
-    output = AddStoreGameMap(interaction, result[0])
-    await interaction.followup.send(output, ephemeral=True)"""
-
-
   @app_commands.command(name='format',
                     description='Map your channel to a format')
   @app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
   @IsStore()
   async def AddFormatMap(self, interaction: Interaction):
-    await interaction.response.defer(ephemeral=True, thinking=False)
-    dynamic_options = GetFormatOptions(interaction)
-    if dynamic_options is None or len(dynamic_options) == 0:
-      await interaction.followup.send('No formats found for this game')
-    else:
-      message = 'Please select a format'
-      placeholder = 'Choose a format'
-      result = await SelectMenu(interaction, message, placeholder, dynamic_options)
-      output = await AddStoreFormatMap(interaction, result[0])
-      await interaction.followup.send(output, ephemeral=True)
+    store, game, format = GetObjectsFromInteraction(interaction)
+    if not game:
+      raise KnownError('No game found. Please map a game to this category first.')
+    modal = MapFormatModal(store, game)
+    await interaction.response.send_modal(modal)
+    await modal.wait()
 
   @AddClaimFeedMap.error
   @AddGameMap.error

@@ -1,7 +1,6 @@
 from output_builder import BuildTableOutput
 from data.metagame_data import GetLeagueMetagame
 from input_modals.league_selector import LeagueSelector, ConfirmView
-from select_menu_bones import SelectMenu
 from tuple_conversions import Store, Game, Format, League, MetagameResult, TopPlayers, PlayerStanding
 from services.date_functions import ConvertToDate
 from interaction_objects import GetObjectsFromInteraction
