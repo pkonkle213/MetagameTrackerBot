@@ -40,6 +40,8 @@ class MappingCommands(commands.GroupCog, name='map'):
     hub = GetHub(interaction.guild_id)
     if not hub:
       raise KnownError('No hub found. Please register your hub.')
+    if not hub.format_lock:
+      raise KnownError('This hub does not have format locking enabled.')
     regions = GetRegions(hub)
     if not regions or len(regions) == 0:
       raise KnownError('No regions found. Please contact the bot owner.')
