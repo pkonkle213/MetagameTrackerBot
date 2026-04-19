@@ -3,8 +3,22 @@ from psycopg.rows import class_row
 from custom_errors import KnownError
 from settings import DATABASE_URL
 import psycopg
-from tuple_conversions import Format, Game, Store
+from tuple_conversions import Format, Game, Store, Hub
 
+def GetHub(discord_id: int) -> Hub | None:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Hub)) as cur:
+    command = f'''
+    SELECT
+      *
+    FROM
+      hubs_view
+    WHERE
+      discord_id = {discord_id}
+    '''
+    cur.execute(command)
+    row = cur.fetchone()
+    return row
 
 def GetFormatByMap(channel_id: int) -> Format | None:
   conn = psycopg.connect(DATABASE_URL)

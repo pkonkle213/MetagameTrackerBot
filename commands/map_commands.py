@@ -1,3 +1,5 @@
+from input_modals.map_region_modal import MapRegionModal
+from data.hubs_data import GetRegions
 from custom_errors import KnownError
 from input_modals.map_game_modal import MapGameModal
 from input_modals.map_format_modal import MapFormatModal
@@ -7,8 +9,9 @@ from discord import app_commands, Interaction
 from services.formats_services import AddStoreFormatMap, GetFormatOptions
 from services.game_mapper_services import AddStoreGameMap, GetGameOptions
 from services.command_error_service import Error
+from data.interaction_data import GetHub
 from services.map_claim_feed import MapClaimFeed
-from checks import isPhil, IsStore
+from checks import isPhil, IsStore, IsHub
 
 class MappingCommands(commands.GroupCog, name='map'):
   """A group of commands for mapping channels to games, formats, and claim feeds"""
@@ -24,6 +27,26 @@ class MappingCommands(commands.GroupCog, name='map'):
     await interaction.response.defer(ephemeral=True, thinking=False)
     output = MapClaimFeed(interaction)
     await interaction.followup.send(output, ephemeral=True)
+
+
+  @app_commands.command(name='region',
+                       description='Map your channel to a region')
+  @app_commands.checks.has_role("MTSubmitter")
+  @app_commands.guild_only()
+  @IsHub()
+  async def AddRegionMap(self, interaction: Interaction):
+    if not interaction.guild_id:
+      raise KnownError('No guild found.')
+    hub = GetHub(interaction.guild_id)
+    if not hub:
+      raise KnownError('No hub found. Please register your hub.')
+    regions = GetRegions(hub)
+    if not regions or len(regions) == 0:
+      raise KnownError('No regions found. Please contact the bot owner.')
+    modal = MapRegionModal(hub, regions)
+    await interaction.response.send_modal(modal)
+    await modal.wait()
+
   
   @app_commands.command(name='game',
                         description='Map your category to a game')
