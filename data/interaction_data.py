@@ -6,7 +6,6 @@ import psycopg
 from tuple_conversions import Format, Game, Store
 
 
-# TODO: Why are these in here and not in their corresponding data files?
 def GetFormatByMap(channel_id: int) -> Format | None:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(Format)) as cur:
@@ -41,8 +40,7 @@ def GetStoreByDiscord(discord_id: int) -> Store | None:
       used_for_data,
       state,
       region_id,
-      is_data_hub,
-      hub_format_lock
+      is_paid
     FROM
       stores_view
     WHERE
@@ -88,6 +86,7 @@ def GetInteractionDetails(
       s.store_address,
       s.used_for_data,
       s.region_id,
+      s.is_paid,
       g.game_id,
       g.game_name,
       f.format_id,
