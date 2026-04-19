@@ -79,8 +79,17 @@ class Store(NamedTuple):
   used_for_data: bool
   state: str
   region_id: str
-  is_data_hub: bool
-  hub_format_lock: int
+  is_paid: bool
+
+class Hub(NamedTuple):
+  discord_id: int
+  discord_name: str
+  hub_name: str
+  owner_id: int
+  owner_name: str
+  region_id: str
+  format_lock: int
+  is_paid: bool
 
 class Event(NamedTuple):
   id: int

@@ -1,5 +1,6 @@
 from custom_errors import KnownError
 from data.games_data import GetAllGames, AddGameMap
+from services.game_mapper_services import AddStoreGameMap
 from tuple_conversions import Game, Store
 import discord
 
@@ -27,8 +28,10 @@ class MapGameModal(discord.ui.Modal, title='Map Game'):
   async def on_submit(self, interaction: discord.Interaction) -> None:
     #if not self.select_game.component:
       #raise Exception("No idea what's going on here")
-    self.selected_game = GetGame(self.select_game.component.values[0], self.games)
+    selected_game = GetGame(self.select_game.component.values[0], self.games)
     await interaction.response.defer(thinking=False)
+    result = AddStoreGameMap(interaction, selected_game)
+    await interaction.followup.send(result, ephemeral=True)
 
   async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
     await interaction.followup.send(f'Oops! Something went wrong: {error}', ephemeral=True)
@@ -37,10 +40,8 @@ class MapGameModal(discord.ui.Modal, title='Map Game'):
   async def on_timeout(self) -> None:
     self.is_submitted = False
 
-def GetGame(selection, games:list[Game]) -> Game:
-  print('Selection: ', selection) 
-  print('Type of Selection:', type(selection))
+def GetGame(selection:str, games:list[Game]) -> Game:
   for game in games:
-    if game.id == int(selection[0]):
+    if game.id == int(selection):
       return game
   raise KnownError('Game selected not found')

@@ -19,9 +19,9 @@ def GetObjectsFromInteraction(
   if not channel_id:
     raise KnownError('No channel found.')
 
-  store, game, format = db.GetInteractionDetails(discord_id,
-                                                 category_id,
-                                                 channel_id)
+  store = GetStore(discord_id)
+  game = GetGame(category_id)
+  format = GetFormat(game, channel_id)
 
   return store, game, format
 
@@ -60,7 +60,7 @@ def SplitInteractionData(interaction: discord.Interaction):
   return discord_id, category_id, channel_id, user_id
 
 
-def GetGame(category_id: int, required: bool):
+def GetGame(category_id: int, required: bool = False):
   """Returns the game mapped to the given category_id
   
   Parameters:
@@ -72,8 +72,9 @@ def GetGame(category_id: int, required: bool):
   return game
 
 
-def GetFormat(game: Game | None, channel_id: int,
-              required: bool) -> Format | None:
+def GetFormat(game: Game | None,
+              channel_id: int,
+              required: bool = False) -> Format | None:
   """Returns the format mapped to the given channel_id
   
   Parameters:
@@ -83,8 +84,6 @@ def GetFormat(game: Game | None, channel_id: int,
   if game is None:
     return None
   format = db.GetFormatByMap(channel_id)
-  if format is None and required:
-    raise KnownError('Format not found. Please map a format to this channel.')
   return format
 
 
