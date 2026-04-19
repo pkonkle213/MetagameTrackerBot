@@ -20,7 +20,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
     super().__init__()
     today = GetToday().strftime('%m/%d/%Y')
     self.data = data
-    event_types = GetEventTypes()
+    event_types = GetEventTypes(store.discord_id)
 
     default_event_name = f'{format.format_name.title()} Weekly'
 

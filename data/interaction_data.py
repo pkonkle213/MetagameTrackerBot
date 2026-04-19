@@ -6,7 +6,6 @@ import psycopg
 from tuple_conversions import Format, Game, Store
 
 
-# TODO: Why are these in here and not in their corresponding data files?
 def GetFormatByMap(channel_id: int) -> Format | None:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(Format)) as cur:
@@ -71,7 +70,7 @@ def GetGameByMap(category_id: int) -> Game | None:
     row = cur.fetchone()
     return row
 
-
+#TODO: I hate this and want to revert it to getting the three things separately
 def GetInteractionDetails(
   discord_id: int, category_id: int, channel_id: int
 ) -> Tuple[Store, Game | None, Format | None]:
@@ -86,7 +85,6 @@ def GetInteractionDetails(
       s.owner_name,
       s.store_address,
       s.used_for_data,
-      s.state,
       s.region_id,
       s.is_paid,
       g.game_id,
