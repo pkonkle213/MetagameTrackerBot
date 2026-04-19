@@ -91,6 +91,10 @@ class Hub(NamedTuple):
   format_lock: int
   is_paid: bool
 
+class Region(NamedTuple):
+  id: int
+  region_name: str
+
 class Event(NamedTuple):
   id: int
   custom_event_id: int | None
