@@ -38,6 +38,7 @@ async def on_guild_join(guild: discord.Guild):
   print('Joined a new guild:', guild.name)
   output = "Thank you for adding me to your server! Here's my notes from installation:\n"
   output += await NewStoreRegistration(bot, guild)
+  await guild.owner.send(output)
   UpdateStores()
 
 @tasks.loop(time=datetime.time(hour=18, minute=00, tzinfo=TIME_ZONE))
