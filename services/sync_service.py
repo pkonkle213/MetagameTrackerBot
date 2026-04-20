@@ -2,14 +2,14 @@ import discord
 from custom_errors import KnownError
 from discord_messages import MessageUser
 import settings
-from data.store_data import DeleteStore, GetAllStoreDiscordIds
+from data.store_data import DeleteStore
 
 async def SyncCommands(bot, commands_directory):
   try: 
     for file in commands_directory.glob("*.py"):
       if file.name != "__init__.py":
         await bot.load_extension(f'commands.{file.name[:-3]}')
-    """ I'm not sure this is needed anymore
+    """ I'm not sure this is needed anymore, though maybe it should check discords
     stores = GetAllStoreDiscordIds()
     if stores is None:
       raise KnownError("No stores found?")

@@ -37,7 +37,7 @@ def UpdateStore(
       raise Exception(f'Unable to update store: {discord_id}')
     return row
 
-def DeleteStore(discord_id) -> bool:
+def DeleteStore(discord_id:int) -> bool:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
@@ -50,40 +50,45 @@ def DeleteStore(discord_id) -> bool:
     success = cur.fetchone()
     return True if success else False
 
-def AddStore(
-  discord_id,
-  discord_name,
-  owner_id,
-  owner_name
-) -> int:
+def AddDiscord(
+  discord_id:int,
+  discord_name:str,
+  owner_id:int,
+  owner_name:str
+) -> int | None:
   conn = psycopg.connect(DATABASE_URL)
-  discord_name = discord_name.replace("'","")
   with conn, conn.cursor(row_factory=scalar_row) as cur:
-    command = f'''
-    INSERT INTO Stores (discord_id, discord_name, owner_id, owner_name, used_for_data, is_data_hub)
-    VALUES ({discord_id}, '{discord_name}', {owner_id}, '{owner_name}', {True}, {False})
+    command = '''
+    INSERT INTO discords (discord_id, discord_name, owner_id, owner_name)
+    VALUES (%s, %s, %s, %s)
     ON CONFLICT (discord_id) DO UPDATE
-    SET discord_name = '{discord_name}', owner_id = {owner_id}, owner_name = '{owner_name}'
+    SET discord_name = %s, owner_id = %s, owner_name = %s
     RETURNING discord_id
     '''
 
-    cur.execute(command)
+    criteria = [discord_id, discord_name, owner_id, owner_name]
+    cur.execute(command, criteria + criteria[1:])
+    conn.commit()
+    row = cur.fetchone()
+    if not row:
+      raise Exception(f'Unable to add discord: {discord_id}')
+    return row
+
+def AddStore(discord_id:int) -> int:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=scalar_row) as cur:
+    command = f'''
+    INSERT INTO stores (discord_id, used_for_data)
+    VALUES (%s, TRUE)
+    RETURNING discord_id
+    '''
+
+    cur.execute(command, [discord_id])
     conn.commit()
     row = cur.fetchone()
     if not row:
       raise Exception(f'Unable to add store: {discord_id}')
     return row
-
-def GetAllStoreDiscordIds() -> list[int]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=scalar_row) as cur:
-    command = '''
-    SELECT discord_id
-    FROM Stores
-    '''
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
 
 def GetArchetypeFeed(
   discord_id: int,

@@ -1,8 +1,11 @@
+from services.input_services import ConvertInput
+import settings
+from discord_messages import MessageUser
 import discord
 from custom_errors import KnownError
 from data.formats_data import AddFormatMap, GetFormatsByGameId
 from data.games_data import AddGameMap
-from data.store_data import AddStore, UpdateStore
+from data.store_data import AddStore, UpdateStore, AddDiscord
 from input_modals.store_profile_update import StoreProfileModal
 from interaction_objects import GetObjectsFromInteraction
 from services.game_mapper_services import GetGameOptions
@@ -32,56 +35,56 @@ async def UpdateStoreDetails(interaction: discord.Interaction):
   if result:
     return 'Store profile updated'
 
-#TODO: Make smaller methods with try/except blocks so that registration isn't stopped by one error, if appropriate
-async def NewStoreRegistration(bot:discord.Client,
-                               guild: discord.Guild):
+async def NewStoreRegistration(
+  bot:discord.Client,
+  guild: discord.Guild
+) -> str:
   """Goes through steps to register a new store and automap categories and channels"""
+  output = ''
+  #TODO: Define discord_name, owner_name, and owner_id and others here as they're used in multiple places
   try:
-    if guild is None:
-      raise Exception('Was unable to find the guild')
-    AddStoreToDatabase(guild)
-    message, mappings = MapCategoriesAndChannels(guild)
-    await MessageOwnerMappings(guild, message, mappings)
+    print('Adding discord to database')
+    add_discord = AddDiscordToDatabase(guild)
+    if add_discord:
+      output += '- Discord added to database\n'
 
-    #Create and assign MTSubmitter role in guild
-    print('Creating MTSubmitter role')
-    output = await CreateMTSubmitterRole(guild)
+    print('Adding store to database')
+    add_store = AddStoreToDatabase(guild)
+    if add_store:
+      output += '- Store added to database\n'
+
+    print('Mapping categories and channels')
+    mapping_message, mapping_success = MapCategoriesAndChannels(guild)
+    if mapping_success:
+      output += '- Categories and channels automapped:\n'
+      output += mapping_message
+    else:
+      output += '- No categories or channels automapped\n'
+
+    print('Creating and assigning MTSubmitter role')
+    role_message, role_success = await CreateMTSubmitterRole(guild)
+    
+    print('Assigning Store Owner role in bot guild')
     owner = guild.owner
     if owner is None:
       raise Exception('No owner found')
-    await AssignStoreOwnerRoleInBotGuild(bot, owner.id)
+    role_assign = await AssignStoreOwnerRoleInBotGuild(bot, owner.id)
     return output
-  except KnownError as error:
-    print(f'KnownError registering store: {error}')
-  except Exception as error:
-    print(f'Error registering store: {error}')
+  except Exception as e:
+    await MessageUser(bot, f"Issue with new store registration: {e}", settings.PHILID)
+    return f'Unable to add this discord to my database. Please contact the bot owner.'
 
-async def MessageOwnerMappings(guild: discord.Guild,
-                               output: str,
-                               mappings: bool):
-  """Messages the owner of the guild with the mappings that were performed"""
-  owner = guild.owner
-  if owner is None:
-    raise Exception('No owner found')
-  if mappings:
-    await owner.send(f"Your store has been auto registered!\n\nHere's what was also automapped:\n{output}If you'd like to change these mappings, please use the `/map` commands.")
-  else:
-    await owner.send("Your store has been auto registered! However, categories or channels weren't automapped. Please map your categories and channels manually.")
+def AddDiscordToDatabase(guild: discord.Guild) -> str:
+  """Adds the discord to the database"""
+  guild_name = ConvertInput(guild.name)
+  owner_name = ConvertInput(guild.owner.name) if guild.owner else 'Unknown'
+  owner_id = guild.owner_id if guild.owner_id else 0
+  discord = AddDiscord(guild.id, guild.name, owner_id, owner_name)
+  return 'Done'
 
 def AddStoreToDatabase(guild: discord.Guild) -> int:
   """Adds the store to the database"""
-  owner = guild.owner
-  if owner is None:
-    raise KnownError('No owner found')
-  print('Adding store:',guild.id,                   
-        guild.name,
-        owner.id,
-        owner.name)
-  store = AddStore(guild.id,                   
-                   guild.name,
-                   owner.id,
-                   owner.name)
-  print('Store added:', store)
+  store = AddStore(guild.id)
   return store
 
 def MatchGame(category_name: str, games: list[Game]):
@@ -126,34 +129,49 @@ def MapCategoriesAndChannels(guild: discord.Guild) -> tuple[str, bool]:
   
     return output, mapping
   except Exception as e:
-    print('Error mapping categories and channels:', e)
     return '', False
 
-async def CreateMTSubmitterRole(guild:discord.Guild):
+async def CreateMTSubmitterRole(guild:discord.Guild) -> tuple[str, bool]:
   """Creates the MTSubmitter role and assigns it to the owner"""
   owner = guild.owner
   if owner is None:
     raise KnownError('No owner found')
   mtsubmitter_role = discord.utils.get(guild.roles, name="MTSubmitter")
+  print('Role:', mtsubmitter_role)
 
+  output = ''
+  success = ''
   if mtsubmitter_role is None:
     print("Attempting to create and add the MTSubmitter role")
     try:
       perms = discord.Permissions(manage_messages=True)
-      mtsubmitter_role = await guild.create_role(name="MTSubmitter", permissions=perms)
+      mtsubmitter_role = await guild.create_role(name="MTSubmitter", permissions=perms, reason="Automatic role creation on join")
+      print('Created role:', mtsubmitter_role)
       print('MTSubmitter role created')
-      await owner.add_roles(mtsubmitter_role)
-      print('MTSubmitter role assigned!')
-      return 'MTSubmitter role created and assigned to owner.'
+      output = 'MTSubmitter role created and assigned to owner.'
+      success = True
+    except discord.Forbidden:
+      print(f"Bot lacks 'Manage Roles' permission in {guild.name}")
+      return 'Bot lacks permission to create MTSubmitter role. Please create and assign manually.', False
     except Exception as e:
       print('Failure to create or assign MTSubmitter role:', e)
-      return 'Unable to create MTSubmitter role. Please create and assign manually.'
+      return 'Unable to create MTSubmitter role. Please create and assign manually.', False
+      
+  try:
+    print('Attempting to assign MTSubmitter role to owner')
+    await owner.add_roles(mtsubmitter_role)
+    print('MTSubmitter role assigned!')
+    output = 'MTSubmitter role assigned to owner.' if output == '' else 'MTSubmitter role created and assigned to owner.'
+    success = True
+    return output, success
+  except Exception as e:
+    return 'MTSubmitter role unable to be assigned to owner. Please assign manually.', True
 
-async def AssignStoreOwnerRoleInBotGuild(bot:discord.Client, owner_id: int):
+async def AssignStoreOwnerRoleInBotGuild(bot:discord.Client, owner_id: int) -> str:
   """Assigns the Store Owner role to the owner in the bot guild"""
   bot_guild = bot.get_guild(BOTGUILDID)
   if bot_guild is None:
-    raise Exception('Bot guild not found')
+    return 'Bot guild not found'
   user = await bot_guild.fetch_member(owner_id)
 
   if user is None:
@@ -164,3 +182,4 @@ async def AssignStoreOwnerRoleInBotGuild(bot:discord.Client, owner_id: int):
     raise Exception('Store Owner role not found')
     
   await user.add_roles(store_owner_role)
+  return "If owner is in the bot's guild, they've been assigned the Store Owner role."
