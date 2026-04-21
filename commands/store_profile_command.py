@@ -4,11 +4,11 @@ from checks import isOwner, IsStore
 from services.command_error_service import Error
 from services.store_services import UpdateStoreDetails
 
-class StoreProfile(commands.Cog):
+class StoreProfile(commands.GroupCog, name="update"):
   def __init__(self, bot):
     self.bot = bot
 
-  @app_commands.command(name="update",
+  @app_commands.command(name="store",
     description="Updates the store profile")
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
