@@ -14,8 +14,8 @@ from tuple_conversions import Format, Game
 
 async def UpdateStoreDetails(interaction: discord.Interaction):
   """Updates the store details in the database"""
-  # Send modal FIRST before any database operations to avoid Discord timeout
-  modal = StoreProfileModal(None)
+  store = GetObjectsFromInteraction(interaction)[0]
+  modal = StoreProfileModal(store)
   await interaction.response.send_modal(modal)
   await modal.wait()
 
@@ -23,12 +23,10 @@ async def UpdateStoreDetails(interaction: discord.Interaction):
     raise KnownError('Modal not submitted correctly')
 
   # Now get store from database after modal is submitted
-  store = GetObjectsFromInteraction(interaction)[0]
   
   result = UpdateStore(store.discord_id,
-                       modal.submitted_owners_name,
                        modal.submitted_store_name,
-                       '', #modal.submitted_store_address,
+                       modal.submitted_store_address,
                        modal.submitted_melee_id,
                        modal.submitted_melee_secret)
   

@@ -5,30 +5,29 @@ from tuple_conversions import Store
 
 def UpdateStore(
   discord_id:int,
-  owner_name:str,
   store_name:str,
   store_address:str,
   melee_id:str | None,
   melee_secret:str | None
 ) -> Store:
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Store)) as cur:
+  with conn, conn.cursor(row_factory=scalar_row) as cur:
     command = f'''
-    UPDATE Stores
+    UPDATE stores
     SET store_name = %s
-      , owner_name = %s
       , store_address = %s
-      {', melee_id = %s' if melee_id else ''}
-      {', melee_secret = %s' if melee_secret else ''}
-    WHERE discord_id = {discord_id}
-    RETURNING discord_id, discord_name, store_name, owner_id, owner_name, store_address, used_for_data, FALSE, is_data_hub
+      {', melee_client_id = %s' if melee_id else ''}
+      {', melee_client_secret = %s' if melee_secret else ''}
+    WHERE discord_id = %s
+    RETURNING discord_id
     '''
 
-    criteria = [store_name, owner_name, store_address]
+    criteria = [store_name, store_address]
     if melee_id:
       criteria.append(melee_id)
     if melee_secret:
       criteria.append(melee_secret)
+    criteria.append(discord_id)
       
     cur.execute(command, criteria)
     conn.commit()

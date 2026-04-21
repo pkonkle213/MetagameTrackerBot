@@ -52,7 +52,6 @@ def GetStoreByDiscord(discord_id: int) -> Store | None:
       owner_name,
       store_address,
       used_for_data,
-      state,
       region_id,
       is_paid
     FROM
