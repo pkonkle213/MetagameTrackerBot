@@ -96,15 +96,6 @@ def GetStats(
     rows = cur.fetchall()
     return rows
 
-
-
-def DetermineStoreRestriction(store:Store) -> str:
-  if store.discord_id == DATAGUILDID:
-    return ''
-  if store.is_data_hub:
-    return f'AND s.region_id = {store.region_id}'
-  return f'AND s.discord_id = {store.discord_id}'
-
 def GetTopPlayerData(
   store:Store,
   game:Game | None,
@@ -113,7 +104,6 @@ def GetTopPlayerData(
   end_date:date
 ):
   conn = psycopg.connect(DATABASE_URL)
-  store_restriction = DetermineStoreRestriction(store)
   with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
     command = f"""
     WITH
@@ -132,7 +122,7 @@ def GetTopPlayerData(
           e.event_date BETWEEN '{start_date}' AND '{end_date}'
           {f'AND e.format_id = {format.id}' if format else ''}
           {f'AND e.game_id = {game.id}' if game else ''}
-          {store_restriction}
+          AND s.discord_id = {store.discord_id}
       )
     SELECT
       player_name,
