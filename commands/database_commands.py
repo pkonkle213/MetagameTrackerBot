@@ -11,7 +11,7 @@ class DatabaseCommands(commands.GroupCog, name='database'):
 
   @app_commands.command(name='download',
                        description='Download the database')
-  @app_commands.guilds(discord.Object(id=BOTGUILDID))
+  @app_commands.guilds(BOTGUILDID)
   @app_commands.check(isPhil)
   async def DownloadDatabase(self, interaction: Interaction):
     await interaction.response.send_message("Generating spreadsheet, please wait...")

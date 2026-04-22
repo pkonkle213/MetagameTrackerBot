@@ -13,7 +13,7 @@ class UniqueSubmitters(commands.Cog):
 
   @app_commands.command(name='events_statistics',
                         description='See unique submitters and percent reported for all events')
-  @app_commands.guilds(discord.Object(id=BOTGUILDID))
+  @app_commands.guilds(BOTGUILDID)
   @app_commands.check(isPhil)
   async def MyEventsReported(self, interaction: Interaction, discord_id:str = ''):
     '''
