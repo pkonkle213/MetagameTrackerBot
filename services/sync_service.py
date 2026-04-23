@@ -25,7 +25,7 @@ async def SyncCommands(bot, commands_directory):
     """
 
     try:
-      sync_my_bot = await bot.tree.sync(guild=discord.Object(settings.BOTGUILDID))
+      sync_my_bot = await bot.tree.sync(guild=discord.Object(id=settings.BOTGUILDID))
       print(f'Synced {len(sync_my_bot)} command(s) to guild My Bot -> {settings.BOTGUILDID}')
     except Exception as error:
       print(f'Unable to sync commands to the bot guild:\n{error}')

@@ -1,4 +1,4 @@
-import discord
+from discord import app_commands, Interaction
 from discord.ext import commands
 import settings
 from timedposts.automated_updates import UpdateDataGuild
@@ -7,10 +7,10 @@ class ForceDataGuildUpdate(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
-  @discord.app_commands.command(name="force_update",
+  @app_commands.command(name="force_update",
                                 description="Force an update of the data guild")
-  @discord.app_commands.guilds(settings.BOTGUILDID)
-  async def ForceUpdate(self, interaction: discord.Interaction):
+  @app_commands.guilds(settings.BOTGUILDID)
+  async def ForceUpdate(self, interaction: Interaction):
     await interaction.response.defer(thinking=False)
     try:
       await UpdateDataGuild(self.bot)
