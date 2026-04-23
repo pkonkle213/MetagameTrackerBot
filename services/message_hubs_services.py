@@ -15,7 +15,7 @@ async def MessageHubs(
   # Find hubs in the same region as the store and format
   hubs = GetAllHubs(event)
   name = store.store_name if store.store_name else store.discord_name
-  output = f"New event submitted for {name}: {event.event_name} ({event.event_date.strftime("%B %d")})" if message == '' else message
+  output = f"New event submitted for {name}: {event.event_name} ({event.event_date.strftime("%B %d")}). Waiting for archetypes..." if message == '' else message
   # Message that an event with NAME and DATE was created at STORE
   for hub in hubs:
     try:
