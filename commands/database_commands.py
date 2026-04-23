@@ -12,7 +12,6 @@ class DatabaseCommands(commands.GroupCog, name='database'):
 
   @app_commands.command(name='download',
                        description='Download the database')
-  @app_commands.guilds(BOTGUILDID)
   @app_commands.check(isPhil)
   async def DownloadDatabase(self, interaction: Interaction):
     await interaction.response.send_message("Generating spreadsheet, please wait...",ephemeral=True)
@@ -23,4 +22,4 @@ class DatabaseCommands(commands.GroupCog, name='database'):
       await interaction.followup.send(f"An error occurred: {e}",ephemeral=True)
 
 async def setup(bot):
-  await bot.add_cog(DatabaseCommands(bot))
+  await bot.add_cog(DatabaseCommands(bot), guilds=[discord.Object(id=BOTGUILDID)])
