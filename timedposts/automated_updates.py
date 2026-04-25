@@ -3,7 +3,7 @@ from output_builder import BuildTableOutput
 from data.automated_updates_data import GetDataChannels
 from interaction_objects import GetStore, GetGame, GetFormat
 from services.date_functions import BuildDateRange
-from data.metagame_data import GetMetagame
+from services.metagame_services import GetWholeMetagame
 
 async def UpdateDataGuild(bot):
   target_channels = GetDataChannels(settings.DATAGUILDID)
@@ -16,8 +16,7 @@ async def UpdateDataGuild(bot):
     channel = bot.get_channel(channel[0])
     date_start, date_end = BuildDateRange('', '', format)
     title_name = format.format_name.title() if format else game.game_name.title()
-    data = GetMetagame(
-      store,
+    data = GetWholeMetagame(
       game,
       format,
       date_start,

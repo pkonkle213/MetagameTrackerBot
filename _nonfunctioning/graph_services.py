@@ -4,7 +4,7 @@ from services.date_functions import BuildDateRange
 from interaction_objects import GetObjectsFromInteraction
 from custom_errors import KnownError
 from discord import Interaction, File
-from data.metagame_data import GetMetagame
+from data.metagame_data import GetTheMetagameagame
 
 
 def MetagameScatterPlot(interaction: Interaction, start_date: str,
@@ -26,7 +26,7 @@ def MetagameScatterPlot(interaction: Interaction, start_date: str,
 
   date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
 
-  data = GetMetagame(objects.game, objects.format, date_start, date_end, objects.store)
+  data = GetTheMetagameagame(objects.game, objects.format, date_start, date_end, objects.store)
   
   if data is None:
     raise KnownError('No data found for the given format and date range.')
