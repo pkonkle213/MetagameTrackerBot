@@ -6,22 +6,22 @@ from settings import DATAGUILDID
 from services.command_error_service import KnownError
 
 def GetStoreAttendance(interaction:Interaction, start_date, end_date):
-  store, game, format = GetObjectsFromInteraction(interaction)
-  if not store or not game:
+  objects = GetObjectsFromInteraction(interaction)
+  if not objects.store or not objects.game:
     raise KnownError('No store or game found')
-  date_start, date_end = BuildDateRange(start_date, end_date, format)
+  date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
   
-  data = GetAttendance(store,
-                       game,
-                       format,
+  data = GetAttendance(objects.store,
+                       objects.game,
+                       objects.format,
                        date_start,
                        date_end)
-  subject = format.format_name.title() if format else game.game_name.title()
+  subject = objects.format.format_name.title() if objects.format else objects.game.game_name.title()
   title = f'{subject} attendance from {date_start} to {date_end}'
   headers = ['Date', 'Event Name', 'Players']
   if not format:
     headers.insert(1, 'Format')
-  if store.discord_id == DATAGUILDID:
+  if objects.store.discord_id == DATAGUILDID:
     headers.insert(1, 'Store')
   
   return (data, title, headers)

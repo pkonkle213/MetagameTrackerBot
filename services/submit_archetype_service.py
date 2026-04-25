@@ -5,7 +5,6 @@ from custom_errors import KnownError
 from data.store_data import GetArchetypeFeed
 from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
-from input_modals.submit_archetype_modal import SubmitArchetypeModal
 from data.archetype_data import AddArchetype
 from data.event_data import GetEventDetails
 from services.input_services import ConvertInput
@@ -13,32 +12,41 @@ from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from output_builder import BuildTableOutput
 from data.metagame_data import OneEventMetagame
 from discord_messages import MessageChannel, MessageUser
-from tuple_conversions import Event, Format, Store, Game
+from tuple_conversions import Event, Format, Store, Game, MetagameResult
+from discord.ext import commands
+from services.message_hubs_services import MessageHubs
+from interaction_objects import GetStore
 
-async def GetUserInput(
-  store:Store,
+async def SubmitArchetype(
+  bot: commands.Bot,
+  interaction:Interaction,
+  player_name:str,
+  event:Event,
+  archetype:str,
   game:Game,
-  format:Format,
-  userId:int,
-  interaction:Interaction
-) -> Tuple[str, Event, str]:
-  modal = SubmitArchetypeModal(store, game, format, userId)
-  await interaction.response.send_modal(modal)
-  await modal.wait()
-
-  if game.game_name.upper() == 'MAGIC' and format.is_limited:
-    archetype = MagicLimited(modal.submitted_main_colors,
-                             modal.submitted_splash_colors)
-  else:
-    archetype = ConvertInput(modal.submitted_archetype)
-
-    if game.game_name.upper() == 'LORCANA':
-      archetype = f'{modal.submitted_inks[0]}/{modal.submitted_inks[1]} - {archetype}'
-
-  if not modal.submitted_event:
-    raise KnownError('No event selected. Please try again.')
-  
-  return modal.submitted_player_name, modal.submitted_event, archetype
+  format:Format
+) -> None:
+  store = GetStore(event.discord_id)
+  if store is None:
+    raise Exception("An event didn't have a store? Sus.")
+  private_output, feed_output, public_output, full_event = AddTheArchetype(interaction, player_name, event, archetype, store, game, format)
+  await interaction.followup.send(private_output, ephemeral=True)
+  await MessageStoreFeed(bot,
+                         feed_output,
+                         interaction)
+  if public_output:
+    await MessageChannel(bot,
+                         public_output,
+                         interaction.guild_id,
+                         interaction.channel_id)
+  if full_event:
+    await MessageChannel(bot,
+                         full_event,
+                         interaction.guild_id,
+                         interaction.channel_id)
+    name = store.store_name if store.store_name else store.discord_name
+    output = f"```{name} - " + full_event[3:]
+    await MessageHubs(bot, store, event, output)
 
 async def MessageStoreFeed(
   bot,
@@ -74,10 +82,8 @@ def AddTheArchetype(
   archetype_submitted = ClaimResult(interaction,
                                     player_name,
                                     archetype,
-                                    event,
-                                    store,
-                                    game,
-                                    format)
+                                    event
+                                   )
   if archetype_submitted is None:
     raise KnownError('Unable to submit the archetype. Please try again later.')
   
@@ -107,15 +113,12 @@ def ClaimResult(
   player_name:str,
   archetype:str,
   event:Event,
-  store:Store,
-  game:Game,
-  format:Format
 ) -> int:
   userId = interaction.user.id
   
-  if ContainsBadWord(store.discord_id, archetype):
+  if ContainsBadWord(event.discord_id, archetype):
     raise KnownError('Archetype contains a banned word')
-  if not CanSubmitArchetypes(store.discord_id, userId):
+  if not CanSubmitArchetypes(event.discord_id, userId):
     raise KnownError('You have submitted too many bad archetypes. Please contact your store owner to have them submit the archetype.')
 
   updater_name = interaction.user.display_name
@@ -148,7 +151,7 @@ def CheckEventPercentage(event:Event) -> Tuple[str | None, str | None]:
     return followup, final
   return None, None
 
-def OneEventMeta(event:Event) -> Tuple[str,list[str],list[Tuple[str, float, float]]]:
+def OneEventMeta(event:Event) -> Tuple[str,list[str],list[MetagameResult]]:
   data = OneEventMetagame(event)
   title = f"{event.event_name}'s Metagame"
   headers = ['Archetype', 'Metagame %', 'Win %']

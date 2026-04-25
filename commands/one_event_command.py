@@ -4,7 +4,7 @@ from discord import app_commands, Interaction
 from discord.ext import commands
 from input_modals.event_selector import EventSelector
 from services.command_error_service import Error
-from services.claim_result_services import OneEventDetails, OneEventMeta
+from services.submit_archetype_service import OneEventDetails, OneEventMeta
 from output_builder import BuildTableOutput
 
 class OneEventCommands(commands.GroupCog, name='one_event'):
@@ -16,11 +16,11 @@ class OneEventCommands(commands.GroupCog, name='one_event'):
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def OneEventMeta(self, interaction:Interaction):
-    store, game, format = GetObjectsFromInteraction(interaction)
-    if not store or not game or not format:
+    objects = GetObjectsFromInteraction(interaction)
+    if not objects.store or not objects.game or not objects.format:
       raise KnownError('No store, game, or format found.')
 
-    modal = EventSelector(store, game, format)
+    modal = EventSelector(objects.store, objects.game, objects.format)
     await interaction.response.send_modal(modal)
     await modal.wait()
 
@@ -39,11 +39,11 @@ class OneEventCommands(commands.GroupCog, name='one_event'):
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def OneEvent(self,
                     interaction:Interaction):
-    store, game, format = GetObjectsFromInteraction(interaction)
-    if not store or not game or not format:
+    objects = GetObjectsFromInteraction(interaction)
+    if not objects.store or not objects.game or not objects.format:
       raise KnownError('No store, game, or format found.')
 
-    modal = EventSelector(store, game, format)
+    modal = EventSelector(objects.store, objects.game, objects.format)
     await interaction.response.send_modal(modal)
     await modal.wait()
 

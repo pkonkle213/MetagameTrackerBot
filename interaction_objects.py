@@ -1,11 +1,11 @@
 from custom_errors import KnownError
 import discord
 import data.interaction_data as db
-from tuple_conversions import Game, Format, Store
+from tuple_conversions import Game, Format, Store, InteractionObjects
 
 def GetObjectsFromInteraction(
     interaction: discord.Interaction
-) -> tuple[Store, Game | None, Format | None]:
+) -> InteractionObjects:
   """Gets the game, format, store, and user_id from the interaction"""
   discord_id = interaction.guild_id
   if not discord_id:
@@ -20,10 +20,11 @@ def GetObjectsFromInteraction(
     raise KnownError('No channel found.')
 
   store = GetStore(discord_id)
-  game = GetGame(category_id)
-  format = GetFormat(game, channel_id)
-
-  return store, game, format
+  hub = GetHub(discord_id)
+  game = GetGame(category_id, discord_id)
+  format = GetFormat(game, channel_id, discord_id)
+  
+  return InteractionObjects(store, hub, game, format)
 
 
 def SplitInteractionData(interaction: discord.Interaction):
@@ -59,22 +60,29 @@ def SplitInteractionData(interaction: discord.Interaction):
 
   return discord_id, category_id, channel_id, user_id
 
+def GetHub(discord_id: int):
+  """Returns the hub mapped to the given discord_id
+  
+  Parameters:
+    discord_id (int): The discord_id to get the hub for"""
+  hub = db.GetHubByDiscord(discord_id)
+  return hub
 
-def GetGame(category_id: int, required: bool = False):
+def GetGame(category_id: int, hub_discord_id: int):
   """Returns the game mapped to the given category_id
   
   Parameters:
-    category_id (int): The category_id mapped to the game
-    required (bool): Whether or not the game is required"""
-  game = db.GetGameByMap(category_id)
-  if game is None and required:
-    raise KnownError('Game not found. Please map a game to this category.')
+    category_id (int): The category_id mapped to the game"""
+  game = db.GetGameByMap(category_id, hub_discord_id)
+ 
   return game
 
 
-def GetFormat(game: Game | None,
-              channel_id: int,
-              required: bool = False) -> Format | None:
+def GetFormat(
+  game: Game | None,
+  channel_id: int,
+  hub_discord_id: int
+) -> Format | None:
   """Returns the format mapped to the given channel_id
   
   Parameters:
@@ -83,18 +91,15 @@ def GetFormat(game: Game | None,
     required (bool): Whether or not the format is required"""
   if game is None:
     return None
-  format = db.GetFormatByMap(channel_id)
+  format = db.GetFormatByMap(channel_id, hub_discord_id)
   return format
 
 
-def GetStore(discord_id: int, required: bool = True):
+def GetStore(discord_id: int) -> Store | None:
   """Returns the store mapped to the given discord_id
   
   Parameters:
-    discord_id (int): The discord_id to get the store for
-    required (bool): Whether or not the store is required"""
+    discord_id (int): The discord_id to get the store for"""
   store = db.GetStoreByDiscord(discord_id)
-
-  if store is None and required:
-    raise KnownError('Store not found. Please register your store.')
+  
   return store
