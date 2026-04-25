@@ -3,7 +3,6 @@ from settings import DATABASE_URL
 from tuple_conversions import Format, Game, Store
 
 def GetUserArchetypes(
-  store: Store,
   userId: int,
   game:Game,
   format:Format
@@ -21,7 +20,6 @@ def GetUserArchetypes(
       AND upper(ua.player_name) = upper(pn.player_name)
     WHERE
       pn.submitter_id = %s
-      AND pn.discord_id = %s
       AND e.game_id = %s
       AND e.format_id = %s
     GROUP BY
@@ -32,16 +30,14 @@ def GetUserArchetypes(
       10
     """
 
-    criteria = [userId, store.discord_id, game.id, format.id]
+    criteria = [userId, game.id, format.id]
     cur.execute(command, criteria)
     rows = cur.fetchall()
     return [row[0] for row in rows]
 
-#TODO: I think this is duplicate code....GetPlayerName
 def GetUserName(
-  store: Store,
   userId: int
-) -> str | None:
+) -> str:
   """Gets the user's name from the database"""
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
@@ -51,11 +47,14 @@ def GetUserName(
     FROM
       player_names
     WHERE
-      discord_id = %s
-      AND submitter_id = %s
+      submitter_id = %s
+    GROUP BY
+      player_name
+    ORDER BY
+      COUNT(*) DESC
     """
 
-    criteria = [store.discord_id, userId]
+    criteria = [userId]
     cur.execute(command, criteria)
     row = cur.fetchone()
-    return row[0] if row else None
+    return row[0] if row else ''

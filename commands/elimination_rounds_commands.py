@@ -21,11 +21,11 @@ class EliminationRoundsCommands(commands.GroupCog, name='elimination_rounds'):
   async def EliminationRounds(self,
                               interaction:Interaction):
     #Get the tournaments
-    store, game, format = GetObjectsFromInteraction(interaction)
-    if not store or not game or not format:
+    objects = GetObjectsFromInteraction(interaction)
+    if not objects.store or not objects.game or not objects.format:
       raise KnownError('No store, game, or format found.')
 
-    modal = EventSelector(store, game, format, event_type=EventType.Tournament.value)
+    modal = EventSelector(objects.store, objects.game, objects.format, event_type=EventType.Tournament.value)
 
     await interaction.response.send_modal(modal)
     await modal.wait()

@@ -136,3 +136,9 @@ class EventInput(NamedTuple):
   StoreID: int
   GameID: int
   FormatID: int
+
+class InteractionObjects(NamedTuple):
+  store: Store | None
+  hub: Hub | None
+  game: Game | None
+  format: Format | None

@@ -56,8 +56,10 @@ class MappingCommands(commands.GroupCog, name='map'):
   @app_commands.guild_only()
   @IsStore()
   async def AddGameMap(self, interaction: Interaction):
-    store, game, format = GetObjectsFromInteraction(interaction)
-    modal = MapGameModal(store)
+    objects = GetObjectsFromInteraction(interaction)
+    if not objects.store:
+      raise KnownError('No store found. Please register your store.')
+    modal = MapGameModal(objects.store)
     await interaction.response.send_modal(modal)
     await modal.wait()
     
@@ -67,10 +69,10 @@ class MappingCommands(commands.GroupCog, name='map'):
   @app_commands.guild_only()
   @IsStore()
   async def AddFormatMap(self, interaction: Interaction):
-    store, game, format = GetObjectsFromInteraction(interaction)
-    if not game:
-      raise KnownError('No game found. Please map a game to this category first.')
-    modal = MapFormatModal(store, game)
+    objects = GetObjectsFromInteraction(interaction)
+    if not objects.game or not objects.store:
+      raise KnownError('No store or game found. Please map a game to this category first.')
+    modal = MapFormatModal(objects.store, objects.game)
     await interaction.response.send_modal(modal)
     await modal.wait()
 

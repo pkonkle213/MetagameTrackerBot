@@ -3,14 +3,13 @@ from data.player_data import GetStats
 from services.date_functions import BuildDateRange
 from interaction_objects import GetObjectsFromInteraction
 
-
 def PlayRecord(interaction: Interaction, start_date: str, end_date: str):
-  store, game, format = GetObjectsFromInteraction(interaction)
-  if not store or not game:
+  objects = GetObjectsFromInteraction(interaction)
+  if not objects.store or not objects.game:
     raise Exception('No store or game found')
   user_id = interaction.user.id
-  date_start, date_end = BuildDateRange(start_date, end_date, format)
-  data = GetStats(store.discord_id, game, format, user_id, date_start, date_end)
+  date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
+  data = GetStats(objects.store.discord_id, objects.game, objects.format, user_id, date_start, date_end)
   title = f'Your Results From {str(date_start)} To {str(date_end)}'
   header = ['Archetype Name', 'Wins', 'Losses', 'Draws', 'Win %']
   if not format:

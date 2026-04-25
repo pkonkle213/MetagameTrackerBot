@@ -17,16 +17,16 @@ async def SelectLeague(
   isEdit:bool = False
 ) -> Tuple[Store, Game, Format, League]:
   """Selects a league from the database"""
-  store, game, format = GetObjectsFromInteraction(interaction)
+  objects = GetObjectsFromInteraction(interaction)
 
-  if not store or not game or not format:
+  if not objects.store or not objects.game or not objects.format:
     raise KnownError("No store, game, or format found. Leagues must be created in a format mapped channel")
 
-  leagues = GetLeagues(store.discord_id, game.id, format.id)
+  leagues = GetLeagues(objects.store.discord_id, objects.game.id, objects.format.id)
   if not leagues or len(leagues) == 0:
     raise KnownError("No leagues found for this game and format")
 
-  modal = LeagueSelector(bot, store, game, format, leagues, isEdit=isEdit)
+  modal = LeagueSelector(bot, objects.store, objects.game, objects.format, leagues, isEdit=isEdit)
   await interaction.response.send_modal(modal)
   await modal.wait()
 
@@ -35,7 +35,7 @@ async def SelectLeague(
 
   league = modal.league
   
-  return store, game, format, league
+  return objects.store, objects.game, objects.format, league
 
 def PlayerStanding(league:League, user_id:int, discord_id:int) -> PlayerStanding:
   """Displays the player's standing in a league"""
@@ -55,11 +55,11 @@ async def EditLeague(bot:commands.Bot, interaction: Interaction):
 
 async def CreateLeague(bot: commands.Bot, interaction: Interaction):
   """Helps the store create a league"""
-  store, game, format = GetObjectsFromInteraction(interaction)
+  objects = GetObjectsFromInteraction(interaction)
 
-  if not store or not game or not format:
+  if not objects.store or not objects.game or not objects.format:
     raise KnownError("No store, game, or format found. Leagues must be created in a format mapped channel")
 
-  modal = LeagueInputModal(bot, store, game, format)
+  modal = LeagueInputModal(bot, objects.store, objects.game, objects.format)
   await interaction.response.send_modal(modal)
   

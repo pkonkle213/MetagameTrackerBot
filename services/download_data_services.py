@@ -6,23 +6,23 @@ from interaction_objects import GetObjectsFromInteraction
 from services.command_error_service import KnownError
 
 def GetStoreData(interaction, start_date, end_date):
-  store, game, format = GetObjectsFromInteraction(interaction)
-  if not store:
+  objects = GetObjectsFromInteraction(interaction)
+  if not objects.store:
     raise KnownError('No store found')
 
-  date_start, date_end = BuildDateRange(start_date, end_date, format)
+  date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
 
-  name = store.store_name if store.store_name else store.discord_name
+  name = objects.store.store_name if objects.store.store_name else objects.store.discord_name
   message = f'Here is the data for {name.title()} between {date_start.strftime("%m/%d/%Y")} and {date_end.strftime("%m/%d/%Y")}:'
   files = []
 
-  participant_data = GetStoreStandingData(store, game, format, date_start, date_end)
+  participant_data = GetStoreStandingData(objects.store, objects.game, objects.format, date_start, date_end)
   if len(participant_data) != 0:
     header = 'GAME,FORMAT,DATE,PLAYER_NAME,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS'
     files.append(ConvertRowsToFile(participant_data, 'MyStoreParticipantData', header))
     message += ' Participant data is attached.'
 
-  round_data = GetStorePairingData(store, game, format, date_start, date_end)
+  round_data = GetStorePairingData(objects.store, objects.game, objects.format, date_start, date_end)
   if len(round_data) != 0:
     header = 'GAME,FORMAT,DATE,ROUND,PLAYER_NAME,ARCHETYPE_PLAYED,OPPONENT_NAME,OPPONENT_ARCHETYPE,RESULT'
     files.append(ConvertRowsToFile(round_data, 'MyStoreRoundByRoundData', header))
@@ -31,25 +31,24 @@ def GetStoreData(interaction, start_date, end_date):
   return message, files
 
 def GetPlayerData(interaction, start_date, end_date):
-
-  store, game, format = GetObjectsFromInteraction(interaction)
-  if not store:
+  objects = GetObjectsFromInteraction(interaction)
+  if not objects.store:
     raise KnownError('No store found')
     
   user_id = interaction.user.id
 
-  date_start, date_end = BuildDateRange(start_date, end_date, format)
+  date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
   
-  name = store.store_name if store.store_name else store.discord_name
+  name = objects.store.store_name if objects.store.store_name else objects.store.discord_name
   message = f'Here is the data for {name.title()} between {date_start.strftime("%m/%d/%Y")} and {date_end.strftime("%m/%d/%Y")}:'
   files = []
 
-  participant_data = GetPlayerStandingData(store, game, format, date_start, date_end, user_id)
+  participant_data = GetPlayerStandingData(objects.store, objects.game, objects.format, date_start, date_end, user_id)
   if len(participant_data) != 0:
     header = 'GAME,FORMAT,DATE,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS'
     files.append(ConvertRowsToFile(participant_data, 'MyEventResultsData', header))
 
-  round_data = GetPlayerPairingData(store, game, format, date_start, date_end, user_id)
+  round_data = GetPlayerPairingData(objects.store, objects.game, objects.format, date_start, date_end, user_id)
   if len(round_data) != 0:
     header = 'GAME,FORMAT,DATE,ROUND,ARCHETYPE_PLAYED,OPPONENT_ARCHETYPE,RESULT'
     files.append(ConvertRowsToFile(round_data, 'MyRoundByRoundData', header))

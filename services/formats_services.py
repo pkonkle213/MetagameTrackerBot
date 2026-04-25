@@ -40,7 +40,7 @@ async def SetChannelMessagePermissions(interaction: Interaction):
 
 
 def GetFormatOptions(interaction: Interaction):
-  store, game, format = GetObjectsFromInteraction(interaction)
-  if not game:
+  objects = GetObjectsFromInteraction(interaction)
+  if not objects.game:
     return None
-  return GetFormatsByGameId(game)
+  return GetFormatsByGameId(objects.game)

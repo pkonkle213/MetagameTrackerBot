@@ -1,7 +1,8 @@
 from datetime import date
 from settings import DATABASE_URL
 import psycopg
-from tuple_conversions import Format, Game, Store
+from tuple_conversions import Format, Game, Store, Event
+from psycopg.rows import class_row
 
 def GetSubmittedArchetypes(
   game:Game,

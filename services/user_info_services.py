@@ -1,3 +1,4 @@
+from data.player_name_data import GetUserName
 from discord import Interaction, Member
 from custom_errors import KnownError
 from data.get_user_info_data import GetLastArchetype, GetPlayerName, GetWinPercentage, GetMostPlayed
@@ -7,31 +8,30 @@ from tuple_conversions import Format, Game, Store
 def GetUserData(interaction: Interaction,
                member: Member):
   """Gets the player name, win percent, last played, and top decks for a user"""
-  store, game, format = GetObjectsFromInteraction(interaction)
-  if not store or not game or not format:
+  objects = GetObjectsFromInteraction(interaction)
+  if not objects.store or not objects.game or not objects.format:
     raise Exception('Unable to get store, game, or format')
 
-  player_name = GetUserName(store.discord_id,
+  player_name = GetPlayerName(objects.store.discord_id,
                             member.id)
   win_percent = GetWinPercent(member.id,
-                              store,
-                              game,
-                              format)
+                              objects.store,
+                              objects.game,
+                              objects.format)
   last_played = GetLastPlayed(member.id,
-                              store,
-                              game,
-                              format)
+                              objects.store,
+                              objects.game,
+                              objects.format)
   top_decks = GetTopDecks(member.id,
-                          store,
-                          game,
-                          format)
+                          objects.store,
+                          objects.game,
+                          objects.format)
   return player_name, win_percent, last_played, top_decks
 
-def GetUserName(guild_id: int,
+def GetPlayerName(guild_id: int,
                 member_id: int):
   """Gets the player name for the user in this discord"""
-  player_name = GetPlayerName(member_id,
-                             guild_id)
+  player_name = GetUserName(member_id)
   if player_name is None:
     raise KnownError('This person has not claimed any data')
   return player_name.title()

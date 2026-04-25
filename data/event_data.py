@@ -3,7 +3,7 @@ from typing import Tuple
 import psycopg
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
-from tuple_conversions import Event, EventInput
+from tuple_conversions import Event, EventInput, Format, Game, Store
 
 def GetEvent(
   event_id: int
@@ -116,4 +116,110 @@ def DeleteStandingsFromEvent(event_id):
     cur.execute(command)
     conn.commit()
     return True
-  
+
+def GetStoreEvents(
+  store:Store,
+  game:Game,
+  format:Format,
+):
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Event)) as cur:
+    command = f'''
+    SELECT
+      e.id,
+      e.custom_event_id,
+      e.discord_id,
+      e.event_date,
+      e.game_id,
+      e.format_id,
+      e.last_update,
+      e.event_name,
+      e.event_type_id,
+      e.reported_as,
+      e.created_by,
+      e.created_at,
+      e.league_id
+    FROM
+      events_view e
+      INNER JOIN stores s ON s.discord_id = e.discord_id
+      INNER JOIN games g ON g.id = e.game_id
+      INNER JOIN formats f ON f.id = e.format_id
+    WHERE
+      s.discord_id = {store.discord_id}
+      AND e.game_id = {game.id}
+      AND e.format_id = {format.id}
+      AND e.event_date >= CURRENT_DATE - INTERVAL '4 weeks'
+    ORDER BY
+      e.event_date DESC
+    LIMIT 25
+    '''
+
+    cur.execute(command)  # type: ignore[arg-type]
+    rows = cur.fetchall()
+
+    return rows
+
+def GetHubEvents(discord_id: int, channel_id:int) -> list[Event]:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Event)) as cur:
+    command = f'''
+    (
+      SELECT
+        e.id,
+        e.discord_id,
+        e.event_date,
+        e.game_id,
+        e.format_id,
+        e.last_update,
+        e.event_type_id,
+        s.store_name || ' - ' || e.event_name AS event_name,
+        e.custom_event_id,
+        e.created_at,
+        e.created_by,
+        e.league_id,
+        e.reported_as
+      FROM
+        events_view e
+        INNER JOIN stores_view s ON s.discord_id = e.discord_id
+        INNER JOIN region_channel_maps rcm ON rcm.region_id = s.region_id
+        INNER JOIN hubs_view h ON h.discord_id = rcm.discord_id
+      WHERE
+        h.discord_id = {discord_id}
+        AND rcm.channel_id = {channel_id}
+      ORDER BY
+        e.event_date DESC
+    )
+    UNION ALL
+    (
+      SELECT
+        e.id,
+        e.discord_id,
+        e.event_date,
+        e.game_id,
+        e.format_id,
+        e.last_update,
+        e.event_type_id,
+        s.store_name || ' - ' || e.event_name AS event_name,
+        e.custom_event_id,
+        e.created_at,
+        e.created_by,
+        e.league_id,
+        e.reported_as
+      FROM
+        events_view e
+        INNER JOIN stores_view s ON s.discord_id = e.discord_id
+        INNER JOIN format_channel_maps fcm ON fcm.format_id = e.format_id
+        INNER JOIN hubs_view h ON h.discord_id = fcm.discord_id
+      WHERE
+        h.discord_id = {discord_id}
+        AND fcm.channel_id = {channel_id}
+      ORDER BY
+        e.event_date DESC
+    )
+    LIMIT
+      25
+    '''
+
+    cur.execute(command)
+    rows = cur.fetchall()
+    return rows

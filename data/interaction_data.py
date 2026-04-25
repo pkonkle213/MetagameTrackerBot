@@ -20,10 +20,11 @@ def GetHub(discord_id: int) -> Hub | None:
     row = cur.fetchone()
     return row
 
-def GetFormatByMap(channel_id: int) -> Format | None:
+def GetFormatByMap(channel_id: int, hub_discord_id:int ) -> Format | None:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(Format)) as cur:
     command = f"""
+    (
     SELECT
       f.id,
       f.format_name,
@@ -34,6 +35,20 @@ def GetFormatByMap(channel_id: int) -> Format | None:
       INNER JOIN formats f ON f.id = fc.format_id
     WHERE
       fc.channel_id = {channel_id}
+    )
+    UNION ALL
+    (
+      SELECT
+        f.id,
+        f.format_name,
+        f.last_ban_update,
+        f.is_limited
+      FROM
+        formats f
+        INNER JOIN hubs_view hv ON hv.format_lock = f.id
+      WHERE
+        hv.discord_id = {hub_discord_id}
+    )
     """
     cur.execute(command)
     row = cur.fetchone()
@@ -64,19 +79,54 @@ def GetStoreByDiscord(discord_id: int) -> Store | None:
     row = cur.fetchone()
     return row
 
+def GetHubByDiscord(discord_id: int) -> Hub | None:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Hub)) as cur:
+    command = f'''
+    SELECT
+      discord_id,
+      discord_name,
+      hub_name,
+      owner_id,
+      owner_name,
+      region_id,
+      format_lock,
+      is_paid
+    FROM
+      hubs_view      
+    WHERE
+      discord_id = {discord_id}
+    '''
 
-def GetGameByMap(category_id: int) -> Game | None:
+    cur.execute(command)
+    row = cur.fetchone()
+    return row
+
+def GetGameByMap(category_id: int, hub_discord_id: int) -> Game | None:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(Game)) as cur:
     command = f"""
-  SELECT
-    id,
-    game_name
-  FROM
-    games g
-    INNER JOIN game_category_maps gc ON g.id = gc.game_id
-  WHERE
-    gc.category_id = {category_id}
+  (
+    SELECT
+      id,
+      game_name
+    FROM
+      games g
+      INNER JOIN game_category_maps gc ON g.id = gc.game_id
+    WHERE
+      gc.category_id = {category_id}
+  )
+  UNION ALL
+  (
+    SELECT
+      g.id,
+      g.game_name
+    FROM
+      games g
+      INNER JOIN hubs_view hv ON hv.game_lock = g.id
+    WHERE
+      hv.discord_id = {hub_discord_id}
+  )
   """
 
     cur.execute(command)

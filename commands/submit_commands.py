@@ -1,5 +1,6 @@
+from data.player_name_data import GetUserArchetypes, GetUserName
 import typing
-from services.claim_result_services import GetUserInput, AddTheArchetype, MessageStoreFeed
+from services.determine_archetype_input import GetUserInput
 from api_calls.melee_tournaments import GetMeleeTournamentData
 import settings
 from services.convert_and_save_input import ConvertCSVToDataErrors, ConvertModalToDataErrors, ConvertMeleeTournamentToDataErrors, ConfirmEventDetails
@@ -12,6 +13,8 @@ from interaction_objects import GetObjectsFromInteraction
 from services.add_results_services import SubmitData
 from services.command_error_service import Error
 from services.message_hubs_services import MessageHubs
+from tuple_conversions import InteractionObjects
+from data.event_data import GetHubEvents, GetStoreEvents
 
 class SubmitDataChecker(commands.GroupCog, name='submit'):
   """A group of commands to submit data"""
@@ -27,15 +30,15 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
   async def SubmitCheck(self, interaction: Interaction):
     await interaction.response.defer(ephemeral=True, thinking=False)
     issues = ['Issues I detect:']
-    store, game, format = GetObjectsFromInteraction(interaction)
+    objects = GetObjectsFromInteraction(interaction)
 
-    if not store:
+    if not objects.store:
       issues.append('- Store not registered')
     if not isSubmitter(interaction.guild, interaction.user, 'MTSubmitter'):
       issues.append("- You don't have the MTSubmitter role.")
-    if not game:
+    if not objects.game:
       issues.append('- Category not mapped to a game')
-    if game and not format:
+    if objects.game and not format:
       issues.append('- Channel not mapped to a format')
 
     if len(issues) == 1:
@@ -47,33 +50,36 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
   @app_commands.command(name="archetype",
                         description="Submit a player's archetype for an event")
   @app_commands.guild_only()
-  @IsStore()
   async def SubmitArchetypeCommand(self, interaction: Interaction):
-    store, game, format = GetObjectsFromInteraction(interaction)
+    objects = GetObjectsFromInteraction(interaction)
     userId = interaction.user.id
 
-    if not store or not game or not format:
-      raise KnownError('No store, game, or format found.')
+    if (not objects.store and not objects.hub) or not objects.game or not objects.format:
+      raise KnownError('No store, hub, game, or format found.')
+    guild_id = interaction.guild_id
+    channel_id = interaction.channel_id
 
-    player_name, event, archetype = await GetUserInput(store, game, format, userId, interaction)
-    private_output, feed_output, public_output, full_event = AddTheArchetype(interaction, player_name, event, archetype, store, game, format)
-    await interaction.followup.send(private_output, ephemeral=True)
-    await MessageStoreFeed(self.bot,
-                           feed_output,
-                           interaction)
-    if public_output:
-      await MessageChannel(self.bot,
-                           public_output,
-                           interaction.guild_id,
-                           interaction.channel_id)
-    if full_event:
-      await MessageChannel(self.bot,
-                           full_event,
-                           interaction.guild_id,
-                           interaction.channel_id)
-      name = store.store_name if store.store_name else store.discord_name
-      output = f"```{name} - " + full_event[3:]
-      await MessageHubs(self.bot, store, event, output)
+    if not guild_id or not channel_id:
+      raise KnownError('No guild or channel found.')
+    
+    player_name = GetUserName(userId)
+    player_archetypes = GetUserArchetypes(userId, objects.game, objects.format)
+
+    if objects.hub:
+      events = GetHubEvents(guild_id, channel_id)
+    elif objects.store:
+      events = GetStoreEvents(objects.store, objects.game, objects.format)
+    else:
+      raise KnownError('No store or hub found.')
+
+    await GetUserInput(self.bot,
+                       userId,
+                       events,
+                       interaction,
+                       objects.game,
+                       objects.format,
+                       player_name,
+                       player_archetypes)
 
   @app_commands.command(
     name="data",
@@ -101,22 +107,22 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     if csv_file and melee_tournament_id:
       raise KnownError("You can only submit a CSV file or a Melee Tournament ID, not both.")
 
-    store, game, format = GetObjectsFromInteraction(interaction)
+    objects = GetObjectsFromInteraction(interaction)
     
-    if not store or not game or not format:
+    if not objects.store or not objects.game or not objects.format:
       raise KnownError('No store, game, or format found.') #TODO Probably needs to be more detailed
       
     if csv_file or melee_tournament_id:
-      date, event_name, event_id, event_type_id = await ConfirmEventDetails(self.bot, interaction, store, game, format)
+      date, event_name, event_id, event_type_id = await ConfirmEventDetails(self.bot, interaction, objects.store, objects.game, objects.format)
       if csv_file:
         if not csv_file.filename.endswith('.csv'):
           raise KnownError("Please upload a file with a '.csv' extension.")
         submitted_event = await ConvertCSVToDataErrors(
           self.bot,
-          store,
-          game,
+          objects.store,
+          objects.game,
           date,
-          format,
+          objects.format,
           interaction,
           event_id,
           event_name,
@@ -124,11 +130,11 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
           csv_file
         )
       elif melee_tournament_id:
-        json_dict = GetMeleeTournamentData(melee_tournament_id, store)
+        json_dict = GetMeleeTournamentData(melee_tournament_id, objects.store)
         submitted_event = ConvertMeleeTournamentToDataErrors(
-          store,
-          game,
-          format,
+          objects.store,
+          objects.game,
+          objects.format,
           melee_tournament_id,
           event_id,
           event_name,
@@ -140,9 +146,9 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
       submitted_event = await ConvertModalToDataErrors(
         self.bot,
         interaction,
-        store,
-        game,
-        format
+        objects.store,
+        objects.game,
+        objects.format
       )
 
     #Alert me to a new event either successfull or not
@@ -182,7 +188,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
         interaction.channel_id
       )
       try:
-        await MessageHubs(self.bot, store, event)
+        await MessageHubs(self.bot, objects.store, event)
       except Exception as e:
         await MessageChannel(self.bot, f"Issue messaging hubs: {e}", settings.BOTGUILDID, settings.ERRORCHANNELID)
 
