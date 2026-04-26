@@ -16,6 +16,7 @@ from tuple_conversions import Event, Format, Store, Game, MetagameResult
 from discord.ext import commands
 from services.message_hubs_services import MessageHubs
 from interaction_objects import GetStore
+from data.archetype_data import PlayerInEvent
 
 async def SubmitArchetype(
   bot: commands.Bot,
@@ -29,6 +30,8 @@ async def SubmitArchetype(
   store = GetStore(event.discord_id)
   if store is None:
     raise Exception("An event didn't have a store? Sus.")
+  if not PlayerInEvent(event, player_name):
+    raise KnownError('Player not found in event. Please try again.')
   private_output, feed_output, public_output, full_event = AddTheArchetype(interaction, player_name, event, archetype, store, game, format)
   await interaction.followup.send(private_output, ephemeral=True)
   await MessageStoreFeed(bot,
@@ -53,21 +56,29 @@ async def MessageStoreFeed(
   message:str,
   interaction:Interaction
 ) -> None:
-  #Message the store feed channel specific to the game
+  """Message the store feed channel specific to the game"""
   try:
+    print('Trying to get store feed')
     channel_id = GetArchetypeFeed(interaction.guild_id,
                                   interaction.channel.category.id)
+    print(f'Messaging channel: {channel_id}')
     await MessageChannel(bot,
                          message,
                          interaction.guild_id,
                          channel_id)
   except Exception as e:
     #If none listed or found, message the bot guild
+    full_text = f"""{message}
+    Error: {e}
+    Tried to message bot guild at:
+    BOTGUILD: {settings.BOTGUILDID}
+    CLAIMCHANNEL: {settings.CLAIMCHANNEL}
+    """
     await MessageChannel(bot,
                          message,
                          settings.BOTGUILDID,
                          settings.CLAIMCHANNEL)
-    await MessageUser(bot, message + f"\nError: {e}", settings.PHILID)
+    await MessageUser(bot, full_text, settings.PHILID)
 
 def AddTheArchetype(
   interaction:Interaction,
@@ -78,7 +89,6 @@ def AddTheArchetype(
   game:Game,
   format:Format
 ) -> Tuple[str, str, str|None, str|None]:
-  player_name = ConvertInput(player_name)
   archetype_submitted = ClaimResult(interaction,
                                     player_name,
                                     archetype,

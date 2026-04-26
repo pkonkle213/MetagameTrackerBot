@@ -1,8 +1,27 @@
+from psycopg.rows import scalar_row
 from datetime import date
 from settings import DATABASE_URL
 import psycopg
 
-from tuple_conversions import Format, Store, Game
+from tuple_conversions import Format, Store, Game, Event
+
+def PlayerInEvent(event:Event, player_name:str) -> bool:
+  with psycopg.connect(DATABASE_URL) as conn:
+    with conn.cursor(row_factory=scalar_row) as cur:
+      command = f'''
+      SELECT
+        e.id
+      FROM
+        events e
+        INNER JOIN full_standings fs ON fs.event_id = e.id
+      WHERE
+        e.id = {event.id}
+        AND UPPER(fs.player_name) = UPPER('{player_name}')
+      '''
+
+      cur.execute(command)
+      row = cur.fetchone()
+      return row is not None
 
 def AddArchetype(
   event_id:int,
