@@ -1,9 +1,10 @@
+import settings
 from services.date_functions import BuildDateRange
 from custom_errors import KnownError
 from interaction_objects import GetObjectsFromInteraction
 from discord import app_commands, Interaction
 from discord.ext import commands
-from services.metagame_services import StoreMetagame, RegionLockedMetagame, FormatLockedMetagame
+from services.metagame_services import StoreMetagame, RegionLockedMetagame, FormatLockedMetagame, GetWholeMetagame
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from checks import IsStore
@@ -40,6 +41,13 @@ class MetagameCommand(commands.Cog):
       data = FormatLockedMetagame(
         objects.hub,
         interaction.channel_id,
+        date_start,
+        date_end
+      )
+    elif interaction.guild_id == settings.DATAGUILDID:
+      data = GetWholeMetagame(
+        objects.game,
+        objects.format,
         date_start,
         date_end
       )

@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from services.personal_history_service import GetPersonalStandingsHistory, GetPersonalPairingsHistory
 from services.command_error_service import Error
-from checks import IsPaidUser
+from checks import IsPaidUser, IsStore
 
 
 class PersonalHistoryCommands(commands.GroupCog, name='history'):
@@ -16,6 +16,7 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
                         description='Your history according to standings')
   @app_commands.guild_only()
   @IsPaidUser()
+  @IsStore()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def GetPersonalStandingsHistory(self,
                                         interaction: discord.Interaction,
@@ -38,6 +39,7 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
                         description='Your history according to pairings')
   @app_commands.guild_only()
   @IsPaidUser()
+  @IsStore()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def GetPersonalPairingsHistory(self,
                                        interaction: discord.Interaction,

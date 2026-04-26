@@ -1,3 +1,4 @@
+from checks import IsStore
 from interaction_objects import GetObjectsFromInteraction
 from custom_errors import KnownError
 from discord import app_commands, Interaction
@@ -14,6 +15,7 @@ class OneEventCommands(commands.GroupCog, name='one_event'):
   @app_commands.command(name='metagame',
     description='View the metagame for one event')
   @app_commands.guild_only()
+  @IsStore()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def OneEventMeta(self, interaction:Interaction):
     objects = GetObjectsFromInteraction(interaction)
@@ -37,6 +39,7 @@ class OneEventCommands(commands.GroupCog, name='one_event'):
                        description="Get the archetypes for an event and their results")
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
+  @IsStore()
   async def OneEvent(self,
                     interaction:Interaction):
     objects = GetObjectsFromInteraction(interaction)
