@@ -58,27 +58,17 @@ async def MessageStoreFeed(
 ) -> None:
   """Message the store feed channel specific to the game"""
   try:
-    print('Trying to get store feed')
     channel_id = GetArchetypeFeed(interaction.guild_id,
                                   interaction.channel.category.id)
-    print(f'Messaging channel: {channel_id}')
     await MessageChannel(bot,
                          message,
                          interaction.guild_id,
                          channel_id)
   except Exception as e:
-    #If none listed or found, message the bot guild
-    full_text = f"""{message}
-    Error: {e}
-    Tried to message bot guild at:
-    BOTGUILD: {settings.BOTGUILDID}
-    CLAIMCHANNEL: {settings.CLAIMCHANNEL}
-    """
     await MessageChannel(bot,
                          message,
                          settings.BOTGUILDID,
                          settings.CLAIMCHANNEL)
-    await MessageUser(bot, full_text, settings.PHILID)
 
 def AddTheArchetype(
   interaction:Interaction,
