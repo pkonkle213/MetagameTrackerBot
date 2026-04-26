@@ -19,7 +19,6 @@ def PlayerInEvent(event:Event, player_name:str) -> bool:
         AND UPPER(fs.player_name) = UPPER('{player_name}')
       '''
 
-      print('PlayerInEvent command:', command)
       cur.execute(command)
       row = cur.fetchone()
       return row is not None
