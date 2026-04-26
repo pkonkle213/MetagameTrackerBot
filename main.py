@@ -10,6 +10,7 @@ from timedposts.automated_check_events import EventCheck
 from services.store_services import NewStoreRegistration
 from timedposts.automated_updates import UpdateDataGuild
 from services.sync_service import SyncCommands
+from discord_messages import MessageUser
 
 intents = discord.Intents.all()
 intents.message_content = True
@@ -39,6 +40,7 @@ async def on_guild_join(guild: discord.Guild):
   output = "Thank you for adding me to your server! Here's my notes from installation:\n"
   output += await NewStoreRegistration(bot, guild)
   await guild.owner.send(output)
+  await MessageUser(bot, f'New guild joined: {guild.name}', settings.PHILID)
   UpdateStores()
 
 @tasks.loop(time=datetime.time(hour=18, minute=00, tzinfo=TIME_ZONE))
