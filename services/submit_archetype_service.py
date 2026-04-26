@@ -16,6 +16,7 @@ from tuple_conversions import Event, Format, Store, Game, MetagameResult
 from discord.ext import commands
 from services.message_hubs_services import MessageHubs
 from interaction_objects import GetStore
+from data.archetype_data import PlayerInEvent
 
 async def SubmitArchetype(
   bot: commands.Bot,
@@ -29,6 +30,8 @@ async def SubmitArchetype(
   store = GetStore(event.discord_id)
   if store is None:
     raise Exception("An event didn't have a store? Sus.")
+  if not PlayerInEvent(event, player_name):
+    raise KnownError('Player not found in event. Please try again.')
   private_output, feed_output, public_output, full_event = AddTheArchetype(interaction, player_name, event, archetype, store, game, format)
   await interaction.followup.send(private_output, ephemeral=True)
   await MessageStoreFeed(bot,
@@ -78,7 +81,6 @@ def AddTheArchetype(
   game:Game,
   format:Format
 ) -> Tuple[str, str, str|None, str|None]:
-  player_name = ConvertInput(player_name)
   archetype_submitted = ClaimResult(interaction,
                                     player_name,
                                     archetype,
