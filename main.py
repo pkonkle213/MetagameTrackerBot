@@ -43,6 +43,7 @@ async def on_guild_join(guild: discord.Guild):
   await MessageUser(bot, f'New guild joined: {guild.name}', settings.PHILID)
   UpdateStores()
 
+
 @tasks.loop(time=datetime.time(hour=18, minute=00, tzinfo=TIME_ZONE))
 async def find_the_unknown():
   """Every day at 6:00 PM EST, the bot will check for events that are 3 days old and have unknown archetypes."""

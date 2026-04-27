@@ -10,11 +10,12 @@ def GetWholeMetagame(
   game:Game,
   format:Format,
   start_date:date,
-  end_date:date
+  end_date:date,
+  archetype:str
 ) -> list[MetagameResult]:
   criteria = f'''
   SELECT
-    COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,
+    {archetype}
     wins,
     losses,
     draws
@@ -35,11 +36,12 @@ def RegionLockedMetagame(
   hub:Hub,
   channel_id:int,
   start_date:date,
-  end_date:date
+  end_date:date,
+  archetype:str
 ) -> list[MetagameResult]:
   criteria = f'''
   SELECT
-    COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,
+    {archetype}
     wins,
     losses,
     draws
@@ -63,11 +65,12 @@ def FormatLockedMetagame(
   hub:Hub,
   channel_id:int,
   start_date:date,
-  end_date:date
+  end_date:date,
+  archetype:str
 ) -> list[MetagameResult]:
   criteria = f'''
   SELECT
-  COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,
+  {archetype}
   wins,
   losses,
   draws
@@ -92,11 +95,12 @@ def StoreMetagame(
   game:Game,
   format:Format,
   date_start:date,
-  date_end:date
+  date_end:date,
+  archetype:str
 ) -> list[MetagameResult]:
   criteria = f'''  
   SELECT
-    COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,
+    {archetype}
     wins,
     losses,
     draws
