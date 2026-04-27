@@ -162,34 +162,3 @@ def OneEventDetails(event:Event) -> Tuple[str,list[str],list[Tuple[str, int, int
   title = f"{event.event_name} Results ({len(data)} attended)"
   headers = ['Archetype', 'Wins', 'Losses', 'Draws']
   return title, headers, data
-
-def MagicLimited(drafted_colors:list, splashed_colors:list) -> str:
-  colors = ""
-  for color in drafted_colors:
-    colors += ConvertMagicColor(color)
-
-  if len(splashed_colors) == 0:
-    return colors
-  for color in splashed_colors:
-    letter = ConvertMagicColor(color)
-    if letter in colors:
-      raise KnownError('You cannot splash a color you drafted. Please try again.')
-    colors += letter.lower()
-  if len(colors) > 5:
-    raise KnownError('Too many colors selected, please try again.')
-  return colors
-
-def ConvertMagicColor(color:str) -> str:
-  match color:
-   case 'White':
-     return 'W'
-   case 'Blue':
-     return 'U'
-   case 'Black':
-     return 'B'
-   case 'Red':
-     return 'R'
-   case 'Green':
-     return 'G'
-   case _:
-     raise KnownError('Color not recognized. Please try again.')

@@ -31,5 +31,5 @@ async def MessageChannel(bot, msg, guildId, channelId, file=None):
         print(f'Error sending message to channel {channelId}: {ex}')
   except Exception as ex:
     await MessageUser(bot,
-                      f"A user ran into an error: {msg}\nError: {ex}",
+                      f"A user ran into an error:\n{msg}\nError: {ex}",
                       settings.PHILID)
