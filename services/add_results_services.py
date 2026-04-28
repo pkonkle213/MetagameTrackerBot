@@ -29,12 +29,13 @@ def SubmitData(
   results = ''
   if submitted_event.StandingData:
     if event.reported_as == ReportedAs.Pairings.value:
-      raise KnownError('This event already has pairings submitted')
-    #TODO: Put a button here to confirm that they actually want to submit standings results, as it's less gooder data
+      raise KnownError('This event already has pairings submitted. Please continue to submit pairings for this event')
     results = AddStandingResults(event, submitted_event.StandingData, userId)
   elif submitted_event.PairingData:
+    print('Event:', event)
     if event.reported_as == ReportedAs.Standings.value:
       #Delete the standings data
+      print('Deleting standings data')
       DeleteStandingsFromEvent(event.id)
     results = AddPairingResults(event, submitted_event.PairingData, userId, submitted_event.round_number)
   else:
@@ -55,7 +56,7 @@ def AddStandingResults(event:Event,
       if output:
         successes.append(person)
 
-  title = f'{event.event_date.strftime("%B %d")} event'
+  title = f'{event.event_date.strftime("%B %d")} - {event.event_name} - Standings'
   headers = ['Player Name', 'Wins', 'Losses', 'Draws']
   output = BuildTableOutput(title, headers, successes)
   return output

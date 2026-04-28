@@ -1,10 +1,10 @@
+from api_calls.melee_tournaments import GetMeleeTournamentData
 from discord.ext import commands
 from discord_messages import MessageChannel
 from incoming_message_conversions.melee import MeleeJsonPairings
 from discord import Interaction, Attachment
-from input_modals.submit_data_modal import SubmitDataModal
 from services.date_functions import GetToday
-from tuple_conversions import EventInput, Store, Format, Game
+from tuple_conversions import EventInput, Store, Format, Game, Pairing, Standing, Event, Archetype, DataConverted
 from data_translation import ConvertCSVToData, ConvertMessageToData
 from datetime import date, datetime
 from custom_errors import KnownError
@@ -13,7 +13,32 @@ import pandas as pd
 import pytz
 import io
 import settings
+from typing import NamedTuple
 
+
+async def ConvertData(
+  event:EventInput,
+  data:str | None,
+  csv_file:Attachment | None,
+  melee_tournament_id:str,
+  store:Store,
+  game:Game,
+  format:Format
+) -> DataConverted:
+  event_input:DataConverted | None = None
+  
+  if data:
+    event_input = ConvertAndUploadMessage(event, data, store, game, format)
+  elif csv_file: #I need to receive a round number for this, as the CSV doesn't have it
+    event_input = await ConvertAndUploadCSV(event, csv_file, store, game, format)
+  elif melee_tournament_id:
+    event_input = ConvertAndUploadMeleeTournament(event, melee_tournament_id, store, game, format)
+
+  if event_input is None:
+    raise KnownError("No data was submitted. Please try again.")
+
+  return event_input
+  
 def BuildFilePath(
   store: Store,
   game: Game,
@@ -39,52 +64,39 @@ def BuildFilePath(
 
   return save_path
 
-def ConvertMeleeTournamentToDataErrors(
+def ConvertAndUploadMeleeTournament(
+  event: EventInput,
+  melee_tournament_id: str,
   store: Store,
   game: Game,
   format: Format,
-  melee_tournament_id: str,
-  event_id: int,
-  event_name: str,
-  event_type_id: int,
-  json_data: list
-) -> EventInput:
-  """Takes in Melee.gg tournament data and converts it to a list of Pairing objects"""
+) -> DataConverted:
+  """Takes in a Melee.gg tournament id, retrieves the data, and converts the data to a list of Pairing objects"""
+  json_data = GetMeleeTournamentData(melee_tournament_id, store)
+  
   path = BuildFilePath(store, game, format, 'MeleeTournament.json')
   upload_json(json_data, path)
 
   data, errors, round_number, date, archetypes = MeleeJsonPairings(json_data)
-
-  event = EventInput(
-    event_id,
-    int(melee_tournament_id),
-    date,
-    event_name,
-    event_type_id,
-    round_number,
+  return DataConverted(
     data,
     None,
-    archetypes,
     errors,
-    store.discord_id,
-    game.id,
-    format.id
+    round_number,
+    date,
+    archetypes,
+    event.custom_event_id
   )
-  return event
 
-async def ConvertCSVToDataErrors(
-  bot: commands.Bot,
+async def ConvertAndUploadCSV(
+  event: EventInput,
+  csv_file: Attachment,
   store: Store,
   game: Game,
-  date: date,
-  format: Format,
-  interaction: Interaction,
-  event_id: int,
-  event_name: str,
-  event_type_id: int,
-  csv_file: Attachment
-) -> EventInput:
-  save_path = BuildFilePath(store, game, format,  csv_file.filename)
+  format: Format
+) -> DataConverted:
+  """Takes in a CSV file and converts it to a list of Pairing or Standing objects"""
+  save_path = BuildFilePath(store, game, format, csv_file.filename)
   csv_data = await csv_file.read()
   upload_bytes(csv_data, save_path)
 
@@ -93,7 +105,7 @@ async def ConvertCSVToDataErrors(
   if df is None or df.empty:
     raise KnownError("The file is empty or unreadable. Please try again.")
 
-  standings_data, pairings_data, errors = ConvertCSVToData(df, game)
+  submitted_data = ConvertCSVToData(df)
 
   filename_split = csv_file.filename.split('-')
   if filename_split[0].upper() == 'STANDINGS':
@@ -103,61 +115,26 @@ async def ConvertCSVToDataErrors(
 
   custom_event_id = int(filename_split[2])
   
-  event = EventInput(
-    event_id,
-    custom_event_id,
-    date,
-    event_name,
-    event_type_id,
+  return DataConverted(
+    submitted_data.pairings_data,
+    submitted_data.standings_data,
+    submitted_data.errors,
     round_number,
-    pairings_data,
-    standings_data,
+    event.event_date,
     None,
-    errors,
-    store.discord_id,
-    game.id,
-    format.id
+    custom_event_id
   )
   
   return event
 
-async def ConfirmEventDetails(
-  bot: commands.Bot,
-  interaction: Interaction,
+def ConvertAndUploadMessage(
+  event:EventInput,
+  data:str,
   store:Store,
   game:Game,
   format:Format
-) -> tuple[date, str, int, int]:
-  modal = SubmitDataModal(store, game, format, False)
-  await interaction.response.send_modal(modal)
-  await modal.wait()
-
-  if not modal.is_submitted:
-    raise KnownError("SubmitData modal was dismissed or timed out. Please try again.")
-
-  selected_event = modal.submitted_event
-
-  return selected_event.Date, selected_event.Name, selected_event.ID, selected_event.TypeID
-
-async def ConvertModalToDataErrors(
-  bot: commands.Bot,
-  interaction: Interaction,
-  store:Store,
-  game:Game,
-  format:Format,
-) -> EventInput:
-  modal = SubmitDataModal(store, game, format)
-  await interaction.response.send_modal(modal)
-  await modal.wait()
-
-  if not modal.is_submitted:
-    raise KnownError("SubmitData modal was dismissed or timed out. Please try again.")
-
-  selected_event = modal.submitted_event
-  if selected_event.Data is None:
-    raise KnownError("No data was submitted. Please try again.")
-
-  match selected_event.TypeID:
+) -> DataConverted:
+  match event.event_type_id:
     case 1:
       event_type = 'Weekly'
     case 2:
@@ -167,41 +144,16 @@ async def ConvertModalToDataErrors(
       
   submission = '\n'.join(
     [
-      f'Date: {selected_event.Date}',
-      f'Name: {selected_event.Name}',
+      f'Date: {event.event_date.strftime('%m/%d/%Y') if event.event_date else ''}',
+      f'Name: {event.event_name}',
       f'Type: {event_type}',
-      f'Message:\n{selected_event.Data}'
+      f'Message:\n{data}'
     ]
   )
 
   save_path = BuildFilePath(store, game, format, 'ModalInput.txt')
   upload_string(submission, save_path)
-  try:
-    message = f'Attempting to add new event data from {store.store_name if store.store_name else store.discord_name}:\n{selected_event.Data}'
-    await MessageChannel(
-      bot,
-      message, 
-      settings.BOTGUILDID,
-      settings.BOTEVENTINPUTID
-    )
-  except Exception as e:
-    print('Error sending message to channel:', e)
-
-  standings_data, pairings_data, errors, round_number = ConvertMessageToData(selected_event.Data, game)
   
-  event = EventInput(
-    int(selected_event.ID),
-    None,
-    selected_event.Date,
-    selected_event.Name,
-    int(selected_event.TypeID),
-    round_number,
-    pairings_data,
-    standings_data,
-    None,
-    errors,
-    store.discord_id,
-    game.id,
-    format.id
-  )
-  return event
+  converted_data = ConvertMessageToData(data, game.id)
+
+  return converted_data

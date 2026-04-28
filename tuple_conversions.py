@@ -125,7 +125,7 @@ class Standing(NamedTuple):
 class EventInput(NamedTuple):
   id: int
   custom_event_id: int | None
-  event_date: date
+  event_date: date | None
   event_name: str
   event_type_id: int
   round_number: int
@@ -138,7 +138,16 @@ class EventInput(NamedTuple):
   FormatID: int
 
 class InteractionObjects(NamedTuple):
-  store: Store | None
-  hub: Hub | None
-  game: Game | None
-  format: Format | None
+  store  : Store | None
+  hub    : Hub | None
+  game   : Game | None
+  format : Format | None
+
+class DataConverted(NamedTuple):
+  pairings_data   : list[Pairing] | None
+  standings_data  : list[Standing] | None
+  errors          : list[str] | None
+  round_number    : int | None
+  event_date      : date | None
+  archetypes      : dict[str, str] | None
+  custom_event_id : int | None

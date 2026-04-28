@@ -64,10 +64,10 @@ def CreateEvent(
     , {event.FormatID}
     , 0
     , '{event.event_name}'
-    , {event.event_type_id if event.event_type_id > 0 else 3}
+    , {event.event_type_id if int(event.event_type_id) > 0 else 3}
     , CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York'
     , {user_id}
-    {f', {-event.event_type_id}' if event.event_type_id < 0 else ', NULL'}
+    {f', {-event.event_type_id}' if int(event.event_type_id) < 0 else ', NULL'}
     )
     RETURNING id
     '''

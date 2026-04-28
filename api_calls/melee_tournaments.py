@@ -3,7 +3,7 @@ from custom_errors import KnownError
 from tuple_conversions import Store
 from data.melee_api_data import GetStoreMeleeInfo
 
-def GetMeleeTournamentData(tournament_id:str,
+def GetMeleeTournamentData(tournament_id: str,
                            store: Store) -> list:
   storeInfo = GetStoreMeleeInfo(store)
   if not storeInfo or storeInfo.melee_client_id is None or storeInfo.melee_client_secret is None:
@@ -15,12 +15,10 @@ def GetMeleeTournamentData(tournament_id:str,
 
   while has_more:
     api_url = f"https://melee.gg/api/match/list/{tournament_id}?variables.page={page}&variables.pageSize={page_size}"
-    #print('API URL:', api_url)
     response = requests.get(api_url, auth=(storeInfo.melee_client_id, storeInfo.melee_client_secret))
 
     if response.status_code == 200:
       response_obj = response.json()
-      #print('Response object:', response_obj)
       data += response_obj['Content']
       has_more = response_obj['HasMore']
       page += 1
