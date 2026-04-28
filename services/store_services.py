@@ -89,9 +89,7 @@ def AddStoreToDatabase(guild: discord.Guild) -> int:
 def MatchGame(category_name: str, games: list[Game]) -> Game | None:
   """Matches the category name to a game"""
   for game in games:
-    print(f'Checking -{game.game_name.lower()}- against -{category_name.lower()}-')
     if game.game_name.lower() in category_name.lower():
-      print(f'Matched -{game.game_name}- to -{category_name}-')
       return game
 
 def MatchFormat(channel_name: str, formats: list[Format]) -> Format | None:
@@ -113,7 +111,6 @@ def MapCategoriesAndChannels(guild: discord.Guild) -> tuple[str, bool]:
     for category in guild.categories:
       game = MatchGame(category.name, games)
       if game:
-        print(f'Found game: {game.game_name}. Adding to maps')
         result = AddGameMap(guild.id, game.id, category.id)
         mapping = True
         if result:
