@@ -13,7 +13,7 @@ import settings
 
 class ConfirmStandings(discord.ui.View):
   def __init__(self, data:EventInput):
-    super().__init__(timeout=60)
+    super().__init__(timeout=120)
     self.is_submitted = False
     self.data = data
 

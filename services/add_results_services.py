@@ -32,7 +32,6 @@ def SubmitData(
       raise KnownError('This event already has pairings submitted. Please continue to submit pairings for this event')
     results = AddStandingResults(event, submitted_event.StandingData, userId)
   elif submitted_event.PairingData:
-    print('Event:', event)
     if event.reported_as == ReportedAs.Standings.value:
       #Delete the standings data
       print('Deleting standings data')
