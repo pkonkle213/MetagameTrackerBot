@@ -51,6 +51,36 @@ def InsertPairing(
       return None
 
 
+def CheckPairings(
+  event_id: int,
+  round_number: int,
+  p1name: str,
+  p2name: str
+) -> bool:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor() as cur:
+    command = '''
+    SELECT
+      *
+    FROM
+      pairings
+    WHERE
+      event_id = %s
+      AND round_number = %s
+      AND (
+        UPPER(player1_name) = UPPER(%s)
+        OR UPPER(player1_name) = UPPER(%s)
+        OR UPPER(player2_name) = UPPER(%s)
+        OR UPPER(player2_name) = UPPER(%s)
+      )
+    '''
+
+    criteria = [event_id, round_number, p1name, p2name, p2name, p1name]
+    cur.execute(command, criteria)
+    row = cur.fetchone()
+    return row is None
+    
+
 def InsertStanding(
   event_id:int,
   player:Standing,

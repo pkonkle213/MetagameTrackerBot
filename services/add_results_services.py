@@ -3,7 +3,7 @@ from datetime import date
 from services.date_functions import ConvertToDate
 from output_builder import BuildTableOutput
 from custom_errors import KnownError
-from data.add_results_data import InsertStanding, InsertPairing
+from data.add_results_data import InsertStanding, InsertPairing, CheckPairings
 from services.input_services import ConvertInput
 from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
 from tuple_conversions import EventInput, Standing, Pairing, Event, ReportedAs
@@ -66,27 +66,40 @@ def AddPairingResults(event:Event,
                       round_number:int) -> str:
   round_number = data[0].round_number if not round_number else round_number
   successes = []
+  errors = []
+  output = ''
  
   for table in data:
-    result = InsertPairing(event.id,
-                         ConvertInput(table.player1_name),
-                         table.player1_game_wins,
-                         ConvertInput(table.player2_name),
-                         table.player2_game_wins,
-                         round_number,
-                         submitterId)
+    p1name = ConvertInput(table.player1_name)
+    p2name = ConvertInput(table.player2_name)
     
-    if result:
-      successes.append((ConvertInput(table.player1_name),
-                       table.player1_game_wins,
-                       ConvertInput(table.player2_name),
-                       table.player2_game_wins,
-                       "Win" if table.player1_game_wins > table.player2_game_wins else "Loss" if table.player1_game_wins < table.player2_game_wins else "Draw"))
+    if CheckPairings(event.id, round_number, p1name, p2name):
+      result = InsertPairing(event.id,
+                             p1name,
+                             table.player1_game_wins,
+                             p2name,
+                             table.player2_game_wins,
+                             round_number,
+                             submitterId)
+      
+      if result:
+        successes.append((p1name,
+                         table.player1_game_wins,
+                         p2name,
+                         table.player2_game_wins,
+                         "Win" if table.player1_game_wins > table.player2_game_wins else "Loss" if table.player1_game_wins < table.player2_game_wins else "Draw"))
+    else:
+      errors.append(f"Cannot add {p1name} vs {p2name} as they already have pairings in round {round_number}")
 
   if len(successes) > 0: 
     title = f"{event.event_date.strftime('%B %d')} - {event.event_name} - Round {round_number}"
     headers = ['Player 1', 'P1 Wins', 'Player 2', 'P2 Wins', 'Result']
     output = BuildTableOutput(title, headers, successes)
-    return output
-  else:
-    return "Sorry, no pairings were added. Please try again later."
+
+  if len(errors) > 0:
+    if output != '':
+      output += "\n\n"
+    output += "\n".join(errors)
+    
+  return output
+  
