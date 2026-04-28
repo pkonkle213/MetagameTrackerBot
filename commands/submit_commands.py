@@ -82,7 +82,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
 
   @app_commands.command(
     name="data",
-    description="Submitting your event's data"
+    description="Submitting an event's data"
   )
   @app_commands.checks.has_role('MTSubmitter')
   @app_commands.guild_only()
