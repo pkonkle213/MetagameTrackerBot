@@ -2,12 +2,11 @@ from typing import Tuple
 import pandas as pd
 from incoming_message_conversions.magic_companion import CompanionStandings, CompanionPairings
 from incoming_message_conversions.csv_carde_io import ConvertToPairings, ConvertToStandings
-from tuple_conversions import Game, Pairing, Standing
+from tuple_conversions import Game, Pairing, Standing, DataConverted, GameEnum
 
 def ConvertCSVToData(
   dataframe:pd.DataFrame,
-  game:Game
-) -> Tuple[list[Standing] | None, list[Pairing] | None, list[str] | None]:
+) -> DataConverted:
   errors = None
   standings_data = None
   pairings_data = None
@@ -19,18 +18,27 @@ def ConvertCSVToData(
 
   if pairings_data is None and standings_data is None:
     raise Exception("Unable to parse data. Please try again.")
-  return standings_data, pairings_data, errors
+
+  return DataConverted(
+    pairings_data,
+    standings_data,
+    errors,
+    None,
+    None,
+    None,
+    None
+  )
 
 def ConvertMessageToData(
   message:str,
-  game:Game
-) -> Tuple[list[Standing] | None, list[Pairing] | None, list[str] | None, int]:
+  gameId:int
+) -> DataConverted:
   errors = None
   round_number = 0
   standings_data = None
   pairings_data = None
   
-  if game.game_name.upper() == 'MAGIC':
+  if gameId == GameEnum.Magic.value:
     #magic - companion - standings - 4 spaces
     standings_data, errors = CompanionStandings(message, "    ")
     
@@ -44,5 +52,13 @@ def ConvertMessageToData(
 
   if standings_data is None and pairings_data is None:
     raise Exception("Unable to parse data. Please try again.")
-    
-  return standings_data, pairings_data, errors, round_number
+
+  return DataConverted(
+    pairings_data,
+    standings_data,
+    errors,
+    round_number,
+    None,
+    None,
+    None
+  )
