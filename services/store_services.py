@@ -14,8 +14,10 @@ from tuple_conversions import Format, Game
 
 async def UpdateStoreDetails(interaction: discord.Interaction):
   """Updates the store details in the database"""
-  store = GetObjectsFromInteraction(interaction)[0]
-  modal = StoreProfileModal(store)
+  objects = GetObjectsFromInteraction(interaction)[0]
+  if not objects.store:
+    raise KnownError('No store found')
+  modal = StoreProfileModal(objects.store)
   await interaction.response.send_modal(modal)
   await modal.wait()
 
