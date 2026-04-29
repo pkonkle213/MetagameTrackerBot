@@ -1,5 +1,5 @@
 from psycopg.rows import class_row
-from datetime import date
+from datetime import date, timedelta
 from typing import NamedTuple
 from settings import DATABASE_URL
 import psycopg
@@ -105,6 +105,10 @@ def GetMostPlayed(
   game: Game,
   format: Format
 ) -> list[TopDeck]:
+  end_date = date.today() - timedelta(days=365)
+  if format.last_ban_update > end_date:
+    end_date = format.last_ban_update
+    
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(TopDeck)) as cur:
     command = f"""
@@ -124,7 +128,7 @@ def GetMostPlayed(
       AND pn.submitter_id = {user_id}
       AND e.format_id = {format.id}
       AND e.game_id = {game.id}
-      AND e.event_date >= CURRENT_DATE - INTERVAL '1 year'
+      AND e.event_date >= {end_date}
     GROUP BY
       INITCAP(archetype_played)
     ORDER BY
