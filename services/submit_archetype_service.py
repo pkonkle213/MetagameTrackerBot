@@ -32,6 +32,17 @@ async def SubmitArchetype(
     raise Exception("An event didn't have a store? Sus.")
   if not PlayerInEvent(event, player_name):
     raise KnownError('Player not found in event. Please try again.')
+  #TODO: Follow SOLID principles and seperate the rest of the code into their own functions
+  #Make the call to check the archetype for banned words here
+  if ContainsBadWord(event.discord_id, archetype):
+    raise KnownError('Archetype contains a banned word')
+
+  #Check if user is allowed to submit archetypes (too many banned words)
+  if not CanSubmitArchetypes(event.discord_id, interaction.user.id):
+    raise KnownError('You have submitted too many archetypes with banned words. Please contact your store owner to have them submit the archetype.')
+  #If not banned, add to the database
+  #If added, check if the event is fully reported
+  #Send all output messages
   private_output, feed_output, public_output, full_event = AddTheArchetype(interaction, player_name, event, archetype, store, game, format)
   await interaction.followup.send(private_output, ephemeral=True)
   await MessageStoreFeed(bot,
@@ -79,12 +90,17 @@ def AddTheArchetype(
   game:Game,
   format:Format
 ) -> Tuple[str, str, str|None, str|None]:
-  archetype_submitted = ClaimResult(interaction,
-                                    player_name,
-                                    archetype,
-                                    event
-                                   )
-  if archetype_submitted is None:
+  userId = interaction.user.id
+
+  updater_name = interaction.user.display_name
+
+  archetype_added = AddArchetype(event[0],
+                                 player_name,
+                                 archetype,
+                                 userId,
+                                 updater_name)
+  
+  if archetype_added is None:
     raise KnownError('Unable to submit the archetype. Please try again later.')
   
   message = BuildMessage(interaction, event, archetype, player_name)
@@ -107,30 +123,6 @@ def BuildMessage(
   message_parts.append(f'For event name: {event.event_name}')
   message_parts.append(f'For channel name: {interaction.channel.name}')
   return '\n'.join(message_parts)  
-
-def ClaimResult(
-  interaction:Interaction,
-  player_name:str,
-  archetype:str,
-  event:Event,
-) -> int:
-  userId = interaction.user.id
-  
-  if ContainsBadWord(event.discord_id, archetype):
-    raise KnownError('Archetype contains a banned word')
-  if not CanSubmitArchetypes(event.discord_id, userId):
-    raise KnownError('You have submitted too many bad archetypes. Please contact your store owner to have them submit the archetype.')
-
-  updater_name = interaction.user.display_name
-
-  archetype_added = AddArchetype(event[0],
-                                 player_name,
-                                 archetype,
-                                 userId,
-                                 updater_name)
-  if archetype_added is None:
-    raise Exception('Unable to submit the archetype. Please try again later.')
-  return archetype_added
 
 def CheckEventPercentage(event:Event) -> Tuple[str | None, str | None]:
   percent_reported = GetEventReportedPercentage(event.id)

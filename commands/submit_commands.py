@@ -1,6 +1,6 @@
 from data.player_name_data import GetUserArchetypes, GetUserName
 import typing
-from services.determine_archetype_input import GetUserInput
+from services.determine_archetype_input import GetArchetypeModal
 from api_calls.melee_tournaments import GetMeleeTournamentData
 import settings
 from input_modals.submit_data_modal import SubmitDataModal
@@ -54,7 +54,8 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     userId = interaction.user.id
 
     if (not objects.store and not objects.hub) or not objects.game or not objects.format:
-      raise KnownError('No store, hub, game, or format found.')
+      raise KnownError('Insufficient information found.')
+
     guild_id = interaction.guild_id
     channel_id = interaction.channel_id
 
@@ -71,7 +72,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     else:
       raise KnownError('No store or hub found.')
 
-    await GetUserInput(self.bot,
+    await GetArchetypeModal(self.bot,
                        userId,
                        events,
                        interaction,

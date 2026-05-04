@@ -9,8 +9,10 @@ class Links(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
-  @app_commands.command(name="get_bot",
-                        description="Display the url to install the bot")
+  @app_commands.command(
+    name="get_bot",
+    description="Display the url to install the bot"
+  )
   @app_commands.guilds(settings.BOTGUILDID)
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
@@ -19,8 +21,9 @@ class Links(commands.Cog):
         f'Here is the link to install the bot: {settings.MYBOTURL}')
 
   @app_commands.command(
-      name='view_all_data',
-      description='Get an invite to my data hub with more stores')
+    name='view_all_data',
+    description='Get an invite to my data hub with more stores'
+  )
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def ViewAllData(self, interaction: Interaction):
     await interaction.response.send_message(

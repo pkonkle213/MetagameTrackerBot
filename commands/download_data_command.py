@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
-from checks import isOwner, IsPaidStore, IsPaidUser
+from checks import isOwner, IsPaidStore, IsPaidUser, IsStore
 from services.download_data_services import GetStoreData, GetPlayerData
 from discord_messages import MessageUser
 from services.command_error_service import Error
@@ -45,6 +45,7 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
                         description="Download the player's data for a store for a date range")
   @app_commands.guild_only()
   @IsPaidUser()
+  @IsStore()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def PlayerDownload(self,
                            interaction: Interaction,

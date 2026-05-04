@@ -35,7 +35,7 @@ class OneEventCommands(commands.GroupCog, name='one_event'):
     output = BuildTableOutput(title, headers, data)
     await interaction.followup.send(output)    
   
-  @app_commands.command(name="topresults",
+  @app_commands.command(name="top_results",
                        description="Get the archetypes for an event and their results")
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))

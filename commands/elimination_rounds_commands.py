@@ -1,3 +1,4 @@
+from settings import BOTGUILDID
 from checks import IsStore
 from discord import app_commands, Interaction
 from discord.ext import commands
@@ -18,6 +19,7 @@ class EliminationRoundsCommands(commands.GroupCog, name='elimination_rounds'):
   @app_commands.guild_only()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   @IsStore()
+  @app_commands.guilds(BOTGUILDID)
   async def EliminationRounds(self,
                               interaction:Interaction):
     #Get the tournaments
