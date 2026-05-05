@@ -40,8 +40,12 @@ async def on_guild_join(guild: discord.Guild):
   output += await NewStoreRegistration(bot, guild)
   if guild.owner:
     await guild.owner.send(output)
+  success = UpdateStores()
+  if success:
+    output += "\n- Stores check has been updated"
+  else:
+    output += "\n- Stores check has failed"
   await MessageUser(bot, f'New guild joined: {guild.name}\n{output}', settings.PHILID)
-  UpdateStores()
 
 
 @tasks.loop(time=datetime.time(hour=18, minute=00, tzinfo=TIME_ZONE))

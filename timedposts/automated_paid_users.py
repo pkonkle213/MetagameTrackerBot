@@ -11,9 +11,10 @@ def UpdatePaidUsers() -> None:
   global PAID_USERS
   PAID_USERS = GetFive6Users() #+ GetPaidUsers()
 
-def UpdateStores() -> None:
+def UpdateStores() -> bool:
   global STORES
   STORES = GetStores()
+  return True
 
 def UpdateHubs() -> None:
   global HUBS
