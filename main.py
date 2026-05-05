@@ -42,9 +42,9 @@ async def on_guild_join(guild: discord.Guild):
     await guild.owner.send(output)
   success = UpdateStores()
   if success:
-    output += "\n- Stores check has been updated"
+    output += "- Stores check has been updated"
   else:
-    output += "\n- Stores check has failed"
+    output += "- Stores check has failed"
   await MessageUser(bot, f'New guild joined: {guild.name}\n{output}', settings.PHILID)
 
 
