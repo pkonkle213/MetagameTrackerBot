@@ -12,20 +12,32 @@ def GetUserData(interaction: Interaction,
   if not objects.store or not objects.game or not objects.format:
     raise Exception('Unable to get store, game, or format')
 
-  player_name = GetPlayerName(objects.store.discord_id,
-                            member.id)
-  win_percent = GetWinPercent(member.id,
-                              objects.store,
-                              objects.game,
-                              objects.format)
-  last_played = GetLastPlayed(member.id,
-                              objects.store,
-                              objects.game,
-                              objects.format)
-  top_decks = GetTopDecks(member.id,
-                          objects.store,
-                          objects.game,
-                          objects.format)
+  player_name = GetPlayerName(
+    objects.store.discord_id,
+    member.id
+  )
+  
+  win_percent = GetWinPercent(
+    member.id,
+    objects.store,
+    objects.game,
+    objects.format
+  )
+  
+  last_played = GetLastPlayed(
+    member.id,
+    objects.store,
+    objects.game,
+    objects.format
+  )
+  
+  top_decks = GetTopDecks(
+    member.id,
+    objects.store,
+    objects.game,
+    objects.format
+  )
+    
   return player_name, win_percent, last_played, top_decks
 
 def GetPlayerName(guild_id: int,

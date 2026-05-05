@@ -51,6 +51,7 @@ def GetWinPercentage(
       AND e.format_id = {format.id}
       AND e.game_id = {game.id}
     """
+  
     cur.execute(command)
     row = cur.fetchone()
     if not row:
@@ -106,9 +107,9 @@ def GetMostPlayed(
   format: Format
 ) -> list[TopDeck]:
   end_date = date.today() - timedelta(days=365)
-  if format.last_ban_update > end_date:
+  if format.last_ban_update and format.last_ban_update > end_date:
     end_date = format.last_ban_update
-    
+
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(TopDeck)) as cur:
     command = f"""
@@ -128,7 +129,7 @@ def GetMostPlayed(
       AND pn.submitter_id = {user_id}
       AND e.format_id = {format.id}
       AND e.game_id = {game.id}
-      AND e.event_date >= {end_date}
+      AND e.event_date >= '{end_date}'
     GROUP BY
       INITCAP(archetype_played)
     ORDER BY
