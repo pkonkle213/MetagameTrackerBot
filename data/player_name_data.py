@@ -52,6 +52,7 @@ def GetUserName(
       player_name
     ORDER BY
       COUNT(*) DESC
+    LIMIT 1
     """
 
     criteria = [userId]
