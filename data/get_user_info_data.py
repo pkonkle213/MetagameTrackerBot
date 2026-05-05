@@ -113,29 +113,42 @@ def GetMostPlayed(
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(TopDeck)) as cur:
     command = f"""
-    SELECT
-      INITCAP(archetype_played) AS archetype_played,
-      ROUND(100.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)), 2) AS win_percentage,
-      ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS chance_played
-    FROM
-      full_standings fs
-      INNER JOIN events e ON fs.event_id = e.id
-      INNER JOIN player_names pn ON UPPER(pn.player_name) = UPPER(fs.player_name)
-      AND pn.discord_id = e.discord_id
-      INNER JOIN unique_archetypes ua ON e.id = ua.event_id
-      AND UPPER(ua.player_name) = UPPER(fs.player_name)
-    WHERE
-      e.discord_id = {store.discord_id}
-      AND pn.submitter_id = {user_id}
-      AND e.format_id = {format.id}
-      AND e.game_id = {game.id}
-      AND e.event_date >= '{end_date}'
-    GROUP BY
-      INITCAP(archetype_played)
-    ORDER BY
-      3 DESC, 1
-    LIMIT
-      3
+    WITH
+      RESULTS AS (
+        SELECT
+          INITCAP(archetype_played) AS archetype_played,
+          wins,
+          losses,
+          draws
+        FROM
+          full_standings fs
+          INNER JOIN events e ON fs.event_id = e.id
+          INNER JOIN player_names pn ON UPPER(pn.player_name) = UPPER(fs.player_name)
+          AND pn.discord_id = e.discord_id
+          INNER JOIN unique_archetypes ua ON e.id = ua.event_id
+          AND UPPER(ua.player_name) = UPPER(fs.player_name)
+        WHERE
+          e.discord_id = {store.discord_id}
+          AND pn.submitter_id = {user_id}
+          AND e.format_id = {format.id}
+          AND e.game_id = {game.id}
+          AND e.event_date >= '{end_date}'
+      )
+      SELECT 
+        archetype_played,
+        ROUND(
+          100.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)),
+          2
+        ) AS win_percentage,
+        ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS chance_played
+      FROM
+        RESULTS
+      GROUP BY
+        archetype_played
+      ORDER BY
+        3 DESC, 1
+      LIMIT
+        3
     """
 
     cur.execute(command)
