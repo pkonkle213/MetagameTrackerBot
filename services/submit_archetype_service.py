@@ -45,11 +45,11 @@ async def SubmitArchetype(
     event.id,
     player_name,
     archetype,
-    userId,
-    updater_name
+    interaction.user.id,
+    interaction.user.name
   )
   if archetype_added is None:
-  raise Exception('Unable to submit the archetype. Please try again later.')
+    raise Exception('Unable to submit the archetype. Please try again later.')
   
   #If added, check if the event is fully reported
   #Send all output messages
