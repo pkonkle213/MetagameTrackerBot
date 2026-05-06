@@ -141,7 +141,18 @@ def ConvertAndUploadMessage(
       event_type = 'Tournament'
     case _:
       event_type = 'League'
-      
+
+  if len(data) == 0:
+    output = []
+    output.append("No data received.")
+    output.append(f"Event:\n{event}")
+    output.append(f"Store:\n{store}")
+    output.append(f"Game:\n{game}")
+    output.append(f"Format:\n{format}")
+    output.append(f"Data:\n{data}")
+    
+    raise Exception("\n".join(output))
+
   submission = '\n'.join(
     [
       f'Date: {event.event_date.strftime('%m/%d/%Y') if event.event_date else ''}',

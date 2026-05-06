@@ -11,6 +11,7 @@ class UnknownArchetypes(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
+  #TODO: This should be a group with archetypes...possibly
   @app_commands.command(
       name='unknown',
       description='See what archetypes still need submitted for a date range')

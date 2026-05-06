@@ -98,7 +98,7 @@ def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
     ORDER BY
       2 DESC,
       4 DESC,
-      1 DESC
+      1
     '''
     
     cur.execute(command)

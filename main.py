@@ -29,19 +29,23 @@ async def on_ready():
   data_guild_update.start()
   find_the_unknown.start()
   sync_paid_users.start()
-  #sync_paid_stores.start()
+  #sync_paid_discords.start()
   await SyncCommands(bot, CMDS_DIR)
   print('Synced commands. Good to go')
 
 @bot.event
 async def on_guild_join(guild: discord.Guild):
   """This event triggers when the bot joins a new guild (server)."""
-  print('Joined a new guild:', guild.name)
   output = "Thank you for adding me to your server! Here's my notes from installation:\n"
   output += await NewStoreRegistration(bot, guild)
-  await guild.owner.send(output)
-  await MessageUser(bot, f'New guild joined: {guild.name}', settings.PHILID)
-  UpdateStores()
+  if guild.owner:
+    await guild.owner.send(output)
+  success = UpdateStores()
+  if success:
+    output += "- Stores check has been updated"
+  else:
+    output += "- Stores check has failed"
+  await MessageUser(bot, f'New guild joined: {guild.name}\n{output}', settings.PHILID)
 
 
 @tasks.loop(time=datetime.time(hour=18, minute=00, tzinfo=TIME_ZONE))
