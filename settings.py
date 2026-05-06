@@ -25,3 +25,4 @@ DATAHUBINVITE = os.environ['DATAHUB_URL_INVITE']
 PHILID = int(os.environ['PHIL_USERID'])
 
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')

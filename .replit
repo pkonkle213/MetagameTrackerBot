@@ -44,3 +44,7 @@ outputType = "console"
 
 [objectStorage]
 defaultBucketID = "replit-objstore-e28cf2c3-4c3e-4e3b-998d-4cd32f92cee1"
+
+[[ports]]
+localPort = 8080
+externalPort = 80

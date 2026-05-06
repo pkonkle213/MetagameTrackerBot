@@ -11,6 +11,7 @@ from services.store_services import NewStoreRegistration
 from timedposts.automated_updates import UpdateDataGuild
 from services.sync_service import SyncCommands
 from discord_messages import MessageUser
+from services.stripe_webhook_service import start_webhook_server
 
 intents = discord.Intents.all()
 intents.message_content = True
@@ -31,6 +32,7 @@ async def on_ready():
   sync_paid_users.start()
   #sync_paid_discords.start()
   await SyncCommands(bot, CMDS_DIR)
+  await start_webhook_server(bot)
   print('Synced commands. Good to go')
 
 @bot.event
