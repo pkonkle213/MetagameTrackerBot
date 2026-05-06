@@ -1,8 +1,8 @@
-from data.player_name_data import GetUserArchetypes, GetUserName
+import settings
 import typing
+from data.player_name_data import GetUserArchetypes, GetUserName
 from services.determine_archetype_input import GetArchetypeModal
 from api_calls.melee_tournaments import GetMeleeTournamentData
-import settings
 from input_modals.submit_data_modal import SubmitDataModal
 from checks import isSubmitter, IsStore
 from custom_errors import KnownError
@@ -110,7 +110,7 @@ class SubmitDataChecker(commands.GroupCog, name='submit'):
     objects = GetObjectsFromInteraction(interaction)
     
     if not objects.store or not objects.game or not objects.format:
-      raise KnownError('No store, game, or format found.') #TODO Probably needs to be more detailed
+      raise KnownError('No store, game, or format found.')
       
     data = False if csv_file or melee_tournament_id else True
     

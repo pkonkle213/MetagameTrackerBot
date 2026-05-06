@@ -1,4 +1,3 @@
-import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 from services.personal_matchups_services import PersonalMatchups
@@ -60,7 +59,7 @@ class PersonalStatisticsGroup(commands.GroupCog, name='personal_stats'):
   @PersonalMatchupReport.error
   @WLDRecord.error
   async def Errors(self,
-                   interaction: discord.Interaction,
+                   interaction: Interaction,
                    error: app_commands.AppCommandError):
     await Error(self.bot, interaction, error)
   

@@ -1,5 +1,4 @@
 from checks import IsStore
-import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 from services.unknown_archetypes_services import GetAllUnknown
@@ -7,11 +6,9 @@ from output_builder import BuildTableOutput
 from services.command_error_service import Error
 
 class UnknownArchetypes(commands.Cog):
-
   def __init__(self, bot):
     self.bot = bot
 
-  #TODO: This should be a group with archetypes...possibly
   @app_commands.command(
       name='unknown',
       description='See what archetypes still need submitted for a date range')
@@ -39,13 +36,10 @@ class UnknownArchetypes(commands.Cog):
       output = output[:-3] + '\nTo submit yours, type and enter: /submit archetype```'
       await interaction.followup.send(output)
 
-  
   @IntoTheUnknown.error
   async def Errors(self, interaction: Interaction,
                    error: app_commands.AppCommandError):
     await Error(self.bot, interaction, error)
-  
-
 
 async def setup(bot):
   await bot.add_cog(UnknownArchetypes(bot))

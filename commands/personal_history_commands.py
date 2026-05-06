@@ -1,5 +1,4 @@
-import discord
-from discord import app_commands
+from discord import app_commands, Interaction
 from discord.ext import commands
 from services.personal_history_service import GetPersonalStandingsHistory, GetPersonalPairingsHistory
 from services.command_error_service import Error
@@ -19,7 +18,7 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
   @IsStore()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def GetPersonalStandingsHistory(self,
-                                        interaction: discord.Interaction,
+                                        interaction: Interaction,
                                         start_date: str = '',
                                         end_date: str = ''):
     """
@@ -42,7 +41,7 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
   @IsStore()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def GetPersonalPairingsHistory(self,
-                                       interaction: discord.Interaction,
+                                       interaction: Interaction,
                                        start_date: str = '',
                                        end_date: str = ''):
     """
@@ -60,7 +59,7 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
 
   @GetPersonalStandingsHistory.error
   @GetPersonalPairingsHistory.error
-  async def Errors(self, interaction: discord.Interaction,
+  async def Errors(self, interaction: Interaction,
                    error: app_commands.AppCommandError):
     await Error(self.bot, interaction, error)
 

@@ -50,7 +50,7 @@ class MetagameCommand(commands.Cog):
         date_end,
         archetype
       )
-    elif interaction.guild_id == settings.DATAGUILDID:
+    elif interaction.guild_id == DATAGUILDID:
       data = GetWholeMetagame(
         objects.game,
         objects.format,
