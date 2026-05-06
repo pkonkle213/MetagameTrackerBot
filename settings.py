@@ -23,3 +23,5 @@ MYBOTGUILDURL = os.environ['BOT_URL_GUILDINVITE']
 DATAHUBINVITE = os.environ['DATAHUB_URL_INVITE']
 
 PHILID = int(os.environ['PHIL_USERID'])
+
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
