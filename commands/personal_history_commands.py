@@ -12,7 +12,7 @@ from services.personal_history_service import (
 class PersonalHistoryCommands(commands.GroupCog, name="history"):
     """A group of commands for getting personal history"""
 
-    def __init__(self, bot):
+    def __init__(self, bot:commands.Bot):
         self.bot = bot
 
     @app_commands.command(
@@ -69,5 +69,5 @@ class PersonalHistoryCommands(commands.GroupCog, name="history"):
         await Error(self.bot, interaction, error)
 
 
-async def setup(bot):
+async def setup(bot:commands.Bot):
     await bot.add_cog(PersonalHistoryCommands(bot))

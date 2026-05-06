@@ -11,7 +11,7 @@ from services.submit_archetype_service import OneEventDetails, OneEventMeta
 
 
 class OneEventCommands(commands.GroupCog, name="one_event"):
-    def __init__(self, bot):
+    def __init__(self, bot:commands.Bot):
         self.bot = bot
 
     @app_commands.command(
@@ -72,5 +72,5 @@ class OneEventCommands(commands.GroupCog, name="one_event"):
         await Error(self.bot, interaction, error)
 
 
-async def setup(bot):
+async def setup(bot:commands.Bot):
     await bot.add_cog(OneEventCommands(bot))

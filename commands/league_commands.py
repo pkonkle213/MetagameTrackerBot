@@ -8,7 +8,7 @@ from services.league_services import (
     SelectLeague,
     LeagueMetagame,
     LeagueLeaderboard,
-    PlayerStanding,
+    FindPlayerStanding
 )
 from output_builder import BuildTableOutput
 from checks import IsPaidStore
@@ -40,7 +40,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
     @app_commands.guild_only()
     @IsPaidStore()
     async def TopPlayers(self, interaction: Interaction):
-        store, game, format, league = await SelectLeague(self.bot, interaction)
+        league = await SelectLeague(self.bot, interaction)
         data = LeagueLeaderboard(league)
         title = f"Top Players for {league.name}"
         headers = ["Player Name", "Points", "Win %"]
@@ -53,7 +53,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
     @app_commands.guild_only()
     @IsPaidStore()
     async def LeagueMeta(self, interaction: Interaction):
-        store, game, format, league = await SelectLeague(self.bot, interaction)
+        league = await SelectLeague(self.bot, interaction)
         data = LeagueMetagame(league)
         title = f"Metagame for {league.name}"
         headers = ["Archetype Name", "Meta %", "Win %"]
@@ -67,10 +67,10 @@ class LeaguesCommands(commands.GroupCog, name="league"):
     @IsPaidStore()
     @app_commands.guild_only()
     async def MyStatus(self, interaction: Interaction):
-        store, game, format, league = await SelectLeague(self.bot, interaction)
+        league = await SelectLeague(self.bot, interaction)
         if not interaction.guild_id:
             raise KnownError("This command can only be used in a server")
-        data = PlayerStanding(league, interaction.user.id, interaction.guild_id)
+        data = FindPlayerStanding(league, interaction.user.id, interaction.guild_id)
         title = f"Your Status for {league.name}"
         headers = ["Points", "Win %", "Rank"]
         output = BuildTableOutput(title, headers, [data])

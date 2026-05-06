@@ -16,7 +16,6 @@ def MaxLength(headers: list[str], collection: list[Any]):
     maxLengths[len(maxLengths) - 1] -= 2
     return maxLengths
 
-
 def BuildTableOutput(title: str, headers: list[str], items: list[Any]) -> str:
     """Builds a table output out of the title, headers, and items provided"""
     if headers == []:

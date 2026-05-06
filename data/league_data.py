@@ -5,7 +5,6 @@ from tuple_conversions import League
 from datetime import date
 from psycopg.rows import class_row
 from tuple_conversions import TopPlayers, PlayerStanding
-from typing import NamedTuple
 
 def GetActiveLeagues(discord_id:int, game_id:int, format_id:int) -> list[League]:
   conn =  psycopg.connect(DATABASE_URL)
@@ -82,6 +81,7 @@ def GetPlayerStanding(league:League, user_id:int, discord_id:int) -> PlayerStand
     row = cur.fetchone()
     if not row:
       raise KnownError('Unable to find player standing')
+
     return row
 
 def GetLeagueLeaderboard(league:League) -> list[TopPlayers]:

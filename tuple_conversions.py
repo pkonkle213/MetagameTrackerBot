@@ -1,4 +1,4 @@
-from typing import NamedTuple
+from typing import Any, NamedTuple
 from datetime import date, datetime
 from enum import Enum
 
@@ -154,3 +154,8 @@ class DataConverted(NamedTuple):
   event_date      : date | None
   archetypes      : dict[str, str] | None
   custom_event_id : int | None
+
+class OutputToBuild(NamedTuple):
+  title: str
+  headers: list[str]
+  data: list[Any]

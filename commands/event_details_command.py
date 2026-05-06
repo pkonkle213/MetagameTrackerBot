@@ -9,7 +9,7 @@ from settings import BOTGUILDID
 
 
 class UniqueSubmitters(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot:commands.Bot):
         self.bot = bot
 
     @app_commands.command(
@@ -29,8 +29,8 @@ class UniqueSubmitters(commands.Cog):
         discord_id_int = 0
         if discord_id != "":
             discord_id_int = int(discord_id)
-        data, title, headers = GetEventStats(interaction, discord_id_int)
-        output = BuildTableOutput(title, headers, data)
+        table = GetEventStats(discord_id_int)
+        output = BuildTableOutput(table.title, table.headers, table.data)
         await interaction.followup.send(output)
 
     @MyEventsReported.error
@@ -40,5 +40,5 @@ class UniqueSubmitters(commands.Cog):
         await Error(self.bot, interaction, error)
 
 
-async def setup(bot):
+async def setup(bot:commands.Bot):
     await bot.add_cog(UniqueSubmitters(bot))

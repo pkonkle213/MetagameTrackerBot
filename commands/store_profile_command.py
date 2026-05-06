@@ -7,7 +7,7 @@ from services.store_services import UpdateStoreDetails
 
 
 class StoreProfile(commands.GroupCog, name="update"):
-    def __init__(self, bot):
+    def __init__(self, bot:commands.Bot):
         self.bot = bot
 
     @app_commands.command(name="store", description="Updates the store profile")
@@ -33,5 +33,5 @@ class StoreProfile(commands.GroupCog, name="update"):
         await Error(self.bot, interaction, error)
 
 
-async def setup(bot):
+async def setup(bot:commands.Bot):
     await bot.add_cog(StoreProfile(bot))

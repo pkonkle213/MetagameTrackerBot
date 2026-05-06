@@ -16,7 +16,7 @@ from services.map_claim_feed import MapClaimFeed
 class MappingCommands(commands.GroupCog, name="map"):
     """A group of commands for mapping channels to games, formats, and claim feeds"""
 
-    def __init__(self, bot):
+    def __init__(self, bot:commands.Bot):
         self.bot = bot
 
     @app_commands.command(
@@ -85,5 +85,5 @@ class MappingCommands(commands.GroupCog, name="map"):
         await Error(self.bot, interaction, error)
 
 
-async def setup(bot):
+async def setup(bot:commands.Bot):
     await bot.add_cog(MappingCommands(bot))

@@ -6,7 +6,7 @@ from timedposts.automated_updates import UpdateDataGuild
 
 
 class ForceDataGuildUpdate(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot:commands.Bot):
         self.bot = bot
 
     @app_commands.command(
@@ -24,5 +24,5 @@ class ForceDataGuildUpdate(commands.Cog):
             )
 
 
-async def setup(bot):
+async def setup(bot:commands.Bot):
     await bot.add_cog(ForceDataGuildUpdate(bot))

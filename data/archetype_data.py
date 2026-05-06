@@ -1,4 +1,5 @@
-from psycopg.rows import scalar_row
+from typing import NamedTuple
+from psycopg.rows import class_row, scalar_row
 from datetime import date
 from settings import DATABASE_URL
 import psycopg
@@ -60,13 +61,18 @@ def AddArchetype(
         raise Exception('Unable to add archetype')
       return row[0]
 
+class UnknownArchetypes(NamedTuple):
+  event_date: str
+  event_name: str
+  player_name: str
+
 def GetUnknownArchetypes(store:Store,
                          game:Game,
                          format:Format,
                          start_date:date,
-                         end_date:date) -> list:
+                         end_date:date) -> list[UnknownArchetypes]:
   with psycopg.connect(DATABASE_URL) as conn:
-    with conn.cursor() as cur:
+    with conn.cursor(row_factory=class_row(UnknownArchetypes)) as cur:
       command = f'''
       SELECT
         TO_CHAR(event_date,'MM/DD') as event_date,

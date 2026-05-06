@@ -6,7 +6,7 @@ from services.command_error_service import Error
 from checks import IsStore
 
 class StoreTopPlayers(commands.Cog):
-  def __init__(self, bot):
+  def __init__(self, bot:commands.Bot):
     self.bot = bot
 
   @app_commands.command(name="leaderboard",
@@ -27,13 +27,16 @@ class StoreTopPlayers(commands.Cog):
       End of Date Range (MM/DD/YYYY)
     """
     await interaction.response.defer(thinking=False)
-    data, title, headers = GetTopPlayers(interaction,
-                           start_date,
-                           end_date)
-    if data is None or len(data) == 0:
+    table = GetTopPlayers(
+      interaction,
+      start_date,
+      end_date
+      )
+
+    if len(table.data) == 0:
       await interaction.followup.send('No players found for this game or format')
     else:
-      output = BuildTableOutput(title, headers, data)
+      output = BuildTableOutput(table.title, table.headers, table.data)
       await interaction.followup.send(output)
   
   @Leaderboard.error
@@ -42,5 +45,5 @@ class StoreTopPlayers(commands.Cog):
                    error: app_commands.AppCommandError):
     await Error(self.bot, interaction, error)
 
-async def setup(bot):
+async def setup(bot:commands.Bot):
   await bot.add_cog(StoreTopPlayers(bot))

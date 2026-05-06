@@ -29,13 +29,13 @@ class EventAttendance(commands.Cog):
           End of Date Range (MM/DD/YYYY)
         """
         await interaction.response.defer(thinking=False)
-        data, title, headers = GetStoreAttendance(interaction, start_date, end_date)
-        if len(data) == 0:
+        table = GetStoreAttendance(interaction, start_date, end_date)
+        if len(table.data) == 0:
             await interaction.followup.send(
                 "No attendance data found for this store and/or format"
             )
         else:
-            output = BuildTableOutput(title, headers, data)
+            output = BuildTableOutput(table.title, table.headers, table.data)
             await interaction.followup.send(output)
 
     @Attendance.error

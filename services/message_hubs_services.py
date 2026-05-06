@@ -2,7 +2,6 @@ from data.data_hubs_data import GetAllHubs
 from discord_messages import MessageChannel, MessageUser
 from tuple_conversions import Event, Store
 from discord.ext import commands
-from services.command_error_service import Error
 import settings
 
 async def MessageHubs(
@@ -21,5 +20,5 @@ async def MessageHubs(
     try:
       await MessageChannel(bot, output, hub.discord_id, hub.channel_id)
     except Exception as e:
-      await MessageChannel(bot, e, settings.BOTGUILDID, settings.ERRORCHANNELID)
+      await MessageChannel(bot, str(e), settings.BOTGUILDID, settings.ERRORCHANNELID)
       await MessageUser(bot, f"Error messaging hub {hub.discord_id}: {e}", settings.PHILID)

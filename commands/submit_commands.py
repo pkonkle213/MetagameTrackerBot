@@ -1,6 +1,6 @@
 import typing
 
-from discord import Attachment, Interaction, app_commands
+from discord import Attachment, Interaction, User, app_commands
 from discord.ext import commands
 
 import settings
@@ -18,7 +18,7 @@ from services.determine_archetype_input import GetArchetypeModal
 class SubmitDataChecker(commands.GroupCog, name="submit"):
     """A group of commands to submit data"""
 
-    def __init__(self, bot):
+    def __init__(self, bot:commands.Bot):
         self.bot = bot
 
     @app_commands.command(name="check", description="To test if you can submit data")
@@ -29,6 +29,10 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         await interaction.response.defer(ephemeral=True, thinking=False)
         issues = ["Issues I detect:"]
         objects = GetObjectsFromInteraction(interaction)
+        if not interaction.guild:
+            raise KnownError('How?')
+        if isinstance(interaction.user, User):
+            raise KnownError('Bad user. Need Member')
 
         if not objects.store:
             issues.append("- Store not registered")
@@ -36,7 +40,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             issues.append("- You don't have the MTSubmitter role.")
         if not objects.game:
             issues.append("- Category not mapped to a game")
-        if objects.game and not format:
+        if objects.game and not objects.format:
             issues.append("- Channel not mapped to a format")
 
         if len(issues) == 1:
@@ -157,5 +161,5 @@ async def NewDataMessage(bot: commands.Bot, interaction: Interaction, isError: b
     await MessageChannel(bot, message, settings.BOTGUILDID, settings.BOTEVENTINPUTID)
 
 
-async def setup(bot):
+async def setup(bot:commands.Bot):
     await bot.add_cog(SubmitDataChecker(bot))

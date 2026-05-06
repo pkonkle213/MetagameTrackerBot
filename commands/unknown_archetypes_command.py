@@ -8,7 +8,7 @@ from services.unknown_archetypes_services import GetAllUnknown
 
 
 class UnknownArchetypes(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot:commands.Bot):
         self.bot = bot
 
     @app_commands.command(
@@ -30,13 +30,13 @@ class UnknownArchetypes(commands.Cog):
           End of Date Range (MM/DD/YYYY)
         """
         await interaction.response.defer(thinking=False)
-        data, title, headers = GetAllUnknown(interaction, start_date, end_date)
-        if data is None or len(data) == 0:
+        table = GetAllUnknown(interaction, start_date, end_date)
+        if len(table.data) == 0:
             await interaction.followup.send(
                 "Congratulations! No unknown archetypes found for this format"
             )
         else:
-            output = BuildTableOutput(title, headers, data)
+            output = BuildTableOutput(table.title, table.headers, table.data)
             output = (
                 output[:-3] + "\nTo submit yours, type and enter: /submit archetype```"
             )
@@ -49,5 +49,5 @@ class UnknownArchetypes(commands.Cog):
         await Error(self.bot, interaction, error)
 
 
-async def setup(bot):
+async def setup(bot:commands.Bot):
     await bot.add_cog(UnknownArchetypes(bot))

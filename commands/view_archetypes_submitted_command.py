@@ -8,7 +8,7 @@ from services.submitted_archetypes_service import SubmittedArchetypesReport
 
 
 class ArchetypeSubmittedCommand(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot:commands.Bot):
         self.bot = bot
 
     @app_commands.command(
@@ -31,15 +31,13 @@ class ArchetypeSubmittedCommand(commands.Cog):
           The date of the event (MM/DD/YYYY)
         """
         await interaction.response.defer(ephemeral=True, thinking=False)
-        data, headers, title = SubmittedArchetypesReport(
-            interaction, player_name, event_date
-        )
-        if data is None or len(data) == 0:
+        table = SubmittedArchetypesReport(interaction, player_name, event_date)
+        if len(table.data) == 0:
             await interaction.followup.send(
                 "No archetypes submitted for this store or format"
             )
         else:
-            output = BuildTableOutput(title, headers, data)
+            output = BuildTableOutput(table.title, table.headers, table.data)
             await interaction.followup.send(output, ephemeral=True)
 
     @ViewSubmittedArchetypes.error
@@ -49,5 +47,5 @@ class ArchetypeSubmittedCommand(commands.Cog):
         await Error(self.bot, interaction, error)
 
 
-async def setup(bot):
+async def setup(bot:commands.Bot):
     await bot.add_cog(ArchetypeSubmittedCommand(bot))

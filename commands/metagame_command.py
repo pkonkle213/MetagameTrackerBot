@@ -13,6 +13,7 @@ from services.metagame_services import (
     StoreMetagame,
 )
 from settings import DATAGUILDID
+from tuple_conversions import GameEnum
 
 
 class MetagameCommand(commands.Cog):
@@ -47,12 +48,15 @@ class MetagameCommand(commands.Cog):
 
         date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
 
-        if objects.game.game_name.upper() == "MAGIC" and objects.format.is_limited:
+        if objects.game.id == GameEnum.Magic.value and objects.format.is_limited:
             archetype = "COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,"
         else:
             archetype = (
                 "COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,"
             )
+
+        if not interaction.channel_id:
+            raise KnownError('Try a channel that has an id')
 
         if objects.hub and objects.hub.format_lock:
             data = FormatLockedMetagame(
@@ -80,14 +84,14 @@ class MetagameCommand(commands.Cog):
                 "This channel is not set up with a store to view a metagame."
             )
 
-        if data is None or len(data) == 0:
+        if len(data) == 0:
             await interaction.followup.send(
                 "No metagame data found for this store and format"
             )
         else:
             title_name = (
                 objects.format.format_name.title()
-                if format
+                if objects.format
                 else objects.game.game_name.title()
             )
             title = f"{title_name} metagame from {date_start.strftime('%-m/%-d')} to {date_end.strftime('%-m/%-d')}"
@@ -102,5 +106,5 @@ class MetagameCommand(commands.Cog):
         await Error(self.bot, interaction, error)
 
 
-async def setup(bot):
+async def setup(bot:commands.Bot):
     await bot.add_cog(MetagameCommand(bot))

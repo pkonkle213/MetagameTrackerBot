@@ -7,7 +7,7 @@ import settings
 class Links(commands.Cog):
     """A group of commands for getting links"""
 
-    def __init__(self, bot):
+    def __init__(self, bot:commands.Bot):
         self.bot = bot
 
     @app_commands.command(
@@ -50,5 +50,5 @@ class Links(commands.Cog):
         )
 
 
-async def setup(bot):
+async def setup(bot:commands.Bot):
     await bot.add_cog(Links(bot))
