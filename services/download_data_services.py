@@ -1,11 +1,12 @@
-from discord import File
+from typing import Any
+from discord import File, Interaction
 from io import BytesIO
 from services.date_functions import BuildDateRange
 from data.download_data import GetStoreStandingData, GetStorePairingData, GetPlayerPairingData, GetPlayerStandingData
 from interaction_objects import GetObjectsFromInteraction
 from services.command_error_service import KnownError
 
-def GetStoreData(interaction, start_date, end_date):
+def GetStoreData(interaction: Interaction, start_date:str, end_date:str) -> tuple[str, list[File]]:
   objects = GetObjectsFromInteraction(interaction)
   if not objects.store:
     raise KnownError('No store found')
@@ -14,7 +15,7 @@ def GetStoreData(interaction, start_date, end_date):
 
   name = objects.store.store_name if objects.store.store_name else objects.store.discord_name
   message = f'Here is the data for {name.title()} between {date_start.strftime("%m/%d/%Y")} and {date_end.strftime("%m/%d/%Y")}:'
-  files = []
+  files:list[File] = []
 
   participant_data = GetStoreStandingData(objects.store, objects.game, objects.format, date_start, date_end)
   if len(participant_data) != 0:
@@ -30,7 +31,7 @@ def GetStoreData(interaction, start_date, end_date):
 
   return message, files
 
-def GetPlayerData(interaction, start_date, end_date):
+def GetPlayerData(interaction: Interaction, start_date:str, end_date:str) -> tuple[str, list[File]]:
   objects = GetObjectsFromInteraction(interaction)
   if not objects.store:
     raise KnownError('No store found')
@@ -41,7 +42,7 @@ def GetPlayerData(interaction, start_date, end_date):
   
   name = objects.store.store_name if objects.store.store_name else objects.store.discord_name
   message = f'Here is the data for {name.title()} between {date_start.strftime("%m/%d/%Y")} and {date_end.strftime("%m/%d/%Y")}:'
-  files = []
+  files:list[File] = []
 
   participant_data = GetPlayerStandingData(objects.store, objects.game, objects.format, date_start, date_end, user_id)
   if len(participant_data) != 0:
@@ -55,8 +56,8 @@ def GetPlayerData(interaction, start_date, end_date):
     
   return message, files
 
-def ConvertRowsToFile(data, filename, header):
-  data_list = []
+def ConvertRowsToFile(data: list[Any], filename:str, header:str):
+  data_list:list[str] = []
   data_list.append(header + '\n')
   for row in data:
     max = len(row)

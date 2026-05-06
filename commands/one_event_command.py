@@ -1,71 +1,76 @@
-from checks import IsStore
-from interaction_objects import GetObjectsFromInteraction
-from custom_errors import KnownError
-from discord import app_commands, Interaction
+from discord import Interaction, app_commands
 from discord.ext import commands
+
+from checks import IsStore
+from custom_errors import KnownError
 from input_modals.event_selector import EventSelector
+from interaction_objects import GetObjectsFromInteraction
+from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from services.submit_archetype_service import OneEventDetails, OneEventMeta
-from output_builder import BuildTableOutput
 
-class OneEventCommands(commands.GroupCog, name='one_event'):
-  def __init__(self, bot):
-    self.bot = bot
 
-  @app_commands.command(name='metagame',
-    description='View the metagame for one event')
-  @app_commands.guild_only()
-  @IsStore()
-  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-  async def OneEventMeta(self, interaction:Interaction):
-    objects = GetObjectsFromInteraction(interaction)
-    if not objects.store or not objects.game or not objects.format:
-      raise KnownError('No store, game, or format found.')
+class OneEventCommands(commands.GroupCog, name="one_event"):
+    def __init__(self, bot):
+        self.bot = bot
 
-    modal = EventSelector(objects.store, objects.game, objects.format)
-    await interaction.response.send_modal(modal)
-    await modal.wait()
+    @app_commands.command(
+        name="metagame", description="View the metagame for one event"
+    )
+    @app_commands.guild_only()
+    @IsStore()
+    @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
+    async def OneEventMeta(self, interaction: Interaction):
+        objects = GetObjectsFromInteraction(interaction)
+        if not objects.store or not objects.game or not objects.format:
+            raise KnownError("No store, game, or format found.")
 
-    if not modal.is_submitted:
-      raise Exception('Modal was not submitted')
+        modal = EventSelector(objects.store, objects.game, objects.format)
+        await interaction.response.send_modal(modal)
+        await modal.wait()
 
-    event = modal.event
+        if not modal.is_submitted:
+            raise Exception("Modal was not submitted")
 
-    title, headers, data = OneEventMeta(event)
-    output = BuildTableOutput(title, headers, data)
-    await interaction.followup.send(output)    
-  
-  @app_commands.command(name="top_results",
-                       description="Get the archetypes for an event and their results")
-  @app_commands.guild_only()
-  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-  @IsStore()
-  async def OneEvent(self,
-                    interaction:Interaction):
-    objects = GetObjectsFromInteraction(interaction)
-    if not objects.store or not objects.game or not objects.format:
-      raise KnownError('No store, game, or format found.')
+        event = modal.event
 
-    modal = EventSelector(objects.store, objects.game, objects.format)
-    await interaction.response.send_modal(modal)
-    await modal.wait()
+        title, headers, data = OneEventMeta(event)
+        output = BuildTableOutput(title, headers, data)
+        await interaction.followup.send(output)
 
-    if not modal.is_submitted:
-      raise Exception('Modal was not submitted')
+    @app_commands.command(
+        name="top_results",
+        description="Get the archetypes for an event and their results",
+    )
+    @app_commands.guild_only()
+    @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
+    @IsStore()
+    async def OneEvent(self, interaction: Interaction):
+        objects = GetObjectsFromInteraction(interaction)
+        if not objects.store or not objects.game or not objects.format:
+            raise KnownError("No store, game, or format found.")
 
-    event = modal.event
+        modal = EventSelector(objects.store, objects.game, objects.format)
+        await interaction.response.send_modal(modal)
+        await modal.wait()
 
-    title, headers, data = OneEventDetails(event)
-    output = BuildTableOutput(title, headers, data)
+        if not modal.is_submitted:
+            raise Exception("Modal was not submitted")
 
-    await interaction.followup.send(output)
+        event = modal.event
 
-  @OneEventMeta.error
-  @OneEvent.error
-  async def Errors(self,
-                   interaction: Interaction,
-                   error: app_commands.AppCommandError):
-    await Error(self.bot, interaction, error)
+        title, headers, data = OneEventDetails(event)
+        output = BuildTableOutput(title, headers, data)
+
+        await interaction.followup.send(output)
+
+    @OneEventMeta.error
+    @OneEvent.error
+    async def Errors(
+        self, interaction: Interaction, error: app_commands.AppCommandError
+    ):
+        await Error(self.bot, interaction, error)
+
 
 async def setup(bot):
-  await bot.add_cog(OneEventCommands(bot))
+    await bot.add_cog(OneEventCommands(bot))

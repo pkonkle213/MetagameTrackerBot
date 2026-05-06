@@ -1,8 +1,22 @@
 from datetime import date
+from typing import NamedTuple
+
+from psycopg.rows import class_row
 from settings import DATABASE_URL
 import psycopg
 
 from tuple_conversions import Format, Game, Store
+
+class StoreStandingData(NamedTuple):
+  game_name: str
+  format_name: str
+  event_date: str
+  event_name: str
+  player_name: str
+  archetype_played: str
+  wins: int
+  losses: int
+  draws: int
 
 def GetStoreStandingData(
   store:Store,
@@ -10,14 +24,15 @@ def GetStoreStandingData(
   format:Format | None,
   start_date:date,
   end_date:date
-) -> list:
+) -> list[StoreStandingData]:
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+  with conn, conn.cursor(row_factory=class_row(StoreStandingData)) as cur:
     command =  f'''
     SELECT
-      INITCAP(g.game_name) AS Game_Name,
-      INITCAP(f.format_name) AS Format_Name,
-      DATE(e.event_date) AS Event_Date,
+      INITCAP(g.game_name) AS game_name,
+      INITCAP(f.format_name) AS format_name,
+      TO_CHAR(e.event_date,'MM/DD/YYYY') AS event_date,
+      e.event_name,
       INITCAP(fp.Player_Name) AS player_name,
       INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
       fp.wins,
@@ -48,20 +63,33 @@ def GetStoreStandingData(
     rows = cur.fetchall()
     return rows
 
+class StorePairingData(NamedTuple):
+  game_name: str
+  format_name: str
+  event_date: str
+  event_name: str
+  round_number: int
+  player_name: str
+  archetype_played: str
+  opponent_name: str
+  opponent_archetype: str
+  result: str
+
 def GetStorePairingData(
   store:Store,
   game:Game | None,
   format:Format | None,
   start_date:date,
   end_date:date
-) -> list:
+) -> list[StorePairingData]:
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+  with conn, conn.cursor(row_factory=class_row(StorePairingData)) as cur:
     command = f'''
     SELECT
-      INITCAP(g.game_name) AS Game_Name,
-      INITCAP(f.format_name) AS Format_name,
-      e.event_date,
+      INITCAP(g.game_name) AS game_name,
+      INITCAP(f.format_name) AS format_name,
+      TO_CHAR(e.event_date,'MM/DD/YYYY') as event_date,
+      e.event_name,
       frr.round_number,
       INITCAP(frr.player_name) as player_name,
       INITCAP(COALESCE(ua1.archetype_played, 'UNKNOWN')) AS player_archetype,
@@ -95,6 +123,16 @@ def GetStorePairingData(
     rows = cur.fetchall()
     return rows
 
+class PlayerPairingData(NamedTuple):
+  game_name: str
+  format_name: str
+  event_date: str
+  event_name: str
+  round_number: int
+  your_archetype: str
+  opponents_archetype: str
+  result: str
+
 def GetPlayerPairingData(
   store:Store,
   game:Game | None,
@@ -102,14 +140,15 @@ def GetPlayerPairingData(
   start_date:date,
   end_date:date,
   user_id:int
-) -> list:
+) -> list[PlayerPairingData]:
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+  with conn, conn.cursor(row_factory=class_row(PlayerPairingData)) as cur:
     command = f'''
     SELECT
-      INITCAP(g.game_name) AS Game_Name,
-      INITCAP(f.format_name) AS Format_name,
-      e.event_date,
+      INITCAP(g.game_name) AS game_name,
+      INITCAP(f.format_name) AS format_name,
+      TO_CHAR(e.event_date,'MM/DD/YYYY') as event_date,
+      e.event_name,
       frr.round_number,
       INITCAP(COALESCE(ua1.archetype_played, 'UNKNOWN')) as your_archetype,
       INITCAP(COALESCE(ua2.archetype_played, 'UNKNOWN')) as opponents_archetype,
@@ -141,6 +180,16 @@ def GetPlayerPairingData(
     rows = cur.fetchall()
     return rows
 
+class PlayerStandingData(NamedTuple):
+  game_name: str
+  format_name: str
+  event_date: str
+  event_name: str
+  archetype_played: str
+  wins: int
+  losses: int
+  draws: int
+
 def GetPlayerStandingData(
   store:Store,
   game:Game | None,
@@ -148,14 +197,14 @@ def GetPlayerStandingData(
   start_date:date,
   end_date:date,
   user_id:int
-) -> list:
+) -> list[PlayerStandingData]:
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+  with conn, conn.cursor(row_factory=class_row(PlayerStandingData)) as cur:
     command =  f'''
     SELECT
-      INITCAP(g.game_name) AS Game_Name,
-      INITCAP(f.format_name) AS Format_name,
-      e.event_date,
+      INITCAP(g.game_name) AS game_name,
+      INITCAP(f.format_name) AS format_name,
+      TO_CHAR(e.event_date, 'MM/DD/YYYY') as event_date,
       e.event_name,
       INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
       fp.wins,
