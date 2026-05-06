@@ -41,6 +41,16 @@ async def SubmitArchetype(
   if not CanSubmitArchetypes(event.discord_id, interaction.user.id):
     raise KnownError('You have submitted too many archetypes with banned words. Please contact your store owner to have them submit the archetype.')
   #If not banned, add to the database
+  archetype_added = AddArchetype(
+    event.id,
+    player_name,
+    archetype,
+    userId,
+    updater_name
+  )
+  if archetype_added is None:
+  raise Exception('Unable to submit the archetype. Please try again later.')
+  
   #If added, check if the event is fully reported
   #Send all output messages
   private_output, feed_output, public_output, full_event = AddTheArchetype(interaction, player_name, event, archetype, store, game, format)
