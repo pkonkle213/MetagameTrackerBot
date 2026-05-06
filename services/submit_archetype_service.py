@@ -1,5 +1,4 @@
-from datetime import datetime
-from typing import Tuple, Any
+from typing import Tuple
 import settings
 from custom_errors import KnownError
 from data.store_data import GetArchetypeFeed
@@ -11,7 +10,7 @@ from services.input_services import ConvertInput
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from output_builder import BuildTableOutput
 from data.metagame_data import OneEventMetagame
-from discord_messages import MessageChannel, MessageUser
+from discord_messages import MessageChannel
 from tuple_conversions import Event, Format, Store, Game, MetagameResult
 from discord.ext import commands
 from services.message_hubs_services import MessageHubs
@@ -30,9 +29,10 @@ async def SubmitArchetype(
   store = GetStore(event.discord_id)
   if store is None:
     raise Exception("An event didn't have a store? Sus.")
+
   if not PlayerInEvent(event, player_name):
     raise KnownError('Player not found in event. Please try again.')
-  #TODO: Follow SOLID principles and seperate the rest of the code into their own functions
+  
   #Make the call to check the archetype for banned words here
   if ContainsBadWord(event.discord_id, archetype):
     raise KnownError('Archetype contains a banned word')
@@ -40,6 +40,7 @@ async def SubmitArchetype(
   #Check if user is allowed to submit archetypes (too many banned words)
   if not CanSubmitArchetypes(event.discord_id, interaction.user.id):
     raise KnownError('You have submitted too many archetypes with banned words. Please contact your store owner to have them submit the archetype.')
+  
   #If not banned, add to the database
   archetype_added = AddArchetype(
     event.id,
@@ -51,9 +52,13 @@ async def SubmitArchetype(
   if archetype_added is None:
     raise Exception('Unable to submit the archetype. Please try again later.')
   
+  feed_output = BuildMessage(interaction, event,archetype, player_name)
+  private_output = f"Thank you for submitting the archetype for {event.event_name}!"
+  
   #If added, check if the event is fully reported
+  public_output, full_event = CheckEventPercentage(event)
+
   #Send all output messages
-  private_output, feed_output, public_output, full_event = AddTheArchetype(interaction, player_name, event, archetype, store, game, format)
   await interaction.followup.send(private_output, ephemeral=True)
   await MessageStoreFeed(bot,
                          feed_output,

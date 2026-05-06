@@ -1,4 +1,3 @@
-import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 from checks import isOwner, IsPaidStore, IsPaidUser, IsStore
@@ -74,7 +73,7 @@ class DownloadDataGroup(commands.GroupCog, name='download'):
   @PlayerDownload.error
   @StoreDownload.error
   async def Errors(self,
-                   interaction: discord.Interaction,
+                   interaction: Interaction,
                    error: app_commands.AppCommandError):
     await Error(self.bot, interaction, error)
 

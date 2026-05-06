@@ -1,4 +1,3 @@
-import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 from custom_errors import KnownError
@@ -51,7 +50,7 @@ class BannedWordCommands(commands.GroupCog, name='banned_words'):
   @BadWord.error
   @StoreOffenders.error
   async def Errors(self,
-                   interaction: discord.Interaction,
+                   interaction: Interaction,
                    error: app_commands.AppCommandError):
     await Error(self.bot, interaction, error)
 

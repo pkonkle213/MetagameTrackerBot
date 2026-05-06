@@ -1,4 +1,4 @@
-import settings
+from settings import DATAGUILDID
 from services.date_functions import BuildDateRange
 from custom_errors import KnownError
 from interaction_objects import GetObjectsFromInteraction
@@ -10,7 +10,7 @@ from services.command_error_service import Error
 from checks import IsStore
 
 class MetagameCommand(commands.Cog):
-  def __init__(self, bot):
+  def __init__(self, bot: commands.Bot):
     self.bot = bot
 
   @app_commands.command(name="metagame",

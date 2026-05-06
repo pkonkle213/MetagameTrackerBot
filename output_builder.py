@@ -1,10 +1,10 @@
 def MaxLength(headers, collection):
+  """Determines the width of each column based upon the headers and data in that column"""
   buffer = 2
-  maxLengths = []
+  maxLengths:list[int] = []
   for header in headers:
     maxLengths.append(len(header) + buffer)
 
-  
   for item in collection:
     for i in range(len(headers)):
       length = len(str(item[i])) + buffer
@@ -19,6 +19,7 @@ def BuildTableOutput(
   headers: list[str],
   items: list
 ) -> str:
+  """Builds a table output out of the title, headers, and items provided"""
   if headers == []:
     raise Exception('No headers provided')
   column_widths = MaxLength(headers, items)
@@ -37,6 +38,7 @@ def BuildTableOutput(
       column_format = '{:' + align + str(column_widths[i]) + 's}'
       if element[0] == '-':
         output = output[:-1]
+
       output += column_format.format(element)
       
     output += '\n'
@@ -45,5 +47,6 @@ def BuildTableOutput(
     output = output[:1994] + '...'
   else:
     output = output[:1997]
+
   output += '```'
   return output

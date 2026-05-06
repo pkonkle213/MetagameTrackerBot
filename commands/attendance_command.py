@@ -1,5 +1,4 @@
 from checks import IsStore
-import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 from services.store_attendance_services import GetStoreAttendance
@@ -37,7 +36,7 @@ class EventAttendance(commands.Cog):
 
   @Attendance.error
   async def Errors(self,
-                   interaction: discord.Interaction,
+                   interaction: Interaction,
                    error: app_commands.AppCommandError):
     await Error(self.bot, interaction, error)
   

@@ -1,4 +1,3 @@
-import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 from services.top_players_services import GetTopPlayers
@@ -12,7 +11,6 @@ class StoreTopPlayers(commands.Cog):
 
   @app_commands.command(name="leaderboard",
                         description="Get the top players of the format")
-  #@app_commands.checks.has_role("MTSubmitter")
   @app_commands.guild_only()
   @IsStore()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
@@ -40,7 +38,7 @@ class StoreTopPlayers(commands.Cog):
   
   @Leaderboard.error
   async def Errors(self,
-                   interaction: discord.Interaction,
+                   interaction: Interaction,
                    error: app_commands.AppCommandError):
     await Error(self.bot, interaction, error)
 

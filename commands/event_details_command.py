@@ -1,4 +1,3 @@
-import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
 from settings import BOTGUILDID
@@ -18,7 +17,7 @@ class UniqueSubmitters(commands.Cog):
   async def MyEventsReported(self, interaction: Interaction, discord_id:str = ''):
     '''
     Parameters:
-    ----------
+    -----------
     discord_id: string
       The discord id of the store to check
     '''
@@ -32,7 +31,7 @@ class UniqueSubmitters(commands.Cog):
 
   @MyEventsReported.error
   async def Errors(self,
-                   interaction: discord.Interaction,
+                   interaction: Interaction,
                    error: app_commands.AppCommandError):
     await Error(self.bot, interaction, error)
 

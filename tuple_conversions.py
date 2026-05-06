@@ -3,15 +3,18 @@ from datetime import date, datetime
 from enum import Enum
 
 class EventType(Enum):
+  """An enum of the different types of events"""
   Weekly = 1
   Tournament = 2
   League = 3
 
 class ReportedAs(Enum):
+  """An enum of how events are reported"""
   Pairings = 1
   Standings = 2
 
 class GameEnum(Enum):
+  """An enum of games in the database"""
   Magic = 1
   Lorcana = 2
   OnePiece = 3

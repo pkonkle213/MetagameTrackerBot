@@ -22,7 +22,6 @@ class EliminationRoundsCommands(commands.GroupCog, name='elimination_rounds'):
   @app_commands.guilds(BOTGUILDID)
   async def EliminationRounds(self,
                               interaction:Interaction):
-    #Get the tournaments
     objects = GetObjectsFromInteraction(interaction)
     if not objects.store or not objects.game or not objects.format:
       raise KnownError('No store, game, or format found.')
@@ -37,7 +36,6 @@ class EliminationRoundsCommands(commands.GroupCog, name='elimination_rounds'):
 
     output = GetEliminationRoundData(modal.event)
     
-    #Return output to the user
     await interaction.followup.send(output)
 
   @EliminationRounds.error
