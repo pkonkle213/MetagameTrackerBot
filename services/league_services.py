@@ -1,21 +1,18 @@
-from output_builder import BuildTableOutput
 from data.metagame_data import GetLeagueMetagame
-from input_modals.league_selector import LeagueSelector, ConfirmView
-from tuple_conversions import Store, Game, Format, League, MetagameResult, TopPlayers, PlayerStanding
-from services.date_functions import ConvertToDate
+from input_modals.league_selector import LeagueSelector
+from tuple_conversions import League, MetagameResult, TopPlayers, PlayerStanding
 from interaction_objects import GetObjectsFromInteraction
-from data.league_data import InsertLeague, GetLeagues, GetLeagueLeaderboard, GetPlayerStanding
+from data.league_data import GetLeagues, GetLeagueLeaderboard, GetPlayerStanding
 from custom_errors import KnownError
 from discord.ext import commands
 from discord import Interaction
-from typing import Tuple
 from input_modals.league_input_modal import LeagueInputModal
 
 async def SelectLeague(
   bot:commands.Bot,
   interaction: Interaction,
   isEdit:bool = False
-) -> Tuple[Store, Game, Format, League]:
+) -> League:
   """Selects a league from the database"""
   objects = GetObjectsFromInteraction(interaction)
 
@@ -35,9 +32,9 @@ async def SelectLeague(
 
   league = modal.league
   
-  return objects.store, objects.game, objects.format, league
+  return league
 
-def PlayerStanding(league:League, user_id:int, discord_id:int) -> PlayerStanding:
+def FindPlayerStanding(league:League, user_id:int, discord_id:int) -> PlayerStanding:
   """Displays the player's standing in a league"""
   return GetPlayerStanding(league, user_id, discord_id)
 

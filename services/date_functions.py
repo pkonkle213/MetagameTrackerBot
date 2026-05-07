@@ -22,28 +22,27 @@ def BuildDateRange(
     raise KnownError("The start date cannot be after the end date")
   return date_start, date_end
 
-def DateDifference(date1, date2) -> int:
+def DateDifference(date1:date, date2:date) -> int:
   return abs((date1 - date2).days)
 
-def GetStartDate(end_date, weeks) -> date:
-  start = end_date - timedelta(days=end_date.weekday()) - timedelta(
-      weeks=weeks)
+def GetStartDate(end_date:date, weeks:int) -> date:
+  start = end_date - timedelta(days=end_date.weekday()) - timedelta(weeks=weeks)
   return start
 
-def GetWeeksAgo(date, weeks) -> date:
+def GetWeeksAgo(date:date, weeks:int) -> date:
   return date - timedelta(weeks=weeks)
 
-def GetDaysAgo(date, days) -> date:
+def GetDaysAgo(date:date, days:int) -> date:
   return date - timedelta(days=days)
 
 def GetToday() -> date:
   return datetime.now(TIMEZONE).date()
 
-def ConvertToDate(date) -> date:
+def ConvertToDate(date:str) -> date:
   try:
     if date.count('/') == 1:
       date += '/' + str(GetToday().year)
     newDate = datetime.strptime(date, '%m/%d/%Y').date()
     return newDate
-  except Exception as e:
+  except Exception:
     raise KnownError(f'Unable to convert "{date}" to a date. Please use the format MM/DD/YYYY.')

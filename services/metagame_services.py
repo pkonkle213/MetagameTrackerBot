@@ -1,10 +1,6 @@
 from datetime import date
 from tuple_conversions import MetagameResult, Store, Format, Game, Hub
-from custom_errors import KnownError
-from discord import Interaction
 from data.metagame_data import GetTheMetagame
-from interaction_objects import GetObjectsFromInteraction
-from services.date_functions import BuildDateRange
 
 def GetWholeMetagame(
   game:Game,
@@ -70,22 +66,22 @@ def FormatLockedMetagame(
 ) -> list[MetagameResult]:
   criteria = f'''
   SELECT
-  {archetype}
-  wins,
-  losses,
-  draws
-FROM
-  full_standings fs
-  LEFT JOIN unique_archetypes ua ON fs.event_id = ua.event_id
-  AND UPPER(fs.player_name) = UPPER(ua.player_name)
-  INNER JOIN events e ON fs.event_id = e.id
-  INNER JOIN stores_view s ON e.discord_id = s.discord_id
-  INNER JOIN region_channel_maps rcm ON rcm.region_id = s.region_id
-  INNER JOIN hubs_view hv ON hv.format_lock = e.format_id
-WHERE
-  e.event_date BETWEEN '{start_date}' AND '{end_date}'
-  AND hv.discord_id = {hub.discord_id}
-  AND rcm.channel_id = {channel_id}
+    {archetype}
+    wins,
+    losses,
+    draws
+  FROM
+    full_standings fs
+    LEFT JOIN unique_archetypes ua ON fs.event_id = ua.event_id
+    AND UPPER(fs.player_name) = UPPER(ua.player_name)
+    INNER JOIN events e ON fs.event_id = e.id
+    INNER JOIN stores_view s ON e.discord_id = s.discord_id
+    INNER JOIN region_channel_maps rcm ON rcm.region_id = s.region_id
+    INNER JOIN hubs_view hv ON hv.format_lock = e.format_id
+  WHERE
+    e.event_date BETWEEN '{start_date}' AND '{end_date}'
+    AND hv.discord_id = {hub.discord_id}
+    AND rcm.channel_id = {channel_id}
   '''
   
   return GetTheMetagame(criteria)

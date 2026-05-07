@@ -4,7 +4,7 @@ import data.interaction_data as db
 from tuple_conversions import Game, Format, Store, InteractionObjects
 
 def GetObjectsFromInteraction(
-    interaction: discord.Interaction
+  interaction: discord.Interaction
 ) -> InteractionObjects:
   """Gets the game, format, store, and user_id from the interaction"""
   discord_id = interaction.guild_id

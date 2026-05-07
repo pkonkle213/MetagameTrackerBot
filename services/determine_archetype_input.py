@@ -5,7 +5,7 @@ from tuple_conversions import Event, Game, Format, Store
 from discord import Interaction
 from discord.ext import commands
 
-async def GetUserInput(
+async def GetArchetypeModal(
   bot: commands.Bot,
   userId:int,
   events:list[Event],

@@ -1,10 +1,15 @@
-from typing import Tuple
+from typing import NamedTuple
+from psycopg.rows import class_row
 from settings import DATABASE_URL
 import psycopg
 
-def GetDataChannels(data_guild_id) -> list[Tuple[int, int]]:
+class DataGuildChannels(NamedTuple):
+  channel_id:int
+  category_id: int
+
+def GetDataChannels(data_guild_id:int) -> list[DataGuildChannels]:
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+  with conn, conn.cursor(row_factory=class_row(DataGuildChannels)) as cur:
     command = '''
     SELECT
       channel_id,

@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Any
 from settings import DATAGUILDID, DATABASE_URL
 import psycopg
 
@@ -10,7 +11,7 @@ def GetAttendance(
   format:Format | None,
   start_date:date,
   end_date:date
-):
+) -> list[Any]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''

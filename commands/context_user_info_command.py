@@ -1,46 +1,50 @@
-import settings
+from discord import Interaction, Member, app_commands
 from discord.ext import commands
-from discord import app_commands, Interaction, Member
-from discord_messages import MessageChannel
+
+import settings
 from custom_errors import KnownError
+from discord_messages import MessageChannel
 from services.user_info_services import GetUserData
 
+
 class UserInfoCommand(commands.Cog):
-  def __init__(self, bot):
-    self.bot = bot
+    def __init__(self, bot:commands.Bot):
+        self.bot = bot
 
-    self.user_info_context_menu = app_commands.ContextMenu(
-      name='Get User Info',  # This is the name of the command displayed in Discord
-      callback=self.GetUserInfo # The function to call when the command is used
-    )
-    # Add the context menu to the bot's command tree
-    self.bot.tree.add_command(self.user_info_context_menu)
+        self.user_info_context_menu = app_commands.ContextMenu(
+            name="Get User Info",  # This is the name of the command displayed in Discord
+            callback=self.GetUserInfo,  # The function to call when the command is used
+        )
+        # Add the context menu to the bot's command tree
+        self.bot.tree.add_command(self.user_info_context_menu)
 
-  @app_commands.guild_only()
-  async def GetUserInfo(self, interaction: Interaction, member: Member):
-    """Callback for the 'Get User Info' context menu command."""
-    await interaction.response.defer(ephemeral=True, thinking=False)
-    try:
-      (player_name,
-       win_percent,
-       last_played,
-       top_decks) = GetUserData(interaction, member)
+    @app_commands.guild_only()
+    async def GetUserInfo(self, interaction: Interaction, member: Member):
+        """Callback for the 'Get User Info' context menu command."""
+        await interaction.response.defer(ephemeral=True, thinking=False)
+        try:
+            (player_name, win_percent, last_played, top_decks) = GetUserData(
+                interaction, member
+            )
 
-      output =  f"Player Name: {player_name}\n"
-      #output += f"Win %: {win_percent}\n"
-      output += f"Last Played: {last_played.archetype_played} ({last_played.event_date})\n"
-      output += "Most Played Decks - % played:\n"
-      for deck in top_decks:
-        output += f"\t{deck[0]} - {deck[2]}%\n"
-      await interaction.followup.send(output, ephemeral=True)
-    except KnownError as error:
-      await interaction.followup.send(error.message, ephemeral=True)
-    except Exception as exception:
-      await MessageChannel(self.bot,
-                           exception,
-                           settings.BOTGUILDID,
-                           settings.ERRORCHANNELID)
-      await interaction.followup.send("Something unexpected went wrong. It's been reported. Please try again in a few hours.", ephemeral=True)
+            output = f"Player Name: {player_name}\n"
+            # output += f"Win %: {win_percent}\n"
+            output += f"Last Played: {last_played.archetype_played} ({last_played.event_date})\n"
+            output += "Most Played Decks - % played:\n"
+            for deck in top_decks:
+                output += f"\t{deck[0]} - {deck[2]}%\n"
+            await interaction.followup.send(output, ephemeral=True)
+        except KnownError as error:
+            await interaction.followup.send(error.message, ephemeral=True)
+        except Exception as exception:
+            await MessageChannel(
+                self.bot, str(exception), settings.BOTGUILDID, settings.ERRORCHANNELID
+            )
+            await interaction.followup.send(
+                "Something unexpected went wrong. It's been reported. Please try again in a few hours.",
+                ephemeral=True,
+            )
 
-async def setup(bot):
-  await bot.add_cog(UserInfoCommand(bot))
+
+async def setup(bot:commands.Bot):
+    await bot.add_cog(UserInfoCommand(bot))

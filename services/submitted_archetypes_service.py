@@ -3,8 +3,9 @@ from data.submitted_archetypes_data import GetSubmittedArchetypes
 from interaction_objects import GetObjectsFromInteraction
 from services.date_functions import ConvertToDate
 from services.input_services import ConvertInput
+from tuple_conversions import OutputToBuild
 
-def SubmittedArchetypesReport(interaction: discord.Interaction, player_name, event_date) -> tuple[list, list[str], str]:
+def SubmittedArchetypesReport(interaction: discord.Interaction, player_name:str, event_date:str) -> OutputToBuild:
   date_used = ConvertToDate(event_date) if event_date != '' else None
   objects= GetObjectsFromInteraction(interaction)
   if not objects.store or not objects.game:
@@ -21,4 +22,4 @@ def SubmittedArchetypesReport(interaction: discord.Interaction, player_name, eve
   title = 'Archetypes Submitted'
   if date_used is not None:
     title += f' for {date_used.strftime("%B %d")}'
-  return data, headers, title
+  return OutputToBuild(title, headers, data)

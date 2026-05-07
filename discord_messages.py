@@ -1,14 +1,16 @@
+from typing import Optional, Sequence
 import discord
+from discord.ext import commands
 import settings
 
-async def MessageUser(bot, msg, userId, files=None):
+async def MessageUser(bot:commands.Bot, msg:str, userId:int, files:Sequence[discord.File] | None = None):
   user = await bot.fetch_user(userId)
   if files is None:
     await user.send(f'{msg}')
   else:
     await user.send(f'{msg}', files=files)
 
-async def MessageChannel(bot, msg, guildId, channelId, file=None):
+async def MessageChannel(bot:commands.Bot, msg:str, guildId:int, channelId:int, file:Optional[discord.File] | None =None):
   try:
     server = bot.get_guild(int(guildId))
     if server is None:

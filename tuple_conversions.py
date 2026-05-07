@@ -1,17 +1,20 @@
-from typing import NamedTuple
+from typing import Any, NamedTuple
 from datetime import date, datetime
 from enum import Enum
 
 class EventType(Enum):
+  """An enum of the different types of events"""
   Weekly = 1
   Tournament = 2
   League = 3
 
 class ReportedAs(Enum):
+  """An enum of how events are reported"""
   Pairings = 1
   Standings = 2
 
 class GameEnum(Enum):
+  """An enum of games in the database"""
   Magic = 1
   Lorcana = 2
   OnePiece = 3
@@ -151,3 +154,8 @@ class DataConverted(NamedTuple):
   event_date      : date | None
   archetypes      : dict[str, str] | None
   custom_event_id : int | None
+
+class OutputToBuild(NamedTuple):
+  title: str
+  headers: list[str]
+  data: list[Any]

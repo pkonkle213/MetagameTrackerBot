@@ -3,8 +3,10 @@ from custom_errors import KnownError
 from tuple_conversions import Store
 from data.melee_api_data import GetStoreMeleeInfo
 
-def GetMeleeTournamentData(tournament_id: str,
-                           store: Store) -> list:
+def GetMeleeTournamentData(
+    tournament_id: str,
+    store: Store
+) -> list:
   storeInfo = GetStoreMeleeInfo(store)
   if not storeInfo or storeInfo.melee_client_id is None or storeInfo.melee_client_secret is None:
     raise KnownError("Store not registered for Melee.gg API. Update store settings and try again.")
@@ -25,7 +27,6 @@ def GetMeleeTournamentData(tournament_id: str,
     else:
       raise Exception("Unable to get data from Melee.gg. Please try again.")
 
-  #print('Data received:', data)
   if not data or data == []:
     raise KnownError("No data found for this tournament. Please try again.")
   return data

@@ -1,49 +1,50 @@
-def MaxLength(headers, collection):
-  buffer = 2
-  maxLengths = []
-  for header in headers:
-    maxLengths.append(len(header) + buffer)
+from typing import Any
 
-  
-  for item in collection:
-    for i in range(len(headers)):
-      length = len(str(item[i])) + buffer
-      if length > maxLengths[i]:
-        maxLengths[i] = length
+def MaxLength(headers: list[str], collection: list[Any]):
+    """Determines the width of each column based upon the headers and data in that column"""
+    buffer = 2
+    maxLengths: list[int] = []
+    for header in headers:
+        maxLengths.append(len(header) + buffer)
 
-  maxLengths[len(maxLengths) - 1] -= 2
-  return maxLengths
+    for item in collection:
+        for i in range(len(headers)):
+            length = len(str(item[i])) + buffer
+            if length > maxLengths[i]:
+                maxLengths[i] = length
 
-def BuildTableOutput(
-  title: str,
-  headers: list[str],
-  items: list
-) -> str:
-  if headers == []:
-    raise Exception('No headers provided')
-  column_widths = MaxLength(headers, items)
-  align = ''
-  output = f'```{title}\n\n'
+    maxLengths[len(maxLengths) - 1] -= 2
+    return maxLengths
 
-  for header in headers:
-    width = '{:' + align + str(column_widths[headers.index(header)]) + 's}'
-    output += width.format(header)
+def BuildTableOutput(title: str, headers: list[str], items: list[Any]) -> str:
+    """Builds a table output out of the title, headers, and items provided"""
+    if headers == []:
+        raise Exception("No headers provided")
+    column_widths = MaxLength(headers, items)
+    align = ""
+    output = f"```{title}\n\n"
 
-  output += '\n' + '-' * sum(column_widths) + '\n'
+    for header in headers:
+        width = "{:" + align + str(column_widths[headers.index(header)]) + "s}"
+        output += width.format(header)
 
-  for item in items:
-    for i in range(len(column_widths)):
-      element = str(item[i])
-      column_format = '{:' + align + str(column_widths[i]) + 's}'
-      if element[0] == '-':
-        output = output[:-1]
-      output += column_format.format(element)
-      
-    output += '\n'
+    output += "\n" + "-" * sum(column_widths) + "\n"
 
-  if len(output) > 1994:
-    output = output[:1994] + '...'
-  else:
-    output = output[:1997]
-  output += '```'
-  return output
+    for item in items:
+        for i in range(len(column_widths)):
+            element = str(item[i])
+            column_format = "{:" + align + str(column_widths[i]) + "s}"
+            if element[0] == "-":
+                output = output[:-1]
+
+            output += column_format.format(element)
+
+        output += "\n"
+
+    if len(output) > 1994:
+        output = output[:1994] + "..."
+    else:
+        output = output[:1997]
+
+    output += "```"
+    return output
