@@ -11,7 +11,7 @@ from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from output_builder import BuildTableOutput
 from data.metagame_data import OneEventMetagame
 from discord_messages import MessageChannel
-from tuple_conversions import Event, Format, Store, Game, MetagameResult
+from tuple_conversions import Event, Format, Store, Game, MetagameResult, OutputToBuild
 from discord.ext import commands
 from services.message_hubs_services import MessageHubs
 from interaction_objects import GetStore
@@ -141,8 +141,8 @@ def CheckEventPercentage(event: Event) -> Tuple[str | None, str | None]:
       final = None
     else:
       followup = f"Congratulations! {str_date}'s {event.event_name} is now fully reported! Thank you to all who reported their archetypes!"
-      title, headers, data = OneEventDetails(event)
-      final = BuildTableOutput(title, headers, data)
+      table = OneEventDetails(event)
+      final = BuildTableOutput(table.title, table.headers, table.data)
     return followup, final
   return None, None
 
@@ -156,8 +156,8 @@ def OneEventMeta(event: Event) -> Tuple[str, list[str], list[MetagameResult]]:
 
 def OneEventDetails(
   event: Event,
-) -> Tuple[str, list[str], list[Tuple[str, int, int, int]]]:
+) -> OutputToBuild:
   data = GetEventDetails(event.id)
   title = f"{event.event_name} Results ({len(data)} attended)"
   headers = ["Archetype", "Wins", "Losses", "Draws"]
-  return title, headers, data
+  return OutputToBuild(title, headers, data)
