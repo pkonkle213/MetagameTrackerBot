@@ -38,7 +38,7 @@ def GetEvent(
       raise Exception(f'Cannot find event. ID: {event_id}')
     return row
 
-#TODO: Why did I need to foce event_type_id to be an int?
+#TODO: Why did I need to force event_type_id to be an int?
 def CreateEvent(
   event:EventInput,
   user_id:int
