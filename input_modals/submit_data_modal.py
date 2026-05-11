@@ -246,10 +246,10 @@ def SetEventTypes(event_types) -> list[discord.SelectOption]:
   return types
       
 
-def FindDefaultEvent(previous_events) -> int:
-  today = GetToday().strftime('%m/%d/%Y')
+def FindDefaultEvent(previous_events: list[Event]) -> int:
+  today = GetToday()
   for event in previous_events:
-    if event.event_date.strftime('%m/%d/%Y') == today:
+    if event.created_at.date() == today:
       return event.id
   
   return 0
