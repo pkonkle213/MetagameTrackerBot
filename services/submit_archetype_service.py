@@ -4,6 +4,7 @@ from custom_errors import KnownError
 from data.store_data import GetArchetypeFeed
 from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
+from data.store_data import GetFormatMapByEvent
 from data.archetype_data import AddArchetype
 from data.event_data import GetEventDetails
 from services.input_services import ConvertInput
@@ -27,12 +28,16 @@ async def SubmitArchetype(
   game: Game,
   format: Format,
 ) -> None:
+  guild_id = interaction.guild.id
+  guild_name = interaction.guild.name
+  channel_id = interaction.channel.id
+  
+  if not PlayerInEvent(event, player_name):
+    raise KnownError("Player not found in event. Please try again.")
+    
   store = GetStore(event.discord_id)
   if store is None:
     raise Exception("An event didn't have a store? Sus.")
-
-  if not PlayerInEvent(event, player_name):
-    raise KnownError("Player not found in event. Please try again.")
 
   # Make the call to check the archetype for banned words here
   if ContainsBadWord(event.discord_id, archetype):
@@ -51,8 +56,8 @@ async def SubmitArchetype(
     archetype,
     interaction.user.id,
     interaction.user.name,
-    interaction.guild.id,
-    interaction.guild.name,
+    guild_id,
+    guild_name,
   )
   if archetype_added is None:
     raise Exception("Unable to submit the archetype. Please try again later.")
@@ -64,15 +69,20 @@ async def SubmitArchetype(
   public_output, full_event = CheckEventPercentage(event)
 
   # Send all output messages
+  #TODO: This doesn't work from the hub because the guild_id and channel_id are for the hub, not the store
   await interaction.followup.send(private_output, ephemeral=True)
   await MessageStoreFeed(bot, feed_output, interaction)
+  format_map = GetFormatMapByEvent(event)
+  mapped_channel = format_map.channel_id
+  
   if public_output:
     await MessageChannel(
-      bot, public_output, interaction.guild_id, interaction.channel_id
+      bot, public_output, event.discord_id, mapped_channel
     )
+    
   if full_event:
     await MessageChannel(
-      bot, full_event, interaction.guild_id, interaction.channel_id
+      bot, full_event, guild_id, mapped_channel
     )
     name = store.store_name if store.store_name else store.discord_name
     output = f"```{name} - " + full_event[3:]
@@ -104,7 +114,7 @@ def AddTheArchetype(
   updater_name = interaction.user.display_name
 
   archetype_added = AddArchetype(
-    event[0], player_name, archetype, userId, updater_name
+    event[0], player_name, archetype, userId, updater_name, interaction.guild.id, interaction.guild.name
   )
 
   if archetype_added is None:
