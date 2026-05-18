@@ -64,6 +64,7 @@ async def SubmitArchetype(
   public_output, full_event = CheckEventPercentage(event)
 
   # Send all output messages
+  #TODO: This doesn't work from the hub because the guild_id and channel_id are for the hub, not the store
   await interaction.followup.send(private_output, ephemeral=True)
   await MessageStoreFeed(bot, feed_output, interaction)
   if public_output:
