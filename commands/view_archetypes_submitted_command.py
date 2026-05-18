@@ -16,7 +16,6 @@ class ArchetypeSubmittedCommand(commands.Cog):
         description="Generate a report of the archetypes submitted and by whom",
     )
     @app_commands.guild_only()
-    @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     @app_commands.checks.has_role("MTSubmitter")
     @IsPaidStore()
     async def ViewSubmittedArchetypes(

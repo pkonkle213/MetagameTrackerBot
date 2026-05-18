@@ -81,7 +81,7 @@ def GetUnknownArchetypes(store:Store,
     with conn.cursor(row_factory=class_row(UnknownArchetypes)) as cur:
       command = f'''
       SELECT
-        TO_CHAR(event_date,'MM/DD') as event_date,
+        event_date,
         event_name,
         INITCAP(player_name) as player_name
       FROM

@@ -99,6 +99,7 @@ def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
     ORDER BY
       2 DESC,
       4 DESC,
+      3 DESC,
       1
     '''
     
