@@ -51,6 +51,11 @@ class League(NamedTuple):
   created_date: date
   updated_by: int
 
+class ChannelFormatMapping(NamedTuple):
+  discord_id: int
+  channel_id: int
+  format_id: int
+
 class HubsChannels(NamedTuple):
   discord_id: int
   channel_id: int

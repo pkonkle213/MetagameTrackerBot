@@ -1,7 +1,7 @@
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
 import psycopg
-from tuple_conversions import Store
+from tuple_conversions import Store, Event, ChannelFormatMapping
 
 def UpdateStore(
   discord_id:int,
@@ -48,6 +48,26 @@ def DeleteStore(discord_id:int) -> bool:
     conn.commit()
     success = cur.fetchone()
     return True if success else False
+
+def GetFormatMapByEvent(event:Event) -> ChannelFormatMapping:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(ChannelFormatMapping)) as cur:
+    command = f'''
+    SELECT
+      discord_id,
+      channel_id,
+      format_id
+    FROM
+      format_channel_maps fcm
+    WHERE
+      fcm.discord_id = {event.discord_id}
+      AND fcm.format_id= {event.format_id}
+    '''
+    cur.execute(command)
+    row = cur.fetchone()
+    if not row:
+      raise Exception(f'Unable to find format map for event: {event.id}')
+    return row
 
 def AddDiscord(
   discord_id:int,
