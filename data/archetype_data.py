@@ -31,7 +31,8 @@ def AddArchetype(
   submitter_id:int,
   submitter_name:str,
   submitter_guild_id:int,
-  submitter_guild_name:str
+  submitter_guild_name:str,
+  is_submitter:bool
 ) -> int:
   criteria = [player_name, archetype_played]
   with psycopg.connect(DATABASE_URL) as conn:
@@ -46,7 +47,8 @@ def AddArchetype(
       submitter_username,
       submitter_discord_id,
       submitter_discord_name,
-      reported)
+      reported,
+      is_submitter)
       VALUES
       ({event_id},
       %s,
@@ -56,7 +58,8 @@ def AddArchetype(
       '{submitter_name}',
       {submitter_guild_id},
       '{submitter_guild_name}',
-      {False})
+      {False},
+      {is_submitter})
       RETURNING *
       '''
 
