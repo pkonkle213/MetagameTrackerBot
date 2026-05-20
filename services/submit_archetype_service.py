@@ -1,3 +1,4 @@
+from checks import isSubmitter
 from typing import Tuple
 import settings
 from custom_errors import KnownError
@@ -49,6 +50,8 @@ async def SubmitArchetype(
       "You have submitted too many archetypes with banned words. Please contact your store owner to have them submit the archetype."
     )
 
+  is_submitter = isSubmitter(interaction.guild, interaction.user ,'MTSubmitter')
+
   # If not banned, add to the database
   archetype_added = AddArchetype(
     event.id,
@@ -58,6 +61,7 @@ async def SubmitArchetype(
     interaction.user.name,
     guild_id,
     guild_name,
+    is_submitter
   )
   if archetype_added is None:
     raise Exception("Unable to submit the archetype. Please try again later.")

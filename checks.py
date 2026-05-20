@@ -37,14 +37,14 @@ def IsHub():
     raise app_commands.CheckFailure("This command must be executed in a hub guild")
   return app_commands.check(predicate)
 
-def isSubmitter(guild:Guild, author: Member, role_name:str):
+def isSubmitter(guild:Guild, author: Member, role_name:str) -> bool:
   role = utils.find(lambda r: r.name == role_name, guild.roles)
   return role in author.roles
 
-def isOwner(interaction: Interaction):
+def isOwner(interaction: Interaction) -> bool:
   userid = interaction.user.id
   ownerid = interaction.guild.owner_id if interaction.guild else None
   return userid == ownerid
 
-def isPhil(interaction: Interaction):
+def isPhil(interaction: Interaction) -> bool:
   return interaction.user.id == PHILID
