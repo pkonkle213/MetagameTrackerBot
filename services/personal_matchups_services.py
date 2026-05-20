@@ -22,10 +22,10 @@ def PersonalMatchups(interaction:Interaction, start_date:str, end_date:str) -> O
   title = f'Personal Matchup Results between {date_start.strftime("%m/%d/%Y")} and {date_end.strftime("%m/%d/%Y")}'
   headers = [
     'Opponent Archetype',
+    'Matches',
     'Wins',
     'Losses',
     'Draws',
-    'Matches',
     'Win %'
   ]
   return OutputToBuild(title, headers, data)
