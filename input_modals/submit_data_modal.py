@@ -10,6 +10,7 @@ from services.add_results_services import SubmitData
 from discord_messages import MessageChannel
 from services.message_hubs_services import MessageHubs
 import settings
+from services.command_error_service import Error
 
 class ConfirmStandings(discord.ui.View):
   def __init__(self, data:EventInput):
@@ -180,9 +181,8 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
     interaction: discord.Interaction,
     error: Exception
   ) -> None:
-    await interaction.followup.send(f'Oops! Something went wrong: {error}',
-                    ephemeral=True)
-    self.is_submitted = False
+    await Error(self.bot, interaction, error)
+    #await interaction.followup.send(f'Oops! Something went wrong: {error}',                 ephemeral=True)   self.is_submitted = False
 
   async def on_timeout(self) -> None:
     self.is_submitted = False
