@@ -173,6 +173,7 @@ def GetHubByDiscord(discord_id: int) -> Hub | None:
       owner_id,
       owner_name,
       region_id,
+      game_lock,
       format_lock,
       is_paid
     FROM
