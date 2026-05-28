@@ -37,7 +37,7 @@ def GetHub(discord_id: int):
   hub = db.GetHubByDiscord(discord_id)
   return hub
 
-def GetGameForStore(category_id: int, hub_discord_id: int):
+def GetGameForStore(category_id: int, discord_id: int):
   """Returns the game mapped to the given category_id
   
   Parameters:
