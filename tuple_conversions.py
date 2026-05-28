@@ -70,7 +70,7 @@ class Archetype(NamedTuple):
 class Format(NamedTuple):
   id: int
   format_name: str
-  last_ban_update: date
+  last_ban_update: date | None
   is_limited: bool
 
 class Game(NamedTuple):

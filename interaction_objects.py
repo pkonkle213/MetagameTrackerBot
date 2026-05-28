@@ -68,20 +68,19 @@ def GetHub(discord_id: int):
   hub = db.GetHubByDiscord(discord_id)
   return hub
 
-def GetGame(category_id: int, hub_discord_id: int):
+def GetGame(category_id: int, discord_id: int):
   """Returns the game mapped to the given category_id
   
   Parameters:
     category_id (int): The category_id mapped to the game"""
-  game = db.GetGameByMap(category_id, hub_discord_id)
+  game = db.GetGameByMap(category_id, discord_id)
  
   return game
-
 
 def GetFormat(
   game: Game | None,
   channel_id: int,
-  hub_discord_id: int
+  discord_id: int
 ) -> Format | None:
   """Returns the format mapped to the given channel_id
   
@@ -91,7 +90,7 @@ def GetFormat(
     required (bool): Whether or not the format is required"""
   if game is None:
     return None
-  format = db.GetFormatByMap(channel_id, hub_discord_id)
+  format = db.GetFormatByMap(channel_id, discord_id)
   return format
 
 
