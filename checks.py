@@ -1,38 +1,38 @@
 from discord import Guild, Member, User, utils, Interaction, app_commands
 from settings import PHILID
-from timedposts.automated_paid_users import PAID_USERS, STORES, PAID_STORES, HUBS, PAID_HUBS
+import timedposts.automated_paid_users as apu
 
 def IsPaidUser():
   async def predicate(interaction: Interaction) -> bool:
-    if interaction.user.id in PAID_USERS:
+    if interaction.user.id in apu.PAID_USERS:
       return True
     raise app_commands.CheckFailure("This command is only available to paid users")
   return app_commands.check(predicate)
 
 def IsPaidStore():
   async def predicate(interaction: Interaction) -> bool:
-    if interaction.guild_id in PAID_STORES:
+    if interaction.guild_id in apu.PAID_STORES:
       return True
     raise app_commands.CheckFailure("This command is only available to paid stores.")
   return app_commands.check(predicate)
 
 def IsPaidHub():
   async def predicate(interaction: Interaction) -> bool:
-    if interaction.guild_id in PAID_HUBS:
+    if interaction.guild_id in apu.PAID_HUBS:
       return True
     raise app_commands.CheckFailure("This command is only available to paid hubs.")
   return app_commands.check(predicate)
   
 def IsStore():
   async def predicate(interaction: Interaction) -> bool:
-    if interaction.guild_id in STORES:
+    if interaction.guild_id in apu.STORES:
       return True
     raise app_commands.CheckFailure("This command must be executed in a store guild")
   return app_commands.check(predicate)
 
 def IsHub():
   async def predicate(interaction: Interaction) -> bool:
-    if interaction.guild_id in HUBS:
+    if interaction.guild_id in apu.HUBS:
       return True
     raise app_commands.CheckFailure("This command must be executed in a hub guild")
   return app_commands.check(predicate)
