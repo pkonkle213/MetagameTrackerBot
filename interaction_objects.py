@@ -23,13 +23,9 @@ def GetObjectsFromInteraction(interaction: discord.Interaction) -> InteractionOb
 
   store = GetStore(discord_id)
   hub = GetHub(discord_id)
-
-  game = None
-  format = None
-
-  if hub:
-    game = GetGameForStore(category_id, discord_id)
-    format = GetFormatForStore(game, channel_id, discord_id)
+  
+  game = GetGameForStore(category_id, discord_id)
+  format = GetFormatForStore(game, channel_id, discord_id)
   
   return InteractionObjects(store, hub, game, format)
 
