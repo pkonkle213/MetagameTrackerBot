@@ -1,5 +1,5 @@
 from datetime import date
-from tuple_conversions import MetagameResult, Store, Format, Game, Hub
+from tuple_conversions import MetagameResult, Store, Format, Game, Hub, Region
 from data.metagame_data import GetTheMetagame
 
 def GetWholeMetagame(
@@ -30,7 +30,8 @@ def GetWholeMetagame(
 
 def RegionLockedMetagame(
   hub:Hub,
-  channel_id:int,
+  game:Game,
+  format:Format,
   start_date:date,
   end_date:date,
   archetype:str
@@ -52,14 +53,16 @@ def RegionLockedMetagame(
   WHERE
     e.event_date BETWEEN '{start_date}' AND '{end_date}'
     AND hv.discord_id = {hub.discord_id}
-    AND fcm.channel_id = {channel_id}
+    AND fcm.format_id = {format.id}
   '''
   
   return GetTheMetagame(criteria)
 
 def FormatLockedMetagame(
   hub:Hub,
-  channel_id:int,
+  game:Game,
+  format:Format,
+  region:Region | None,
   start_date:date,
   end_date:date,
   archetype:str
@@ -81,7 +84,7 @@ def FormatLockedMetagame(
   WHERE
     e.event_date BETWEEN '{start_date}' AND '{end_date}'
     AND hv.discord_id = {hub.discord_id}
-    AND rcm.channel_id = {channel_id}
+    {f"AND rcm.region_id = {region.id}" if region else ""}
   '''
   
   return GetTheMetagame(criteria)

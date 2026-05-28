@@ -85,7 +85,7 @@ class Store(NamedTuple):
   owner_name: str
   store_address: str
   used_for_data: bool
-  region_id: str
+  region_id: int
   is_paid: bool
 
 class Hub(NamedTuple):
@@ -94,7 +94,8 @@ class Hub(NamedTuple):
   hub_name: str
   owner_id: int
   owner_name: str
-  region_id: str
+  region_id: int
+  game_lock: int
   format_lock: int
   is_paid: bool
 
@@ -148,6 +149,7 @@ class EventInput(NamedTuple):
 class InteractionObjects(NamedTuple):
   store  : Store | None
   hub    : Hub | None
+  region: Region | None
   game   : Game | None
   format : Format | None
 

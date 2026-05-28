@@ -50,12 +50,28 @@ class MetagameCommand(commands.Cog):
     if not interaction.channel_id:
       raise KnownError('Try a channel that has an id')
 
-    #TODO: But what if the hub channel isn't mapped to a region? I want it to combine ALL regions in the discord, not just die
-    if objects.hub and objects.hub.format_lock:
-      data = FormatLockedMetagame(objects.hub, interaction.channel_id, date_start, date_end, archetype)
-    elif objects.hub:
-      data = RegionLockedMetagame(objects.hub, interaction.channel_id, date_start, date_end, archetype)
-    elif interaction.guild_id == DATAGUILDID:
+    # TODO: How does this change now that I have the region object
+    # Also, I don't need a many:many relationship between hubs and regions, as it's already built into the region mapping channel
+    """
+    I think there's X situations:
+    1) Region locked hub
+      - Region is defined by region_id
+      - Game is defined by category_id
+      - Format is defined by channel_id
+      - All are mandatory
+    2) Format locked hub (Like Ohio River Valley)
+      - Region is defined by channel_id
+      - Game is defined by game_lock
+      - Format is defined by format_lock
+      - Region is optional, but if it's not used, look in region_channel_maps for what region(s) to include for the hub
+    3) My All Data Hub
+      - Game is defined by category_id
+      - Format is defined by channel_id
+    4) Store
+      - Game is defined by category_id
+      - Format is defined by channel_id
+    """
+    if interaction.guild_id == DATAGUILDID:
       data = GetWholeMetagame(objects.game, objects.format, date_start, date_end, archetype)
     elif objects.store:
       data = StoreMetagame(
@@ -65,6 +81,25 @@ class MetagameCommand(commands.Cog):
         date_start,
         date_end,
         archetype,
+      )
+    elif objects.hub and objects.hub.region_id:
+      data = RegionLockedMetagame(
+        objects.hub,
+        objects.game,
+        objects.format,
+        date_start,
+        date_end,
+        archetype,
+      )
+    elif objects.hub:
+      data = FormatLockedMetagame(
+        objects.hub,
+        objects.game,
+        objects.format,
+        objects.region,
+        date_start,
+        date_end,
+        archetype
       )
     else:
       raise KnownError(

@@ -1,7 +1,7 @@
 from custom_errors import KnownError
 import discord
 import data.interaction_data as db
-from tuple_conversions import Game, Format, Store, InteractionObjects
+from tuple_conversions import Game, Format, Store, InteractionObjects, Hub, Region
 
 def GetObjectsFromInteraction(interaction: discord.Interaction) -> InteractionObjects:
   """Gets the game, format, store, and user_id from the interaction"""
@@ -24,12 +24,34 @@ def GetObjectsFromInteraction(interaction: discord.Interaction) -> InteractionOb
   store = GetStore(discord_id)
   hub = GetHub(discord_id)
   
-  game = GetGameForStore(category_id, discord_id)
-  format = GetFormatForStore(game, channel_id, discord_id)
-  
-  return InteractionObjects(store, hub, game, format)
+  if store:
+    region = DetermineRegion(store, 0)
+    game = GetGameForStore(category_id, discord_id)
+    format = GetFormatForStore(game, channel_id, discord_id)
+  elif hub:
+    region = DetermineRegion(hub, channel_id)
+    game = GetGameForHub(category_id, discord_id)
+    format = GetFormatForHub(channel_id, discord_id)
+  else:
+    raise KnownError("You lied! There's no store or hub found.")
 
-def GetHub(discord_id: int):
+  print('Results:')
+  print('Store:', store)
+  print('Hub:', hub)
+  print('Region:', region)
+  print('Game:', game)
+  print('Format:', format)
+  
+  return InteractionObjects(store, hub, region, game, format)
+
+def DetermineRegion(hub: Hub | Store, channel_id:int) -> Region | None:
+  if hub.region_id:
+    return Region(hub.region_id, '')
+
+  region = db.GetRegion(hub.discord_id, channel_id)
+  return region
+
+def GetHub(discord_id: int) -> Hub | None:
   """Returns the hub mapped to the given discord_id
   
   Parameters:
@@ -37,7 +59,7 @@ def GetHub(discord_id: int):
   hub = db.GetHubByDiscord(discord_id)
   return hub
 
-def GetGameForStore(category_id: int, discord_id: int):
+def GetGameForStore(category_id: int, discord_id: int) -> Game | None:
   """Returns the game mapped to the given category_id
   
   Parameters:
@@ -45,6 +67,19 @@ def GetGameForStore(category_id: int, discord_id: int):
   game = db.GetGameByMap(category_id, discord_id)
  
   return game
+
+def GetGameForHub(category_id: int, discord_id: int) -> Game | None:
+  """Returns the game mapped to the given category_id or determined by the discord's game_lock"""
+  game = db.GetGameByHub(category_id, discord_id)
+
+  return game
+
+def GetFormatForHub(
+  channel_id: int,
+  discord_id: int
+) -> Format | None:
+  format = db.GetFormatByMap(channel_id, discord_id)
+  return format
 
 def GetFormatForStore(
   game: Game | None,
