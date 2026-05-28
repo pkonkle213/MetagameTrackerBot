@@ -1,9 +1,12 @@
+from tuple_conversions import Game, Format, Store
+from interaction_objects import GetStore, GetGame
 from data.archetype_data import GetUnknownArchetypes
 from data.automated_events_data import ThreeDayOldEventsWithUnknown
 from discord_messages import MessageChannel
 from services.date_functions import GetDaysAgo, GetToday
 from output_builder import BuildTableOutput
 from discord_messages import MessageUser
+from custom_errors import KnownError
 import settings
 
 async def EventCheck(bot):
@@ -18,19 +21,25 @@ async def GetEventsWithUnkown(bot):
       #Get all unknown archetypes
       end_date = GetToday()
       start_date = GetDaysAgo(end_date, 3)
-      archetypes = GetUnknownArchetypes(channel.DiscordID,
-                                        channel.GameID,
-                                        channel.FormatID,
+      
+      #Setting up dummy variables as all I need are the IDs
+      store = Store(channel.discord_id, "", "", -1, "", "", False, "", False)
+      game = Game(channel.game_id, "")
+      format = Format(channel.format_id, "", None, False)
+      
+      archetypes = GetUnknownArchetypes(store,
+                                        game,
+                                        format,
                                         start_date,
                                         end_date)
       if not archetypes or len(archetypes) == 0:
-        print(f'No unknown archetypes found for {channel.DiscordID}, {channel.GameID}, {channel.FormatID}') #raise KnownError('No unknown archetypes found')
+        print(f'No unknown archetypes found for {channel.discord_id}, {channel.game_id}, {channel.format_id}') #raise KnownError('No unknown archetypes found')
   
       output = BuildTableOutput('We need your help with these archetypes!', ['Date', 'Player Name'], archetypes)
       output = output[:-3] + '\nTo submit yours, type and enter: /submit archetype```'
       
       #Message each channel with the unknown archetypes
-      await MessageChannel(bot, output, channel.DiscordID, channel.ChannelID)
+      await MessageChannel(bot, output, channel.discord_id, channel.channel_id)
   except Exception as ex:
     await MessageUser(bot, f'Error getting events with unknown archetypes: {ex}\nChannel:{channels}', settings.PHILID)
   

@@ -46,7 +46,7 @@ def GetGameForStore(category_id: int, hub_discord_id: int):
   
   Parameters:
     category_id (int): The category_id mapped to the game"""
-  game = db.GetGameByMap(category_id, hub_discord_id)
+  game = db.GetGameByMap(category_id, discord_id)
  
   return game
 
