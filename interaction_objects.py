@@ -3,62 +3,31 @@ import discord
 import data.interaction_data as db
 from tuple_conversions import Game, Format, Store, InteractionObjects
 
-def GetObjectsFromInteraction(
-  interaction: discord.Interaction
-) -> InteractionObjects:
+def GetObjectsFromInteraction(interaction: discord.Interaction) -> InteractionObjects:
   """Gets the game, format, store, and user_id from the interaction"""
+  
   discord_id = interaction.guild_id
   if not discord_id:
     raise KnownError('No guild found')
+    
   if not isinstance(interaction.channel, discord.TextChannel):
     raise KnownError('No channel found.')
+    
   category_id = interaction.channel.category_id
   if not category_id:
     raise KnownError('No category found.')
+    
   channel_id = interaction.channel_id
   if not channel_id:
     raise KnownError('No channel found.')
 
   store = GetStore(discord_id)
   hub = GetHub(discord_id)
-  game = GetGame(category_id, discord_id)
-  format = GetFormat(game, channel_id, discord_id)
+  
+  game = GetGameForStore(category_id, discord_id)
+  format = GetFormatForStore(game, channel_id, discord_id)
   
   return InteractionObjects(store, hub, game, format)
-
-
-def SplitInteractionData(interaction: discord.Interaction):
-  """Converts the interaction into appropriate ids
-  
-  Parameters:
-    interaction (discord.Interaction): The interaction to split"""
-  discord_guild = interaction.guild
-  if discord_guild is None:
-    raise KnownError('No guild found')
-  discord_id = discord_guild.id
-
-  channel = interaction.channel
-  if channel is None or not isinstance(channel,
-                                       discord.TextChannel) or isinstance(
-                                           channel, discord.GroupChannel):
-    raise KnownError('No channel found.')
-
-  channel_id = channel.id
-
-  category = channel.category
-  if category is None:
-    raise KnownError('No category found.')
-  category_id = category.id
-
-  user_id = -1
-  if isinstance(interaction, discord.Interaction):
-    user_id = interaction.user.id
-  elif isinstance(interaction, discord.Message):
-    user_id = interaction.author.id
-  else:
-    raise KnownError('No user found!?')
-
-  return discord_id, category_id, channel_id, user_id
 
 def GetHub(discord_id: int):
   """Returns the hub mapped to the given discord_id
@@ -68,7 +37,7 @@ def GetHub(discord_id: int):
   hub = db.GetHubByDiscord(discord_id)
   return hub
 
-def GetGame(category_id: int, discord_id: int):
+def GetGameForStore(category_id: int, discord_id: int):
   """Returns the game mapped to the given category_id
   
   Parameters:
@@ -77,7 +46,7 @@ def GetGame(category_id: int, discord_id: int):
  
   return game
 
-def GetFormat(
+def GetFormatForStore(
   game: Game | None,
   channel_id: int,
   discord_id: int
@@ -92,7 +61,6 @@ def GetFormat(
     return None
   format = db.GetFormatByMap(channel_id, discord_id)
   return format
-
 
 def GetStore(discord_id: int) -> Store | None:
   """Returns the store mapped to the given discord_id
