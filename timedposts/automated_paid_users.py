@@ -9,22 +9,22 @@ HUBS: list[int] = GetHubs()
 
 
 def UpdateStores() -> bool:
-    global STORES
-    STORES = GetStores()
-    return True
+  global STORES
+  STORES = GetStores()
+  return True
 
 def UpdateHubs() -> None:
-    global HUBS
-    HUBS = GetHubs()
+  global HUBS
+  HUBS = GetHubs()
 
 def UpdatePaidUsers() -> None:
-    global PAID_USERS
-    PAID_USERS = GetFive6Users()  # + GetPaidUsers()
+  global PAID_USERS
+  PAID_USERS = GetFive6Users()  # + GetPaidUsers()
 
 def UpdatePaidStores() -> None:
-    global PAID_STORES
-    PAID_STORES = GetStores(True)
+  global PAID_STORES
+  PAID_STORES = GetStores(True)
 
 def UpdatePaidHubs() -> None:
-    global PAID_HUBS
-    PAID_HUBS = GetHubs(True)
+  global PAID_HUBS
+  PAID_HUBS = GetHubs(True)
