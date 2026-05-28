@@ -20,12 +20,8 @@ class MetagameCommand(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @app_commands.command(
-        name="metagame", description="Get the metagame for this format"
-    )
-    @app_commands.checks.cooldown(
-        1, 60.0, key=lambda i: (i.guild_id, i.user.id, i.channel_id)
-    )
+    @app_commands.command(name="metagame", description="Get the metagame for this format")
+    @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id, i.channel_id))
     @app_commands.guild_only()
     async def ViewMetagame(
         self, interaction: Interaction, start_date: str = "", end_date: str = ""
@@ -42,34 +38,24 @@ class MetagameCommand(commands.Cog):
         objects = GetObjectsFromInteraction(interaction)
 
         if not objects.game or not objects.format:
-            raise KnownError(
-                "This channel is not set up with a game or format to view a metagame."
-            )
+            raise KnownError("This channel is not set up with a game or format to view a metagame.")
 
         date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
 
         if objects.game.id == GameEnum.Magic.value and objects.format.is_limited:
             archetype = "COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,"
         else:
-            archetype = (
-                "COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,"
-            )
+            archetype = "COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,"
 
         if not interaction.channel_id:
             raise KnownError('Try a channel that has an id')
 
         if objects.hub and objects.hub.format_lock:
-            data = FormatLockedMetagame(
-                objects.hub, interaction.channel_id, date_start, date_end, archetype
-            )
-        elif interaction.guild_id == DATAGUILDID:
-            data = GetWholeMetagame(
-                objects.game, objects.format, date_start, date_end, archetype
-            )
+            data = FormatLockedMetagame(objects.hub, interaction.channel_id, date_start, date_end, archetype)
         elif objects.hub:
-            data = RegionLockedMetagame(
-                objects.hub, interaction.channel_id, date_start, date_end, archetype
-            )
+            data = RegionLockedMetagame(objects.hub, interaction.channel_id, date_start, date_end, archetype)
+        elif interaction.guild_id == DATAGUILDID:
+            data = GetWholeMetagame(objects.game, objects.format, date_start, date_end, archetype)
         elif objects.store:
             data = StoreMetagame(
                 objects.store,
@@ -81,7 +67,7 @@ class MetagameCommand(commands.Cog):
             )
         else:
             raise KnownError(
-                "This channel is not set up with a store to view a metagame."
+                "This channel is not set up with a store or hub to view a metagame."
             )
 
         if len(data) == 0:

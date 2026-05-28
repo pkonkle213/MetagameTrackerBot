@@ -5,7 +5,7 @@ from custom_errors import KnownError
 import settings
 from output_builder import BuildTableOutput
 from data.automated_updates_data import GetDataChannels
-from interaction_objects import GetHub, GetGame, GetFormat
+from interaction_objects import GetHub, GetGameForStore, GetFormatForStore
 from services.date_functions import BuildDateRange
 from services.metagame_services import GetWholeMetagame
 
@@ -13,8 +13,8 @@ async def UpdateDataGuild(bot:commands.Bot):
   target_channels = GetDataChannels(settings.DATAGUILDID)
   store = GetHub(settings.DATAGUILDID)
   for data_channel in target_channels:
-    game = GetGame(data_channel.category_id, True)
-    format = GetFormat(game, data_channel.channel_id, True)
+    game = GetGameForStore(data_channel.category_id, True)
+    format = GetFormatForStore(game, data_channel.channel_id, True)
     if not store or not game or not format:
       continue
     channel = bot.get_channel(data_channel.channel_id)
