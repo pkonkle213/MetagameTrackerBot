@@ -15,25 +15,11 @@ class ForceDataGuildUpdate(commands.GroupCog, name="force_update"):
     async def UpdatePaidObjects(self, interaction: Interaction):
         await interaction.response.defer(thinking=True)
         try:
-          await interaction.followup.send(f"Original stores: {apu.STORES}")
           apu.UpdateStores()
-          await interaction.followup.send(f"New stores: {apu.STORES}")
-          
-          await interaction.followup.send(f"Original Hubs: {apu.HUBS}")
           apu.UpdateHubs()
-          await interaction.followup.send(f"New Hubs: {apu.HUBS}")
-          
-          await interaction.followup.send(f"Original Paid Users: {apu.PAID_USERS}")
           apu.UpdatePaidUsers()
-          await interaction.followup.send(f"New Paid Users: {apu.PAID_USERS}")
-          
-          await interaction.followup.send(f"Original Paid Stores: {apu.PAID_STORES}")
           apu.UpdatePaidStores()
-          await interaction.followup.send(f"New Paid Stores: {apu.PAID_STORES}")
-          
-          await interaction.followup.send(f"Original Paid Hubs: {apu.PAID_HUBS}")
           apu.UpdatePaidHubs()
-          await interaction.followup.send(f"New Paid Hubs: {apu.PAID_HUBS}")
           
           await interaction.followup.send("All paid objects successfully updated!")
         except Exception as exception:

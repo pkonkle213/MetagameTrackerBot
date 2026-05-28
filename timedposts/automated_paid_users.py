@@ -7,7 +7,6 @@ PAID_HUBS: list[int] = GetHubs(True)
 STORES: list[int] = GetStores()
 HUBS: list[int] = GetHubs()
 
-
 def UpdateStores() -> bool:
   global STORES
   STORES = GetStores()
