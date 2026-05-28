@@ -1,5 +1,5 @@
 from tuple_conversions import Game, Format, Store
-from interaction_objects import GetStore, GetGame
+from interaction_objects import GetStore, GetGameForStore
 from data.archetype_data import GetUnknownArchetypes
 from data.automated_events_data import ThreeDayOldEventsWithUnknown
 from discord_messages import MessageChannel
