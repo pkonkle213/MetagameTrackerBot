@@ -7,90 +7,91 @@ from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from services.date_functions import BuildDateRange
 from services.metagame_services import (
-    FormatLockedMetagame,
-    GetWholeMetagame,
-    RegionLockedMetagame,
-    StoreMetagame,
+  FormatLockedMetagame,
+  GetWholeMetagame,
+  RegionLockedMetagame,
+  StoreMetagame,
 )
 from settings import DATAGUILDID
 from tuple_conversions import GameEnum
 
 
 class MetagameCommand(commands.Cog):
-    def __init__(self, bot: commands.Bot):
-        self.bot = bot
+  def __init__(self, bot: commands.Bot):
+    self.bot = bot
 
-    @app_commands.command(name="metagame", description="Get the metagame for this format")
-    @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id, i.channel_id))
-    @app_commands.guild_only()
-    async def ViewMetagame(
-        self, interaction: Interaction, start_date: str = "", end_date: str = ""
-    ):
-        """
-        Parameters
-        ----------
-        start_date: string
-          The start date of the metagame (MM/DD/YYYY)
-        end_date: string
-          The end date of the metagame (MM/DD/YYYY)
-        """
-        await interaction.response.defer(thinking=False)
-        objects = GetObjectsFromInteraction(interaction)
+  @app_commands.command(name="metagame", description="Get the metagame for this format")
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id, i.channel_id))
+  @app_commands.guild_only()
+  async def ViewMetagame(
+    self, interaction: Interaction, start_date: str = "", end_date: str = ""
+  ):
+    """
+    Parameters
+    ----------
+    start_date: string
+      The start date of the metagame (MM/DD/YYYY)
+    end_date: string
+      The end date of the metagame (MM/DD/YYYY)
+    """
+    await interaction.response.defer(thinking=False)
+    objects = GetObjectsFromInteraction(interaction)
 
-        if not objects.game or not objects.format:
-            raise KnownError("This channel is not set up with a game or format to view a metagame.")
+    if not objects.game or not objects.format:
+      raise KnownError("This channel is not set up with a game or format to view a metagame.")
 
-        date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
+    date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
 
-        if objects.game.id == GameEnum.Magic.value and objects.format.is_limited:
-            archetype = "COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,"
-        else:
-            archetype = "COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,"
+    if objects.game.id == GameEnum.Magic.value and objects.format.is_limited:
+      archetype = "COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,"
+    else:
+      archetype = "COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,"
 
-        if not interaction.channel_id:
-            raise KnownError('Try a channel that has an id')
+    if not interaction.channel_id:
+      raise KnownError('Try a channel that has an id')
 
-        if objects.hub and objects.hub.format_lock:
-            data = FormatLockedMetagame(objects.hub, interaction.channel_id, date_start, date_end, archetype)
-        elif objects.hub:
-            data = RegionLockedMetagame(objects.hub, interaction.channel_id, date_start, date_end, archetype)
-        elif interaction.guild_id == DATAGUILDID:
-            data = GetWholeMetagame(objects.game, objects.format, date_start, date_end, archetype)
-        elif objects.store:
-            data = StoreMetagame(
-                objects.store,
-                objects.game,
-                objects.format,
-                date_start,
-                date_end,
-                archetype,
-            )
-        else:
-            raise KnownError(
-                "This channel is not set up with a store or hub to view a metagame."
-            )
+    #TODO: But what if the hub channel isn't mapped to a region? I want it to combine ALL regions in the discord, not just die
+    if objects.hub and objects.hub.format_lock:
+      data = FormatLockedMetagame(objects.hub, interaction.channel_id, date_start, date_end, archetype)
+    elif objects.hub:
+      data = RegionLockedMetagame(objects.hub, interaction.channel_id, date_start, date_end, archetype)
+    elif interaction.guild_id == DATAGUILDID:
+      data = GetWholeMetagame(objects.game, objects.format, date_start, date_end, archetype)
+    elif objects.store:
+      data = StoreMetagame(
+        objects.store,
+        objects.game,
+        objects.format,
+        date_start,
+        date_end,
+        archetype,
+      )
+    else:
+      raise KnownError(
+        "This channel is not set up with a store or hub to view a metagame."
+      )
 
-        if len(data) == 0:
-            await interaction.followup.send(
-                "No metagame data found for this store and format"
-            )
-        else:
-            title_name = (
-                objects.format.format_name.title()
-                if objects.format
-                else objects.game.game_name.title()
-            )
-            title = f"{title_name} metagame from {date_start.strftime('%-m/%-d')} to {date_end.strftime('%-m/%-d')}"
-            headers = ["Deck Archetype", "Meta %", "Win %"]
-            output = BuildTableOutput(title, headers, data)
-            await interaction.followup.send(output)
+    if len(data) == 0:
+      await interaction.followup.send(
+        "No metagame data found for this store and format"
+      )
+    else:
+      title_name = (
+        objects.format.format_name.title()
+        if objects.format
+        else objects.game.game_name.title()
+      )
+      title = f"{title_name} metagame from {date_start.strftime('%-m/%-d')} to {date_end.strftime('%-m/%-d')}"
+      headers = ["Deck Archetype", "Meta %", "Win %"]
+      output = BuildTableOutput(title, headers, data)
+      await interaction.followup.send(output)
 
-    @ViewMetagame.error
-    async def Errors(
-        self, interaction: Interaction, error: app_commands.AppCommandError
-    ):
-        await Error(self.bot, interaction, error)
+  @ViewMetagame.error
+  async def Errors(
+    self, interaction: Interaction, error: app_commands.AppCommandError
+  ):
+    await Error(self.bot, interaction, error)
 
 
 async def setup(bot:commands.Bot):
-    await bot.add_cog(MetagameCommand(bot))
+  await bot.add_cog(MetagameCommand(bot))
