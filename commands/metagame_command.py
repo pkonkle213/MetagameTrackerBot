@@ -13,7 +13,7 @@ from services.metagame_services import (
   StoreMetagame,
 )
 from settings import DATAGUILDID
-from tuple_conversions import GameEnum
+from tuple_conversions import GameEnum, MetagameResult
 
 
 class MetagameCommand(commands.Cog):
@@ -51,8 +51,11 @@ class MetagameCommand(commands.Cog):
     else:
       archetype = "COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,"
 
+    title:str = ''
+    data:list[MetagameResult] = []
     if interaction.guild_id == DATAGUILDID:
       data = GetWholeMetagame(objects.game, objects.format, date_start, date_end, archetype)
+      title = f"{objects.format.format_name.title()} metagame from {date_start.strftime('%-m/%-d')} to {date_end.strftime('%-m/%-d')}"
     elif objects.store:
       data = StoreMetagame(
         objects.store,
@@ -62,6 +65,7 @@ class MetagameCommand(commands.Cog):
         date_end,
         archetype,
       )
+      title = f"{objects.format.format_name.title()} metagame from {date_start.strftime('%-m/%-d')} to {date_end.strftime('%-m/%-d')}"
     elif objects.hub and objects.hub.region_id:
       data = RegionLockedMetagame(
         objects.hub,
@@ -71,6 +75,7 @@ class MetagameCommand(commands.Cog):
         date_end,
         archetype,
       )
+      title = f"{objects.format.format_name.title()} metagame from {date_start.strftime('%-m/%-d')} to {date_end.strftime('%-m/%-d')}"
     elif objects.hub:
       data = FormatLockedMetagame(
         objects.hub,
@@ -81,6 +86,8 @@ class MetagameCommand(commands.Cog):
         date_end,
         archetype
       )
+      title_name = objects.region.region_name.title() if objects.region else 'General'
+      title = f"{title_name} metagame from {date_start.strftime('%-m/%-d')} to {date_end.strftime('%-m/%-d')}"
     else:
       raise KnownError(
         "This channel is not set up with a store or hub to view a metagame."
@@ -88,15 +95,9 @@ class MetagameCommand(commands.Cog):
 
     if len(data) == 0:
       await interaction.followup.send(
-        "No metagame data found for this store and format"
+        "No metagame data found for this discord and format"
       )
     else:
-      title_name = (
-        objects.format.format_name.title()
-        if objects.format
-        else objects.game.game_name.title()
-      )
-      title = f"{title_name} metagame from {date_start.strftime('%-m/%-d')} to {date_end.strftime('%-m/%-d')}"
       headers = ["Deck Archetype", "Meta %", "Win %"]
       output = BuildTableOutput(title, headers, data)
       await interaction.followup.send(output)
