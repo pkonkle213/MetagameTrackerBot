@@ -86,7 +86,7 @@ class MetagameCommand(commands.Cog):
         date_end,
         archetype
       )
-      title_name = objects.region.region_name.title() if objects.region else 'General'
+      title_name = objects.region.region_name.title() if objects.region else 'General ' + objects.format.format_name.title()
       title = f"{title_name} metagame from {date_start.strftime('%-m/%-d')} to {date_end.strftime('%-m/%-d')}"
     else:
       raise KnownError(

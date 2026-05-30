@@ -50,7 +50,7 @@ async def SubmitArchetype(
       "You have submitted too many archetypes with banned words. Please contact your store owner to have them submit the archetype."
     )
 
-  is_submitter = isSubmitter(interaction.guild, interaction.user ,'MTSubmitter')
+  is_submitter = isSubmitter(interaction.guild, interaction.user,'MTSubmitter')
 
   # If not banned, add to the database
   archetype_added = AddArchetype(

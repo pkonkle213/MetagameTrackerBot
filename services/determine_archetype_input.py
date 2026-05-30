@@ -1,7 +1,7 @@
 from input_modals.submit_archetype_general_modal import SubmitArchetypeModal
 from input_modals.submit_archetype_magic_limited_modal import MagicLimitedSubmitArchetypeModal
 from input_modals.submit_archetype_lorcana_modal import LorcanaSubmitArchetypeModal
-from tuple_conversions import Event, Game, Format, Store
+from tuple_conversions import Event, Game, Format, Store, GameEnum
 from discord import Interaction
 from discord.ext import commands
 
@@ -16,7 +16,7 @@ async def GetArchetypeModal(
   player_archetypes: list[str]
 ) -> None:
   '''Determines which modal to use based on the game and format'''
-  if game.game_name.upper() == 'MAGIC' and format.is_limited:
+  if game.id == GameEnum.Magic.value and format.is_limited:
     modal = MagicLimitedSubmitArchetypeModal(bot, game, format, userId, events, player_name, player_archetypes)
   elif game.game_name.upper() == 'LORCANA':
     modal = LorcanaSubmitArchetypeModal(bot, game, format, userId, events, player_name, player_archetypes)

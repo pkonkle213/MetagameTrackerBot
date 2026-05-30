@@ -5,6 +5,7 @@ from discord import ui, Interaction
 from data.data_input_menus import GetPreviousEvents
 from data.player_name_data import GetUserArchetypes, GetUserName
 from discord.ext import commands
+from services.command_error_service import Error
 from services.submit_archetype_service import SubmitArchetype
 
 class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
@@ -89,8 +90,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
                           self.format)
 
   async def on_error(self, interaction: Interaction, error: Exception) -> None:
-    await interaction.followup.send(f'Oops! Something went wrong: {error}', ephemeral=True)
-    self.is_submitted = False
+    raise Exception(error)
 
   async def on_timeout(self) -> None:
     self.is_submitted = False
