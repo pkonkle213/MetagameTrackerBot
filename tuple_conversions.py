@@ -162,6 +162,12 @@ class DataConverted(NamedTuple):
   archetypes      : dict[str, str] | None
   custom_event_id : int | None
 
+class UserData(NamedTuple):
+  player_name: str
+  win_percent: float
+  last_played: str
+  top_decks: list[tuple[str, str]]
+
 class OutputToBuild(NamedTuple):
   title: str
   headers: list[str]

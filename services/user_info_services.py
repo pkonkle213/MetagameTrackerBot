@@ -1,21 +1,18 @@
 from data.player_name_data import GetUserName
 from discord import Interaction, Member
 from custom_errors import KnownError
-from data.get_user_info_data import GetLastArchetype, GetPlayerName, GetWinPercentage, GetMostPlayed
+from data.get_user_info_data import GetLastArchetype, GetWinPercentage, GetMostPlayed
 from interaction_objects import GetObjectsFromInteraction
-from tuple_conversions import Format, Game, Store
+from tuple_conversions import Format, Game, Store, UserData
 
 def GetUserData(interaction: Interaction,
-               member: Member):
+               member: Member) -> UserData:
   """Gets the player name, win percent, last played, and top decks for a user"""
   objects = GetObjectsFromInteraction(interaction)
-  if not objects.store or not objects.game or not objects.format:
+  if (not objects.store and not objects.hub) or not objects.game or not objects.format:
     raise Exception('Unable to get store, game, or format')
 
-  player_name = GetPlayerName(
-    objects.store.discord_id,
-    member.id
-  )
+  player_name = GetPlayerName(member.id)
   
   win_percent = GetWinPercent(
     member.id,
@@ -40,8 +37,7 @@ def GetUserData(interaction: Interaction,
     
   return player_name, win_percent, last_played, top_decks
 
-def GetPlayerName(guild_id: int,
-                member_id: int):
+def GetPlayerName(member_id: int) -> str:
   """Gets the player name for the user in this discord"""
   player_name = GetUserName(member_id)
   if player_name is None:
@@ -51,14 +47,12 @@ def GetPlayerName(guild_id: int,
 def GetWinPercent(member_id: int,
                   store: Store,
                   game: Game,
-                  format: Format):
+                  format: Format) -> float:
   win_percent = GetWinPercentage(member_id,
                                  store,
                                  game,
                                  format)
 
-  if win_percent is None:
-    raise KnownError('This person has not played any games in this format')
   return win_percent
 
 def GetLastPlayed(member_id: int,
@@ -69,9 +63,6 @@ def GetLastPlayed(member_id: int,
                                  store,
                                  game,
                                  format)
-
-  if last_played is None:
-    raise KnownError('This person has not played any games in this format')  
   return last_played
 
 def GetTopDecks(member_id: int,

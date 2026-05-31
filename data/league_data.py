@@ -194,7 +194,7 @@ def InsertLeague(
       game_id,
       format_id,
       created_by,
-      date_created
+      created_date
     )
     VALUES (
       %s,

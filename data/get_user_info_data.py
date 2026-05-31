@@ -1,33 +1,10 @@
+from custom_errors import KnownError
 from psycopg.rows import class_row
 from datetime import date, timedelta
 from typing import NamedTuple
 from settings import DATABASE_URL
 import psycopg
 from tuple_conversions import Format, Game, Store
-
-
-def GetPlayerName(
-  user_id: int,
-  discord_id: int
-) -> str:
-  """Pulls the player name for a userId and a discordId from the database"""
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
-    command = f"""
-    SELECT
-      player_name
-    FROM
-      player_names
-    WHERE
-      discord_id = {discord_id}
-      AND submitter_id = {user_id}
-    """
-    
-    cur.execute(command)
-    row = cur.fetchone()
-    if not row:
-      raise Exception('Unable to get player name')
-    return row[0]
 
 def GetWinPercentage(
   user_id: int,
@@ -55,7 +32,7 @@ def GetWinPercentage(
     cur.execute(command)
     row = cur.fetchone()
     if not row:
-      raise Exception('Unable to get win percentage')
+      raise KnownError('This person has not played any games in this format')
     return row[0]
 
 class LastArchetype(NamedTuple):
@@ -92,7 +69,7 @@ def GetLastArchetype(
     cur.execute(command)
     row = cur.fetchone()
     if not row:
-      raise Exception('Unable to get last archetype')
+      raise KnownError('This person has not played any games in this format')
     return row
 
 class TopDeck(NamedTuple):
