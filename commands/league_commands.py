@@ -5,6 +5,7 @@ from discord import app_commands, Interaction
 from services.league_services import (
     CreateLeague,
     EditLeague,
+    ViewLeague,
     SelectLeague,
     LeagueMetagame,
     LeagueLeaderboard,
@@ -27,12 +28,20 @@ class LeaguesCommands(commands.GroupCog, name="league"):
     async def CreateLeague(self, interaction: Interaction):
         await CreateLeague(self.bot, interaction)
 
-    @app_commands.command(name="edit", description="Exit an existing league")
+    @app_commands.command(name="edit", description="Exit a league")
     @app_commands.guild_only()
     @IsPaidStore()
     @app_commands.checks.has_role("MTSubmitter")
     async def EditLeague(self, interaction: Interaction):
         await EditLeague(self.bot, interaction)
+
+    @app_commands.command(name="view", description="View a league")
+    @app_commands.guild_only()
+    @IsPaidStore()
+    @app_commands.checks.has_role("MTSubmitter")
+    async def ViewLeague(self, interaction: Interaction):
+        output = await ViewLeague(self.bot, interaction)
+        await interaction.followup.send(output)
 
     @app_commands.command(
         name="leaderboard", description="Display the top players in a league"

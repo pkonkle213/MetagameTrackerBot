@@ -46,6 +46,16 @@ def LeagueMetagame(league:League) -> list[MetagameResult]:
   """Displays the metagame of a league"""
   return GetLeagueMetagame(league)
 
+async def ViewLeague(bot:commands.Bot, interaction: Interaction) -> str:
+  """Helps the store view a league"""
+  league = await SelectLeague(bot, interaction)
+  return f'''{league.name}
+  -------------------
+  Start Date: {league.start_date.strftime("%m/%d/%Y")}
+  End Date: {league.end_date.strftime("%m/%d/%Y")}
+  Cuts to Top: {league.top_cut}
+  Description: {league.description}'''
+  
 async def EditLeague(bot:commands.Bot, interaction: Interaction):
   """Helps the store edit a league"""
   await SelectLeague(bot, interaction, isEdit=True)

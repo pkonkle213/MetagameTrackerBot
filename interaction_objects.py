@@ -33,15 +33,8 @@ def GetObjectsFromInteraction(interaction: discord.Interaction) -> InteractionOb
     game = GetGameForHub(category_id, discord_id)
     format = GetFormatForHub(channel_id, discord_id)
   else:
-    raise KnownError("You lied! There's no store or hub found.")
+    raise Exception("You lied! There's no store or hub found.")
 
-  print('Results:')
-  print('Store:', store)
-  print('Hub:', hub)
-  print('Region:', region)
-  print('Game:', game)
-  print('Format:', format)
-  
   return InteractionObjects(store, hub, region, game, format)
 
 def DetermineRegion(hub: Hub | Store, channel_id:int) -> Region | None:
