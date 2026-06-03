@@ -3,6 +3,7 @@ import discord
 from tuple_conversions import Event, Game, Format, Store
 from discord import ui, Interaction
 from data.data_input_menus import GetPreviousEvents
+from services.command_error_service import Error
 from data.player_name_data import GetUserArchetypes, GetUserName
 from discord.ext import commands
 from services.command_error_service import Error
@@ -90,7 +91,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
                           self.format)
 
   async def on_error(self, interaction: Interaction, error: Exception) -> None:
-    raise Exception(error)
+    await Error(self.bot, interaction, error)
 
   async def on_timeout(self) -> None:
     self.is_submitted = False

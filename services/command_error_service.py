@@ -14,7 +14,7 @@ async def MissingRoleError(interaction, error:app_commands.AppCommandError):
 
 async def Error(bot:Bot,
                 interaction:Interaction,
-                error:app_commands.AppCommandError):
+                error:app_commands.AppCommandError | Exception):
   print('Error type:', type(error))
   print('IsMissingRole:', isinstance(error, app_commands.errors.MissingRole))
   print('IsCommandOnCooldown:', isinstance(error, app_commands.errors.CommandOnCooldown))
@@ -33,7 +33,7 @@ async def Error(bot:Bot,
     print("Error received:", error)
     feedback = "Something unexpected went wrong. It's been reported. Please try again in a few hours."
     await MessageChannel(bot,
-                         error,
+                         str(error),
                          settings.BOTGUILDID,
                          settings.ERRORCHANNELID)
   try:
