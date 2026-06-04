@@ -1,10 +1,9 @@
 from custom_errors import KnownError
 import psycopg
 from settings import DATABASE_URL
-from tuple_conversions import League
 from datetime import date
 from psycopg.rows import class_row
-from tuple_conversions import TopPlayers, PlayerStanding
+from tuple_conversions import League, TopPlayers, PlayerStanding, LeaderboardRace
 
 def GetActiveLeagues(discord_id:int, game_id:int, format_id:int) -> list[League]:
   conn =  psycopg.connect(DATABASE_URL)
@@ -83,6 +82,25 @@ def GetPlayerStanding(league:League, user_id:int, discord_id:int) -> PlayerStand
       raise KnownError('Unable to find player standing')
 
     return row
+
+def GetLeaderboardTimeLapse(league:League) -> list[LeaderboardRace]:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(LeaderboardRace)) as cur:
+    command = f'''
+    SELECT
+      e.event_date,
+      INITCAP(fs.player_name) as player_name,
+      3 * wins + draws AS points
+    FROM
+      full_standings fs
+      INNER JOIN events e ON fs.event_id = e.id
+    WHERE e.league_id = {league.id}
+    ORDER BY e.event_date
+    '''
+    
+    cur.execute(command)
+    rows = cur.fetchall()
+    return rows
 
 def GetLeagueLeaderboard(league:League) -> list[TopPlayers]:
   conn = psycopg.connect(DATABASE_URL)

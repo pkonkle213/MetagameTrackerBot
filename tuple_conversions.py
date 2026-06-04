@@ -162,6 +162,11 @@ class DataConverted(NamedTuple):
   archetypes      : dict[str, str] | None
   custom_event_id : int | None
 
+class LeaderboardRace(NamedTuple):
+  event_date: date
+  player_name: str
+  points: int
+
 class UserData(NamedTuple):
   player_name: str
   win_percent: float

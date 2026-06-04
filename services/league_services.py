@@ -1,12 +1,14 @@
+import pandas as pd
 from data.metagame_data import GetLeagueMetagame
 from input_modals.league_selector import LeagueSelector
-from tuple_conversions import League, MetagameResult, TopPlayers, PlayerStanding
+from tuple_conversions import League, MetagameResult, TopPlayers, PlayerStanding, LeaderboardRace
 from interaction_objects import GetObjectsFromInteraction
-from data.league_data import GetLeagues, GetLeagueLeaderboard, GetPlayerStanding
+from data.league_data import GetLeagues, GetLeagueLeaderboard, GetPlayerStanding, GetLeaderboardTimeLapse
 from custom_errors import KnownError
 from discord.ext import commands
-from discord import Interaction
+from discord import Interaction, File
 from input_modals.league_input_modal import LeagueInputModal
+import bar_chart_race as bcr
 
 async def SelectLeague(
   bot:commands.Bot,
@@ -41,6 +43,36 @@ def FindPlayerStanding(league:League, user_id:int, discord_id:int) -> PlayerStan
 def LeagueLeaderboard(league:League) -> list[TopPlayers]:
   """Displays the leaderboard of a league"""
   return GetLeagueLeaderboard(league)
+
+def LeagueTimeLapse(league:League) -> File: #TODO: Should return a file, probably?
+  """Gets data for a racing leaderboard of a league"""
+  rows = GetLeaderboardTimeLapse(league)
+  if len(rows) == 0:
+    raise KnownError("No data found for this league")
+
+  df = pd.DataFrame(rows, columns=['Date', 'Player', 'Points'])
+
+  pivot_df = df.pivot(index='Date', columns='Player', values='Points').fillna(0)
+
+  pivot_df = pivot_df.cumsum()
+
+  output_filename = 'racing_bar_chart.mp4'
+  
+  bcr.bar_chart_race(
+    df=pivot_df,
+    filename=output_filename,
+    orientation='h',
+    sort='desc',
+    n_bars=10,
+    title='Player Points Progression',
+    figsize=(6, 3.5),
+    dpi=144,
+    interpolate_period=True
+  )
+
+  # 4. Send the video file to Discord
+  file = File(output_filename, filename="racing_bars.mp4")
+  return file
 
 def LeagueMetagame(league:League) -> list[MetagameResult]:
   """Displays the metagame of a league"""
