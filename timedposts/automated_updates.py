@@ -13,8 +13,8 @@ async def UpdateDataGuild(bot:commands.Bot):
   target_channels = GetDataChannels(settings.DATAGUILDID)
   store = GetHub(settings.DATAGUILDID)
   for data_channel in target_channels:
-    game = GetGameForStore(data_channel.category_id, True)
-    format = GetFormatForStore(game, data_channel.channel_id, True)
+    game = GetGameForStore(data_channel.category_id, settings.DATAGUILDID)
+    format = GetFormatForStore(game, data_channel.channel_id, settings.DATAGUILDID)
     if not store or not game or not format:
       continue
     channel = bot.get_channel(data_channel.channel_id)
