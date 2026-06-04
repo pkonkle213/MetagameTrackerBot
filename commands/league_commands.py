@@ -49,6 +49,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
   )
   @app_commands.guild_only()
   @IsPaidStore()
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def TopPlayers(self, interaction: Interaction):
     league = await SelectLeague(self.bot, interaction)
     data = LeagueLeaderboard(league)
@@ -62,10 +63,10 @@ class LeaguesCommands(commands.GroupCog, name="league"):
   )
   @app_commands.guild_only()
   @IsPaidStore()
-  async def TopPlayers(self, interaction: Interaction):
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
+  async def LeaderboardRace(self, interaction: Interaction):
     league = await SelectLeague(self.bot, interaction)
-    data = LeagueTimeLapse(league)
-    
+    data = LeagueTimeLapse(league)    
     await interaction.followup.send(file=data)
 
   @app_commands.command(
@@ -73,6 +74,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
   )
   @app_commands.guild_only()
   @IsPaidStore()
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def LeagueMeta(self, interaction: Interaction):
     league = await SelectLeague(self.bot, interaction)
     data = LeagueMetagame(league)
@@ -87,6 +89,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
   )
   @IsPaidStore()
   @app_commands.guild_only()
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
   async def MyStatus(self, interaction: Interaction):
     league = await SelectLeague(self.bot, interaction)
     if not interaction.guild_id:
@@ -99,7 +102,9 @@ class LeaguesCommands(commands.GroupCog, name="league"):
 
   @CreateLeague.error
   @EditLeague.error
+  @ViewLeague.error
   @TopPlayers.error
+  @LeaderboardRace.error
   @LeagueMeta.error
   @MyStatus.error
   async def Errors(
