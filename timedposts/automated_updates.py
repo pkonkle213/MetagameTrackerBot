@@ -22,12 +22,13 @@ async def UpdateDataGuild(bot:commands.Bot):
       raise KnownError('Cannot send a message to this channel')
     date_start, date_end = BuildDateRange('', '', format)
     title_name = format.format_name.title() if format else game.game_name.title()
+    archetypes = "COALESCE(ua.archetype_played, 'Unknown') AS archetype_played," if format.is_limited else "INITCAP(COALESCE(ua.archetype_played, 'Unknown')) AS archetype_played,"
     data = GetWholeMetagame(
       game,
       format,
       date_start,
       date_end,
-      "COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,"
+      archetypes
     )
     if len(data) > 0:
       title = f'{title_name} metagame from {date_start} to {date_end}'
