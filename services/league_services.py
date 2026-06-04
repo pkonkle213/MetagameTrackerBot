@@ -47,30 +47,28 @@ def LeagueLeaderboard(league:League) -> list[TopPlayers]:
 def LeagueTimeLapse(league:League) -> File: #TODO: Should return a file, probably?
   """Gets data for a racing leaderboard of a league"""
   rows = GetLeaderboardTimeLapse(league)
+
   if len(rows) == 0:
     raise KnownError("No data found for this league")
-
+  
   df = pd.DataFrame(rows, columns=['Date', 'Player', 'Points'])
 
-  pivot_df = df.pivot(index='Date', columns='Player', values='Points').fillna(0)
-
+  pivot_df = df.groupby(['Date', 'Player'])['Points'].sum().unstack()
+  pivot_df = pivot_df.fillna(0)
+  pivot_df.index = pd.to_datetime(pivot_df.index)
   pivot_df = pivot_df.cumsum()
-
   output_filename = 'racing_bar_chart.mp4'
-  
   bcr.bar_chart_race(
     df=pivot_df,
     filename=output_filename,
     orientation='h',
     sort='desc',
-    n_bars=10,
+    n_bars=8,
     title='Player Points Progression',
-    figsize=(6, 3.5),
-    dpi=144,
-    interpolate_period=True
+    figsize=(6, 4),
+    period_length=1500
   )
 
-  # 4. Send the video file to Discord
   file = File(output_filename, filename="racing_bars.mp4")
   return file
 
