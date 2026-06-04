@@ -63,7 +63,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
   )
   @app_commands.guild_only()
   @IsPaidStore()
-  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.channel.id))
   async def LeaderboardRace(self, interaction: Interaction):
     league = await SelectLeague(self.bot, interaction)
     data = LeagueTimeLapse(league)    

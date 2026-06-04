@@ -64,7 +64,7 @@ def LeagueTimeLapse(league:League) -> File: #TODO: Should return a file, probabl
     orientation='h',
     sort='desc',
     n_bars=8,
-    title='Player Points Progression',
+    title='Leage Points Leaders',
     figsize=(6, 4),
     period_length=1500
   )
