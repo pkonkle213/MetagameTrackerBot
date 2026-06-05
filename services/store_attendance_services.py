@@ -8,7 +8,7 @@ from tuple_conversions import OutputToBuild
 
 def GetAttendance(interaction:Interaction, start_date:str, end_date:str) -> OutputToBuild:
   objects = GetObjectsFromInteraction(interaction)
-  if (not objects.store or not objects.hub) or not objects.game:
+  if (not objects.store and not objects.hub) or not objects.game or not objects.region:
     raise KnownError('No store, hub, or game found')
   date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
 
@@ -28,7 +28,7 @@ def GetAttendance(interaction:Interaction, start_date:str, end_date:str) -> Outp
     title = f'{subject} attendance from {date_start} to {date_end}'
   elif objects.hub:
     data = GetHubAttendance(
-      objects.hub,
+      objects.region,
       objects.game,
       objects.format,
       date_start,
