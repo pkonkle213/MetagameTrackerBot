@@ -48,7 +48,7 @@ def GetPersonalPairingsHistory(
   elif objects.store:
     data = GetPairingsStoreHistory(user_id, objects.game, objects.format, date_start, date_end, objects.store)
     name = objects.store.store_name if objects.store.store_name else objects.store.discord_name
-    headers = ['Date', 'Round', 'Your Archetype', "Opponent's Archetype", 'Result']
+    headers = ['Date', 'Store', 'Round', 'Your Archetype', "Opponent's Archetype", 'Result']
 
   if data is None or len(data) == 0:
     return 'No history found.'
