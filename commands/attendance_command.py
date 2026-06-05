@@ -4,7 +4,7 @@ from discord.ext import commands
 from checks import IsStore
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
-from services.store_attendance_services import GetStoreAttendance
+from services.store_attendance_services import GetAttendance
 
 
 class EventAttendance(commands.Cog):
@@ -15,7 +15,6 @@ class EventAttendance(commands.Cog):
         name="attendance", description="Get the attendance for a date range"
     )
     @app_commands.guild_only()
-    @IsStore()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def Attendance(
         self, interaction: Interaction, start_date: str = "", end_date: str = ""
@@ -29,7 +28,7 @@ class EventAttendance(commands.Cog):
           End of Date Range (MM/DD/YYYY)
         """
         await interaction.response.defer(thinking=False)
-        table = GetStoreAttendance(interaction, start_date, end_date)
+        table = GetAttendance(interaction, start_date, end_date)
         if len(table.data) == 0:
             await interaction.followup.send(
                 "No attendance data found for this store and/or format"
