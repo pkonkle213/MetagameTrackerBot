@@ -39,6 +39,7 @@ def GetObjectsFromInteraction(interaction: discord.Interaction) -> InteractionOb
 
 def DetermineRegion(hub: Hub | Store, channel_id:int) -> Region | None:
   if hub.region_id:
+    #TODO: This should probably get the region from the database in case I need its name
     return Region(hub.region_id, '')
 
   region = db.GetRegion(hub.discord_id, channel_id)

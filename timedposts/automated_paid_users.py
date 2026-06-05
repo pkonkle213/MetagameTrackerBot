@@ -18,7 +18,7 @@ def UpdateHubs() -> None:
 
 def UpdatePaidUsers() -> None:
   global PAID_USERS
-  PAID_USERS = GetFive6Users()  # + GetPaidUsers()
+  PAID_USERS = [505548744444477441] + GetFive6Users()  # + GetPaidUsers()
 
 def UpdatePaidStores() -> None:
   global PAID_STORES
