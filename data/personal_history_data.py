@@ -81,7 +81,7 @@ def GetPairingsStoreHistory(
     command = f'''
     SELECT
       TO_CHAR(e.event_date, 'MM/DD') as event_date,
-      COALESCE(store_name, discord_name) AS store_name
+      COALESCE(store_name, discord_name) AS store_name,
       {'INITCAP(g.game_name) AS game_name,' if not game else ''}
       {'INITCAP(f.format_name) AS format_name,' if not format else ''}
       fp.round_number,
