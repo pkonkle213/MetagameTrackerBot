@@ -43,7 +43,6 @@ class PersonalHistoryCommands(commands.GroupCog, name="history"):
     )
     @app_commands.guild_only()
     @IsPaidUser()
-    @IsStore()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def GetPersonalPairingsHistory(
         self, interaction: Interaction, start_date: str = "", end_date: str = ""
