@@ -31,7 +31,7 @@ def GetHubAttendance(
       e.event_date BETWEEN '{start_date}' AND '{end_date}'
       AND e.game_id = {game.id}
       {f'AND e.format_id = {format.id}' if format else ''}
-      {f'AND s.region_id = {region.id}' if region else f'rcm.discord_id = {hub.discord_id}'}
+      AND {f's.region_id = {region.id}' if region else f'rcm.discord_id = {hub.discord_id}'}
     GROUP BY
       format_id,
       f.format_name,
