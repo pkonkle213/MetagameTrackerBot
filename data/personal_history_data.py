@@ -94,7 +94,7 @@ def GetPairingsStoreHistory(
     FROM
       full_pairings fp
       INNER JOIN events e ON e.id = fp.event_id
-      INNER JOIN stores s ON s.discord_id = e.discord_id
+      INNER JOIN stores_view s ON s.discord_id = e.discord_id
       INNER JOIN player_names pn ON UPPER(pn.player_name) = UPPER(fp.player_name) AND pn.discord_id = s.discord_id
       LEFT JOIN unique_archetypes uap ON uap.event_id = e.id AND UPPER(uap.player_name) = UPPER(pn.player_name)
       LEFT JOIN unique_archetypes uao ON uao.event_id = e.id AND UPPER(uao.player_name) = UPPER(fp.opponent_name)
