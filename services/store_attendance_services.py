@@ -25,7 +25,7 @@ def GetAttendance(interaction:Interaction, start_date:str, end_date:str) -> Outp
       date_end
     )
     subject = objects.format.format_name.title() if objects.format else objects.game.game_name.title()
-    title = f'{subject} attendance from {date_start} to {date_end}'
+    title = f'{subject} attendance from {date_start.strftime('%m/%d/%Y')} to {date_end.strftime('%m/%d/%Y')}'
   elif objects.hub:
     data = GetHubAttendance(
       objects.hub,

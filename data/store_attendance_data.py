@@ -17,9 +17,9 @@ def GetHubAttendance(
     command = f'''
     SELECT
       TO_CHAR(e.event_date, 'MM/DD') as event_date,
-      s.store_name,
-      {'f.format_name,' if not format else ''}
-      e.event_name,
+      INITCAP(s.store_name) aS store_name,
+      {'INITCAP(f.format_name) as format_name,' if not format else ''}
+      INITCAP(e.event_name) as event_name,
       COUNT(*)
     FROM
       full_standings fp
