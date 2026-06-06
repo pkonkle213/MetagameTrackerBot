@@ -1,7 +1,7 @@
 import discord
 from custom_errors import KnownError
 from interaction_objects import GetObjectsFromInteraction
-from data.personal_history_data import GetStandingsHistory, GetPairingsHubHistory, GetPairingsStoreHistory
+from data.personal_history_data import GetStandingsHistory, GetPairingsHistory
 from output_builder import BuildTableOutput
 from services.date_functions import BuildDateRange
 
@@ -41,12 +41,12 @@ def GetPersonalPairingsHistory(
   user_id = interaction.user.id
   date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
 
+  data = GetPairingsHistory(user_id, objects.store, objects.hub, objects.region, objects.game, objects.format, date_start, date_end)
+  
   if objects.hub:
-    data = GetPairingsHubHistory(user_id, objects.game, objects.format, date_start, date_end, objects.hub, objects.region)
     name = objects.hub.hub_name if objects.hub.hub_name else objects.hub.discord_name
     headers = ['Date', 'Store', 'Round', 'Your Archetype', "Opponent's Archetype", 'Result']
   elif objects.store:
-    data = GetPairingsStoreHistory(user_id, objects.game, objects.format, date_start, date_end, objects.store)
     name = objects.store.store_name if objects.store.store_name else objects.store.discord_name
     headers = ['Date', 'Round', 'Your Archetype', "Opponent's Archetype", 'Result']
 
