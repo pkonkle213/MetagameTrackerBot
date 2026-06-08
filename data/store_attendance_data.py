@@ -2,10 +2,11 @@ from datetime import date
 from typing import Any
 from settings import DATAGUILDID, DATABASE_URL
 import psycopg
-from tuple_conversions import Format, Game, Store, Region
+from tuple_conversions import Format, Game, Store, Region, Hub
 
 def GetHubAttendance(
-  region:Region,
+  hub:Hub,
+  region:Region | None,
   game:Game,
   format:Format | None,
   start_date:date,
@@ -16,20 +17,21 @@ def GetHubAttendance(
     command = f'''
     SELECT
       TO_CHAR(e.event_date, 'MM/DD') as event_date,
-      s.store_name,
-      {'f.format_name,' if not format else ''}
-      e.event_name,
+      INITCAP(s.store_name) aS store_name,
+      {'INITCAP(f.format_name) as format_name,' if not format else ''}
+      INITCAP(e.event_name) as event_name,
       COUNT(*)
     FROM
       full_standings fp
       INNER JOIN events e ON e.id = fp.event_id
       INNER JOIN stores s ON s.discord_id = e.discord_id
       INNER JOIN formats f ON f.id = e.format_id
+      INNER JOIN region_channel_maps rcm ON rcm.region_id = s.region_id
     WHERE
       e.event_date BETWEEN '{start_date}' AND '{end_date}'
       AND e.game_id = {game.id}
       {f'AND e.format_id = {format.id}' if format else ''}
-      AND s.region_id = {region.id}
+      AND {f's.region_id = {region.id}' if region else f'rcm.discord_id = {hub.discord_id}'}
     GROUP BY
       format_id,
       f.format_name,
