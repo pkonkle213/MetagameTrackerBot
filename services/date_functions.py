@@ -6,6 +6,9 @@ from tuple_conversions import Format
 
 TIMEZONE = pytz.timezone('America/New_York')
 
+#TODO: Can this also return the formatting that should be used for the dates?
+# If the yeras are not both equal to the current year, then we should use the full date format
+# Otherwise, we can use the month/day format
 def BuildDateRange(
   start_date: str,
   end_date: str,

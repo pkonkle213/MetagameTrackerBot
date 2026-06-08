@@ -5,15 +5,6 @@ from settings import DATABASE_URL, DATAGUILDID
 import psycopg
 from settings import BOTGUILDID
 from tuple_conversions import Format, Game, Store, League, TopPlayers
-
-#TODO: Implement this for cleaner code
-class PersonalStats(NamedTuple):
-  format_name: str
-  archetype_played: str
-  wins: int
-  losses: int
-  draws: int
-  win_percentage: float
   
 def GetStats(
   discord_id:int,
@@ -24,6 +15,7 @@ def GetStats(
   end_date:date):
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
+    #TODO: I don't like how this is written. Needs refactored
     command = f'''
     SELECT
       {'format_name,' if not format else ''}

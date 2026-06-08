@@ -10,7 +10,7 @@ def PlayRecord(interaction: Interaction, start_date: str, end_date: str):
   user_id = interaction.user.id
   date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
   data = GetStats(objects.store.discord_id, objects.game, objects.format, user_id, date_start, date_end)
-  title = f'Your Results From {str(date_start)} To {str(date_end)}'
+  title = f'Your Results From {date_start.strftime('%m/%d/%Y')} To {date_end.strftime('%m/%d/%Y')}'
   header = ['Archetype Name', 'Wins', 'Losses', 'Draws', 'Win %']
   if not format:
     header.insert(0, 'Format')

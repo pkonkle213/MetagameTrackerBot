@@ -4,68 +4,67 @@ from discord.ext import commands
 from checks import IsPaidUser, IsStore
 from services.command_error_service import Error
 from services.personal_history_service import (
-    GetPersonalPairingsHistory,
-    GetPersonalStandingsHistory,
+  GetPersonalPairingsHistory,
+  GetPersonalStandingsHistory,
 )
 
 
 class PersonalHistoryCommands(commands.GroupCog, name="history"):
-    """A group of commands for getting personal history"""
+  """A group of commands for getting personal history"""
 
-    def __init__(self, bot:commands.Bot):
-        self.bot = bot
+  def __init__(self, bot:commands.Bot):
+    self.bot = bot
 
-    @app_commands.command(
-        name="standings", description="Your history according to standings"
-    )
-    @app_commands.guild_only()
-    @IsStore()
-    @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-    async def GetPersonalStandingsHistory(
-        self, interaction: Interaction, start_date: str = "", end_date: str = ""
-    ):
-        """
-        Parameters
-        ----------
-        start_date: string
-          Beginning of Date Range (MM/DD/YYYY)
-        end_date: string
-          End of Date Range (MM/DD/YYYY)
-        """
+  @app_commands.command(
+    name="standings", description="Your history according to standings"
+  )
+  @app_commands.guild_only()
+  @IsPaidUser()
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
+  async def GetPersonalStandingsHistory(
+    self, interaction: Interaction, start_date: str = "", end_date: str = ""
+  ):
+    """
+    Parameters
+    ----------
+    start_date: string
+      Beginning of Date Range (MM/DD/YYYY)
+    end_date: string
+      End of Date Range (MM/DD/YYYY)
+    """
 
-        await interaction.response.defer(ephemeral=True, thinking=False)
-        output = GetPersonalStandingsHistory(interaction, start_date, end_date)
-        await interaction.followup.send(output, ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    output = GetPersonalStandingsHistory(interaction, start_date, end_date)
+    await interaction.followup.send(output, ephemeral=True)
 
-    @app_commands.command(
-        name="pairings", description="Your history according to pairings"
-    )
-    @app_commands.guild_only()
-    @IsPaidUser()
-    @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-    async def GetPersonalPairingsHistory(
-        self, interaction: Interaction, start_date: str = "", end_date: str = ""
-    ):
-        """
-        Parameters
-        ----------
-        start_date: string
-          Beginning of Date Range (MM/DD/YYYY)
-        end_date: string
-          End of Date Range (MM/DD/YYYY)
-        """
+  @app_commands.command(
+    name="pairings", description="Your history according to pairings"
+  )
+  @app_commands.guild_only()
+  @IsPaidUser()
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
+  async def GetPersonalPairingsHistory(
+    self, interaction: Interaction, start_date: str = "", end_date: str = ""
+  ):
+    """
+    Parameters
+    ----------
+    start_date: string
+      Beginning of Date Range (MM/DD/YYYY)
+    end_date: string
+      End of Date Range (MM/DD/YYYY)
+    """
 
-        await interaction.response.defer(ephemeral=True, thinking=False)
-        output = GetPersonalPairingsHistory(interaction, start_date, end_date)
-        await interaction.followup.send(output, ephemeral=True)
+    await interaction.response.defer(ephemeral=True, thinking=False)
+    output = GetPersonalPairingsHistory(interaction, start_date, end_date)
+    await interaction.followup.send(output, ephemeral=True)
 
-    @GetPersonalStandingsHistory.error
-    @GetPersonalPairingsHistory.error
-    async def Errors(
-        self, interaction: Interaction, error: app_commands.AppCommandError
-    ):
-        await Error(self.bot, interaction, error)
-
+  @GetPersonalStandingsHistory.error
+  @GetPersonalPairingsHistory.error
+  async def Errors(
+    self, interaction: Interaction, error: app_commands.AppCommandError
+  ):
+    await Error(self.bot, interaction, error)
 
 async def setup(bot:commands.Bot):
-    await bot.add_cog(PersonalHistoryCommands(bot))
+  await bot.add_cog(PersonalHistoryCommands(bot))
