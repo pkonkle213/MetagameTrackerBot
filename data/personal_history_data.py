@@ -81,7 +81,6 @@ def GetPairingsStoreHistory(
     command = f'''
     SELECT
       TO_CHAR(e.event_date, 'MM/DD') as event_date,
-      COALESCE(store_name, discord_name) AS store_name
       {'INITCAP(g.game_name) AS game_name,' if not game else ''}
       {'INITCAP(f.format_name) AS format_name,' if not format else ''}
       fp.round_number,
@@ -115,7 +114,51 @@ def GetPairingsStoreHistory(
     rows = cur.fetchall()
     return rows
 
-def GetStandingsHistory(
+def GetStandingsHubHistory(
+  user_id: int,
+  game: Game | None,
+  format: Format | None,
+  start_date: date,
+  end_date: date,
+  hub: Hub,
+  region: Region | None
+) -> list[TupleRow]:
+  where_clause = DetermineWhereClause(hub, region)
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor() as cur:
+    command = f'''
+    SELECT
+      TO_CHAR(event_date, 'MM/DD') as event_date,
+      COALESCE(store_name, discord_name) AS store_name,
+      {'INITCAP(g.game_name) AS game_name,' if not game else ''}
+      {'INITCAP(f.format_name) AS format_name,' if not format else ''}
+      COALESCE(INITCAP(archetype_played), 'Unknown') as archetype_played,
+      wins,
+      losses,
+      draws
+    FROM
+      full_standings fp
+      INNER JOIN events e ON e.id = fp.event_id
+      INNER JOIN stores_view s ON s.discord_id = e.discord_id
+      INNER JOIN games g ON g.id = e.game_id
+      INNER JOIN formats f ON f.id = e.format_id
+      INNER JOIN player_names pn ON pn.discord_id = e.discord_id AND UPPER(pn.player_name) = UPPER(fp.player_name)
+      LEFT JOIN unique_archetypes uar ON uar.event_id = e.id AND UPPER(uar.player_name) = UPPER(pn.player_name)
+    WHERE
+      pn.submitter_id = {user_id}
+      AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+      {f'AND e.game_id = {game.id}' if game else ''}
+      {f'AND e.format_id = {format.id}' if format else ''}
+      {where_clause}
+    ORDER BY
+      e.event_date DESC
+    '''
+
+    cur.execute(command)
+    rows = cur.fetchall()
+    return rows
+
+def GetStandingsStoreHistory(
   user_id: int,
   game: Game | None,
   format: Format | None,
@@ -128,10 +171,9 @@ def GetStandingsHistory(
     command = f'''
     SELECT
       TO_CHAR(event_date, 'MM/DD') as event_date,
-      {'s.discord_name,' if store.discord_id == DATAGUILDID else ''}
       {'INITCAP(g.game_name) AS game_name,' if not game else ''}
       {'INITCAP(f.format_name) AS format_name,' if not format else ''}
-      INITCAP(archetype_played) as archetype_played,
+      COALESCE(INITCAP(archetype_played), 'Unknown') as archetype_played,
       wins,
       losses,
       draws
@@ -141,10 +183,10 @@ def GetStandingsHistory(
       INNER JOIN games g ON g.id = e.game_id
       INNER JOIN formats f ON f.id = e.format_id
       INNER JOIN player_names pn ON pn.discord_id = e.discord_id AND UPPER(pn.player_name) = UPPER(fp.player_name)
-      INNER JOIN unique_archetypes uar ON uar.event_id = e.id AND UPPER(uar.player_name) = UPPER(pn.player_name)
+      LEFT JOIN unique_archetypes uar ON uar.event_id = e.id AND UPPER(uar.player_name) = UPPER(pn.player_name)
     WHERE
       pn.submitter_id = {user_id}
-      {f'AND e.discord_id = {store.discord_id}' if store.discord_id != DATAGUILDID else ''}
+      AND e.discord_id = {store.discord_id}
       {f'AND e.game_id = {game.id}' if game else ''}
       {f'AND e.format_id = {format.id}' if format else ''}
       AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
