@@ -19,7 +19,6 @@ class PersonalHistoryCommands(commands.GroupCog, name="history"):
         name="standings", description="Your history according to standings"
     )
     @app_commands.guild_only()
-    @IsPaidUser()
     @IsStore()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def GetPersonalStandingsHistory(
