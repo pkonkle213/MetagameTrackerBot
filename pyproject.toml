@@ -7,7 +7,9 @@ requires-python = ">=3.12"
 dependencies = [
     "bar-chart-race>=0.1.0",
     "discord-py",
+    "httpx>=0.28.1",
     "matplotlib",
+    "mtg-parser>=0.0.1a54",
     "numpy",
     "pandas",
     "psycopg",
