@@ -46,7 +46,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
     self.csv_file = csv_file
     self.melee_tournament_id = melee_tournament_id
     
-    event_types = GetEventTypes(store.discord_id)
+    event_types = GetEventTypes(store.discord_id, game, format)
 
     default_event_name = f'{format.format_name.title()} Weekly'
 
