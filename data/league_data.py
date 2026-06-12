@@ -125,11 +125,14 @@ def GetLeagues(discord_id:int, game_id:int, format_id:int) -> list[League]:
   conn =  psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(League)) as cur:
     command = f'''
-    SELECT *
-    FROM leagues
-    WHERE discord_id = %s
-    AND game_id = %s
-    AND format_id = %s
+    SELECT
+      *
+    FROM
+      leagues
+    WHERE
+      discord_id = %s
+      AND game_id = %s
+      AND format_id = %s
     ORDER BY end_date DESC, start_date DESC
     '''
     cur.execute(command, [discord_id, game_id, format_id])

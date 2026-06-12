@@ -100,7 +100,7 @@ def DetermineArchetype(self) -> str:
   archetype = ''
   if not self.archetype_select.component.values:
     archetype = self.new_archetype.component.value
-  elif self.archetype_select.component.values[0] == '0':
+  elif self.archetype_select.component.values[0] == '0': #When does this happen?
     archetype = self.new_archetype.component.value
   else:
     archetype = self.archetype_select.component.values[0]

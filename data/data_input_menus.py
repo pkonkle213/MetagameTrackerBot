@@ -73,8 +73,8 @@ def GetEventTypes(discord_id: int) -> list[Tuple[int, str]]:
       FROM
         leagues
       WHERE
-        end_date > NOW()
-        AND start_date < NOW()
+        end_date >= NOW()
+        AND start_date <= NOW()
         AND discord_id = %s
       ORDER BY
         end_date DESC,
