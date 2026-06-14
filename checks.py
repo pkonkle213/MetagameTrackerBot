@@ -41,10 +41,14 @@ def isSubmitter(guild:Guild, author: Member, role_name:str) -> bool:
   role = utils.find(lambda r: r.name == role_name, guild.roles)
   return role in author.roles
 
-def isOwner(interaction: Interaction) -> bool:
-  userid = interaction.user.id
-  ownerid = interaction.guild.owner_id if interaction.guild else None
-  return userid == ownerid
+def IsOwner():
+  async def predicate(interaction: Interaction) -> bool:
+    userid = interaction.user.id
+    ownerid = interaction.guild.owner_id if interaction.guild else None
+    if userid == ownerid:
+      return True
+    raise app_commands.CheckFailure("You must be the owner of this server to use this command")
+  return app_commands.check(predicate)
 
 def isPhil(interaction: Interaction) -> bool:
   return interaction.user.id == PHILID
