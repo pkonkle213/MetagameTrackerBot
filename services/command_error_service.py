@@ -3,14 +3,7 @@ from custom_errors import KnownError
 from discord_messages import MessageChannel
 from discord import app_commands, Interaction
 import settings
-
-async def MissingRoleError(interaction, error:app_commands.AppCommandError):
-  if isinstance(error, app_commands.MissingRole):
-    await interaction.response.send_message('You do not have the required role to use this command.', ephemeral=True)
-  elif isinstance(error, KnownError):
-    await interaction.response.send_message(error.message, ephemeral=True)
-  else:
-    await interaction.response.send_message('Catch this:', type(error), ephemeral=True)
+import traceback
 
 async def Error(bot:Bot,
                 interaction:Interaction,
@@ -30,7 +23,8 @@ async def Error(bot:Bot,
   elif isinstance(error, KnownError):
     feedback = error.message
   else:
-    print("Error received:", error)
+    traceback = "".join(traceback.format_exception(type(error), error, error.__traceback__
+    ))
     feedback = "Something unexpected went wrong. It's been reported. Please try again in a few hours."
     await MessageChannel(bot,
                          str(error),
