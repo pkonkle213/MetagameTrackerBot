@@ -23,8 +23,7 @@ async def Error(bot:Bot,
   elif isinstance(error, KnownError):
     feedback = error.message
   else:
-    traceback = "".join(traceback.format_exception(type(error), error, error.__traceback__
-    ))
+    traceback = "".join(traceback.format_exception(type(error), error, error.__traceback__))
     feedback = "Something unexpected went wrong. It's been reported. Please try again in a few hours."
     await MessageChannel(bot,
                          str(error),
