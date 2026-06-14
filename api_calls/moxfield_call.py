@@ -28,7 +28,6 @@ def get_moxfield_decklist(url) -> list[str]:
   for board_name in ["mainboard", "sideboard"]:
     board = deck_data.get(board_name, {})
     for card_id, details in board.items():
-      quantity = details.get("quantity")
       card_name = details.get("card", {}).get("name")
-      cards.append(f"{quantity} {card_name}")
+      cards.append(f"{card_name}")
   return cards
