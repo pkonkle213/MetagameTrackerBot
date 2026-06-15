@@ -27,10 +27,9 @@ async def Error(bot:Bot,
     error_traceback = "".join(traceback.format_exception(
         type(original_error), original_error, original_error.__traceback__
     ))
-    error_traceback = error_traceback[:2000]
     feedback = "Something unexpected went wrong. It's been reported. Please try again in a few hours."
     await MessageChannel(bot,
-                         error_traceback,
+                         f"```{error_traceback[:1994]}```",
                          settings.BOTGUILDID,
                          settings.ERRORCHANNELID)
   try:
