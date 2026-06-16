@@ -47,9 +47,9 @@ def CreateEvent(
   with conn, conn.cursor(row_factory=scalar_row) as cur:
     command = f'''
     INSERT INTO Events
-    (event_date,
-    discord_id,
-    game_id
+    (event_date
+    , discord_id
+    , game_id
     , format_id
     , last_update
     , event_name
@@ -57,11 +57,12 @@ def CreateEvent(
     , created_at
     , created_by
     , league_id
+    , custom_event_id
     )
     VALUES
-    ('{event.event_date}',
-    {event.StoreID},
-    {event.GameID}
+    ('{event.event_date}'
+    , {event.StoreID}
+    , {event.GameID}
     , {event.FormatID}
     , 0
     , '{event.event_name}'
@@ -69,6 +70,7 @@ def CreateEvent(
     , CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York'
     , {user_id}
     {f', {-int(event.event_type_id)}' if int(event.event_type_id) < 0 else ', NULL'}
+    , {event.custom_event_id if event.custom_event_id else 'NULL'}
     )
     RETURNING id
     '''

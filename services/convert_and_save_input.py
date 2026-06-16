@@ -74,7 +74,7 @@ def ConvertAndUploadMeleeTournament(
   """Takes in a Melee.gg tournament id, retrieves the data, and converts the data to a list of Pairing objects"""
   json_data = GetMeleeTournamentData(melee_tournament_id, store)
 
-  #TODO: Build in an error check to make sure that the format is correct
+  #TODO: Build in an error check to make sure that the Format is correct
   
   path = BuildFilePath(store, game, format, 'MeleeTournament.json')
   upload_json(json_data, path)

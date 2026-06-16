@@ -72,7 +72,7 @@ def AddPairingResults(event:Event,
                       data:list[Pairing],
                       submitterId:int,
                       round_number:int) -> str:
-  const_round_number = data[0].round_number if not round_number else round_number #TODO: This doesn't work for melee data
+  const_round_number = data[0].round_number if not round_number else round_number
   successes = []
   errors = []
   output = ''

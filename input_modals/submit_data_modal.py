@@ -115,6 +115,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
   async def on_submit(self, interaction: discord.Interaction):
     submitted_event = SetEventInfo(
       self.continue_event.component.values[0],
+      self.melee_tournament_id,
       self.previous_events,
       self.date_input.component.value,
       self.name_input.component.value,
@@ -133,7 +134,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
 
     event_input = EventInput(
       submitted_event.id,
-      submitted_event.custom_event_id, #TODO: This needs added if melee
+      submitted_event.custom_event_id,
       submitted_event.event_date,
       submitted_event.event_name,
       submitted_event.event_type_id,
@@ -208,6 +209,7 @@ async def SendMeleeInputMessage(bot:commands.Bot, interaction: discord.Interacti
 
 def SetEventInfo(
   continued_event_id: str,
+  custom_event_id: int,
   previous_events: list[Event], 
   date_input:str, 
   name_input:str, 
@@ -219,7 +221,7 @@ def SetEventInfo(
     date = ConvertToDate(date_input)
     event = EventInput(
       0,
-      0,
+      custom_event_id,
       date,
       name_input,
       event_type,
@@ -236,7 +238,7 @@ def SetEventInfo(
       if prev_event[0] == int(continued_event_id):
         event = EventInput(
           prev_event.id,
-          0,
+          prev_event.custom_event_id,
           prev_event.event_date,
           prev_event.event_name,
           prev_event.event_type_id,

@@ -149,7 +149,7 @@ class EventInput(NamedTuple):
 class InteractionObjects(NamedTuple):
   store  : Store | None
   hub    : Hub | None
-  region: Region | None
+  region : Region | None
   game   : Game | None
   format : Format | None
 
