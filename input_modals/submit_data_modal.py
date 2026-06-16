@@ -1,4 +1,6 @@
+from output_builder import BuildTableOutput
 import discord
+from data.pairings_data import GetEventByRounds
 from datetime import date
 from custom_errors import KnownError
 from services.date_functions import ConvertToDate, GetToday
@@ -118,10 +120,10 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
       self.name_input.component.value,
       self.event_type.component.values[0] if self.event_type.component.values else None
     )
-    
+
     data_input = await ConvertData(
       submitted_event,
-      self.message_input.component.value, 
+      self.message_input.component.value if (not self.csv_file and not self.melee_tournament_id) else None, 
       self.csv_file,
       self.melee_tournament_id,
       self.store,
@@ -131,7 +133,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
 
     event_input = EventInput(
       submitted_event.id,
-      submitted_event.custom_event_id,
+      submitted_event.custom_event_id, #TODO: This needs added if melee
       submitted_event.event_date,
       submitted_event.event_name,
       submitted_event.event_type_id,
@@ -161,7 +163,10 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
     if not output:
       raise KnownError("Unable to submit data. Please try again later.")
 
-    await interaction.followup.send(output, ephemeral=True)
+    if self.melee_tournament_id and event:
+      await SendMeleeInputMessage(self.bot, interaction, event)
+    else:
+      await interaction.followup.send(output[:2000], ephemeral=True)
     
     if event:
       await MessageChannel(
@@ -174,7 +179,7 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
         await MessageHubs(self.bot, self.store, event)
       except Exception as e:
         await MessageChannel(self.bot, f"Issue messaging hubs: {e}", settings.BOTGUILDID, settings.ERRORCHANNELID)
-    
+
   
   async def on_error(
     self,
@@ -182,11 +187,24 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
     error: Exception
   ) -> None:
     await Error(self.bot, interaction, error)
-    #await interaction.followup.send(f'Oops! Something went wrong: {error}',                 ephemeral=True)   self.is_submitted = False
 
   async def on_timeout(self) -> None:
     self.is_submitted = False
 
+async def SendMeleeInputMessage(bot:commands.Bot, interaction: discord.Interaction, event: Event):
+  pairings = GetEventByRounds(event.id)
+  round_output = {}
+  for pairing in pairings:
+    if pairing.round_number not in round_output:
+      round_output[pairing.round_number] = []
+    round_output[pairing.round_number].append(pairing)
+
+  headers = ["Player 1 Name", "Player 1 Games Won", "Player 2 Name", "Player 2 Games Won", "Round Number"]
+  
+  for i in range(1, len(round_output)+1):
+    title = f"Round {i} Pairings"
+    output = BuildTableOutput(title, headers, round_output[i])
+    await interaction.followup.send(output, ephemeral=True)
 
 def SetEventInfo(
   continued_event_id: str,
