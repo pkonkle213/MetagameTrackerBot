@@ -200,7 +200,7 @@ async def SendMeleeInputMessage(bot:commands.Bot, interaction: discord.Interacti
       round_output[pairing.round_number] = []
     round_output[pairing.round_number].append(pairing)
 
-  headers = ["Player 1 Name", "Player 1 Games Won", "Player 2 Name", "Player 2 Games Won", "Round Number"]
+  headers = ["Player 1", "P1 Wins", "Player 2", "P2 Wins", "Round Number"]
   
   for i in range(1, len(round_output)+1):
     title = f"Round {i} Pairings"
