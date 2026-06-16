@@ -60,11 +60,19 @@ def AddStandingResults(event:Event,
   output = BuildTableOutput(title, headers, successes)
   return output
 
+def DetermineResult(p1wins:int, p2wins:int) -> str:
+  if p1wins > p2wins:
+    return "Win"
+  elif p1wins < p2wins:
+    return "Loss"
+  else:
+    return "Draw"
+
 def AddPairingResults(event:Event,
                       data:list[Pairing],
                       submitterId:int,
                       round_number:int) -> str:
-  round_number = data[0].round_number if not round_number else round_number
+  const_round_number = data[0].round_number if not round_number else round_number
   successes = []
   errors = []
   output = ''
@@ -72,22 +80,24 @@ def AddPairingResults(event:Event,
   for table in data:
     p1name = ConvertInput(table.player1_name)
     p2name = ConvertInput(table.player2_name)
+    round_number = table.round_number if table.round_number else const_round_number
     
     if CheckPairings(event.id, round_number, p1name, p2name):
-      result = InsertPairing(event.id,
+      db_result = InsertPairing(event.id,
                              p1name,
                              table.player1_game_wins,
                              p2name,
                              table.player2_game_wins,
                              round_number,
                              submitterId)
+      result = DetermineResult(table.player1_game_wins, table.player2_game_wins)
       
-      if result:
+      if db_result:
         successes.append((p1name,
                          table.player1_game_wins,
                          p2name,
                          table.player2_game_wins,
-                         "Win" if table.player1_game_wins > table.player2_game_wins else "Loss" if table.player1_game_wins < table.player2_game_wins else "Draw"))
+                         result))
     else:
       errors.append(f"Cannot add {p1name} vs {p2name} as they already have pairings in round {round_number}")
 

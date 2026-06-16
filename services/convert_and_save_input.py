@@ -17,15 +17,15 @@ from typing import NamedTuple
 
 
 async def ConvertData(
-  event:EventInput,
-  data:str | None,
-  csv_file:Attachment | None,
-  melee_tournament_id:str,
-  store:Store,
-  game:Game,
-  format:Format
+  event: EventInput,
+  data: str | None,
+  csv_file: Attachment | None,
+  melee_tournament_id: str,
+  store: Store,
+  game: Game,
+  format: Format
 ) -> DataConverted:
-  event_input:DataConverted | None = None
+  event_input: DataConverted | None = None
   
   if data:
     event_input = ConvertAndUploadMessage(event, data, store, game, format)
@@ -73,6 +73,8 @@ def ConvertAndUploadMeleeTournament(
 ) -> DataConverted:
   """Takes in a Melee.gg tournament id, retrieves the data, and converts the data to a list of Pairing objects"""
   json_data = GetMeleeTournamentData(melee_tournament_id, store)
+
+  #TODO: Build in an error check to make sure that the Format is correct
   
   path = BuildFilePath(store, game, format, 'MeleeTournament.json')
   upload_json(json_data, path)

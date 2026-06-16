@@ -122,6 +122,9 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     if not objects.store or not objects.game or not objects.format:
       raise KnownError("No store, game, or format found.")
 
+    if objects.hub:
+      raise KnownError("You can't submit data from a hub.")
+
     data = False if csv_file or melee_tournament_id else True
 
     modal = SubmitDataModal(
