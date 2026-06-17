@@ -16,11 +16,11 @@ def PlayerInEvent(event:Event, player_name:str) -> bool:
         events e
         INNER JOIN full_standings fs ON fs.event_id = e.id
       WHERE
-        e.id = {event.id}
-        AND UPPER(fs.player_name) = UPPER('{player_name}')
+        e.id = %s
+        AND UPPER(fs.player_name) = UPPER(%s)
       '''
 
-      cur.execute(command)
+      cur.execute(command,[event.id, player_name])
       row = cur.fetchone()
       return row is not None
 
