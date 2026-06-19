@@ -106,6 +106,8 @@ def DetermineArchetype(self) -> str:
     archetype = self.archetype_select.component.values[0]
 
   archetype = ConvertInput(archetype)
+  if archetype == '':
+    raise Exception('No archetype submitted. Please try again.')
   return archetype
 
 def GetEvent(
