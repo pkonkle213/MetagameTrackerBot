@@ -23,7 +23,7 @@ async def GetEventsWithUnkown(bot):
       start_date = GetDaysAgo(end_date, 3)
       
       #Setting up dummy variables as all I need are the IDs
-      store = Store(channel.discord_id, "", "", -1, "", "", False, "", False)
+      store = Store(channel.discord_id, "", "", -1, "", "", False, -1, False)
       game = Game(channel.game_id, "")
       format = Format(channel.format_id, "", None, False)
       
