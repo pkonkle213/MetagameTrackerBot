@@ -20,10 +20,12 @@ def GetWholeMetagame(
     LEFT JOIN unique_archetypes ua ON fs.event_id = ua.event_id
     AND UPPER(fs.player_name) = UPPER(ua.player_name)
     INNER JOIN events e ON fs.event_id = e.id
+    INNER JOIN stores_view s ON e.discord_id = s.discord_id
   WHERE
     e.event_date BETWEEN '{start_date}' AND '{end_date}'
     AND e.game_id = {game.id}
     AND e.format_id = {format.id}
+    AND s.used_for_data = TRUE
   '''
 
   return GetTheMetagame(criteria)

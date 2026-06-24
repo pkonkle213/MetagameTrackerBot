@@ -123,7 +123,7 @@ class Pairing(NamedTuple):
   player1_game_wins: int
   player2_name: str
   player2_game_wins: int
-  round_number: int
+  round_number: int #TODO: Very curious why I can't put this first as there's a "strip" error
 
 class Standing(NamedTuple):
   player_name: str
@@ -149,7 +149,7 @@ class EventInput(NamedTuple):
 class InteractionObjects(NamedTuple):
   store  : Store | None
   hub    : Hub | None
-  region: Region | None
+  region : Region | None
   game   : Game | None
   format : Format | None
 

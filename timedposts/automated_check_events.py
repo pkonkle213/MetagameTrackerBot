@@ -23,7 +23,7 @@ async def GetEventsWithUnkown(bot):
       start_date = GetDaysAgo(end_date, 3)
       
       #Setting up dummy variables as all I need are the IDs
-      store = Store(channel.discord_id, "", "", -1, "", "", False, "", False)
+      store = Store(channel.discord_id, "", "", -1, "", "", False, -1, False)
       game = Game(channel.game_id, "")
       format = Format(channel.format_id, "", None, False)
       
@@ -35,7 +35,7 @@ async def GetEventsWithUnkown(bot):
       if not archetypes or len(archetypes) == 0:
         print(f'No unknown archetypes found for {channel.discord_id}, {channel.game_id}, {channel.format_id}') #raise KnownError('No unknown archetypes found')
   
-      output = BuildTableOutput('We need your help with these archetypes!', ['Date', 'Player Name'], archetypes)
+      output = BuildTableOutput('We need your help with these archetypes!', ['Date', 'Event Name', 'Player Name'], archetypes)
       output = output[:-3] + '\nTo submit yours, type and enter: /submit archetype```'
       
       #Message each channel with the unknown archetypes

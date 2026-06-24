@@ -50,7 +50,11 @@ def GetPreviousEvents(
     
     return rows
 
-def GetEventTypes(discord_id: int) -> list[Tuple[int, str]]:
+def GetEventTypes(
+  discord_id: int,
+  game: Game,
+  format:Format
+) -> list[Tuple[int, str]]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = '''
@@ -73,9 +77,11 @@ def GetEventTypes(discord_id: int) -> list[Tuple[int, str]]:
       FROM
         leagues
       WHERE
-        end_date > NOW()
-        AND start_date < NOW()
+        end_date >= NOW()
+        AND start_date <= NOW()
         AND discord_id = %s
+        AND game_id = %s
+        AND format_id = %s
       ORDER BY
         end_date DESC,
         start_date DESC
@@ -83,6 +89,6 @@ def GetEventTypes(discord_id: int) -> list[Tuple[int, str]]:
     LIMIT 25
     '''
 
-    cur.execute(command, [discord_id])
+    cur.execute(command, [discord_id, game.id, format.id])
     rows = cur.fetchall()
     return rows

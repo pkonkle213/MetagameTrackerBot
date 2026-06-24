@@ -40,9 +40,7 @@ async def on_ready():
 @bot.event
 async def on_guild_join(guild: discord.Guild):
     """This event triggers when the bot joins a new guild (server)."""
-    output = (
-        "Thank you for adding me to your server! Here's my notes from installation:\n"
-    )
+    output = ("Thank you for adding me to your server! Here's my notes from installation:\n")
     output += await NewStoreRegistration(bot, guild)
     if guild.owner:
         await guild.owner.send(output)

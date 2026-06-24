@@ -1,7 +1,7 @@
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsPaidStore, IsPaidUser, IsStore, isOwner
+from checks import IsPaidStore, IsPaidUser, IsStore, IsOwner
 from discord_messages import MessageUser
 from services.command_error_service import Error
 from services.download_data_services import GetPlayerData, GetStoreData
@@ -16,7 +16,7 @@ class DownloadDataGroup(commands.GroupCog, name="download"):
     @app_commands.command(
         name="store", description="Download the store data for a date range"
     )
-    @app_commands.check(isOwner)
+    @IsOwner()
     @IsPaidStore()
     @app_commands.guild_only()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
