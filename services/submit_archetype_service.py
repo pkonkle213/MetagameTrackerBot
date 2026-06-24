@@ -34,7 +34,7 @@ async def SubmitArchetype(
   channel_id = interaction.channel.id
   
   if not PlayerInEvent(event, player_name):
-    raise KnownError("Player not found in event. Please try again.")
+    raise KnownError(f"Player name `{player_name}` not found in event. Please try again.")
     
   store = GetStore(event.discord_id)
   if store is None:
