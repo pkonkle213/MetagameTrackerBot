@@ -1,3 +1,6 @@
+from custom_errors import KnownError
+from interaction_objects import GetObjectsFromInteraction
+from services.determine_archetype_service import GetMoxfieldArchetype
 import settings
 from discord import Interaction, app_commands, Object
 from discord.ext import commands
@@ -14,12 +17,10 @@ class GetDecklist(commands.Cog):
   async def Decklist(
     self, interaction: Interaction, deck_id:str
   ):
-    decklist_url = f"https://www.moxfield.com/decks/{deck_id}"
-    decklist = get_moxfield_decklist(decklist_url)
-
-    print('----Decklist cards----')
-    for card in decklist:
-      print(card)
+    objects = GetObjectsFromInteraction(interaction)
+    if not objects.format:
+      raise KnownError('Needs a format')
+    test = GetMoxfieldArchetype(deck_id, objects.format)
         
     await interaction.response.send_message("Decklist retrieved")
 

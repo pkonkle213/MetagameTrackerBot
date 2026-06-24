@@ -177,3 +177,7 @@ class OutputToBuild(NamedTuple):
   title: str
   headers: list[str]
   data: list[Any]
+
+class Card(NamedTuple):
+  quantity: int
+  name: str

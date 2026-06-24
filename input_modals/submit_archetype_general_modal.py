@@ -7,6 +7,7 @@ from services.command_error_service import Error
 from data.player_name_data import GetUserArchetypes, GetUserName
 from discord.ext import commands
 from services.command_error_service import Error
+from services.determine_archetype_service import GetMoxfieldArchetype
 from services.submit_archetype_service import SubmitArchetype
 
 class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
@@ -76,6 +77,16 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     )
     self.add_item(self.new_archetype)
 
+    # PK - This should only be for magic players
+    self.moxfield_link = ui.Label(
+      text="Moxfield Link",
+      component=ui.TextInput(
+        placeholder="https://www.moxfield.com/decks/...",
+        required=False
+      )
+    )
+    self.add_item(self.moxfield_link)
+
   # handling the submission
   async def on_submit(self, interaction: Interaction) -> None:
     submitted_archetype:str = DetermineArchetype(self)
@@ -98,6 +109,8 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
 
 def DetermineArchetype(self) -> str:
   archetype = ''
+  if self.moxfield_link.component.value:
+    archetype = GetMoxfieldArchetype(self.moxfield_link.component.value, self.format)
   if not self.archetype_select.component.values:
     archetype = self.new_archetype.component.value
   elif self.archetype_select.component.values[0] == '0':
@@ -116,4 +129,4 @@ def GetEvent(
     if event.id == int(event_id):
       return event
   raise Exception('No event found?')
-  
+
