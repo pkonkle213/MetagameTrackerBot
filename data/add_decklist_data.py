@@ -25,7 +25,7 @@ async def AddCards(deck_id:int, cards:list[Card]) -> int:
   async with await psycopg.AsyncConnection.connect(DATABASE_URL) as conn:
     async with conn.cursor() as cur:
       command = '''
-      INSERT INTO decklists (deck_id, quantity, card_name, in_mainboard)
+      INSERT INTO decklists (deck_id, quantity, card_name, is_mainboard)
       VALUES (%s, %s, %s, %s)
       '''
 
