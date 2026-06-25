@@ -1,8 +1,9 @@
 import re
 import requests
+from data.add_decklist_data import AddDeck, AddCards
 from tuple_conversions import Format, Card
 
-def GetMoxfieldArchetype(url:str, format:Format) -> str:
+async def GetMoxfieldArchetype(url:str, format:Format) -> str:
   print('----Getting Moxfield Archetype----')
   # Determine if the url is a moxfield url or a moxfield deck id
   slashes = url.count('/')
@@ -12,7 +13,7 @@ def GetMoxfieldArchetype(url:str, format:Format) -> str:
   elif slashes == 1:
     mox_url = f"https://www.moxfield.com/{url}"
 
-  match = re.search(r"decks/([a-zA-Z0-9_-]+)", url)
+  match = re.search(r"decks/([a-zA-Z0-9_-]+)", mox_url)
   if not match:
     raise ValueError("Invalid Moxfield URL")
 
@@ -38,17 +39,30 @@ def GetMoxfieldArchetype(url:str, format:Format) -> str:
     for card_id, details in board.items():
       card_name = details.get("card", {}).get("name")
       card_qty = details.get("quantity")
-      legal = details.get("card").get("legalities").get(format.format_name)
+      in_main = board_name == "mainboard"
+      legal = details.get("card").get("legalities").get(format.format_name.lower())
       print(f"{card_qty} {card_name} is {legal} in {format.format_name} format")
       if legal != 'legal':
         print(f"{card_name} is not legal in {format.format_name} format")
         raise ValueError(f"{card_name} is not legal in {format.format_name} format")
         
-      cards.append(Card(card_qty, card_name))
+      cards.append(Card(card_qty, card_name, in_main))
 
   print('----Decklist cards----')
   for card in cards:
-    print(f"{card.quantity} {card.name}")
-  # Build an array of strings of card names, get archetypes and their haves/nots. loop through to determine the name of the archetype
+    print(f"{card.quantity} {card.name} ({card.in_mainboard})")
+
+  # Save the decklist in the db
+  # 1) Make a new deck
+  player_name = 'Phillip Konkle'
+  event_id = 118
+  deck_id = AddDeck(player_name, event_id)
+  
+  print(f'----Deck ID: {deck_id}----')
+  
+  # 2) Input qty and card names for decklist
+  rows = await AddCards(deck_id, cards)
+  print('----Decklist saved----')
+  print(f'----Rows: {rows}----')
   
   return ''

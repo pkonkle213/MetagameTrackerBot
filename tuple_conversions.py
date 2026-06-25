@@ -181,3 +181,4 @@ class OutputToBuild(NamedTuple):
 class Card(NamedTuple):
   quantity: int
   name: str
+  in_mainboard: bool

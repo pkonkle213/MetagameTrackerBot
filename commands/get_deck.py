@@ -20,7 +20,7 @@ class GetDecklist(commands.Cog):
     objects = GetObjectsFromInteraction(interaction)
     if not objects.format:
       raise KnownError('Needs a format')
-    test = GetMoxfieldArchetype(deck_id, objects.format)
+    test = await GetMoxfieldArchetype(deck_id, objects.format)
         
     await interaction.response.send_message("Decklist retrieved")
 
