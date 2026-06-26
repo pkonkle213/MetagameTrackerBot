@@ -1,13 +1,13 @@
+from custom_errors import KnownError
 from services.input_services import ConvertInput
 import discord
-from tuple_conversions import Event, Game, Format, Store
+from tuple_conversions import Event, Game, Format, Store, GameEnum
 from discord import ui, Interaction
 from data.data_input_menus import GetPreviousEvents
 from services.command_error_service import Error
 from data.player_name_data import GetUserArchetypes, GetUserName
 from discord.ext import commands
 from services.command_error_service import Error
-from services.determine_archetype_service import GetMoxfieldArchetype
 from services.submit_archetype_service import SubmitArchetype
 
 class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
@@ -32,14 +32,10 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
       option = events[i]
       label = f"{option.event_date.strftime('%m/%d')} - {option.event_name}"
       value = str(option.id)
-      if i == 0:
-        past_events.append(discord.SelectOption(label=label, value=value, default=True))
-      else:
-        past_events.append(discord.SelectOption(label=label, value=value))
+      past_events.append(discord.SelectOption(label=label, value=value, default=(i == 0)))
 
     archetype_options = [discord.SelectOption(label=archetype, value=archetype) for archetype in prev_archetypes] if len(prev_archetypes) > 0 else [discord.SelectOption(label="Please enter an archetype", value="0")]
 
-    print('Default events:', past_events)
     self.event_select = ui.Label(
         text="Event",
         component=ui.Select(
@@ -49,7 +45,6 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     )
     self.add_item(self.event_select)
 
-    print('Default player name:', player_name)
     self.player_name_input = ui.Label(
       text="Player Name",
       component=ui.TextInput(
@@ -60,7 +55,6 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     )
     self.add_item(self.player_name_input)
 
-    print('Default archetype options:', archetype_options)
     self.archetype_select = ui.Label(
       text="Choose An Archetype",
       component=ui.Select(
@@ -81,14 +75,15 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     self.add_item(self.new_archetype)
 
     # PK - This should only be for magic players
-    self.moxfield_link = ui.Label(
-      text="Moxfield Link",
-      component=ui.TextInput(
-        placeholder="https://www.moxfield.com/decks/...",
-        required=False
+    if self.game.id == GameEnum.Magic.value:
+      self.moxfield_link = ui.Label(
+        text="Moxfield Decklist Link",
+        component=ui.TextInput(
+          placeholder="https://www.moxfield.com/decks/...",
+          required=False
+        )
       )
-    )
-    self.add_item(self.moxfield_link)
+      self.add_item(self.moxfield_link)
 
   # handling the submission
   async def on_submit(self, interaction: Interaction) -> None:
@@ -102,7 +97,9 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
                           submitted_event,
                           submitted_archetype,
                           self.game,
-                          self.format)
+                          self.format,
+                          self.moxfield_link.component.value if self.game.id == GameEnum.Magic.value else None
+                         )
 
   async def on_error(self, interaction: Interaction, error: Exception) -> None:
     await Error(self.bot, interaction, error)
@@ -112,8 +109,6 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
 
 def DetermineArchetype(self) -> str:
   archetype = ''
-  if self.moxfield_link.component.value:
-    archetype = GetMoxfieldArchetype(self.moxfield_link.component.value, self.format)
   if not self.archetype_select.component.values:
     archetype = self.new_archetype.component.value
   elif self.archetype_select.component.values[0] == '0': #When does this happen?
@@ -122,7 +117,7 @@ def DetermineArchetype(self) -> str:
     archetype = self.archetype_select.component.values[0]
 
   archetype = ConvertInput(archetype)
-  if archetype == '':
+  if archetype == '' and not self.moxfield_link.component.value:
     raise Exception('No archetype submitted. Please try again.')
   return archetype
 

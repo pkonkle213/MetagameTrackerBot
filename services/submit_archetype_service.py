@@ -9,6 +9,7 @@ from data.store_data import GetFormatMapByEvent
 from data.archetype_data import AddArchetype
 from data.event_data import GetEventDetails
 from services.input_services import ConvertInput
+from services.determine_archetype_service import GetMoxfieldArchetype
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from output_builder import BuildTableOutput
 from data.metagame_data import OneEventMetagame
@@ -28,6 +29,7 @@ async def SubmitArchetype(
   archetype: str,
   game: Game,
   format: Format,
+  moxfield_link: str | None
 ) -> None:
   guild_id = interaction.guild.id
   guild_name = interaction.guild.name
@@ -50,21 +52,37 @@ async def SubmitArchetype(
       "You have submitted too many archetypes with banned words. Please contact your store owner to have them submit the archetype."
     )
 
-  is_submitter = isSubmitter(interaction.guild, interaction.user,'MTSubmitter')
+  # TODO: I should already know this, when checking to get the appropriate events
+  is_submitter = isSubmitter(interaction.guild, interaction.user, 'MTSubmitter')
 
+  # If a moxfield link is provided, get the archetype from it
+  if moxfield_link:
+    moxfield_archetype = await GetMoxfieldArchetype(moxfield_link, event, format, player_name)
+    moxfield_added = AddArchetype(
+      event.id,
+      player_name,
+      moxfield_archetype,
+      interaction.user.id,
+      interaction.user.name,
+      guild_id,
+      guild_name,
+      is_submitter
+    )
+  
   # If not banned, add to the database
-  archetype_added = AddArchetype(
-    event.id,
-    player_name,
-    archetype,
-    interaction.user.id,
-    interaction.user.name,
-    guild_id,
-    guild_name,
-    is_submitter
-  )
-  if archetype_added is None:
-    raise Exception("Unable to submit the archetype. Please try again later.")
+  if archetype != '':
+    archetype_added = AddArchetype(
+      event.id,
+      player_name,
+      archetype,
+      interaction.user.id,
+      interaction.user.name,
+      guild_id,
+      guild_name,
+      is_submitter
+    )
+    if archetype_added is None:
+      raise Exception("Unable to submit the archetype. Please try again later.")
 
   feed_output = BuildMessage(interaction, event, archetype, player_name)
   private_output = f"Thank you for submitting the archetype for {event.event_name}!"

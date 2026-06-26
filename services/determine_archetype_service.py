@@ -1,19 +1,18 @@
+from custom_errors import KnownError
 import re
 import requests
-from data.add_decklist_data import AddDeck, AddCards
-from tuple_conversions import Format, Card
+from data.add_decklist_data import AddDeck, AddCards, SelectArchetype
+from tuple_conversions import Format, Card, Event
 
-async def GetMoxfieldArchetype(url:str, format:Format) -> str:
-  print('----Getting Moxfield Archetype----')
-  # Determine if the url is a moxfield url or a moxfield deck id
-  slashes = url.count('/')
-  mox_url = ''
-  if slashes == 0:
-    mox_url = f"https://www.moxfield.com/decks/{url}"
-  elif slashes == 1:
-    mox_url = f"https://www.moxfield.com/{url}"
-
-  match = re.search(r"decks/([a-zA-Z0-9_-]+)", mox_url)
+# Should it be that only one decklist is submitted per person?
+# Do I limit submissions to paid users?
+# Do I limit submissions to self submissions only? How does the first work?
+async def GetMoxfieldArchetype(url:str, event:Event, format:Format, player_name: str) -> str:
+  # Transform into a moxfield deck id
+  slash = url.rfind('/')  
+  mox_id = url[slash+1:]
+  
+  match = re.search(r"([a-zA-Z0-9_-]+)", mox_id)
   if not match:
     raise ValueError("Invalid Moxfield URL")
 
@@ -30,8 +29,6 @@ async def GetMoxfieldArchetype(url:str, format:Format) -> str:
 
   deck_data = response.json()
   cards:list[Card] = []
-
-  print(f'----Format: {format.format_name}----')
   
   # Loop through cards and make decklist of card qty, name, and check if legal
   for board_name in ["mainboard", "sideboard"]:
@@ -44,25 +41,18 @@ async def GetMoxfieldArchetype(url:str, format:Format) -> str:
       print(f"{card_qty} {card_name} is {legal} in {format.format_name} format")
       if legal != 'legal':
         print(f"{card_name} is not legal in {format.format_name} format")
-        raise ValueError(f"{card_name} is not legal in {format.format_name} format")
+        raise KnownError(f"{card_name} is not legal in {format.format_name} format")
         
       cards.append(Card(card_qty, card_name, in_main))
 
-  print('----Decklist cards----')
-  for card in cards:
-    print(f"{card.quantity} {card.name} ({card.in_mainboard})")
-
   # Save the decklist in the db
   # 1) Make a new deck
-  player_name = 'Phillip Konkle'
-  event_id = 118
-  deck_id = AddDeck(player_name, event_id)
-  
-  print(f'----Deck ID: {deck_id}----')
+  deck_id = AddDeck(player_name, event.id)
   
   # 2) Input qty and card names for decklist
   rows = await AddCards(deck_id, cards)
-  print('----Decklist saved----')
-  print(f'----Rows: {rows}----')
-  
-  return ''
+
+  # 3) Determine Archetype
+  archetype_guess = SelectArchetype(cards, format)
+    
+  return archetype_guess

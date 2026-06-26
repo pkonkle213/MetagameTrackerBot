@@ -81,6 +81,8 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     else:
       raise KnownError("No store or hub found.")
 
+    if len(events) == 0:
+      raise KnownError("No events found.")
     await GetArchetypeModal(
       self.bot,
       userId,
