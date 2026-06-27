@@ -1,43 +1,56 @@
-from discord import app_commands, Interaction
+from discord import Interaction, app_commands
 from discord.ext import commands
-from interaction_objects import GetObjectsFromInteraction
+
+from checks import IsStore
 from input_modals.event_selector import EventSelector
-from services.command_error_service import KnownError
+from interaction_objects import GetObjectsFromInteraction
+from services.command_error_service import Error, KnownError
 from services.elimination_rounds_services import GetEliminationRoundData
-from services.command_error_service import Error
+from settings import BOTGUILDID
 from tuple_conversions import EventType
 
-class EliminationRoundsCommands(commands.GroupCog, name='elimination_rounds'):
-  """A group of commands to view elimination rounds"""
-  def __init__(self, bot):
-    self.bot = bot
 
-  @app_commands.command(name="view",
-                        description="View the elimination rounds for an event")
-  async def EliminationRounds(self,
-                              interaction:Interaction):
-    #Get the tournaments
-    store, game, format = GetObjectsFromInteraction(interaction)
-    if not store or not game or not format:
-      raise KnownError('No store, game, or format found.')
+class EliminationRoundsCommands(commands.GroupCog, name="elimination_rounds"):
+    """A group of commands to view elimination rounds"""
 
-    modal = EventSelector(store, game, format, event_type=EventType.Tournament.value)
+    def __init__(self, bot:commands.Bot):
+        self.bot = bot
 
-    await interaction.response.send_modal(modal)
-    await modal.wait()
+    @app_commands.command(
+        name="view", description="View the elimination rounds for an event"
+    )
+    @app_commands.guild_only()
+    @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
+    @IsStore()
+    @app_commands.guilds(BOTGUILDID)
+    async def EliminationRounds(self, interaction: Interaction):
+        objects = GetObjectsFromInteraction(interaction)
+        if not objects.store or not objects.game or not objects.format:
+            raise KnownError("No store, game, or format found.")
 
-    if not modal.is_submitted:
-      await interaction.followup.send('Modal not submitted')
+        modal = EventSelector(
+            objects.store,
+            objects.game,
+            objects.format,
+            event_type=EventType.Tournament.value,
+        )
 
-    output = GetEliminationRoundData(modal.event)
-    
-    #Return output to the user
-    await interaction.followup.send(output)
+        await interaction.response.send_modal(modal)
+        await modal.wait()
 
-  @EliminationRounds.error
-  async def Errors(self, interaction: Interaction,
-                     error: app_commands.AppCommandError):
-     await Error(self.bot, interaction, error)
+        if not modal.is_submitted:
+            await interaction.followup.send("Modal not submitted")
 
-async def setup(bot):
-   await bot.add_cog(EliminationRoundsCommands(bot))
+        output = GetEliminationRoundData(modal.event)
+
+        await interaction.followup.send(output)
+
+    @EliminationRounds.error
+    async def Errors(
+        self, interaction: Interaction, error: app_commands.AppCommandError
+    ):
+        await Error(self.bot, interaction, error)
+
+
+async def setup(bot:commands.Bot):
+    await bot.add_cog(EliminationRoundsCommands(bot))

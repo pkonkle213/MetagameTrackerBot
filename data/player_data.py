@@ -1,9 +1,11 @@
 from custom_errors import KnownError
 from psycopg.rows import scalar_row
 from datetime import date
-from settings import DATABASE_URL
+from settings import DATABASE_URL, DATAGUILDID
 import psycopg
 from settings import BOTGUILDID
+from tuple_conversions import Format, Game, Store, League, TopPlayers
+  
 from tuple_conversions import Format, Game, Store
 
 def GetPlayerWinPercentage(submitter_id:int) -> float:
@@ -118,7 +120,7 @@ def GetTopPlayerData(
   end_date:date
 ):
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+  with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
     command = f"""
     WITH
       X AS (
@@ -131,22 +133,28 @@ def GetTopPlayerData(
         FROM
           full_standings fs
           INNER JOIN events e ON fs.event_id = e.id
+          INNER JOIN stores_view s ON e.discord_id = s.discord_id
         WHERE
           e.event_date BETWEEN '{start_date}' AND '{end_date}'
           {f'AND e.format_id = {format.id}' if format else ''}
           {f'AND e.game_id = {game.id}' if game else ''}
-          AND e.discord_id = {store.discord_id}
+          AND s.discord_id = {store.discord_id}
       )
     SELECT
       player_name,
       (3 * SUM(wins) + SUM(draws)) AS points,
-      ROUND(100.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)), 2) AS win_percent
+      ROUND(
+        100.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)),
+        2
+      ) AS win_percent
     FROM
       X
     GROUP BY
       player_name
     ORDER BY
-      (3 * SUM(wins) + SUM(draws)) DESC
+      2 DESC,
+      3 DESC,
+      1
     LIMIT
       CEIL(
         .5 * (
@@ -164,7 +172,7 @@ def GetTopPlayerData(
         )
       )
     """
-    
+
     cur.execute(command)
     rows = cur.fetchall()
     return rows

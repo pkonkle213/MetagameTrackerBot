@@ -1,7 +1,7 @@
 SELECT
   event_id,
-  COUNT(*) as NumPlayers,
-  MAX(wins + losses + draws) as ROUNDS,
+  COUNT(*) AS NumPlayers,
+  MAX(wins + losses + draws) AS ROUNDS,
   COUNT(
     CASE
       WHEN losses = 0
@@ -28,8 +28,8 @@ SELECT
   ) AS "X-1-1"
 FROM
   full_standings fs
-INNER JOIN events e ON e.id = fs.event_id
-  WHERE e.discord_id != 1437606618144444448
+  INNER JOIN events e ON e.id = fs.event_id
 GROUP BY
   event_id
-  ORDER BY NumPlayers
+ORDER BY
+  NumPlayers

@@ -27,12 +27,12 @@ def CanSubmitArchetypes(discord_id:int, user_id:int):
   return len(offenses) < 3
 
 def Offenders(interaction:Interaction):
-  store, game, format = GetObjectsFromInteraction(interaction)
-  offenders = GetOffenders(game, format, store)
+  objects = GetObjectsFromInteraction(interaction)
+  offenders = GetOffenders(objects.game, objects.format, objects.store)
   headers = ['Date Submitted', 'Submitter', 'Submitter ID', 'Event Date', 'Player Name', 'Archetype Played']
-  if not format:
+  if not objects.format:
     headers.insert(5, 'Format')
-  if not game:
+  if not objects.game:
     headers.insert(5, 'Game')
   title = 'Those who have been flagged for bad words/phrases'
   return offenders, title, headers

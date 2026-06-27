@@ -3,14 +3,111 @@ from psycopg.rows import class_row
 from custom_errors import KnownError
 from settings import DATABASE_URL
 import psycopg
-from tuple_conversions import Format, Game, Store
+from tuple_conversions import Format, Game, Store, Hub, Region
 
+def GetHub(discord_id: int) -> Hub | None:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Hub)) as cur:
+    command = f'''
+    SELECT
+      *
+    FROM
+      hubs_view
+    WHERE
+      discord_id = {discord_id}
+    '''
+    cur.execute(command)
+    row = cur.fetchone()
+    return row
 
-# TODO: Why are these in here and not in their corresponding data files?
-def GetFormatByMap(channel_id: int) -> Format | None:
+def GetRegion(discord_id: int, channel_id: int) -> Region | None:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Region)) as cur:
+    command = f'''
+    SELECT
+      r.id,
+      r.region_name
+    FROM
+      regions r
+      INNER JOIN region_channel_maps hc ON hc.region_id = r.id
+    WHERE
+      hc.discord_id = {discord_id}
+      AND hc.channel_id = {channel_id}
+    '''
+    cur.execute(command)
+    row = cur.fetchone()
+    return row
+
+def GetGameByHub(category_id: int, hub_discord_id: int) -> Game | None:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Game)) as cur:
+    command = f"""
+    (
+      SELECT
+        g.id,
+        g.game_name
+      FROM
+        games g
+        INNER JOIN game_category_maps gc ON g.id = gc.game_id
+      WHERE
+        gc.category_id = {category_id}
+    )
+    UNION ALL
+    (
+      SELECT
+        g.id,
+        g.game_name
+      FROM
+        games g
+        INNER JOIN hubs_view hv ON hv.game_lock = g.id
+      WHERE
+        hv.discord_id = {hub_discord_id}
+    )
+    """
+    
+    cur.execute(command)
+    row = cur.fetchone()
+    return row
+
+def GetFormatByHub(channel_id: int, hub_discord_id: int) -> Format | None:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(Format)) as cur:
     command = f"""
+    (
+      SELECT
+        f.id,
+        f.format_name,
+        f.last_ban_update,
+        f.is_limited
+      FROM
+        format_channel_maps fc
+        INNER JOIN formats f ON f.id = fc.format_id
+      WHERE
+        fc.channel_id = {channel_id}
+    )
+    UNION ALL
+    (
+      SELECT
+        f.id,
+        f.format_name,
+        f.last_ban_update,
+        f.is_limited
+      FROM
+        formats f
+        INNER JOIN hubs_view hv ON hv.format_lock = f.id
+      WHERE
+        hv.discord_id = {hub_discord_id}
+    )
+    """
+    cur.execute(command)
+    row = cur.fetchone()
+    return row
+
+def GetFormatByMap(channel_id: int, hub_discord_id:int) -> Format | None:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Format)) as cur:
+    command = f"""
+    (
     SELECT
       f.id,
       f.format_name,
@@ -21,6 +118,20 @@ def GetFormatByMap(channel_id: int) -> Format | None:
       INNER JOIN formats f ON f.id = fc.format_id
     WHERE
       fc.channel_id = {channel_id}
+    )
+    UNION ALL
+    (
+      SELECT
+        f.id,
+        f.format_name,
+        f.last_ban_update,
+        f.is_limited
+      FROM
+        formats f
+        INNER JOIN hubs_view hv ON hv.format_lock = f.id
+      WHERE
+        hv.discord_id = {hub_discord_id}
+    )
     """
     cur.execute(command)
     row = cur.fetchone()
@@ -39,10 +150,8 @@ def GetStoreByDiscord(discord_id: int) -> Store | None:
       owner_name,
       store_address,
       used_for_data,
-      state,
       region_id,
-      is_data_hub,
-      hub_format_lock
+      is_paid
     FROM
       stores_view
     WHERE
@@ -53,88 +162,57 @@ def GetStoreByDiscord(discord_id: int) -> Store | None:
     row = cur.fetchone()
     return row
 
-
-def GetGameByMap(category_id: int) -> Game | None:
+def GetHubByDiscord(discord_id: int) -> Hub | None:
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Game)) as cur:
-    command = f"""
-  SELECT
-    id,
-    game_name
-  FROM
-    games g
-    INNER JOIN game_category_maps gc ON g.id = gc.game_id
-  WHERE
-    gc.category_id = {category_id}
-  """
+  with conn, conn.cursor(row_factory=class_row(Hub)) as cur:
+    command = f'''
+    SELECT
+      discord_id,
+      discord_name,
+      hub_name,
+      owner_id,
+      owner_name,
+      region_id,
+      game_lock,
+      format_lock,
+      is_paid
+    FROM
+      hubs_view      
+    WHERE
+      discord_id = {discord_id}
+    '''
 
     cur.execute(command)
     row = cur.fetchone()
     return row
 
-
-def GetInteractionDetails(
-  discord_id: int, category_id: int, channel_id: int
-) -> Tuple[Store | None, Game | None, Format | None]:
+def GetGameByMap(category_id: int, hub_discord_id: int) -> Game | None:
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+  with conn, conn.cursor(row_factory=class_row(Game)) as cur:
     command = f"""
-    SELECT
-      s.discord_id,
-      s.discord_name,
-      s.store_name,
-      s.owner_id,
-      s.owner_name,
-      s.store_address,
-      s.used_for_data,
-      s.state,
-      s.region_id,
-      s.is_data_hub,
-      s.hub_format_lock,
-      g.game_id,
-      g.game_name,
-      f.format_id,
-      f.format_name,
-      f.last_ban_update,
-      f.is_limited
-    FROM
-      stores_view s
-      LEFT JOIN (
-        SELECT
-          gcm.discord_id,
-          g.id AS game_id,
-          g.game_name AS game_name
-        FROM
-          game_category_maps gcm
-          INNER JOIN games g ON g.id = gcm.game_id
-        WHERE
-          gcm.category_id = {category_id}
-      ) g ON g.discord_id = s.discord_id
-      LEFT JOIN (
-        SELECT
-          fcm.discord_id,
-          f.game_id AS game_id,
-          f.id AS format_id,
-          f.format_name AS format_name,
-          f.last_ban_update,
-          f.is_limited
-        FROM
-          format_channel_maps fcm
-          INNER JOIN formats f ON f.id = fcm.format_id
-        WHERE
-          fcm.channel_id = {channel_id}
-      ) f ON f.discord_id = s.discord_id
-      AND f.game_id = g.game_id
-    WHERE
-      s.discord_id = {discord_id}
+    (
+      SELECT
+        id,
+        game_name
+      FROM
+        games g
+        INNER JOIN game_category_maps gc ON g.id = gc.game_id
+      WHERE
+        gc.category_id = {category_id}
+    )
+    UNION ALL
+    (
+      SELECT
+        g.id,
+        g.game_name
+      FROM
+        games g
+        INNER JOIN hubs_view hv ON hv.game_lock = g.id
+      WHERE
+        hv.discord_id = {hub_discord_id}
+    )
     """
 
     cur.execute(command)
     row = cur.fetchone()
-    if not row:
-        raise KnownError("Nothing found for data provided")
-
-    store = Store(*row[0:11]) if row[0] else None
-    game = Game(*row[11:13]) if row[11] else None
-    format = Format(*row[13:17]) if row[13] else None
-    return store, game, format
+    return row

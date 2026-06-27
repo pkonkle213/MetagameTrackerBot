@@ -7,19 +7,17 @@ from psycopg.rows import class_row
 class Message(NamedTuple):
   discord_id: int
   game_id: int
-  category_id: int
   format_id: int
   channel_id: int
 
 
-def ThreeDayOldEventsWithUnknown():
+def ThreeDayOldEventsWithUnknown() -> list[Message]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(Message)) as cur:
     command = """
     SELECT
       e.discord_id,
       gm.game_id AS game_id,
-      gm.category_id,
       fm.format_id AS format_id,
       fm.channel_id
     FROM

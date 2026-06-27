@@ -1,26 +1,29 @@
-import discord
-from discord import app_commands
+from discord import Interaction, app_commands
 from discord.ext import commands
-from services.personal_history_service import GetPersonalStandingsHistory, GetPersonalPairingsHistory
+
+from checks import IsPaidUser, IsStore
 from services.command_error_service import Error
-from checks import isPaidUser
+from services.personal_history_service import (
+  GetPersonalPairingsHistory,
+  GetPersonalStandingsHistory,
+)
 
 
-class PersonalHistoryCommands(commands.GroupCog, name='history'):
+class PersonalHistoryCommands(commands.GroupCog, name="history"):
   """A group of commands for getting personal history"""
 
-  def __init__(self, bot):
+  def __init__(self, bot:commands.Bot):
     self.bot = bot
 
-  @app_commands.command(name='standings',
-                        description='Your history according to standings')
+  @app_commands.command(
+    name="standings", description="Your history according to standings"
+  )
   @app_commands.guild_only()
-  @isPaidUser()
+  @IsPaidUser()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-  async def GetPersonalStandingsHistory(self,
-                                        interaction: discord.Interaction,
-                                        start_date: str = '',
-                                        end_date: str = ''):
+  async def GetPersonalStandingsHistory(
+    self, interaction: Interaction, start_date: str = "", end_date: str = ""
+  ):
     """
     Parameters
     ----------
@@ -34,15 +37,15 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
     output = GetPersonalStandingsHistory(interaction, start_date, end_date)
     await interaction.followup.send(output, ephemeral=True)
 
-  @app_commands.command(name='pairings',
-                        description='Your history according to pairings')
+  @app_commands.command(
+    name="pairings", description="Your history according to pairings"
+  )
   @app_commands.guild_only()
-  @isPaidUser()
+  @IsPaidUser()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-  async def GetPersonalPairingsHistory(self,
-                                       interaction: discord.Interaction,
-                                       start_date: str = '',
-                                       end_date: str = ''):
+  async def GetPersonalPairingsHistory(
+    self, interaction: Interaction, start_date: str = "", end_date: str = ""
+  ):
     """
     Parameters
     ----------
@@ -58,10 +61,10 @@ class PersonalHistoryCommands(commands.GroupCog, name='history'):
 
   @GetPersonalStandingsHistory.error
   @GetPersonalPairingsHistory.error
-  async def Errors(self, interaction: discord.Interaction,
-                   error: app_commands.AppCommandError):
+  async def Errors(
+    self, interaction: Interaction, error: app_commands.AppCommandError
+  ):
     await Error(self.bot, interaction, error)
 
-
-async def setup(bot):
+async def setup(bot:commands.Bot):
   await bot.add_cog(PersonalHistoryCommands(bot))

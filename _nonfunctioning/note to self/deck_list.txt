@@ -1,0 +1,10 @@
+set_c = set(C)  # Keep C as a set for high-speed membership testing
+
+# Evaluates true only if every element of A is found in set_c
+all_a_in_c = all(item in set_c for item in A)
+
+# Evaluates true only if no element of B is found in set_c
+none_b_in_c = not any(item in set_c for item in B)
+
+is_valid = all_a_in_c and none_b_in_c
+print(is_valid)

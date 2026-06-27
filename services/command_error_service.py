@@ -3,18 +3,11 @@ from custom_errors import KnownError
 from discord_messages import MessageChannel
 from discord import app_commands, Interaction
 import settings
-
-async def MissingRoleError(interaction, error:app_commands.AppCommandError):
-  if isinstance(error, app_commands.MissingRole):
-    await interaction.response.send_message('You do not have the required role to use this command.', ephemeral=True)
-  elif isinstance(error, KnownError):
-    await interaction.response.send_message(error.message, ephemeral=True)
-  else:
-    await interaction.response.send_message('Catch this:', type(error), ephemeral=True)
+import traceback
 
 async def Error(bot:Bot,
                 interaction:Interaction,
-                error:app_commands.AppCommandError):
+                error:app_commands.AppCommandError | Exception):
   print('Error type:', type(error))
   print('IsMissingRole:', isinstance(error, app_commands.errors.MissingRole))
   print('IsCommandOnCooldown:', isinstance(error, app_commands.errors.CommandOnCooldown))
@@ -25,15 +18,18 @@ async def Error(bot:Bot,
     feedback = 'You do not have the required role to use this command.'
   elif isinstance(error, app_commands.errors.CommandOnCooldown):
     feedback = str(error)
+  elif isinstance(error, app_commands.errors.CheckFailure):
+    feedback = str(error)
   elif isinstance(error, KnownError):
     feedback = error.message
-  elif isinstance(error, app_commands.errors.CheckFailure):
-    feedback = 'You do not have has access to this command.'
   else:
-    print("Error received:", error)
+    original_error = getattr(error, 'original', error)
+    error_traceback = "".join(traceback.format_exception(
+        type(original_error), original_error, original_error.__traceback__
+    ))
     feedback = "Something unexpected went wrong. It's been reported. Please try again in a few hours."
     await MessageChannel(bot,
-                         error,
+                         f"```{error_traceback[:1994]}```",
                          settings.BOTGUILDID,
                          settings.ERRORCHANNELID)
   try:

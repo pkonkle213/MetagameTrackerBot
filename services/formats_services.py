@@ -2,14 +2,17 @@ from replit import db
 import discord
 from discord import Interaction
 from custom_errors import KnownError
-from interaction_objects import GetObjectsFromInteraction, SplitInteractionData
+from interaction_objects import GetObjectsFromInteraction
 from data.formats_data import AddFormatMap, GetFormatsByGameId
 from tuple_conversions import Format
 
 
 async def AddStoreFormatMap(interaction: Interaction,
                             chosen_format: Format) -> str:
-  discord_id, category_id, channel_id, user_id = SplitInteractionData(interaction)
+  discord_id = interaction.guild_id
+  channel_id = interaction.channel_id
+  if not discord_id or not channel_id:
+    raise KnownError('No guild or channel found')
 
   rows = AddFormatMap(discord_id, chosen_format.id, channel_id)
   if rows is None:
@@ -40,5 +43,7 @@ async def SetChannelMessagePermissions(interaction: Interaction):
 
 
 def GetFormatOptions(interaction: Interaction):
-  store, game, format = GetObjectsFromInteraction(interaction)
-  return GetFormatsByGameId(game)
+  objects = GetObjectsFromInteraction(interaction)
+  if not objects.game:
+    return None
+  return GetFormatsByGameId(objects.game)

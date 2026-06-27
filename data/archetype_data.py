@@ -1,15 +1,38 @@
+from typing import NamedTuple
+from psycopg.rows import class_row, scalar_row
 from datetime import date
 from settings import DATABASE_URL
 import psycopg
 
-from tuple_conversions import Format, Store, Game
+from tuple_conversions import Format, Store, Game, Event
+
+def PlayerInEvent(event:Event, player_name:str) -> bool:
+  with psycopg.connect(DATABASE_URL) as conn:
+    with conn.cursor(row_factory=scalar_row) as cur:
+      command = f'''
+      SELECT
+        e.id
+      FROM
+        events e
+        INNER JOIN full_standings fs ON fs.event_id = e.id
+      WHERE
+        e.id = %s
+        AND UPPER(fs.player_name) = UPPER(%s)
+      '''
+
+      cur.execute(command,[event.id, player_name])
+      row = cur.fetchone()
+      return row is not None
 
 def AddArchetype(
   event_id:int,
   player_name:str,
   archetype_played:str,
   submitter_id:int,
-  submitter_name:str
+  submitter_name:str,
+  submitter_guild_id:int,
+  submitter_guild_name:str,
+  is_submitter:bool
 ) -> int:
   criteria = [player_name, archetype_played]
   with psycopg.connect(DATABASE_URL) as conn:
@@ -22,7 +45,10 @@ def AddArchetype(
       date_submitted,
       submitter_id,
       submitter_username,
-      reported)
+      submitter_discord_id,
+      submitter_discord_name,
+      reported,
+      is_submitter)
       VALUES
       ({event_id},
       %s,
@@ -30,7 +56,10 @@ def AddArchetype(
       NOW(),
       {submitter_id},
       '{submitter_name}',
-      {False})
+      {submitter_guild_id},
+      '{submitter_guild_name}',
+      {False},
+      {is_submitter})
       RETURNING *
       '''
 
@@ -41,16 +70,21 @@ def AddArchetype(
         raise Exception('Unable to add archetype')
       return row[0]
 
+class UnknownArchetypes(NamedTuple):
+  event_date: str
+  event_name: str
+  player_name: str
+
 def GetUnknownArchetypes(store:Store,
                          game:Game,
                          format:Format,
                          start_date:date,
-                         end_date:date) -> list:
+                         end_date:date) -> list[UnknownArchetypes]:
   with psycopg.connect(DATABASE_URL) as conn:
-    with conn.cursor() as cur:
+    with conn.cursor(row_factory=class_row(UnknownArchetypes)) as cur:
       command = f'''
       SELECT
-        TO_CHAR(event_date,'MM/DD') as event_date,
+        event_date,
         event_name,
         INITCAP(player_name) as player_name
       FROM

@@ -25,7 +25,10 @@ def GetPreviousEvents(
       e.last_update,
       e.event_name,
       e.event_type_id,
-      e.reported_as
+      e.reported_as,
+      e.created_by,
+      e.created_at,
+      e.league_id
     FROM
       events_view e
       INNER JOIN stores s ON s.discord_id = e.discord_id
@@ -47,17 +50,45 @@ def GetPreviousEvents(
     
     return rows
 
-def GetEventTypes() -> list[Tuple[int, str]]:
+def GetEventTypes(
+  discord_id: int,
+  game: Game,
+  format:Format
+) -> list[Tuple[int, str]]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = '''
-    SELECT
-      id,  
-      event_type
-    FROM
-      event_types
+    (
+      SELECT
+        id,
+        event_type
+      FROM
+        event_types
+      WHERE
+        id NOT IN (3)
+      ORDER BY
+        id
+    )
+    UNION ALL
+    (
+      SELECT
+        - id AS id,
+        name
+      FROM
+        leagues
+      WHERE
+        end_date >= NOW()
+        AND start_date <= NOW()
+        AND discord_id = %s
+        AND game_id = %s
+        AND format_id = %s
+      ORDER BY
+        end_date DESC,
+        start_date DESC
+    )
+    LIMIT 25
     '''
 
-    cur.execute(command)
+    cur.execute(command, [discord_id, game.id, format.id])
     rows = cur.fetchall()
     return rows

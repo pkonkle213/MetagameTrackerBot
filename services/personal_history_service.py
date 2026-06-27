@@ -7,25 +7,33 @@ from services.date_functions import BuildDateRange
 
 def GetPersonalStandingsHistory(interaction: discord.Interaction, start_date: str, end_date: str):
   """Gets the personal standings history for the user"""
-  store, game, format = GetObjectsFromInteraction(interaction)
-  if not store:
-    raise KnownError('No Store Found')
+  objects = GetObjectsFromInteraction(interaction)
+  if not objects.store and not objects.hub:
+    raise KnownError('No store or hub found')
 
   user_id = interaction.user.id
   
-  date_start, date_end = BuildDateRange(start_date, end_date, format)
-  data = GetStandingsHistory(user_id, game, format, date_start, date_end, store)
+  date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
+
+  data = GetStandingsHistory(user_id, objects.store, objects.hub, objects.region, objects.game, objects.format, date_start, date_end)
+  headers = ['Date', 'Archetype', 'Wins', 'Losses', 'Draws']
+  
+  if objects.hub:
+    name = objects.hub.hub_name if objects.hub.hub_name else objects.hub.discord_name
+    headers.insert(1, 'Store')
+  elif objects.store:
+    name = objects.store.store_name if objects.store.store_name else objects.store.discord_name
+      
   if data is None or len(data) == 0:
     return 'No history found.'
-  name = store.store_name if store.store_name else store.discord_name
+  
   title = f'Personal History for {name.title()}'
-  headers = ['Date', 'Archetype', 'Wins', 'Losses', 'Draws']
+  
   if not format:
-    headers.insert(1, 'Format')
-  if not game:
-    headers.insert(1, 'Game')
-  if not store:
-    headers.insert(1, 'Store Name')
+    headers.insert(2, 'Format')
+  if not objects.game:
+    headers.insert(2, 'Game')
+
   output = BuildTableOutput(title, headers, data)
   return output
 
@@ -34,23 +42,31 @@ def GetPersonalPairingsHistory(
   start_date: str,
   end_date: str):
   """Gets the personal pairings history for the user"""
-  store, game, format = GetObjectsFromInteraction(interaction)
-  if not store:
-    raise KnownError('No Store Found')
-  
+  objects = GetObjectsFromInteraction(interaction)
+  if not objects.store and not objects.hub:
+    raise KnownError('No store or hub found')
+
   user_id = interaction.user.id
-  date_start, date_end = BuildDateRange(start_date, end_date, format)
-  data = GetPairingsHistory(user_id, game, format, date_start, date_end, store)
+  date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
+
+  data = GetPairingsHistory(user_id, objects.store, objects.hub, objects.region, objects.game, objects.format, date_start, date_end)
+  headers = ['Date', 'Round', 'Your Archetype', "Opponent's Archetype", 'Result']
+
+  name = 'You'
+  if objects.hub:
+    name = objects.hub.hub_name if objects.hub.hub_name else objects.hub.discord_name
+    headers.insert(1, 'Store')
+  elif objects.store:
+    name = objects.store.store_name if objects.store.store_name else objects.store.discord_name
+
   if data is None or len(data) == 0:
     return 'No history found.'
-  name = store.store_name if store.store_name else store.discord_name
+
   title = f'Personal History for {name.title()}'
-  headers = ['Date', 'Round', 'Your Archetype', "Opponent's Archetype", 'Result']
-  if not format:
-    headers.insert(1, 'Format')
-  if not game:
-    headers.insert(1, 'Game')
-  if not store:
-    headers.insert(1, 'Store Name')
+  if not objects.format:
+    headers.insert(2, 'Format')
+  if not objects.game:
+    headers.insert(2, 'Game')
+
   output = BuildTableOutput(title, headers, data)
   return output

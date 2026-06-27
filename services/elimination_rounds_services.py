@@ -10,6 +10,7 @@ def GetEliminationRoundData(event:Event) -> str:
   if event.reported_as == ReportedAs.Standings.value:
     data = GetEliminationStandings(event)
     output = BuildEliminationStandingOutput(data)
+
   #If the selected tournament is submitted via pairings, obtain the top 8 that way
   elif event.reported_as == ReportedAs.Pairings.value:
     data = GetEliminationPairings(event)
