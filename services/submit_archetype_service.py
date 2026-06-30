@@ -9,7 +9,7 @@ from data.store_data import GetFormatMapByEvent
 from data.archetype_data import AddArchetype
 from data.event_data import GetEventDetails
 from services.input_services import ConvertInput
-from services.determine_archetype_service import GetMoxfieldArchetype
+from api_calls.moxfield_decklist import GetMoxfieldArchetype
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from output_builder import BuildTableOutput
 from data.metagame_data import OneEventMetagame

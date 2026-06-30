@@ -20,7 +20,6 @@ def AddDeck(player_name:str, event_id: int) -> int:
 
 async def AddCards(deck_id:int, cards:list[Card]) -> int:
   data_to_insert = [(deck_id, card.quantity, card.name, card.in_mainboard) for card in cards]
-  print(f'----Data to insert:----\n', data_to_insert)
 
   async with await psycopg.AsyncConnection.connect(DATABASE_URL) as conn:
     async with conn.cursor() as cur:
