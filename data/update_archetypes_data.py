@@ -56,7 +56,6 @@ def AddUpdatedArchetypes(
     SELECT COUNT(*) FROM inserted_rows
     '''
 
-    print('UpdateArchetypes Command:', command)
     criteria = [new_archetype, submitter_id, submitter_name, submitter_discord_id, submitter_discord_name, old_archetype, store.discord_id, format.id, game.id]
     cur.execute(command, criteria)
     conn.commit()

@@ -1,6 +1,7 @@
+from custom_errors import KnownError
 from services.input_services import ConvertInput
 import discord
-from tuple_conversions import Event, Game, Format, Store
+from tuple_conversions import Event, Game, Format, Store, GameEnum
 from discord import ui, Interaction
 from data.data_input_menus import GetPreviousEvents
 from services.command_error_service import Error
@@ -31,13 +32,10 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
       option = events[i]
       label = f"{option.event_date.strftime('%m/%d')} - {option.event_name}"
       value = str(option.id)
-      if i == 0:
-        past_events.append(discord.SelectOption(label=label, value=value, default=True))
-      else:
-        past_events.append(discord.SelectOption(label=label, value=value))
+      past_events.append(discord.SelectOption(label=label, value=value, default=(i == 0)))
 
     archetype_options = [discord.SelectOption(label=archetype, value=archetype) for archetype in prev_archetypes] if len(prev_archetypes) > 0 else [discord.SelectOption(label="Please enter an archetype", value="0")]
-    
+
     self.event_select = ui.Label(
         text="Event",
         component=ui.Select(
@@ -46,7 +44,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
         )
     )
     self.add_item(self.event_select)
-  
+
     self.player_name_input = ui.Label(
       text="Player Name",
       component=ui.TextInput(
@@ -56,7 +54,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
       )
     )
     self.add_item(self.player_name_input)
-  
+
     self.archetype_select = ui.Label(
       text="Choose An Archetype",
       component=ui.Select(
@@ -76,6 +74,16 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     )
     self.add_item(self.new_archetype)
 
+    if self.game.id == GameEnum.Magic.value:
+      self.moxfield_link = ui.Label(
+        text="Moxfield Decklist Link",
+        component=ui.TextInput(
+          placeholder="https://www.moxfield.com/decks/...",
+          required=False
+        )
+      )
+      self.add_item(self.moxfield_link)
+
   # handling the submission
   async def on_submit(self, interaction: Interaction) -> None:
     submitted_archetype:str = DetermineArchetype(self)
@@ -88,7 +96,9 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
                           submitted_event,
                           submitted_archetype,
                           self.game,
-                          self.format)
+                          self.format,
+                          self.moxfield_link.component.value if self.game.id == GameEnum.Magic.value else None
+                         )
 
   async def on_error(self, interaction: Interaction, error: Exception) -> None:
     await Error(self.bot, interaction, error)
@@ -106,7 +116,7 @@ def DetermineArchetype(self) -> str:
     archetype = self.archetype_select.component.values[0]
 
   archetype = ConvertInput(archetype)
-  if archetype == '':
+  if archetype == '' and not self.moxfield_link.component.value:
     raise Exception('No archetype submitted. Please try again.')
   return archetype
 
@@ -118,4 +128,4 @@ def GetEvent(
     if event.id == int(event_id):
       return event
   raise Exception('No event found?')
-  
+

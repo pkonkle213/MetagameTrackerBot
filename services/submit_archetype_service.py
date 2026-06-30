@@ -9,6 +9,7 @@ from data.store_data import GetFormatMapByEvent
 from data.archetype_data import AddArchetype
 from data.event_data import GetEventDetails
 from services.input_services import ConvertInput
+from api_calls.moxfield_decklist import GetMoxfieldArchetype
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from output_builder import BuildTableOutput
 from data.metagame_data import OneEventMetagame
@@ -28,6 +29,7 @@ async def SubmitArchetype(
   archetype: str,
   game: Game,
   format: Format,
+  moxfield_link: str | None
 ) -> None:
   guild_id = interaction.guild.id
   guild_name = interaction.guild.name
@@ -50,24 +52,44 @@ async def SubmitArchetype(
       "You have submitted too many archetypes with banned words. Please contact your store owner to have them submit the archetype."
     )
 
-  is_submitter = isSubmitter(interaction.guild, interaction.user,'MTSubmitter')
+  # TODO: I should already know this, when checking to get the appropriate events
+  is_submitter = isSubmitter(interaction.guild, interaction.user, 'MTSubmitter')
 
+  # If a moxfield link is provided, get the archetype from it
+  moxfield_error = ''
+  if moxfield_link:
+    try:
+      moxfield_archetype = await GetMoxfieldArchetype(moxfield_link, event, format, player_name)
+      moxfield_added = AddArchetype(
+        event.id,
+        player_name,
+        moxfield_archetype,
+        None,
+        'Moxfield Import',
+        guild_id,
+        guild_name,
+        is_submitter
+      )
+    except KnownError as e:
+      moxfield_error = ' Unable to load the decklist from Moxfield. Please try again later.'
+  
   # If not banned, add to the database
-  archetype_added = AddArchetype(
-    event.id,
-    player_name,
-    archetype,
-    interaction.user.id,
-    interaction.user.name,
-    guild_id,
-    guild_name,
-    is_submitter
-  )
-  if archetype_added is None:
-    raise Exception("Unable to submit the archetype. Please try again later.")
+  if archetype != '':
+    archetype_added = AddArchetype(
+      event.id,
+      player_name,
+      archetype,
+      interaction.user.id,
+      interaction.user.name,
+      guild_id,
+      guild_name,
+      is_submitter
+    )
+    if archetype_added is None:
+      raise Exception("Unable to submit the archetype. Please try again later.")
 
   feed_output = BuildMessage(interaction, event, archetype, player_name)
-  private_output = f"Thank you for submitting the archetype for {event.event_name}!"
+  private_output = f"Thank you for submitting the archetype for {event.event_name}!" + moxfield_error
 
   # If added, check if the event is fully reported
   public_output, full_event = CheckEventPercentage(event)
@@ -104,33 +126,6 @@ async def MessageStoreFeed(bot, message: str, interaction: Interaction) -> None:
     await MessageChannel(bot, message, settings.BOTGUILDID, settings.CLAIMCHANNEL)
 
 
-def AddTheArchetype(
-  interaction: Interaction,
-  player_name: str,
-  event: Event,
-  archetype: str,
-  store: Store,
-  game: Game,
-  format: Format,
-) -> Tuple[str, str, str | None, str | None]:
-  userId = interaction.user.id
-
-  updater_name = interaction.user.display_name
-
-  archetype_added = AddArchetype(
-    event[0], player_name, archetype, userId, updater_name, interaction.guild.id, interaction.guild.name
-  )
-
-  if archetype_added is None:
-    raise KnownError("Unable to submit the archetype. Please try again later.")
-
-  message = BuildMessage(interaction, event, archetype, player_name)
-  feed_output = message
-  private_output = f"Thank you for submitting the archetype for {event.event_name}!"
-  public_output, event_full = CheckEventPercentage(event)
-  return private_output, feed_output, public_output, event_full
-
-
 def BuildMessage(
   interaction: Interaction, event: Event, archetype: str, player_name: str
 ) -> str:
@@ -160,7 +155,7 @@ def CheckEventPercentage(event: Event) -> Tuple[str | None, str | None]:
     return followup, final
   return None, None
 
-
+#TODO: These should have their own service
 def OneEventMeta(event: Event) -> Tuple[str, list[str], list[MetagameResult]]:
   data = OneEventMetagame(event)
   title = f"{event.event_name}'s Metagame"
