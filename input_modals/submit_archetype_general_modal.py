@@ -74,7 +74,6 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     )
     self.add_item(self.new_archetype)
 
-    # PK - This should only be for magic players
     if self.game.id == GameEnum.Magic.value:
       self.moxfield_link = ui.Label(
         text="Moxfield Decklist Link",
