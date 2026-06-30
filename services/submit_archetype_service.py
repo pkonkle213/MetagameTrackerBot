@@ -56,18 +56,22 @@ async def SubmitArchetype(
   is_submitter = isSubmitter(interaction.guild, interaction.user, 'MTSubmitter')
 
   # If a moxfield link is provided, get the archetype from it
+  moxfield_error = ''
   if moxfield_link:
-    moxfield_archetype = await GetMoxfieldArchetype(moxfield_link, event, format, player_name)
-    moxfield_added = AddArchetype(
-      event.id,
-      player_name,
-      moxfield_archetype,
-      0,
-      'Moxfield Import',
-      guild_id,
-      guild_name,
-      is_submitter
-    )
+    try:
+      moxfield_archetype = await GetMoxfieldArchetype(moxfield_link, event, format, player_name)
+      moxfield_added = AddArchetype(
+        event.id,
+        player_name,
+        moxfield_archetype,
+        0,
+        'Moxfield Import',
+        guild_id,
+        guild_name,
+        is_submitter
+      )
+    except KnownError as e:
+      moxfield_error = ' Unable to load the decklist from Moxfield. Please try again later.'
   
   # If not banned, add to the database
   if archetype != '':
@@ -85,7 +89,7 @@ async def SubmitArchetype(
       raise Exception("Unable to submit the archetype. Please try again later.")
 
   feed_output = BuildMessage(interaction, event, archetype, player_name)
-  private_output = f"Thank you for submitting the archetype for {event.event_name}!"
+  private_output = f"Thank you for submitting the archetype for {event.event_name}!" + moxfield_error
 
   # If added, check if the event is fully reported
   public_output, full_event = CheckEventPercentage(event)
@@ -122,33 +126,6 @@ async def MessageStoreFeed(bot, message: str, interaction: Interaction) -> None:
     await MessageChannel(bot, message, settings.BOTGUILDID, settings.CLAIMCHANNEL)
 
 
-def AddTheArchetype(
-  interaction: Interaction,
-  player_name: str,
-  event: Event,
-  archetype: str,
-  store: Store,
-  game: Game,
-  format: Format,
-) -> Tuple[str, str, str | None, str | None]:
-  userId = interaction.user.id
-
-  updater_name = interaction.user.display_name
-
-  archetype_added = AddArchetype(
-    event[0], player_name, archetype, userId, updater_name, interaction.guild.id, interaction.guild.name
-  )
-
-  if archetype_added is None:
-    raise KnownError("Unable to submit the archetype. Please try again later.")
-
-  message = BuildMessage(interaction, event, archetype, player_name)
-  feed_output = message
-  private_output = f"Thank you for submitting the archetype for {event.event_name}!"
-  public_output, event_full = CheckEventPercentage(event)
-  return private_output, feed_output, public_output, event_full
-
-
 def BuildMessage(
   interaction: Interaction, event: Event, archetype: str, player_name: str
 ) -> str:
@@ -178,7 +155,7 @@ def CheckEventPercentage(event: Event) -> Tuple[str | None, str | None]:
     return followup, final
   return None, None
 
-
+#TODO: These should have their own service
 def OneEventMeta(event: Event) -> Tuple[str, list[str], list[MetagameResult]]:
   data = OneEventMetagame(event)
   title = f"{event.event_name}'s Metagame"
