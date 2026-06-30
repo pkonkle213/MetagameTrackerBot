@@ -62,8 +62,8 @@ async def SubmitArchetype(
       event.id,
       player_name,
       moxfield_archetype,
-      interaction.user.id,
-      interaction.user.name,
+      0,
+      'Moxfield Import',
       guild_id,
       guild_name,
       is_submitter

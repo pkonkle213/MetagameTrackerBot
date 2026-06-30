@@ -54,5 +54,6 @@ async def GetMoxfieldArchetype(url:str, event:Event, format:Format, player_name:
 
   # 3) Determine Archetype
   archetype_guess = SelectArchetype(cards, format)
+  print('Looks like this archetype is: ' + archetype_guess)
     
   return archetype_guess
