@@ -36,10 +36,9 @@ class LeaguesCommands(commands.GroupCog, name="league"):
   async def EditLeague(self, interaction: Interaction):
     await EditLeague(self.bot, interaction)
 
-  @app_commands.command(name="view", description="View a league")
+  @app_commands.command(name="information", description="Display information about a league")
   @app_commands.guild_only()
   @IsPaidStore()
-  @app_commands.checks.has_role("MTSubmitter")
   async def ViewLeague(self, interaction: Interaction):
     output = await ViewLeague(self.bot, interaction)
     await interaction.followup.send(output)
