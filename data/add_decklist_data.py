@@ -138,7 +138,7 @@ def SelectArchetype(cards:list[Card], format:Format) -> str:
             dc.deck_id
         )
       SELECT
-        a.archetype_name,
+        a.archetype_name
       FROM
         matches m
         JOIN deck_stats ds ON m.deck_id = ds.deck_id
