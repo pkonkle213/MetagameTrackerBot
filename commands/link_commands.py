@@ -1,8 +1,7 @@
+from checks import IsStore
 from discord import Interaction, app_commands
 from discord.ext import commands
-
 import settings
-
 
 class Links(commands.Cog):
     """A group of commands for getting links"""
@@ -22,10 +21,11 @@ class Links(commands.Cog):
         )
 
     @app_commands.command(
-        name="view_all_data",
-        description="Get an invite to my data hub with more stores",
+        name="view_hubs",
+        description="See All Hubs Connected To This Store",
     )
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
+    @IsStore()
     async def ViewAllData(self, interaction: Interaction):
         await interaction.response.send_message(
             f"Here is the link to my data hub: {settings.DATAHUBINVITE}"
