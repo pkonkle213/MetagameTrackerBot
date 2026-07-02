@@ -179,6 +179,14 @@ class OutputToBuild(NamedTuple):
   data: list[Any]
 
 class Card(NamedTuple):
+  deck_id: int
   quantity: int
-  name: str
-  in_mainboard: bool
+  card_name: str
+  is_mainboard: bool
+
+class Deck(NamedTuple):
+  id: int
+  archetype_played: str
+  wins: int
+  losses: int
+  draws: int

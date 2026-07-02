@@ -1,6 +1,6 @@
 from discord import Interaction, app_commands
 from discord.ext import commands
-
+from services.one_event_decklists import OneEventDecklists
 from checks import IsStore
 from custom_errors import KnownError
 from input_modals.event_selector import EventSelector
@@ -15,7 +15,8 @@ class OneEventCommands(commands.GroupCog, name="one_event"):
     self.bot = bot
 
   @app_commands.command(
-    name="metagame", description="View the metagame for one event"
+    name="metagame",
+    description="View the metagame for one event"
   )
   @app_commands.guild_only()
   @IsStore()
@@ -63,6 +64,28 @@ class OneEventCommands(commands.GroupCog, name="one_event"):
     output = BuildTableOutput(table.title, table.headers, table.data)
 
     await interaction.followup.send(output)
+
+  @app_commands.command(
+    name="decklists",
+    description="View decklists that were provided for the event"
+  )
+  @app_commands.guild_only()
+  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
+  @IsStore()
+  async def OneEventDecklists(self, interaction: Interaction):
+    objects = GetObjectsFromInteraction(interaction)
+    if not objects.store or not objects.game or not objects.format:
+      raise KnownError("No store, game, or format found.")
+
+    modal = EventSelector(objects.store, objects.game, objects.format)
+    await interaction.response.send_modal(modal)
+    await modal.wait()
+
+    if not modal.is_submitted:
+      raise Exception("Modal was not submitted")
+
+    event = modal.event
+    await OneEventDecklists(interaction, event)
 
   @OneEventMeta.error
   @OneEvent.error

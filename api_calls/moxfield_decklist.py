@@ -30,6 +30,10 @@ async def GetMoxfieldArchetype(url:str, event:Event, format:Format, player_name:
   deck_data = response.json()
   cards:list[Card] = []
   
+  # Save the decklist in the db
+  # 1) Make a new deck
+  deck_id = AddDeck(player_name, event.id)
+  
   # Loop through cards and make decklist of card qty, name, and check if legal
   for board_name in ["mainboard", "sideboard"]:
     board = deck_data.get(board_name, {})
@@ -41,11 +45,8 @@ async def GetMoxfieldArchetype(url:str, event:Event, format:Format, player_name:
       if legal != 'legal':
         raise KnownError(f"{card_name} is not legal in {format.format_name} format")
         
-      cards.append(Card(card_qty, card_name, in_main))
+      cards.append(Card(deck_id, card_qty, card_name, in_main))
 
-  # Save the decklist in the db
-  # 1) Make a new deck
-  deck_id = AddDeck(player_name, event.id)
   
   # 2) Input qty and card names for decklist
   rows = await AddCards(deck_id, cards)
