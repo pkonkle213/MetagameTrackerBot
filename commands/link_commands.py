@@ -31,7 +31,10 @@ class Links(commands.Cog):
             f"Here is the link to my data hub: {settings.DATAHUBINVITE}"
         )
 
-    @app_commands.command(name="get_sop", description="Display the url to get the SOP")
+    @app_commands.command(
+        name="get_sop",
+        description="Display the url to get the SOP"
+    )
     @app_commands.guild_only()
     @app_commands.guilds(settings.BOTGUILDID)
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
