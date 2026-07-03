@@ -75,17 +75,19 @@ class UnknownArchetypes(NamedTuple):
   event_name: str
   player_name: str
 
-def GetUnknownArchetypes(store:Store,
-                         game:Game,
-                         format:Format,
-                         start_date:date,
-                         end_date:date) -> list[UnknownArchetypes]:
+def GetUnknownArchetypes(
+  store:Store,
+  game:Game,
+  format:Format,
+  start_date:date,
+  end_date:date
+) -> list[UnknownArchetypes]:
   with psycopg.connect(DATABASE_URL) as conn:
     with conn.cursor(row_factory=class_row(UnknownArchetypes)) as cur:
       command = f'''
       SELECT
-        event_date,
-        event_name,
+        TO_CHAR(event_date, 'MM/DD/YYYY') as event_date,
+        INITCAP(event_name) as event_name,
         INITCAP(player_name) as player_name
       FROM
         unknown_archetypes ua
