@@ -117,6 +117,7 @@ class Event(NamedTuple):
   reported_as: int
   created_by: int
   created_at: datetime  
+  is_complete: bool
 
 class Pairing(NamedTuple):
   player1_name: str
