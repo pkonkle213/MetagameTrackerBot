@@ -7,7 +7,7 @@ WITH
     WHERE
       event_date >= date_trunc('year', CURRENT_DATE)
       AND format_id = 1
-      AND discord_id = 1210746744602890310
+      --AND discord_id = 1210746744602890310
   ),
   archetypes AS (
     SELECT
