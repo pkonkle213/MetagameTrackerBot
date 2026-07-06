@@ -98,6 +98,7 @@ class Hub(NamedTuple):
   game_lock: int
   format_lock: int
   is_paid: bool
+  invite: str
 
 class Region(NamedTuple):
   id: int
