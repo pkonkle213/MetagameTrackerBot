@@ -5,7 +5,7 @@ import datetime
 import discord
 from discord.ext import commands, tasks
 import settings
-from timedposts.automated_paid_users import UpdatePaidUsers, UpdateStores
+import timedposts.automated_paid_users as apu
 from timedposts.automated_check_events import EventCheck
 from services.store_services import NewStoreRegistration
 from timedposts.automated_updates import UpdateDataGuild
@@ -27,69 +27,72 @@ TIME_ZONE = pytz.timezone("US/Eastern")
 
 @bot.event
 async def on_ready():
-    print(f"Logged on as {format(bot.user)}!")
-    data_guild_update.start()
-    find_the_unknown.start()
-    sync_paid_users.start()
-    # sync_paid_discords.start()
-    await SyncCommands(bot, CMDS_DIR)
-    # await start_webhook_server(bot)
-    print("Synced commands. Good to go")
+  print(f"Logged on as {format(bot.user)}!")
+  data_guild_update.start()
+  find_the_unknown.start()
+  sync_paid_users.start()
+  # sync_paid_discords.start()
+  await SyncCommands(bot, CMDS_DIR)
+  # await start_webhook_server(bot)
+  print("Synced commands. Good to go")
 
 
 @bot.event
 async def on_guild_join(guild: discord.Guild):
-    """This event triggers when the bot joins a new guild (server)."""
-    output = ("Thank you for adding me to your server! Here's my notes from installation:\n")
-    output += await NewStoreRegistration(bot, guild)
-    if guild.owner:
-        await guild.owner.send(output)
-    success = UpdateStores()
-    if success:
-        output += "- Stores check has been updated"
-    else:
-        output += "- Stores check has failed"
-    await MessageUser(bot, f"New guild joined: {guild.name}\n{output}", settings.PHILID)
+  """This event triggers when the bot joins a new guild (server)."""
+  output = ("Thank you for adding me to your server! Here's my notes from installation:\n")
+  output += await NewStoreRegistration(bot, guild)
+  if guild.owner:
+    await guild.owner.send(output)
+  success = UpdateStores()
+  if success:
+    output += "- Stores check has been updated"
+  else:
+    output += "- Stores check has failed"
+  await MessageUser(bot, f"New guild joined: {guild.name}\n{output}", settings.PHILID)
 
 
 @tasks.loop(time=datetime.time(hour=18, minute=00, tzinfo=TIME_ZONE))
 async def find_the_unknown():
-    """Every day at 6:00 PM EST, the bot will check for events that are 3 days old and have unknown archetypes."""
-    await EventCheck(bot)
+  """Every day at 6:00 PM EST, the bot will check for events that are 3 days old and have unknown archetypes."""
+  await EventCheck(bot)
 
 
 @find_the_unknown.before_loop
 async def before_find_the_unknown():
-    await bot.wait_until_ready()
+  await bot.wait_until_ready()
 
 
 @tasks.loop(minutes=60)
 async def sync_paid_users():
-    """Every 60 minutes, the bot will sync the paid users for command permission"""
-    print("Syncing paid users")
-    with contextlib.suppress(Exception):
-        UpdatePaidUsers()
+  """Every 60 minutes, the bot will sync the paid entities for command permission"""
+  with contextlib.suppress(Exception):        
+    apu.UpdateStores()
+    apu.UpdateHubs()
+    apu.UpdatePaidUsers()
+    apu.UpdatePaidStores()
+    apu.UpdatePaidHubs()
 
 
 @sync_paid_users.before_loop
 async def before_sync_paid_users():
-    await bot.wait_until_ready()
+  await bot.wait_until_ready()
 
 
 @tasks.loop(time=datetime.time(hour=10, minute=00, tzinfo=TIME_ZONE))
 async def data_guild_update():
-    """Every Friday at 10:00 AM EST, the data guild is updated with new data"""
-    time_now = datetime.datetime.now(datetime.timezone.utc)
-    if time_now.weekday() == 4:  # Check if it's Friday, 0 = Monday
-        try:
-            await UpdateDataGuild(bot)
-        except Exception as error:
-            print(f"Error updating data guild: {error}")
+  """Every Friday at 10:00 AM EST, the data guild is updated with new data"""
+  time_now = datetime.datetime.now(datetime.timezone.utc)
+  if time_now.weekday() == 4:  # Check if it's Friday, 0 = Monday
+    try:
+      await UpdateDataGuild(bot)
+    except Exception as error:
+      print(f"Error updating data guild: {error}")
 
 
 @data_guild_update.before_loop
 async def before_scheduled_post():
-    await bot.wait_until_ready()
+  await bot.wait_until_ready()
 
 
 bot.run(settings.DISCORDTOKEN)
