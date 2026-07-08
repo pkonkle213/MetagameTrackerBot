@@ -24,7 +24,8 @@ def GetEvent(
       reported_as,
       league_id,
       created_by,
-      created_at
+      created_at,
+      is_complete
     FROM
       events_view
     WHERE
