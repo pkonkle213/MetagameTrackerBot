@@ -9,7 +9,7 @@ def GetDecks(event:Event) -> list[Deck]:
   with conn, conn.cursor(row_factory=class_row(Deck)) as cur:
     command = f'''
     SELECT
-      d.deck_id,
+      d.deck_id as id,
       INITCAP(COALESCE(ua.archetype_played, 'Unknown')) AS archetype_played,
       fs.wins,
       fs.losses,
