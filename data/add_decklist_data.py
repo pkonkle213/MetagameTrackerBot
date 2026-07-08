@@ -33,7 +33,7 @@ async def AddCards(deck_id:int, cards:list[Card]) -> int:
       return len(cards)
 
 def ConvertInputToPostgresArray(input_list:list[Card]) -> str:
-  card_names = [card.card_name.replace("'","''") for card in input_list if is_mainboardboard]
+  card_names = [card.card_name.replace("'","''") for card in input_list if card.is_mainboard]
   array_string = "',\n'".join(card_names)
   return f"'{array_string}'"
 
