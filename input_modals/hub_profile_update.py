@@ -32,9 +32,9 @@ class HubProfileModal(discord.ui.Modal, title='Update Hub Profile'):
 
   async def on_submit(self, interaction: discord.Interaction) -> None:
     self.submitted_hub_name = self.hub_name.component.value
-    self.submitted_hub_invite = self.hub_invite.component.value
+    self.submitted_hub_invite = CleanUrl(self.hub_invite.component.value)
     self.is_submitted = True
-    await interaction.response.defer(thinking=True)
+    await interaction.response.defer(thinking=False)
 
 
   async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
@@ -42,3 +42,8 @@ class HubProfileModal(discord.ui.Modal, title='Update Hub Profile'):
 
   async def on_timeout(self) -> None:
     self.is_submitted = False
+
+def CleanUrl(url:str) -> str:
+  slash = url.rfind('/')  
+  invite = 'https://discord.gg/' + url[slash+1:]
+  return invite

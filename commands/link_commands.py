@@ -1,4 +1,5 @@
 from checks import IsStore
+from services.hub_invites_service import GetAllHubs
 from discord import Interaction, app_commands
 from discord.ext import commands
 import settings
@@ -27,9 +28,8 @@ class Links(commands.Cog):
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     @IsStore()
     async def ViewAllData(self, interaction: Interaction):
-        await interaction.response.send_message(
-            f"Here is the link to my data hub: {settings.DATAHUBINVITE}"
-        )
+        output = GetAllHubs(interaction)
+        await interaction.response.send_message(output)
 
     @app_commands.command(
         name="get_sop",

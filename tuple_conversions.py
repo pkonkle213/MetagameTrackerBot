@@ -2,39 +2,49 @@ from typing import Any, NamedTuple
 from datetime import date, datetime
 from enum import Enum
 
+
 class EventType(Enum):
   """An enum of the different types of events"""
+
   Weekly = 1
   Tournament = 2
   League = 3
 
+
 class ReportedAs(Enum):
   """An enum of how events are reported"""
+
   Pairings = 1
   Standings = 2
 
+
 class GameEnum(Enum):
   """An enum of games in the database"""
+
   Magic = 1
   Lorcana = 2
   OnePiece = 3
   StarWarsUnlimited = 4
   Riftbound = 5
 
+
 class PlayerStanding(NamedTuple):
   points: int
   win_percent: float
   rank: int
 
+
 class TopPlayers(NamedTuple):
   player_name: str
   points: int
   win_percent: float
-  
+
+
 class MetagameResult(NamedTuple):
   archetype_played: str
   metagame_percent: float
   win_percent: float
+
 
 class League(NamedTuple):
   id: int
@@ -51,14 +61,17 @@ class League(NamedTuple):
   created_date: date
   updated_by: int
 
+
 class ChannelFormatMapping(NamedTuple):
   discord_id: int
   channel_id: int
   format_id: int
 
+
 class HubsChannels(NamedTuple):
   discord_id: int
   channel_id: int
+
 
 class Archetype(NamedTuple):
   event_id: int
@@ -67,15 +80,18 @@ class Archetype(NamedTuple):
   submitter_id: int
   submitter_name: str
 
+
 class Format(NamedTuple):
   id: int
   format_name: str
   last_ban_update: date | None
   is_limited: bool
 
+
 class Game(NamedTuple):
   id: int
   game_name: str
+
 
 class Store(NamedTuple):
   discord_id: int
@@ -88,6 +104,7 @@ class Store(NamedTuple):
   region_id: int
   is_paid: bool
 
+
 class Hub(NamedTuple):
   discord_id: int
   discord_name: str
@@ -99,10 +116,17 @@ class Hub(NamedTuple):
   format_lock: int
   is_paid: bool
   invite: str
+  
+
+class HubInvite(NamedTuple):
+  hub_name: str
+  invite: str
+  
 
 class Region(NamedTuple):
   id: int
   region_name: str
+
 
 class Event(NamedTuple):
   id: int
@@ -117,20 +141,25 @@ class Event(NamedTuple):
   event_name: str
   reported_as: int
   created_by: int
-  created_at: datetime  
+  created_at: datetime
+
 
 class Pairing(NamedTuple):
   player1_name: str
   player1_game_wins: int
   player2_name: str
   player2_game_wins: int
-  round_number: int #TODO: Very curious why I can't put this first as there's a "strip" error
+  round_number: (
+    int  # TODO: Very curious why I can't put this first as there's a "strip" error
+  )
+
 
 class Standing(NamedTuple):
   player_name: str
   wins: int
   losses: int
   draws: int
+
 
 class EventInput(NamedTuple):
   id: int
@@ -147,26 +176,30 @@ class EventInput(NamedTuple):
   GameID: int
   FormatID: int
 
+
 class InteractionObjects(NamedTuple):
-  store  : Store | None
-  hub    : Hub | None
-  region : Region | None
-  game   : Game | None
-  format : Format | None
+  store: Store | None
+  hub: Hub | None
+  region: Region | None
+  game: Game | None
+  format: Format | None
+
 
 class DataConverted(NamedTuple):
-  pairings_data   : list[Pairing] | None
-  standings_data  : list[Standing] | None
-  errors          : list[str] | None
-  round_number    : int | None
-  event_date      : date | None
-  archetypes      : dict[str, str] | None
-  custom_event_id : int | None
+  pairings_data: list[Pairing] | None
+  standings_data: list[Standing] | None
+  errors: list[str] | None
+  round_number: int | None
+  event_date: date | None
+  archetypes: dict[str, str] | None
+  custom_event_id: int | None
+
 
 class LeaderboardRace(NamedTuple):
   event_date: date
   player_name: str
   points: int
+
 
 class UserData(NamedTuple):
   player_name: str
@@ -174,16 +207,19 @@ class UserData(NamedTuple):
   last_played: str
   top_decks: list[tuple[str, str]]
 
+
 class OutputToBuild(NamedTuple):
   title: str
   headers: list[str]
   data: list[Any]
+
 
 class Card(NamedTuple):
   deck_id: int
   quantity: int
   card_name: str
   is_mainboard: bool
+
 
 class Deck(NamedTuple):
   id: int
