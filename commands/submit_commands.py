@@ -129,17 +129,19 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
     data = False if csv_file or melee_tournament_id else True
 
-    modal = SubmitDataModal(
-      self.bot,
-      objects.store,
-      objects.game,
-      objects.format,
-      data,
-      csv_file,
-      melee_tournament_id,
-    )
-    await interaction.response.send_modal(modal)
-    await modal.wait()
+    cont = True
+    while cont:
+      modal = SubmitDataModal(
+        self.bot,
+        objects.store,
+        objects.game,
+        objects.format,
+        data,
+        csv_file,
+        melee_tournament_id,
+      )
+      await interaction.response.send_modal(modal)
+      await modal.wait()
 
   @SubmitCheck.error
   @SubmitDataCommand.error
