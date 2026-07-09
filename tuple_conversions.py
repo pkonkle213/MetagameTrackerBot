@@ -141,7 +141,8 @@ class Event(NamedTuple):
   event_name: str
   reported_as: int
   created_by: int
-  created_at: datetime
+  created_at: datetime  
+  is_complete: bool
 
 
 class Pairing(NamedTuple):

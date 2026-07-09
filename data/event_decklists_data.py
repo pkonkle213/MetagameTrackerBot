@@ -9,13 +9,13 @@ def GetDecks(event:Event) -> list[Deck]:
   with conn, conn.cursor(row_factory=class_row(Deck)) as cur:
     command = f'''
     SELECT
-      d.id,
+      d.deck_id as id,
       INITCAP(COALESCE(ua.archetype_played, 'Unknown')) AS archetype_played,
       fs.wins,
       fs.losses,
       fs.draws
     FROM
-      decks d
+      decks_view d
       INNER JOIN full_standings fs ON fs.event_id = d.event_id
       AND upper(fs.player_name) = upper(d.player_name)
       LEFT JOIN unique_archetypes ua ON ua.event_id = d.event_id

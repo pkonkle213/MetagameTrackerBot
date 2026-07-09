@@ -36,7 +36,7 @@ async def GetEventsWithUnkown(bot):
         print(f'No unknown archetypes found for {channel.discord_id}, {channel.game_id}, {channel.format_id}') #raise KnownError('No unknown archetypes found')
   
       output = BuildTableOutput('We need your help with these archetypes!', ['Date', 'Event Name', 'Player Name'], archetypes)
-      output = output[:-3] + '\nTo submit yours, type and enter: /submit archetype```'
+      output = output[:1940] + "\nTo submit yours, use the command `/submit archetype`"
       
       #Message each channel with the unknown archetypes
       await MessageChannel(bot, output, channel.discord_id, channel.channel_id)

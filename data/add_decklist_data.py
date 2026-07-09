@@ -19,7 +19,7 @@ def AddDeck(player_name:str, event_id: int) -> int:
     return deck[0]
 
 async def AddCards(deck_id:int, cards:list[Card]) -> int:
-  data_to_insert = [(deck_id, card.quantity, card.card_name, is_mainboardboard) for card in cards]
+  data_to_insert = [(deck_id, card.quantity, card.card_name, card.is_mainboard) for card in cards]
 
   async with await psycopg.AsyncConnection.connect(DATABASE_URL) as conn:
     async with conn.cursor() as cur:
@@ -33,7 +33,7 @@ async def AddCards(deck_id:int, cards:list[Card]) -> int:
       return len(cards)
 
 def ConvertInputToPostgresArray(input_list:list[Card]) -> str:
-  card_names = [card.card_name.replace("'","''") for card in input_list if is_mainboardboard]
+  card_names = [card.card_name.replace("'","''") for card in input_list if card.is_mainboard]
   array_string = "',\n'".join(card_names)
   return f"'{array_string}'"
 

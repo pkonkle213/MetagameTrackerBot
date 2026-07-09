@@ -1,8 +1,8 @@
 from discord import Interaction, app_commands, Object
 from discord.ext import commands
-import timedposts.automated_paid_users as apu
 import settings
 from timedposts.automated_updates import UpdateDataGuild
+import timedposts.automated_paid_users as apu
 
 
 class ForceDataGuildUpdate(commands.GroupCog, name="force_update"):

@@ -24,7 +24,8 @@ def GetEvent(
       reported_as,
       league_id,
       created_by,
-      created_at
+      created_at,
+      is_complete
     FROM
       events_view
     WHERE
@@ -142,7 +143,8 @@ def GetStoreEvents(
       e.reported_as,
       e.created_by,
       e.created_at,
-      e.league_id
+      e.league_id,
+      e.is_complete
     FROM
       events_view e
       INNER JOIN stores s ON s.discord_id = e.discord_id
@@ -181,7 +183,8 @@ def GetHubEvents(discord_id: int, channel_id:int) -> list[Event]:
         e.created_at,
         e.created_by,
         e.league_id,
-        e.reported_as
+        e.reported_as,
+        e.is_complete
       FROM
         events_view e
         INNER JOIN stores_view s ON s.discord_id = e.discord_id
@@ -208,7 +211,8 @@ def GetHubEvents(discord_id: int, channel_id:int) -> list[Event]:
         e.created_at,
         e.created_by,
         e.league_id,
-        e.reported_as
+        e.reported_as,
+        e.is_complete
       FROM
         events_view e
         INNER JOIN stores_view s ON s.discord_id = e.discord_id
