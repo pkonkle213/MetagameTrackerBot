@@ -28,7 +28,8 @@ def GetPreviousEvents(
       e.reported_as,
       e.created_by,
       e.created_at,
-      e.league_id
+      e.league_id,
+      e.is_complete
     FROM
       events_view e
       INNER JOIN stores s ON s.discord_id = e.discord_id

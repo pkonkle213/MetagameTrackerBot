@@ -1,7 +1,31 @@
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
 import psycopg
-from tuple_conversions import Store, Event, ChannelFormatMapping
+from tuple_conversions import Store, Event, ChannelFormatMapping, Hub
+
+def UpdateHub(
+  discord_id:int,
+  hub_name:str,
+  hub_invite:str
+) -> int:
+  conn = psycopg.connect(DATABASE_URL)
+  print('Hub Name:', hub_name)
+  print('Hub Invite:', hub_invite)
+  with conn, conn.cursor(row_factory=scalar_row) as cur:
+    command = f'''
+    UPDATE hubs
+    SET hub_name = %s
+      , invite = %s
+    WHERE discord_id = %s
+    RETURNING discord_id
+    '''
+    cur.execute(command, [hub_name, hub_invite, discord_id])
+    conn.commit()
+    row = cur.fetchone()
+    if not row:
+      raise Exception(f'Unable to update hub: {discord_id}')
+
+    return row
 
 def UpdateStore(
   discord_id:int,
@@ -9,15 +33,17 @@ def UpdateStore(
   store_address:str,
   melee_id:str | None,
   melee_secret:str | None
-) -> Store:
+) -> int:
+  print('Store client id:', melee_id)
+  print('Store client secret:', melee_secret)
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=scalar_row) as cur:
     command = f'''
     UPDATE stores
     SET store_name = %s
       , store_address = %s
-      {', melee_client_id = %s' if melee_id else ''}
-      {', melee_client_secret = %s' if melee_secret else ''}
+      , melee_client_id = {'%s' if melee_id else 'NULL'}
+      , melee_client_secret = {'%s' if melee_secret else 'NULL'}
     WHERE discord_id = %s
     RETURNING discord_id
     '''

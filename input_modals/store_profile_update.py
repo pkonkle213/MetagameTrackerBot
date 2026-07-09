@@ -1,12 +1,14 @@
+from discord.ext import commands
+from services.command_error_service import Error
 import discord
-
 from tuple_conversions import Store
 
 class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
   is_submitted = False
   
-  def __init__(self, store: Store | None = None) -> None:
+  def __init__(self, bot:commands.Bot, store: Store) -> None:
     super().__init__()
+    self.bot = bot
 
     self.store_name = discord.ui.Label(
       text="Store Name",
@@ -52,11 +54,10 @@ class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
     self.submitted_melee_id =  self.melee_id.component.value if self.melee_id.component.value else None
     self.submitted_melee_secret = self.melee_secret.component.value if self.melee_secret.component.value else None
     self.is_submitted = True
-    await interaction.response.defer(thinking=False)
+    await interaction.response.defer(thinking=True)
 
   async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
-    await interaction.followup.send(f'Oops! Something went wrong: {error}', ephemeral=True)
-    self.is_submitted = False
+    await Error(self.bot, interaction, error)
   
   async def on_timeout(self) -> None:
     self.is_submitted = False
