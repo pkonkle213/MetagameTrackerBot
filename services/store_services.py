@@ -2,38 +2,55 @@ from services.input_services import ConvertInput
 import settings
 from discord_messages import MessageUser
 import discord
+from discord.ext import commands
 from custom_errors import KnownError
 from data.formats_data import AddFormatMap, GetFormatsByGameId
 from data.games_data import AddGameMap
-from data.store_data import AddStore, UpdateStore, AddDiscord
+from data.store_data import AddStore, UpdateStore, AddDiscord, UpdateHub
 from input_modals.store_profile_update import StoreProfileModal
+from input_modals.hub_profile_update import HubProfileModal
 from interaction_objects import GetObjectsFromInteraction
 from services.game_mapper_services import GetGameOptions
 from settings import BOTGUILDID
 from tuple_conversions import Format, Game
 
-async def UpdateStoreDetails(interaction: discord.Interaction):
+async def UpdateDetails(bot:commands.Bot, interaction: discord.Interaction) -> str:
   """Updates the store details in the database"""
-  store = GetObjectsFromInteraction(interaction)[0]
-  if not store:
-    raise KnownError('No store found')
-  modal = StoreProfileModal(store)
-  await interaction.response.send_modal(modal)
-  await modal.wait()
+  objects = GetObjectsFromInteraction(interaction)
+  if not objects.store and not objects.hub:
+    raise KnownError('No registered discord found')
 
-  if not modal.is_submitted:
-    raise KnownError('Modal not submitted correctly')
+  if objects.store:
+    modal = StoreProfileModal(bot, objects.store)
+    await interaction.response.send_modal(modal)
+    await modal.wait()  
 
-  # Now get store from database after modal is submitted
-  
-  result = UpdateStore(store.discord_id,
-                       modal.submitted_store_name,
-                       modal.submitted_store_address,
-                       modal.submitted_melee_id,
-                       modal.submitted_melee_secret)
+    if not modal.is_submitted:
+      raise KnownError('Modal not submitted correctly')
+    
+    result = UpdateStore(objects.store.discord_id,
+                         modal.submitted_store_name,
+                         modal.submitted_store_address,
+                         modal.submitted_melee_id,
+                         modal.submitted_melee_secret)
+
+  if objects.hub:
+    modal = HubProfileModal(bot, objects.hub)
+    await interaction.response.send_modal(modal)
+    await modal.wait()
+
+    if not modal.is_submitted:
+      raise KnownError('Modal not submitted correctly')
+
+    result = UpdateHub(objects.hub.discord_id,
+                       modal.submitted_hub_name,
+                       modal.submitted_hub_invite)
   
   if result:
-    return 'Store profile updated'
+    return 'Profile updated!'
+  else:
+    raise KnownError('Profile unable to update')
+  
 
 async def NewStoreRegistration(
   bot:discord.Client,

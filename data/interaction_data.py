@@ -175,7 +175,8 @@ def GetHubByDiscord(discord_id: int) -> Hub | None:
       region_id,
       game_lock,
       format_lock,
-      is_paid
+      is_paid,
+      invite
     FROM
       hubs_view      
     WHERE

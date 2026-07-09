@@ -4,7 +4,12 @@ import requests
 from data.add_decklist_data import AddDeck, AddCards, SelectArchetype
 from tuple_conversions import Format, Card, Event
 
-async def GetMoxfieldArchetype(url:str, event:Event, format:Format, player_name: str) -> str:
+async def GetMoxfieldArchetype(
+  url:str,
+  event:Event,
+  format:Format,
+  player_name:str
+) -> str:
   # Transform into a moxfield deck id
   slash = url.rfind('/')  
   mox_id = url[slash+1:]
