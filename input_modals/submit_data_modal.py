@@ -1,12 +1,11 @@
 from output_builder import BuildTableOutput
 import discord
 from data.pairings_data import GetEventByRounds
-from datetime import date
 from custom_errors import KnownError
 from services.date_functions import ConvertToDate, GetToday
 from discord.ext import commands
 from data.data_input_menus import GetPreviousEvents, GetEventTypes
-from tuple_conversions import Event, Format, Game, Store, EventInput, DataConverted
+from tuple_conversions import Event, Format, Game, Store, EventInput
 from services.convert_and_save_input import ConvertData
 from services.add_results_services import SubmitData
 from discord_messages import MessageChannel

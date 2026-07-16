@@ -1,6 +1,4 @@
 from typing import Tuple
-from datetime import date
-from services.date_functions import ConvertToDate
 from output_builder import BuildTableOutput
 from custom_errors import KnownError
 from data.add_results_data import InsertStanding, InsertPairing, CheckPairings
@@ -17,8 +15,6 @@ def SubmitData(
   if submitted_event.id == 0:
     event_id = CreateEvent(submitted_event,
                            userId)
-    if event_id is None:
-      raise KnownError('Unable to create event')
     event_created = True
   else:
     event_id = submitted_event.id

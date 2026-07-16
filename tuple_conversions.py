@@ -3,7 +3,7 @@ from datetime import date, datetime
 from enum import Enum
 
 
-class EventType(Enum):
+class EventTypeEnum(Enum):
   """An enum of the different types of events"""
 
   Weekly = 1
@@ -11,7 +11,11 @@ class EventType(Enum):
   League = 3
 
 
-class ReportedAs(Enum):
+class EventType(NamedTuple):
+  id: int
+  name: str
+
+class ReportedAsEnum(Enum):
   """An enum of how events are reported"""
 
   Pairings = 1

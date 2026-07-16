@@ -1,8 +1,7 @@
-from typing import Tuple
 from psycopg.rows import class_row
 from settings import DATABASE_URL
 import psycopg
-from tuple_conversions import Event, Format, Game, Store
+from tuple_conversions import Event, Format, Game, Store, EventType
 
 def GetPreviousEvents(
   store:Store,
@@ -55,22 +54,10 @@ def GetEventTypes(
   discord_id: int,
   game: Game,
   format:Format
-) -> list[Tuple[int, str]]:
+) -> list[EventType]:
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
+  with conn, conn.cursor(row_factory=class_row(EventType)) as cur:
     command = '''
-    (
-      SELECT
-        id,
-        event_type
-      FROM
-        event_types
-      WHERE
-        id NOT IN (3)
-      ORDER BY
-        id
-    )
-    UNION ALL
     (
       SELECT
         - id AS id,
@@ -86,6 +73,18 @@ def GetEventTypes(
       ORDER BY
         end_date DESC,
         start_date DESC
+    )
+    UNION ALL
+    (
+      SELECT
+        id,
+        event_type
+      FROM
+        event_types
+      WHERE
+        id NOT IN (3)
+      ORDER BY
+        id
     )
     LIMIT 25
     '''

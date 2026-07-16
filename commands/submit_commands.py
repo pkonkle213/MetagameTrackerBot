@@ -83,6 +83,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
     if len(events) == 0:
       raise KnownError("No events found.")
+
     await GetArchetypeModal(
       self.bot,
       userId,
@@ -100,24 +101,8 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
   @IsStore()
   async def SubmitDataCommand(
     self,
-    interaction: Interaction,
-    csv_file: typing.Optional[Attachment] = None,
-    melee_tournament_id: str = "",
+    interaction: Interaction
   ) -> None:
-    """
-    Parameters
-    ----------
-    csv_file: Attachment
-      The CSV file containing the event's data from CARDE.IO
-
-    melee_tournament_id: str
-      The Melee Tournament ID for the event
-    """
-    # Ensure that only one type of data is being submitted
-    if csv_file and melee_tournament_id:
-      raise KnownError(
-        "You can only submit a CSV file or a Melee Tournament ID, not both."
-      )
 
     objects = GetObjectsFromInteraction(interaction)
 
@@ -127,46 +112,18 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     if objects.hub:
       raise KnownError("You can't submit data from a hub.")
 
-    data = False if csv_file or melee_tournament_id else True
+    event = await EventInput(self.bot, interaction, objects.store, objects.game, objects.store)
 
-    cont = True
-    while cont:
-      modal = SubmitDataModal(
-        self.bot,
-        objects.store,
-        objects.game,
-        objects.format,
-        data,
-        csv_file,
-        melee_tournament_id,
-      )
-      await interaction.response.send_modal(modal)
-      await modal.wait()
 
   @SubmitCheck.error
   @SubmitDataCommand.error
   @SubmitArchetypeCommand.error
   async def Errors(
-    self, interaction: Interaction, error: app_commands.AppCommandError
+    self,
+    interaction: Interaction,
+    error: app_commands.AppCommandError
   ):
     await Error(self.bot, interaction, error)
-
-
-async def NewDataMessage(bot: commands.Bot, interaction: Interaction, isError: bool):
-  if not interaction.guild or not interaction.channel:
-    raise Exception("No guild or channel to this interaction??")
-  message = f"""
-  {"Could not submit data due to error" if isError else "Successfully received new data"}
-  Guild name: {interaction.guild.name}
-  Guild id: {interaction.guild.id}
-  Channel name: {interaction.channel.name}
-  Channel id: {interaction.channel.id}
-  Author name: {interaction.user.name}
-  Author id: {interaction.user.id}
-  """
-
-  await MessageChannel(bot, message, settings.BOTGUILDID, settings.BOTEVENTINPUTID)
-
 
 async def setup(bot:commands.Bot):
   await bot.add_cog(SubmitDataChecker(bot))
