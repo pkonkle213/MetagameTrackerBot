@@ -65,7 +65,7 @@ async def SubmitArchetype(
         player_name,
         moxfield_archetype,
         None,
-        'Moxfield Import',
+        'Decklist Import',
         guild_id,
         guild_name,
         is_submitter

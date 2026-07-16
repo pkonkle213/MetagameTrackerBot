@@ -4,6 +4,7 @@ import requests
 from data.add_decklist_data import AddDeck, AddCards, SelectArchetype
 from tuple_conversions import Format, Card, Event
 
+#TODO: This does too much and should be broken apart.
 async def GetMoxfieldArchetype(
   url:str,
   event:Event,
@@ -29,9 +30,8 @@ async def GetMoxfieldArchetype(
     response = requests.get(api_url, headers=headers)
     response.raise_for_status()
   except requests.exceptions.HTTPError as e:
-    raise KnownError(f"Error fetching decklist: {e}")
+    raise KnownError("Error fetching decklist")
 
-  
   deck_data = response.json()
   cards:list[Card] = []
   
