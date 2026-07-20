@@ -1,5 +1,4 @@
 import discord
-from discord.ext import commands
 from data.data_input_menus import GetEventTypes, GetPreviousEvents
 from services.date_functions import ConvertToDate, GetToday
 from tuple_conversions import Event, EventInput, EventType, Format, Game, Store
@@ -8,14 +7,12 @@ from custom_errors import KnownError
 class SubmitEventModal(discord.ui.Modal, title='Select Event'):
     def __init__(
         self,
-        bot: commands.Bot,
         store: Store,
         game: Game,
         format: Format
     ):
         super().__init__()
         today = GetToday().strftime('%m/%d/%Y')
-        self.bot = bot
         self.store = store
         self.game = game
         self.format = format
@@ -28,6 +25,12 @@ class SubmitEventModal(discord.ui.Modal, title='Select Event'):
         default_id = FindDefaultEvent(self.previous_events)
         past_events = SetPastEventsOptions(self.previous_events, default_id)
         list_event_types = SetEventTypes(event_types)
+
+        data_types = [
+          discord.SelectOption(label='Manual Text Entry', value='0', default=True),
+          discord.SelectOption(label='CSV', value='1'),
+          discord.SelectOption(label='Melee.gg Event Id', value='2')
+        ]
 
         self.continue_event = discord.ui.Label(
             text="Continue?",
@@ -75,14 +78,25 @@ class SubmitEventModal(discord.ui.Modal, title='Select Event'):
         )
         self.add_item(self.event_type)
 
-    async def on_submit(self, interaction: discord.Interaction):
-        submitted_event = SetEventInfo(
-            self.continue_event.component.values[0],
-            self.previous_events,
-            self.date_input.component.value,
-            self.name_input.component.value,
-            self.event_type.component.values[0] if self.event_type.component.values else None
+        self.data_input = discord.ui.Label(
+          text='How will data be submitted?'
+          component=discord.ui.Select(
+            placeholder='Select a method',
+            min=1,
+            max=1,
+            required=True,
+            options=data_types
+          )
         )
+
+    async def on_submit(self, interaction: discord.Interaction):
+      submitted_event = SetEventInfo(
+          self.continue_event.component.values[0],
+          self.previous_events,
+          self.date_input.component.value,
+          self.name_input.component.value,
+          self.event_type.component.values[0] if self.event_type.component.values else None
+      )
 
 def SetEventInfo(
   continued_event_id: str,
@@ -141,7 +155,6 @@ def SetEventTypes(event_types:list[EventType]) -> list[discord.SelectOption]:
   
   return types
       
-
 def FindDefaultEvent(previous_events: list[Event]) -> int:
   today = GetToday()
   if len(previous_events) == 0:

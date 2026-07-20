@@ -12,19 +12,7 @@ from discord_messages import MessageChannel
 from services.message_hubs_services import MessageHubs
 import settings
 from services.command_error_service import Error
-
-class ConfirmStandings(discord.ui.View):
-  def __init__(self, data:EventInput):
-    super().__init__(timeout=120)
-    self.is_submitted = False
-    self.data = data
-
-  @discord.ui.button(label="Confirm & Submit", style=discord.ButtonStyle.success)
-  async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
-    await interaction.response.edit_message(content="Submitting data...", view=None)
-    for child in self.children: child.disabled = True
-    self.stop()
-  
+from views.confirm_standings import ConfirmStandings
 
 class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
   def __init__(
@@ -99,17 +87,6 @@ class SubmitDataModal(discord.ui.Modal, title='Submit Data'):
         min_values=1)
     )
     self.add_item(self.event_type)
-
-    if data:
-      self.message_input = discord.ui.Label(
-        text="Event Data",
-        component=discord.ui.TextInput(
-          style=discord.TextStyle.paragraph,
-          placeholder='Paste your data here',
-          required=True,
-          max_length=2000  # Max length for text input
-        ))
-      self.add_item(self.message_input)
 
   async def on_submit(self, interaction: discord.Interaction):
     submitted_event = SetEventInfo(

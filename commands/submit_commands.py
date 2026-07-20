@@ -1,15 +1,10 @@
-import typing
-
-from discord import Attachment, Interaction, User, app_commands
+from discord import Interaction, User, app_commands
 from discord.ext import commands
 
-import settings
 from checks import IsStore, isSubmitter
 from custom_errors import KnownError
 from data.event_data import GetHubEvents, GetStoreEvents
 from data.player_name_data import GetUserArchetypes, GetUserName
-from discord_messages import MessageChannel
-from input_modals.submit_data_modal import SubmitDataModal
 from interaction_objects import GetObjectsFromInteraction
 from services.command_error_service import Error
 from services.determine_archetype_input import GetArchetypeModal
@@ -110,9 +105,20 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
       raise KnownError("No store, game, or format found.")
 
     if objects.hub:
-      raise KnownError("You can't submit data from a hub.")
+      raise KnownError("You can't submit data from a hub...yet...")
 
     event = await EventInput(self.bot, interaction, objects.store, objects.game, objects.store)
+
+    # now with the event known, I need to start a loop and present modals to input data
+    cont = True
+    while cont:
+      # Define the correct modal (csv, melee, text) for receiving data and send to user
+      
+      # Define the view of asking if the data submitting is over elsewhere, but initialize here (probably nothing needed in the initialization)
+      
+      # If event over, update event as complete and set cont = False
+      # If event not over, set cont = False
+      ...
 
 
   @SubmitCheck.error
@@ -120,7 +126,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
   @SubmitArchetypeCommand.error
   async def Errors(
     self,
-    interaction: Interaction,
+    interaction: Interaction,  
     error: app_commands.AppCommandError
   ):
     await Error(self.bot, interaction, error)
