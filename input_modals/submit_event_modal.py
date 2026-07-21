@@ -1,18 +1,22 @@
+from discord.ext import commands
+
+from services.command_error_service import Error
 import discord
 from data.data_input_menus import GetEventTypes, GetPreviousEvents
 from services.date_functions import ConvertToDate, GetToday
-from tuple_conversions import Event, EventInput, EventType, Format, Game, Store
-from custom_errors import KnownError
+from tuple_conversions import Event, EventType, Format, Game, Store
 
 class SubmitEventModal(discord.ui.Modal, title='Select Event'):
     def __init__(
         self,
+        bot: commands.Bot,
         store: Store,
         game: Game,
         format: Format
     ):
         super().__init__()
         today = GetToday().strftime('%m/%d/%Y')
+        self.bot = bot
         self.store = store
         self.game = game
         self.format = format
@@ -26,7 +30,7 @@ class SubmitEventModal(discord.ui.Modal, title='Select Event'):
         past_events = SetPastEventsOptions(self.previous_events, default_id)
         list_event_types = SetEventTypes(event_types)
 
-        data_types = [
+        self.data_types:list[discord.SelectOption] = [
           discord.SelectOption(label='Manual Text Entry', value='0', default=True),
           discord.SelectOption(label='CSV', value='1'),
           discord.SelectOption(label='Melee.gg Event Id', value='2')
@@ -85,65 +89,61 @@ class SubmitEventModal(discord.ui.Modal, title='Select Event'):
             min=1,
             max=1,
             required=True,
-            options=data_types
+            options=self.data_types
           )
         )
+        self.add_item(self.data_input)
 
     async def on_submit(self, interaction: discord.Interaction):
-      submitted_event = SetEventInfo(
-          self.continue_event.component.values[0],
+      self.submitted_event = SetEventInfo(
+          int(self.continue_event.component.values[0]),
           self.previous_events,
           self.date_input.component.value,
           self.name_input.component.value,
-          self.event_type.component.values[0] if self.event_type.component.values else None
+          self.event_type.component.values[0] if self.event_type.component.values else None,
+          int(self.data_input.component.values[0])
       )
 
+    async def on_error(
+        self,
+        interaction: discord.Interaction,
+        error: Exception
+      ) -> None:
+        await Error(self.bot, interaction, error)
+
+    async def on_timeout(self) -> None:
+      self.is_submitted = False
+
 def SetEventInfo(
-  continued_event_id: str,
+  continued_event_id: int,
   previous_events: list[Event],
   date_input:str, 
   name_input:str, 
   event_type:int
-) -> EventInput:
-  event = None
-  
-  if continued_event_id == '0':
+) -> Event | None:
+  if continued_event_id == 0:
     date = ConvertToDate(date_input)
-    event = EventInput(
+    return Event(
       0,
       None,
+      None,
+      0,
       date,
-      name_input,
+      0,
+      0,
+      0,
       event_type,
-      0,
-      None,
-      None,
-      None,
-      None,
+      name_input,
       0,
       0,
-      0)
+      None,
+      False
+    )
   else:
     for prev_event in previous_events:
-      if prev_event[0] == int(continued_event_id):
-        event = EventInput(
-          prev_event.id,
-          prev_event.custom_event_id,
-          prev_event.event_date,
-          prev_event.event_name,
-          prev_event.event_type_id,
-          0,
-          None,
-          None,
-          None,
-          None,
-          0,
-          0,
-          0
-        )
-    if not event:
-      raise KnownError('Event not found')
-  return event
+      if prev_event[0] == continued_event_id:
+        return prev_event
+  return None
 
 def SetEventTypes(event_types:list[EventType]) -> list[discord.SelectOption]:
   types:list[discord.SelectOption] = []
@@ -161,7 +161,7 @@ def FindDefaultEvent(previous_events: list[Event]) -> int:
     return 0
 
   for event in previous_events:
-    if event.created_at.date() == today:
+    if event.created_at and event.created_at.date() == today:
       return event.id
   
   return 0

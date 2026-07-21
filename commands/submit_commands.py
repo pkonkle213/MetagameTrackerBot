@@ -1,6 +1,6 @@
 from discord import Interaction, User, app_commands
 from discord.ext import commands
-
+from services.event_services import EventInput, GetEvent
 from checks import IsStore, isSubmitter
 from custom_errors import KnownError
 from data.event_data import GetHubEvents, GetStoreEvents
@@ -107,8 +107,8 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     if objects.hub:
       raise KnownError("You can't submit data from a hub...yet...")
 
-    event = await EventInput(self.bot, interaction, objects.store, objects.game, objects.store)
-
+    event = GetEvent(self.bot, interaction, objects.store, objects.game, objects.format)
+    
     # now with the event known, I need to start a loop and present modals to input data
     cont = True
     while cont:

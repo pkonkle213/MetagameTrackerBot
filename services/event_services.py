@@ -1,10 +1,9 @@
-from discord import Game, Interaction
+from discord import Interaction
 from discord.ext import commands
+from tuple_conversions import Format, Game, Store, Event
 
-from tuple_conversions import Format, Store
 
-
-def EventInput(bot:commands.Bot, interaction:Interaction, store:Store, game:Game, format:Format):
+async def GetEvent(bot:commands.Bot, interaction:Interaction, store:Store, game:Game, format:Format) -> Event:
     # This should present a modal similar to what is now the data modal (but not the data)
     # 1) Continue dropdown
     # 2) New Event Date - default to today
@@ -16,4 +15,8 @@ def EventInput(bot:commands.Bot, interaction:Interaction, store:Store, game:Game
     #       Text - default if magic
 
     # It needs to figure out if the event for the data is new or a continuation of a previous event
+    event = await EventInput(bot, interaction, store, game, format)
+    
+    # If new, create it
+
     ...
