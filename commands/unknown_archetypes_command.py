@@ -37,7 +37,7 @@ class UnknownArchetypes(commands.Cog):
       )
     else:
       output = BuildTableOutput(table.title, table.headers, table.data)
-      output = output[:1940] + "\nTo submit yours, use the command `/submit archetype`"
+      output = output[:1940] + "\nTo submit an archetype, use the command `/submit archetype`"
       await interaction.followup.send(output)
 
   @IntoTheUnknown.error
