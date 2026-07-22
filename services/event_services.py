@@ -1,5 +1,6 @@
 from discord import Interaction
 from discord.ext import commands
+from input_modals.submit_event_modal import SubmitEventModal
 from tuple_conversions import Format, Game, Store, Event
 
 
@@ -15,8 +16,16 @@ async def GetEvent(bot:commands.Bot, interaction:Interaction, store:Store, game:
     #       Text - default if magic
 
     # It needs to figure out if the event for the data is new or a continuation of a previous event
-    event = await EventInput(bot, interaction, store, game, format)
-    
+    modal = SubmitEventModal(store, game, format)
+    await interaction.response.send_modal(modal)
+    try:
+        await modal.wait()
+    except:
+        raise Exception('Unable to find the event')
+
+    selected_event = modal.submitted_event
+
+    print('selected event:', selected_event)
     # If new, create it
 
     ...

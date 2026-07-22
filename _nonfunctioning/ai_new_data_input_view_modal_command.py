@@ -1,5 +1,4 @@
 import discord
-from discord.ext import commands
 from discord import app_commands
 
 # 1. Define the Modal for user input
