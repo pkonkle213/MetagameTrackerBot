@@ -1,6 +1,6 @@
 from discord import Interaction, User, app_commands
 from discord.ext import commands
-from services.event_services import EventInput, GetEvent
+from services.event_services import GetEvent
 from checks import IsStore, isSubmitter
 from custom_errors import KnownError
 from data.event_data import GetHubEvents, GetStoreEvents
@@ -98,20 +98,23 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     self,
     interaction: Interaction
   ) -> None:
-
     objects = GetObjectsFromInteraction(interaction)
 
     if not objects.store or not objects.game or not objects.format:
       raise KnownError("No store, game, or format found.")
 
     if objects.hub:
-      raise KnownError("You can't submit data from a hub...yet...")
+      raise KnownError("You can't submit data from a hub")
 
-    event = GetEvent(self.bot, interaction, objects.store, objects.game, objects.format)
+    print('Attempting to get an event')
+    event_id, input_type = await GetEvent(self.bot, interaction, objects.store, objects.game, objects.format)
+
+    print('Event id found:', event_id)
+    print('Input type found:', input_type)
     
     # now with the event known, I need to start a loop and present modals to input data
     cont = True
-    while cont:
+    while False:
       # Define the correct modal (csv, melee, text) for receiving data and send to user
       
       # Define the view of asking if the data submitting is over elsewhere, but initialize here (probably nothing needed in the initialization)

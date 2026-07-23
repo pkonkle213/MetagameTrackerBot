@@ -1,8 +1,8 @@
 import discord
-from tuple_conversions import EventInput
+from tuple_conversions import DataInput
 
 class ConfirmStandings(discord.ui.View):
-  def __init__(self, data:EventInput):
+  def __init__(self, data:DataInput):
     super().__init__(timeout=120)
     self.is_submitted = False
     self.data = data

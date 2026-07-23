@@ -4,10 +4,10 @@ from custom_errors import KnownError
 from data.add_results_data import InsertStanding, InsertPairing, CheckPairings
 from services.input_services import ConvertInput
 from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
-from tuple_conversions import EventInput, Standing, Pairing, Event, ReportedAs
+from tuple_conversions import Standing, Pairing, Event, ReportedAsEnum
 
 def SubmitData(
-  submitted_event:EventInput,
+  submitted_event,
   userId:int
 ) -> Tuple[str | None, Event | None]:
   """Submits an event's data to the database"""
@@ -24,11 +24,11 @@ def SubmitData(
   #Add the data to the database depending on the type of data
   results = ''
   if submitted_event.StandingData:
-    if event.reported_as == ReportedAs.Pairings.value:
+    if event.reported_as == ReportedAsEnum.Pairings.value:
       raise KnownError('This event already has pairings submitted. Please continue to submit pairings for this event')
     results = AddStandingResults(event, submitted_event.StandingData, userId)
   elif submitted_event.PairingData:
-    if event.reported_as == ReportedAs.Standings.value:
+    if event.reported_as == ReportedAsEnum.Standings.value:
       #Delete the standings data
       print('Deleting standings data')
       DeleteStandingsFromEvent(event.id)

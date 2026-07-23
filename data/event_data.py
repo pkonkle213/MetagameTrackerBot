@@ -2,7 +2,7 @@ from typing import Tuple
 import psycopg
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
-from tuple_conversions import Event, EventInput, Format, Game, Store
+from tuple_conversions import Event, DataInput, Format, Game, Store
 
 def GetEvent(
   event_id: int
@@ -37,9 +37,9 @@ def GetEvent(
       raise Exception(f'Cannot find event. ID: {event_id}')
     return row
 
-#TODO: Why did I need to force event_type_id to be an int?
+#TODO: Fix
 def CreateEvent(
-  event:EventInput,
+  event:Event,
   user_id:int
 ) -> int:
   conn = psycopg.connect(DATABASE_URL)
@@ -60,9 +60,9 @@ def CreateEvent(
     )
     VALUES
     ('{event.event_date}'
-    , {event.StoreID}
-    , {event.GameID}
-    , {event.FormatID}
+    , {event.discord_id}
+    , {event.game_id}
+    , {event.format_id}
     , 0
     , '{event.event_name}'
     , {event.event_type_id if int(event.event_type_id) > 0 else 3}

@@ -2,6 +2,12 @@ from psycopg.rows import class_row
 from settings import DATABASE_URL
 import psycopg
 from tuple_conversions import Event, Format, Game, Store, EventType
+from typing import NamedTuple
+
+class EventSelect(NamedTuple):
+  id: int
+  event_name: str
+  events: int
 
 def GetPreviousEvents(
   store:Store,
@@ -60,25 +66,31 @@ def GetEventTypes(
     command = '''
     (
       SELECT
-        - id AS id,
-        name
+        - l.id AS id,
+        name,
+        COUNT(e.id) AS num_events
       FROM
-        leagues
+        leagues l
+        INNER JOIN events e ON e.league_id = l.id
       WHERE
         end_date >= NOW()
         AND start_date <= NOW()
-        AND discord_id = %s
-        AND game_id = %s
-        AND format_id = %s
+        AND l.discord_id = %s
+        AND l.game_id = %s
+        AND l.format_id = %s
+      GROUP BY
+        l.id
       ORDER BY
         end_date DESC,
         start_date DESC
+      LIMIT 23
     )
     UNION ALL
     (
       SELECT
         id,
-        event_type
+        event_type,
+        0 AS num_events
       FROM
         event_types
       WHERE
@@ -86,9 +98,9 @@ def GetEventTypes(
       ORDER BY
         id
     )
-    LIMIT 25
     '''
 
     cur.execute(command, [discord_id, game.id, format.id])
     rows = cur.fetchall()
+    print('----Event Types----\n', rows)
     return rows

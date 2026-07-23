@@ -51,6 +51,7 @@ class MetagameResult(NamedTuple):
 class EventType(NamedTuple):
   id: int
   name: str
+  num_events: int
 
 class League(NamedTuple):
   id: int
