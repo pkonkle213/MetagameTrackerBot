@@ -3,15 +3,21 @@ from datetime import date, datetime
 from enum import Enum
 
 
-class EventType(Enum):
+class EventTypeEnum(Enum):
   """An enum of the different types of events"""
 
   Weekly = 1
   Tournament = 2
   League = 3
 
+class DataInputEnum(Enum):
+  """An enum of how data will be submitted"""
 
-class ReportedAs(Enum):
+  Manual = 1
+  CSV = 2
+  Melee = 3
+
+class ReportedAsEnum(Enum):
   """An enum of how events are reported"""
 
   Pairings = 1
@@ -27,24 +33,25 @@ class GameEnum(Enum):
   StarWarsUnlimited = 4
   Riftbound = 5
 
-
 class PlayerStanding(NamedTuple):
   points: int
   win_percent: float
   rank: int
-
 
 class TopPlayers(NamedTuple):
   player_name: str
   points: int
   win_percent: float
 
-
 class MetagameResult(NamedTuple):
   archetype_played: str
   metagame_percent: float
   win_percent: float
 
+class EventType(NamedTuple):
+  id: int
+  name: str
+  num_events: int
 
 class League(NamedTuple):
   id: int
@@ -141,7 +148,7 @@ class Event(NamedTuple):
   event_name: str
   reported_as: int
   created_by: int
-  created_at: datetime  
+  created_at: datetime | None
   is_complete: bool
 
 
@@ -162,13 +169,8 @@ class Standing(NamedTuple):
   draws: int
 
 
-class EventInput(NamedTuple):
-  id: int
-  custom_event_id: int | None
-  event_date: date | None
-  event_name: str
-  event_type_id: int
-  round_number: int
+class DataInput(NamedTuple):
+  event: Event
   PairingData: list[Pairing] | None
   StandingData: list[Standing] | None
   ArchetypeData: dict[str, str] | None
@@ -176,6 +178,7 @@ class EventInput(NamedTuple):
   StoreID: int
   GameID: int
   FormatID: int
+  DataMethod: int
 
 
 class InteractionObjects(NamedTuple):

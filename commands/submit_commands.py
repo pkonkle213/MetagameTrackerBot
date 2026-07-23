@@ -1,15 +1,10 @@
-import typing
-
-from discord import Attachment, Interaction, User, app_commands
+from discord import Interaction, User, app_commands
 from discord.ext import commands
-
-import settings
+from services.event_services import GetEvent
 from checks import IsStore, isSubmitter
 from custom_errors import KnownError
 from data.event_data import GetHubEvents, GetStoreEvents
 from data.player_name_data import GetUserArchetypes, GetUserName
-from discord_messages import MessageChannel
-from input_modals.submit_data_modal import SubmitDataModal
 from interaction_objects import GetObjectsFromInteraction
 from services.command_error_service import Error
 from services.determine_archetype_input import GetArchetypeModal
@@ -83,6 +78,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
     if len(events) == 0:
       raise KnownError("No events found.")
+
     await GetArchetypeModal(
       self.bot,
       userId,
@@ -100,71 +96,43 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
   @IsStore()
   async def SubmitDataCommand(
     self,
-    interaction: Interaction,
-    csv_file: typing.Optional[Attachment] = None,
-    melee_tournament_id: str = "",
+    interaction: Interaction
   ) -> None:
-    """
-    Parameters
-    ----------
-    csv_file: Attachment
-      The CSV file containing the event's data from CARDE.IO
-
-    melee_tournament_id: str
-      The Melee Tournament ID for the event
-    """
-    # Ensure that only one type of data is being submitted
-    if csv_file and melee_tournament_id:
-      raise KnownError(
-        "You can only submit a CSV file or a Melee Tournament ID, not both."
-      )
-
     objects = GetObjectsFromInteraction(interaction)
 
     if not objects.store or not objects.game or not objects.format:
       raise KnownError("No store, game, or format found.")
 
     if objects.hub:
-      raise KnownError("You can't submit data from a hub.")
+      raise KnownError("You can't submit data from a hub")
 
-    data = False if csv_file or melee_tournament_id else True
+    print('Attempting to get an event')
+    event_id, input_type = await GetEvent(self.bot, interaction, objects.store, objects.game, objects.format)
 
-    modal = SubmitDataModal(
-      self.bot,
-      objects.store,
-      objects.game,
-      objects.format,
-      data,
-      csv_file,
-      melee_tournament_id,
-    )
-    await interaction.response.send_modal(modal)
-    await modal.wait()
+    print('Event id found:', event_id)
+    print('Input type found:', input_type)
+    
+    # now with the event known, I need to start a loop and present modals to input data
+    cont = True
+    while False:
+      # Define the correct modal (csv, melee, text) for receiving data and send to user
+      
+      # Define the view of asking if the data submitting is over elsewhere, but initialize here (probably nothing needed in the initialization)
+      
+      # If event over, update event as complete and set cont = False
+      # If event not over, set cont = False
+      ...
+
 
   @SubmitCheck.error
   @SubmitDataCommand.error
   @SubmitArchetypeCommand.error
   async def Errors(
-    self, interaction: Interaction, error: app_commands.AppCommandError
+    self,
+    interaction: Interaction,  
+    error: app_commands.AppCommandError
   ):
     await Error(self.bot, interaction, error)
-
-
-async def NewDataMessage(bot: commands.Bot, interaction: Interaction, isError: bool):
-  if not interaction.guild or not interaction.channel:
-    raise Exception("No guild or channel to this interaction??")
-  message = f"""
-  {"Could not submit data due to error" if isError else "Successfully received new data"}
-  Guild name: {interaction.guild.name}
-  Guild id: {interaction.guild.id}
-  Channel name: {interaction.channel.name}
-  Channel id: {interaction.channel.id}
-  Author name: {interaction.user.name}
-  Author id: {interaction.user.id}
-  """
-
-  await MessageChannel(bot, message, settings.BOTGUILDID, settings.BOTEVENTINPUTID)
-
 
 async def setup(bot:commands.Bot):
   await bot.add_cog(SubmitDataChecker(bot))

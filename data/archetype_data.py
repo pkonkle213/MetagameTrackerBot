@@ -33,7 +33,7 @@ def AddArchetype(
   submitter_guild_id:int,
   submitter_guild_name:str,
   is_submitter:bool
-) -> int:
+) -> None:
   criteria = [player_name, archetype_played]
   with psycopg.connect(DATABASE_URL) as conn:
     with conn.cursor() as cur:
@@ -68,7 +68,6 @@ def AddArchetype(
       row = cur.fetchone()
       if not row:
         raise Exception('Unable to add archetype')
-      return row[0]
 
 class UnknownArchetypes(NamedTuple):
   event_date: str

@@ -4,7 +4,7 @@ from discord_messages import MessageChannel
 from incoming_message_conversions.melee import MeleeJsonPairings
 from discord import Interaction, Attachment
 from services.date_functions import GetToday
-from tuple_conversions import EventInput, Store, Format, Game, Pairing, Standing, Event, Archetype, DataConverted
+from tuple_conversions import DataInput, Store, Format, Game, Pairing, Standing, Event, Archetype, DataConverted
 from data_translation import ConvertCSVToData, ConvertMessageToData
 from datetime import date, datetime
 from custom_errors import KnownError
@@ -17,7 +17,7 @@ from typing import NamedTuple
 
 
 async def ConvertData(
-  event: EventInput,
+  event: DataInput,
   data: str | None,
   csv_file: Attachment | None,
   melee_tournament_id: str,
@@ -65,7 +65,7 @@ def BuildFilePath(
   return save_path
 
 def ConvertAndUploadMeleeTournament(
-  event: EventInput,
+  event: DataInput,
   melee_tournament_id: str,
   store: Store,
   game: Game,
@@ -91,7 +91,7 @@ def ConvertAndUploadMeleeTournament(
   )
 
 async def ConvertAndUploadCSV(
-  event: EventInput,
+  event: DataInput,
   csv_file: Attachment,
   store: Store,
   game: Game,
@@ -130,7 +130,7 @@ async def ConvertAndUploadCSV(
   return event
 
 def ConvertAndUploadMessage(
-  event:EventInput,
+  event:DataInput,
   data:str,
   store:Store,
   game:Game,

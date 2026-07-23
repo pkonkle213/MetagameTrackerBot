@@ -26,8 +26,6 @@ class MapGameModal(discord.ui.Modal, title='Map Game'):
     self.add_item(self.select_game)
 
   async def on_submit(self, interaction: discord.Interaction) -> None:
-    #if not self.select_game.component:
-      #raise Exception("No idea what's going on here")
     selected_game = GetGame(self.select_game.component.values[0], self.games)
     await interaction.response.defer(thinking=False)
     result = AddStoreGameMap(interaction, selected_game)

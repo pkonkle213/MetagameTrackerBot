@@ -75,7 +75,7 @@ async def SubmitArchetype(
   
   # If not banned, add to the database
   if archetype != '':
-    archetype_added = AddArchetype(
+    AddArchetype(
       event.id,
       player_name,
       archetype,
@@ -85,8 +85,6 @@ async def SubmitArchetype(
       guild_name,
       is_submitter
     )
-    if archetype_added is None:
-      raise Exception("Unable to submit the archetype. Please try again later.")
 
   feed_output = BuildMessage(interaction, event, archetype, player_name)
   private_output = f"Thank you for submitting the archetype for {event.event_name}!" + moxfield_error
