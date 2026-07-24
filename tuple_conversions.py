@@ -10,6 +10,14 @@ class EventTypeEnum(Enum):
   Tournament = 2
   League = 3
 
+class ViewButtonEnum(Enum):
+  """An enum of the different buttons and options"""
+
+  Cancel = 0
+  Continue = 1
+  DoneComplete = 2
+  DoneIncomplete = 3
+
 class DataInputEnum(Enum):
   """An enum of how data will be submitted"""
 
@@ -153,13 +161,11 @@ class Event(NamedTuple):
 
 
 class Pairing(NamedTuple):
+  round_number: int
   player1_name: str
   player1_game_wins: int
-  player2_name: str
   player2_game_wins: int
-  round_number: (
-    int  # TODO: Very curious why I can't put this first as there's a "strip" error
-  )
+  player2_name: str
 
 
 class Standing(NamedTuple):
@@ -167,18 +173,6 @@ class Standing(NamedTuple):
   wins: int
   losses: int
   draws: int
-
-
-class DataInput(NamedTuple):
-  event: Event
-  PairingData: list[Pairing] | None
-  StandingData: list[Standing] | None
-  ArchetypeData: dict[str, str] | None
-  Errors: list[str] | None
-  StoreID: int
-  GameID: int
-  FormatID: int
-  DataMethod: int
 
 
 class InteractionObjects(NamedTuple):
@@ -193,8 +187,7 @@ class DataConverted(NamedTuple):
   pairings_data: list[Pairing] | None
   standings_data: list[Standing] | None
   errors: list[str] | None
-  round_number: int | None
-  event_date: date | None
+  round_number: int
   archetypes: dict[str, str] | None
   custom_event_id: int | None
 

@@ -102,5 +102,4 @@ def GetEventTypes(
 
     cur.execute(command, [discord_id, game.id, format.id])
     rows = cur.fetchall()
-    print('----Event Types----\n', rows)
     return rows

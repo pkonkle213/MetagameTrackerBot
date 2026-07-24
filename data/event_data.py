@@ -2,7 +2,23 @@ from typing import Tuple
 import psycopg
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
-from tuple_conversions import Event, DataInput, Format, Game, Store
+from tuple_conversions import Event, Format, Game, Store
+
+def CompleteEvent(
+  event_id: int
+) -> bool:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor() as cur:
+    command = f'''
+    UPDATE events
+    SET is_complete = TRUE
+    WHERE id = {event_id}
+    RETURNING id
+    '''
+    cur.execute(command)  # type: ignore[arg-type]
+    conn.commit()
+    row = cur.fetchone()
+    return True if row else False
 
 def GetEvent(
   event_id: int
@@ -37,7 +53,7 @@ def GetEvent(
       raise Exception(f'Cannot find event. ID: {event_id}')
     return row
 
-#TODO: Fix
+
 def CreateEvent(
   event:Event,
   user_id:int

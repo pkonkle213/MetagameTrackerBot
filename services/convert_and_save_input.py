@@ -130,11 +130,9 @@ async def ConvertAndUploadCSV(
   return event
 
 def ConvertAndUploadMessage(
-  event:DataInput,
+  event:Event,
   data:str,
-  store:Store,
-  game:Game,
-  format:Format
+  save_path:str
 ) -> DataConverted:
   match event.event_type_id:
     case 1:
@@ -144,17 +142,6 @@ def ConvertAndUploadMessage(
     case _:
       event_type = 'League'
 
-  if len(data) == 0:
-    output = []
-    output.append("No data received.")
-    output.append(f"Event:\n{event}")
-    output.append(f"Store:\n{store}")
-    output.append(f"Game:\n{game}")
-    output.append(f"Format:\n{format}")
-    output.append(f"Data:\n{data}")
-    
-    raise Exception("\n".join(output))
-
   submission = '\n'.join(
     [
       f'Date: {event.event_date.strftime('%m/%d/%Y') if event.event_date else ''}',
@@ -163,10 +150,9 @@ def ConvertAndUploadMessage(
       f'Message:\n{data}'
     ]
   )
-
-  save_path = BuildFilePath(store, game, format, 'ModalInput.txt')
+  
   upload_string(submission, save_path)
   
-  converted_data = ConvertMessageToData(data, game.id)
+  converted_data = ConvertMessageToData(data)
 
   return converted_data

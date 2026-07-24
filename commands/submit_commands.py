@@ -1,14 +1,19 @@
+from views.confirm_data import ConfirmData
 from discord import Interaction, User, app_commands
 from discord.ext import commands
-from services.event_services import GetEvent
+from services.event_services import EventForData
 from checks import IsStore, isSubmitter
 from custom_errors import KnownError
-from data.event_data import GetHubEvents, GetStoreEvents
+from data.event_data import GetHubEvents, GetStoreEvents, CompleteEvent
 from data.player_name_data import GetUserArchetypes, GetUserName
 from interaction_objects import GetObjectsFromInteraction
 from services.command_error_service import Error
 from services.determine_archetype_input import GetArchetypeModal
-
+from tuple_conversions import DataInputEnum, DataConverted
+from services.convert_and_save_input import BuildFilePath
+from input_modals.submit_data_modal import SubmitManualDataModal
+from services.add_results_services import AddStandingResults, AddPairingResults
+from tuple_conversions import ViewButtonEnum
 
 class SubmitDataChecker(commands.GroupCog, name="submit"):
   """A group of commands to submit data"""
@@ -106,22 +111,69 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     if objects.hub:
       raise KnownError("You can't submit data from a hub")
 
-    print('Attempting to get an event')
-    event_id, input_type = await GetEvent(self.bot, interaction, objects.store, objects.game, objects.format)
-
-    print('Event id found:', event_id)
-    print('Input type found:', input_type)
+    event, input_type = await EventForData(self.bot, interaction, objects.store, objects.game, objects.format)
+    # TODO: I need to know if the event was created so that I can alert the channel to new data
+    if not event or not input_type:
+      #TODO: I don't like how this doesn't clear the last message
+      await interaction.followup.send('Event canceled!', ephemeral=True)
+      return
     
-    # now with the event known, I need to start a loop and present modals to input data
+    # Now with the event known, I need to start a loop and present modals to input data
+    save_path = BuildFilePath(objects.store, objects.game, objects.format, 'ManualInput.txt')
     cont = True
-    while False:
-      # Define the correct modal (csv, melee, text) for receiving data and send to user
+    while cont:
+      match input_type:
+        case DataInputEnum.Manual.value:
+          modal = SubmitManualDataModal(event, save_path)
+          pass
+
+        case DataInputEnum.CSV.value:
+          #TODO: Define the modal for csv data input
+          pass
+
+        case DataInputEnum.Melee.value:
+          #TODO: Define the modal for melee data input
+          pass
+
+        case _:
+          raise KnownError("Unknown input type")            
+
+      await interaction.response.send_modal(modal)
+      try:
+        await modal.wait()
+      except:
+        raise KnownError("Something went wrong. Canceling data.")
+
+      # TODO: Build table to have the user double check
       
-      # Define the view of asking if the data submitting is over elsewhere, but initialize here (probably nothing needed in the initialization)
+      view = ConfirmData()
+      await interaction.followup.send("Please confirm the data", ephemeral=True, view=view)
+      await view.wait()
+
+      self.confirm_response = view.action
+
+      if self.confirm_response == ViewButtonEnum.Cancel.value:
+        return
+        
+      data = modal.converted_data
+      confirmation = modal.confirm_response  
+      
+      # Submit data to database
+      if data.standings_data:
+        response = AddStandingResults(event, data.standings_data, interaction.user.id)
+      elif data.pairings_data:
+        response = AddPairingResults(event, data.pairings_data, interaction.user.id, data.round_number)
       
       # If event over, update event as complete and set cont = False
+      if confirmation == ViewButtonEnum.DoneComplete.value:
+        cont = False
+        CompleteEvent(event.id)
+        
       # If event not over, set cont = False
-      ...
+      if confirmation == ViewButtonEnum.DoneIncomplete.value:
+        cont = False
+    
+    await interaction.followup.send("Thank you for submitting data!", ephemeral=True)
 
 
   @SubmitCheck.error

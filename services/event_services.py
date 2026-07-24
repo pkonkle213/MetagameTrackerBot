@@ -1,10 +1,17 @@
 from discord import Interaction
 from discord.ext import commands
 from input_modals.submit_event_modal import SubmitEventModal
-from tuple_conversions import Format, Game, Store, Event
-from data.event_data import CreateEvent
+from tuple_conversions import Format, Game, Store, Event, ViewButtonEnum
+from data.event_data import CreateEvent, GetEvent
+from views.confirm_event import ConfirmEvent
 
-async def GetEvent(bot:commands.Bot, interaction:Interaction, store:Store, game:Game, format:Format) -> tuple[int, int]:
+async def EventForData(
+  bot:commands.Bot,
+  interaction:Interaction,
+  store:Store,
+  game:Game,
+  format:Format
+) -> tuple[Event | None, int | None]:
   modal = SubmitEventModal(store, game, format)
   await interaction.response.send_modal(modal)
   try:
@@ -17,12 +24,22 @@ async def GetEvent(bot:commands.Bot, interaction:Interaction, store:Store, game:
   if not selected_event or not data_submission_type:
     raise Exception('No event or input type selected')
     
-  event_id = selected_event.id
   input_type = data_submission_type
 
-  print('selected event:', selected_event)
-  if event_id == 0:
-    event_id = CreateEvent(selected_event, interaction.user.id)
+  view = ConfirmEvent()
+  event_output = f'''```
+Event Name: {selected_event.event_name}
+Event Date: {selected_event.event_date.strftime('%m/%d/%Y')}
+Event Type: {selected_event.event_type_id}
+Data Submission Type: {input_type}```'''
+  await interaction.followup.send(f'{event_output}\nIs this correct?', view=view, ephemeral=True)
+  await view.wait()
 
-  print('New event submitted:', event_id)
-  return event_id, input_type
+  if view.action == ViewButtonEnum.Cancel.value:
+    return None, None
+
+  if selected_event.id == 0:
+    event_id = CreateEvent(selected_event, interaction.user.id)
+    event = GetEvent(selected_event.id)
+
+  return event, input_type
