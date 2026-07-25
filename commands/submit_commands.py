@@ -9,7 +9,7 @@ from data.player_name_data import GetUserArchetypes, GetUserName
 from interaction_objects import GetObjectsFromInteraction
 from services.command_error_service import Error
 from services.determine_archetype_input import GetArchetypeModal
-from tuple_conversions import DataInputEnum, DataConverted
+from tuple_conversions import DataInputEnum
 from services.convert_and_save_input import BuildFilePath
 from input_modals.submit_data_modal import SubmitManualDataModal
 from services.add_results_services import AddStandingResults, AddPairingResults
@@ -128,10 +128,12 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
           pass
 
         case DataInputEnum.CSV.value:
+          modal = None
           #TODO: Define the modal for csv data input
           pass
 
         case DataInputEnum.Melee.value:
+          modal = None
           #TODO: Define the modal for melee data input
           pass
 
@@ -160,9 +162,9 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
       
       # Submit data to database
       if data.standings_data:
-        response = AddStandingResults(event, data.standings_data, interaction.user.id)
+        AddStandingResults(event, data.standings_data, interaction.user.id)
       elif data.pairings_data:
-        response = AddPairingResults(event, data.pairings_data, interaction.user.id, data.round_number)
+        AddPairingResults(event, data.pairings_data, interaction.user.id, data.round_number)
       
       # If event over, update event as complete and set cont = False
       if confirmation == ViewButtonEnum.DoneComplete.value:
