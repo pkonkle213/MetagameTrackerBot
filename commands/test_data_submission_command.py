@@ -78,7 +78,8 @@ class TestDataSubmission(commands.Cog):
       active_interaction = view.interaction
 
       if confirm_response == ViewButtonEnum.Cancel.value:
-        break
+        await active_interaction.response.send_message('Data submission canceled.', ephemeral=True)
+        return
 
       data = modal.converted_data
       confirmation = modal.confirm_response
@@ -95,7 +96,7 @@ class TestDataSubmission(commands.Cog):
       if confirmation == ViewButtonEnum.DoneIncomplete.value:
         cont = False
 
-    await interaction.followup.send("Thank you for submitting data!", ephemeral=True)
+    await active_interaction.response.send_message("Thank you for submitting data!", ephemeral=True)
 
   @TestDataSubmissionCommand.error
   async def Errors(

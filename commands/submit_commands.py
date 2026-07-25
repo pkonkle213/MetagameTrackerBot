@@ -152,7 +152,8 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
       active_interaction = view.interaction
 
       if confirm_response == ViewButtonEnum.Cancel.value:
-        break
+        await active_interaction.response.send_message('Data submission canceled.', ephemeral=True)
+        return
         
       data = modal.converted_data
       confirmation = modal.confirm_response  
@@ -171,8 +172,8 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
       # If event not over, set cont = False
       if confirmation == ViewButtonEnum.DoneIncomplete.value:
         cont = False
-    
-    await interaction.followup.send("Thank you for submitting data!", ephemeral=True)
+
+    await active_interaction.response.send_message("Thank you for submitting data!", ephemeral=True)
 
 
   @SubmitCheck.error

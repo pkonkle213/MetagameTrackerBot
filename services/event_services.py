@@ -11,7 +11,7 @@ async def EventForData(
   store:Store,
   game:Game,
   format:Format
-) -> tuple[Event | None, int | None]:
+) -> tuple[Event | None, int | None, Interaction | None]:
   modal = SubmitEventModal(store, game, format)
   await interaction.response.send_modal(modal)
   try:
@@ -36,6 +36,7 @@ Data Submission Type: {input_type}```'''
   await view.wait()
 
   if view.action == ViewButtonEnum.Cancel.value:
+    await view.interaction.response.send_message('Event selection canceled.', ephemeral=True)
     return None, None, None
 
   if selected_event.id == 0:

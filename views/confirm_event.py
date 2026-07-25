@@ -12,12 +12,10 @@ class ConfirmEvent(discord.ui.View):
   async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
     self.action = ViewButtonEnum.Cancel.value
     self.interaction = interaction
-    await interaction.response.defer(ephemeral=True)
     self.stop()
 
   @discord.ui.button(label="Continue", style=discord.ButtonStyle.primary)
   async def approve_event(self, interaction: discord.Interaction, button: discord.ui.Button):
     self.action = ViewButtonEnum.Continue.value
     self.interaction = interaction
-    await interaction.response.defer(ephemeral=True)
     self.stop()
