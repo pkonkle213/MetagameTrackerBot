@@ -1,23 +1,19 @@
 from api_calls.melee_tournaments import GetMeleeTournamentData
-from discord.ext import commands
-from discord_messages import MessageChannel
 from incoming_message_conversions.melee import MeleeJsonPairings
-from discord import Interaction, Attachment
+from discord import  Attachment
 from services.date_functions import GetToday
-from tuple_conversions import DataInput, Store, Format, Game, Pairing, Standing, Event, Archetype, DataConverted
+from tuple_conversions import Store, Format, Game,  Event,  DataConverted
 from data_translation import ConvertCSVToData, ConvertMessageToData
-from datetime import date, datetime
+from datetime import datetime
 from custom_errors import KnownError
 from services.object_storage_service import upload_bytes, upload_json, upload_string
 import pandas as pd
 import pytz
 import io
-import settings
-from typing import NamedTuple
 
 
 async def ConvertData(
-  event: DataInput,
+  event,
   data: str | None,
   csv_file: Attachment | None,
   melee_tournament_id: str,
@@ -65,7 +61,7 @@ def BuildFilePath(
   return save_path
 
 def ConvertAndUploadMeleeTournament(
-  event: DataInput,
+  event,
   melee_tournament_id: str,
   store: Store,
   game: Game,
@@ -91,7 +87,7 @@ def ConvertAndUploadMeleeTournament(
   )
 
 async def ConvertAndUploadCSV(
-  event: DataInput,
+  event,
   csv_file: Attachment,
   store: Store,
   game: Game,
