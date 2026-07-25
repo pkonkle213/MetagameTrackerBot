@@ -27,8 +27,10 @@ class SubmitManualDataModal(discord.ui.Modal, title='Submit Data'):
     self.add_item(self.manual_data)
 
   async def on_submit(self, interaction: discord.Interaction):
+    self.interaction = interaction
+    await interaction.response.defer(ephemeral=True)
     self.converted_data = ConvertAndUploadMessage(
       self.event,
       self.file_path,
-      self.message_input.component.value
+      self.manual_data.component.value
     )

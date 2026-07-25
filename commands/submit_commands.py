@@ -110,10 +110,10 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     if objects.hub:
       raise KnownError("You can't submit data from a hub")
 
-    event, input_type = await EventForData(self.bot, interaction, objects.store, objects.game, objects.format)
+    event, input_type, active_interaction = await EventForData(self.bot, interaction, objects.store, objects.game, objects.format)
     
     # TODO: I need to know if the event was created so that I can alert the channel to new data
-    if not event or not input_type:
+    if not event or not input_type or not active_interaction:
       #TODO: I don't like how this doesn't clear the last message
       await interaction.followup.send('Event canceled!', ephemeral=True)
       return
@@ -125,36 +125,33 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
       match input_type:
         case DataInputEnum.Manual.value:
           modal = SubmitManualDataModal(event, save_path)
-          pass
 
         case DataInputEnum.CSV.value:
           modal = None
           #TODO: Define the modal for csv data input
-          pass
 
         case DataInputEnum.Melee.value:
           modal = None
           #TODO: Define the modal for melee data input
-          pass
 
         case _:
-          raise KnownError("Unknown input type")            
+          raise KnownError("Unknown input type")
 
-      await interaction.response.send_modal(modal)
+      await active_interaction.response.send_modal(modal)
       try:
         await modal.wait()
       except:
         raise KnownError("Something went wrong. Canceling data.")
 
       # TODO: Build table to have the user double check
-      
       view = ConfirmData()
-      await interaction.followup.send("Please confirm the data", ephemeral=True, view=view)
+      await modal.interaction.followup.send("Please confirm the data", ephemeral=True, view=view)
       await view.wait()
 
-      self.confirm_response = view.action
+      confirm_response = view.action
+      active_interaction = view.interaction
 
-      if self.confirm_response == ViewButtonEnum.Cancel.value:
+      if confirm_response == ViewButtonEnum.Cancel.value:
         break
         
       data = modal.converted_data

@@ -36,7 +36,7 @@ Data Submission Type: {input_type}```'''
   await view.wait()
 
   if view.action == ViewButtonEnum.Cancel.value:
-    return None, None
+    return None, None, None
 
   if selected_event.id == 0:
     event_id = CreateEvent(selected_event, interaction.user.id)
@@ -44,4 +44,4 @@ Data Submission Type: {input_type}```'''
   else:
     event = selected_event
 
-  return event, input_type
+  return event, input_type, view.interaction

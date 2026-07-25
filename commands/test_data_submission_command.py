@@ -36,11 +36,11 @@ class TestDataSubmission(commands.Cog):
     if objects.hub:
       raise KnownError("You can't submit data from a hub.")
 
-    event, input_type = await EventForData(
+    event, input_type, active_interaction = await EventForData(
       self.bot, interaction, objects.store, objects.game, objects.format
     )
 
-    if not event or not input_type:
+    if not event or not input_type or not active_interaction:
       await interaction.followup.send('Event canceled!', ephemeral=True)
       return
 
@@ -62,19 +62,20 @@ class TestDataSubmission(commands.Cog):
         case _:
           raise KnownError("Unknown input type")
 
-      await interaction.response.send_modal(modal)
+      await active_interaction.response.send_modal(modal)
       try:
         await modal.wait()
       except Exception:
         raise KnownError("Something went wrong. Canceling data.")
 
       view = ConfirmData()
-      await interaction.followup.send(
+      await modal.interaction.followup.send(
         "Please confirm the data", ephemeral=True, view=view
       )
       await view.wait()
 
       confirm_response = view.action
+      active_interaction = view.interaction
 
       if confirm_response == ViewButtonEnum.Cancel.value:
         break
