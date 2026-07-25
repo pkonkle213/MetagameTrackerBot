@@ -32,7 +32,7 @@ Event Name: {selected_event.event_name}
 Event Date: {selected_event.event_date.strftime('%m/%d/%Y')}
 Event Type: {selected_event.event_type_id}
 Data Submission Type: {input_type}```'''
-  await interaction.response.send_message(f'{event_output}\nIs this correct?', view=view, ephemeral=True)
+  await interaction.followup.send(f'{event_output}\nIs this correct?', view=view, ephemeral=True)
   await view.wait()
 
   if view.action == ViewButtonEnum.Cancel.value:
