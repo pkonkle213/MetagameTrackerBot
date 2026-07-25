@@ -11,6 +11,7 @@ class SubmitEventModal(discord.ui.Modal, title='Select Event'):
     format: Format
   ):
     super().__init__()
+    self.is_submitted: bool = False
     self.submitted_event: Event | None = None
     self.data_submission_type = None
     today = GetToday().strftime('%m/%d/%Y')
@@ -95,7 +96,6 @@ class SubmitEventModal(discord.ui.Modal, title='Select Event'):
     self.add_item(self.data_input)
 
   async def on_submit(self, interaction:discord.Interaction):
-    #TODO: Add a view to double check that this is correct (also enabling the next modal)
     self.submitted_event = SetEventInfo(
       int(self.continue_event.component.values[0]),
       self.previous_events,
@@ -107,7 +107,8 @@ class SubmitEventModal(discord.ui.Modal, title='Select Event'):
       self.format
     )
     self.data_submission_type = int(self.data_input.component.values[0])
-    await interaction.response.defer(thinking=False, ephemeral=True)
+    self.is_submitted = True
+    #await interaction.response.defer(thinking=False, ephemeral=True)
 
 def SetEventInfo(
   continued_event_id: int,

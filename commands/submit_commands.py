@@ -111,6 +111,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
       raise KnownError("You can't submit data from a hub")
 
     event, input_type = await EventForData(self.bot, interaction, objects.store, objects.game, objects.format)
+    
     # TODO: I need to know if the event was created so that I can alert the channel to new data
     if not event or not input_type:
       #TODO: I don't like how this doesn't clear the last message
@@ -154,7 +155,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
       self.confirm_response = view.action
 
       if self.confirm_response == ViewButtonEnum.Cancel.value:
-        return
+        break
         
       data = modal.converted_data
       confirmation = modal.confirm_response  
