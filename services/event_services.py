@@ -27,16 +27,32 @@ async def EventForData(
   input_type = data_submission_type
 
   view = ConfirmEvent()
+
+  #TODO: This should probably loop through the enum so they're not magical strings
+  if input_type == 1:
+    input_name = 'Manual'
+  elif input_type == 2:
+    input_name = 'CSV'
+  else:
+    input_name = 'Melee'
+
+  #TODO: This should probably loop through the enum so they're not magical strings
+  if selected_event.event_type_id == 1:
+    event_type_name = 'Weekly'
+  elif selected_event.event_type_id == 2:
+    event_type_name = 'Tournament'
+  else:
+    event_type_name = 'League'
+    
   event_output = f'''```
 Event Name: {selected_event.event_name}
 Event Date: {selected_event.event_date.strftime('%m/%d/%Y')}
-Event Type: {selected_event.event_type_id}
-Data Submission Type: {input_type}```'''
+Event Type: {event_type_name}
+Data Submission Type: {input_name}```'''
   await interaction.followup.send(f'{event_output}\nIs this correct?', view=view, ephemeral=True)
   await view.wait()
 
   if view.action == ViewButtonEnum.Cancel.value:
-    await view.interaction.response.send_message('Event selection canceled.', ephemeral=True)
     return None, None, None
 
   if selected_event.id == 0:
