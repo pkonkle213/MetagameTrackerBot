@@ -9,11 +9,10 @@ from data.player_name_data import GetUserArchetypes, GetUserName
 from interaction_objects import GetObjectsFromInteraction
 from services.command_error_service import Error
 from services.determine_archetype_input import GetArchetypeModal
-from tuple_conversions import DataInputEnum
+from tuple_conversions import DataInputEnum, ViewButtonEnum
 from services.convert_and_save_input import BuildFilePath
 from input_modals.submit_data_modal import SubmitManualDataModal
 from services.add_results_services import AddStandingResults, AddPairingResults
-from tuple_conversions import ViewButtonEnum
 
 class SubmitDataChecker(commands.GroupCog, name="submit"):
   """A group of commands to submit data"""
