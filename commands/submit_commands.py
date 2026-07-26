@@ -13,6 +13,7 @@ from tuple_conversions import DataInputEnum, ViewButtonEnum
 from services.convert_and_save_input import BuildFilePath
 from input_modals.submit_data_modal import SubmitManualDataModal
 from services.add_results_services import AddStandingResults, AddPairingResults
+from input_modals.submit_csv_modal import SubmitCSVDataModal
 
 class SubmitDataChecker(commands.GroupCog, name="submit"):
   """A group of commands to submit data"""
@@ -126,7 +127,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
           modal = SubmitManualDataModal(event, save_path)
 
         case DataInputEnum.CSV.value:
-          modal = None
+          modal = SubmitCSVDataModal(event, save_path)
           # TODO: Define the modal for CSV data input
 
         case DataInputEnum.Melee.value:
