@@ -87,11 +87,9 @@ def ConvertAndUploadMeleeTournament(
   )
 
 async def ConvertAndUploadCSV(
-  event,
-  csv_file: Attachment,
-  store: Store,
-  game: Game,
-  format: Format
+  event: Event,
+  file_path: str,
+  csv_file: Attachment
 ) -> DataConverted:
   """Takes in a CSV file and converts it to a list of Pairing or Standing objects"""
   save_path = BuildFilePath(store, game, format, csv_file.filename)
