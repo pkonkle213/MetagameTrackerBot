@@ -116,33 +116,36 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     )
 
     if not event or not input_type or not active_interaction:
-      await interaction.followup.send('Event canceled!', ephemeral=True)
+      #await interaction.followup.send('Event canceled!', ephemeral=True)
       return
 
-    save_path = BuildFilePath(objects.store, objects.game, objects.format, 'ManualInput.txt')
     cont = True
     while cont:
+      print('---cont value----\n', cont)
       match input_type:
         case DataInputEnum.Manual.value:
+          save_path = BuildFilePath(objects.store, objects.game, objects.format, 'ManualInput.txt')
           modal = SubmitManualDataModal(event, save_path)
 
         case DataInputEnum.CSV.value:
+          save_path = BuildFilePath(objects.store, objects.game, objects.format, 'CSVInput.txt')
           modal = SubmitCSVDataModal(event, save_path)
-          # TODO: Define the modal for CSV data input
 
         case DataInputEnum.Melee.value:
+          save_path = BuildFilePath(objects.store, objects.game, objects.format, 'MeleeInput.txt')
           modal = None
-          # TODO: Define the modal for Melee data input
 
         case _:
           raise KnownError("Unknown input type")
 
       await active_interaction.response.send_modal(modal)
+
       try:
         await modal.wait()
       except Exception:
         raise KnownError("Something went wrong. Canceling data.")
 
+      #TODO: Output the data in a readable table for the user to confirm
       view = ConfirmData()
       await modal.interaction.followup.send(
         "Please confirm the data", ephemeral=True, view=view
@@ -153,21 +156,21 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
       active_interaction = view.interaction
 
       if confirm_response == ViewButtonEnum.Cancel.value:
+        await active_interaction.response.edit_message(content="Data submission canceled!", view=None)
         break
 
       data = modal.converted_data
-      confirmation = modal.confirm_response
 
       if data.standings_data:
         AddStandingResults(event, data.standings_data, interaction.user.id)
       elif data.pairings_data:
-        AddPairingResults(event, data.pairings_data, interaction.user.id, data.round_number)
+        AddPairingResults(event, data.pairings_data, interaction.user.id)
 
-      if confirmation == ViewButtonEnum.DoneComplete.value:
-        cont = False
+      if confirm_response == ViewButtonEnum.DoneComplete.value:
         CompleteEvent(event.id)
+        cont = False
 
-      if confirmation == ViewButtonEnum.DoneIncomplete.value:
+      if confirm_response == ViewButtonEnum.DoneIncomplete.value:
         cont = False
 
     await interaction.followup.send("Thank you for submitting data!", ephemeral=True)

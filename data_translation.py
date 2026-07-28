@@ -5,7 +5,7 @@ from incoming_message_conversions.csv_carde_io import ConvertToPairings, Convert
 from tuple_conversions import Game, Pairing, Standing, DataConverted, GameEnum
 
 def ConvertCSVToData(
-  dataframe:pd.DataFrame,
+  dataframe:pd.DataFrame
 ) -> DataConverted:
   errors = None
   standings_data = None
@@ -23,7 +23,6 @@ def ConvertCSVToData(
     pairings_data,
     standings_data,
     errors,
-    None,
     None,
     None
   )
@@ -54,7 +53,6 @@ def ConvertMessageToData(
     pairings_data,
     standings_data,
     errors,
-    round_number,
     None,
     None
   )

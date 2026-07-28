@@ -27,28 +27,32 @@ def AddStandingResults(
 def AddPairingResults(
   event:Event,
   data:list[Pairing],
-  submitterId:int,
-  round_number:int
+  submitterId:int
 ) -> list[Pairing]:
-  const_round_number = data[0].round_number if not round_number else round_number
   errors:list[Pairing] = []
   output = ''
  
   for table in data:
     p1name = ConvertInput(table.player1_name)
     p2name = ConvertInput(table.player2_name)
-    round_number = table.round_number if table.round_number else const_round_number
+    round_number = table.round_number
+    
+    pairing = Pairing(
+      round_number,
+      p1name,
+      table.player1_game_wins,
+      table.player2_game_wins,
+      p2name
+    )
 
-    unique = CheckPairings(event.id, round_number, p1name, p2name)
-    if unique:
-      pairing = Pairing(
-        round_number,
-        p1name,
-        table.player1_game_wins,
-        table.player2_game_wins,
-        p2name
-      )
-      
+    unique = CheckPairings(
+      event.id,
+      pairing.round_number,
+      pairing.player1_name,
+      pairing.player2_name
+    )
+    
+    if unique:      
       db_result = InsertPairing(
         event.id,
         pairing,
