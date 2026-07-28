@@ -14,9 +14,11 @@ from services.convert_and_save_input import BuildFilePath
 from input_modals.submit_data_modal import SubmitManualDataModal
 from services.add_results_services import AddStandingResults, AddPairingResults
 from input_modals.submit_csv_modal import SubmitCSVDataModal
+from input_modals.submit_melee_modal import SubmitMeleeDataModal
+from services.submit_data_services import BuildReviewOutput
 
 class SubmitDataChecker(commands.GroupCog, name="submit"):
-  """A group of commands to submit data"""
+  """A group of commands to submit event data and archetypes"""
 
   def __init__(self, bot:commands.Bot):
     self.bot = bot
@@ -121,7 +123,6 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
     cont = True
     while cont:
-      print('---cont value----\n', cont)
       match input_type:
         case DataInputEnum.Manual.value:
           save_path = BuildFilePath(objects.store, objects.game, objects.format, 'ManualInput.txt')
@@ -133,7 +134,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
         case DataInputEnum.Melee.value:
           save_path = BuildFilePath(objects.store, objects.game, objects.format, 'MeleeInput.txt')
-          modal = None
+          modal = SubmitMeleeDataModal(event, save_path)
 
         case _:
           raise KnownError("Unknown input type")
@@ -145,10 +146,10 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
       except Exception:
         raise KnownError("Something went wrong. Canceling data.")
 
-      #TODO: Output the data in a readable table for the user to confirm
+      output = BuildReviewOutput(modal.converted_data)
       view = ConfirmData()
       await modal.interaction.followup.send(
-        "Please confirm the data", ephemeral=True, view=view
+        f"{output}\nPlease confirm the data", ephemeral=True, view=view
       )
       await view.wait()
 
