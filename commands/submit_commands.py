@@ -1,22 +1,24 @@
-import typing
-
-from discord import Attachment, Interaction, User, app_commands
+from views.confirm_data import ConfirmData
+from discord import Interaction, User, app_commands
 from discord.ext import commands
-
-import settings
+from services.event_services import EventForData
 from checks import IsStore, isSubmitter
 from custom_errors import KnownError
-from data.event_data import GetHubEvents, GetStoreEvents
+from data.event_data import GetHubEvents, GetStoreEvents, CompleteEvent
 from data.player_name_data import GetUserArchetypes, GetUserName
-from discord_messages import MessageChannel
-from input_modals.submit_data_modal import SubmitDataModal
 from interaction_objects import GetObjectsFromInteraction
 from services.command_error_service import Error
 from services.determine_archetype_input import GetArchetypeModal
-
+from tuple_conversions import DataInputEnum, ViewButtonEnum
+from services.convert_and_save_input import BuildFilePath
+from input_modals.submit_data_modal import SubmitManualDataModal
+from services.add_results_services import AddStandingResults, AddPairingResults
+from input_modals.submit_csv_modal import SubmitCSVDataModal
+from input_modals.submit_melee_modal import SubmitMeleeDataModal
+from services.submit_data_services import BuildReviewOutput
 
 class SubmitDataChecker(commands.GroupCog, name="submit"):
-  """A group of commands to submit data"""
+  """A group of commands to submit event data and archetypes"""
 
   def __init__(self, bot:commands.Bot):
     self.bot = bot
@@ -83,6 +85,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
     if len(events) == 0:
       raise KnownError("No events found.")
+
     await GetArchetypeModal(
       self.bot,
       userId,
@@ -100,25 +103,8 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
   @IsStore()
   async def SubmitDataCommand(
     self,
-    interaction: Interaction,
-    csv_file: typing.Optional[Attachment] = None,
-    melee_tournament_id: str = "",
+    interaction: Interaction
   ) -> None:
-    """
-    Parameters
-    ----------
-    csv_file: Attachment
-      The CSV file containing the event's data from CARDE.IO
-
-    melee_tournament_id: str
-      The Melee Tournament ID for the event
-    """
-    # Ensure that only one type of data is being submitted
-    if csv_file and melee_tournament_id:
-      raise KnownError(
-        "You can only submit a CSV file or a Melee Tournament ID, not both."
-      )
-
     objects = GetObjectsFromInteraction(interaction)
 
     if not objects.store or not objects.game or not objects.format:
@@ -127,44 +113,79 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     if objects.hub:
       raise KnownError("You can't submit data from a hub.")
 
-    data = False if csv_file or melee_tournament_id else True
-
-    modal = SubmitDataModal(
-      self.bot,
-      objects.store,
-      objects.game,
-      objects.format,
-      data,
-      csv_file,
-      melee_tournament_id,
+    event, input_type, active_interaction = await EventForData(
+      self.bot, interaction, objects.store, objects.game, objects.format
     )
-    await interaction.response.send_modal(modal)
-    await modal.wait()
+
+    if not event or not input_type or not active_interaction:
+      #await interaction.followup.send('Event canceled!', ephemeral=True)
+      return
+
+    cont = True
+    while cont:
+      match input_type:
+        case DataInputEnum.Manual.value:
+          save_path = BuildFilePath(objects.store, objects.game, objects.format, 'ManualInput.txt')
+          modal = SubmitManualDataModal(event, save_path)
+
+        case DataInputEnum.CSV.value:
+          save_path = BuildFilePath(objects.store, objects.game, objects.format, 'CSVInput.txt')
+          modal = SubmitCSVDataModal(event, save_path)
+
+        case DataInputEnum.Melee.value:
+          save_path = BuildFilePath(objects.store, objects.game, objects.format, 'MeleeInput.txt')
+          modal = SubmitMeleeDataModal(event, save_path)
+
+        case _:
+          raise KnownError("Unknown input type")
+
+      await active_interaction.response.send_modal(modal)
+
+      try:
+        await modal.wait()
+      except Exception:
+        raise KnownError("Something went wrong. Canceling data.")
+
+      output = BuildReviewOutput(modal.converted_data)
+      view = ConfirmData()
+      await modal.interaction.followup.send(
+        f"{output}\nPlease confirm the data", ephemeral=True, view=view
+      )
+      await view.wait()
+
+      confirm_response = view.action
+      active_interaction = view.interaction
+
+      if confirm_response == ViewButtonEnum.Cancel.value:
+        await active_interaction.response.edit_message(content="Data submission canceled!", view=None)
+        break
+
+      data = modal.converted_data
+
+      if data.standings_data:
+        AddStandingResults(event, data.standings_data, interaction.user.id)
+      elif data.pairings_data:
+        AddPairingResults(event, data.pairings_data, interaction.user.id)
+
+      if confirm_response == ViewButtonEnum.DoneComplete.value:
+        CompleteEvent(event.id)
+        cont = False
+
+      if confirm_response == ViewButtonEnum.DoneIncomplete.value:
+        cont = False
+
+    await interaction.followup.send("Thank you for submitting data!", ephemeral=True)
+
 
   @SubmitCheck.error
   @SubmitDataCommand.error
   @SubmitArchetypeCommand.error
   async def Errors(
-    self, interaction: Interaction, error: app_commands.AppCommandError
+    self,
+    interaction: Interaction,  
+    error: app_commands.AppCommandError
   ):
     await Error(self.bot, interaction, error)
-
-
-async def NewDataMessage(bot: commands.Bot, interaction: Interaction, isError: bool):
-  if not interaction.guild or not interaction.channel:
-    raise Exception("No guild or channel to this interaction??")
-  message = f"""
-  {"Could not submit data due to error" if isError else "Successfully received new data"}
-  Guild name: {interaction.guild.name}
-  Guild id: {interaction.guild.id}
-  Channel name: {interaction.channel.name}
-  Channel id: {interaction.channel.id}
-  Author name: {interaction.user.name}
-  Author id: {interaction.user.id}
-  """
-
-  await MessageChannel(bot, message, settings.BOTGUILDID, settings.BOTEVENTINPUTID)
-
 
 async def setup(bot:commands.Bot):
   await bot.add_cog(SubmitDataChecker(bot))

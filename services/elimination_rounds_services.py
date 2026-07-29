@@ -1,18 +1,18 @@
 from typing import Tuple
 from data.elimination_rounds_data import GetEliminationPairings, GetEliminationStandings
-from tuple_conversions import Event, ReportedAs
+from tuple_conversions import Event, ReportedAsEnum
 
 def GetEliminationRoundData(event:Event) -> str:
   title = f"{event.event_date.strftime("%m/%d/%Y")} - {event.event_name}'s Top 8:"
   output = ''
  
   #If the selected tournament is submitted via standings, obtain the top 8 that way
-  if event.reported_as == ReportedAs.Standings.value:
+  if event.reported_as == ReportedAsEnum.Standings.value:
     data = GetEliminationStandings(event)
     output = BuildEliminationStandingOutput(data)
 
   #If the selected tournament is submitted via pairings, obtain the top 8 that way
-  elif event.reported_as == ReportedAs.Pairings.value:
+  elif event.reported_as == ReportedAsEnum.Pairings.value:
     data = GetEliminationPairings(event)
     output = BuildEliminationPairingOutput(data)
 

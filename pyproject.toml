@@ -6,7 +6,7 @@ authors = ["Your Name <you@example.com>"]
 requires-python = ">=3.12"
 dependencies = [
     "bar-chart-race>=0.1.0",
-    "discord-py",
+    "discord-py>=2.7.1",
     "httpx>=0.28.1",
     "matplotlib",
     "mtg-parser>=0.0.1a54",

@@ -1,15 +1,11 @@
 from settings import DATABASE_URL
 import psycopg
-from tuple_conversions import Standing
+from tuple_conversions import Standing, Pairing
 
 #TODO: Why am is this not receiving a Pairing object?
 def InsertPairing(
   event_id: int,
-  p1name: str,
-  p1wins: int,
-  p2name: str,
-  p2wins: int,
-  round_number: int,
+  pairing: Pairing,
   submitter_id: int
 ) -> int | None:
   conn = psycopg.connect(DATABASE_URL)
@@ -36,11 +32,11 @@ def InsertPairing(
 
       criteria = [
         event_id,
-        round_number,
-        p1wins,
-        p2wins,
-        p1name,
-        p2name,
+        pairing.round_number,
+        pairing.player1_game_wins,
+        pairing.player2_game_wins,
+        pairing.player1_name,
+        pairing.player2_name,
         submitter_id
       ]
       cur.execute(command, criteria)

@@ -22,16 +22,16 @@ def CompanionStandings(message, seperator) -> Tuple[list[Standing] | None,list[s
         raise KnownError(f'Losses cannot be negative for row {i + 1}: {rows[i]}')
       draws = int(record[2])
       if draws < 0:
-        raise KnownError(f'Draws cannot be negative for row {i+1}: {rows[i]}')
+        raise KnownError(f'Draws cannot be negative for row {i + 1}: {rows[i]}')
 
       player = Standing(player_name, wins, losses, draws)
       data.append(player)
     except ValueError:
-      errors.append(f'Unable to parse the record for row {i+1}: {rows[i]}')
+      errors.append(f'Unable to parse the record for row {i + 1}: {rows[i]}')
     except KnownError as exception:
       errors.append(exception.message)
     except Exception:
-      errors.append(f'Unable to parse row {i+1}: {rows[i]}')
+      errors.append(f'Unable to parse row {i + 1}: {rows[i]}')
 
   return data if len(data) > 0 else None, errors
 
@@ -63,7 +63,7 @@ def CompanionPairings(message) -> Tuple[list[Pairing] | None, list[str], int]:
         p2name = 'Bye'
         p2gw = 0
         roundnumber = int(row[1][0]) + int(row[1][2]) + int(row[1][4])
-      result = Pairing(p1name, p1gw, p2name, p2gw, roundnumber)
+      result = Pairing(roundnumber, p1name, p1gw, p2gw, p2name)
       data.append(result)
     except ValueError:
       errors.append(f'Unable to parse the record for row {i + 4}: {rows[i + 3]}')

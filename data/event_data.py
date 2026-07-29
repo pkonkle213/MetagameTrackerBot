@@ -1,16 +1,31 @@
-from datetime import date
 from typing import Tuple
 import psycopg
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
-from tuple_conversions import Event, EventInput, Format, Game, Store
+from tuple_conversions import Event, Format, Game, Store
+
+def CompleteEvent(
+  event_id: int
+) -> bool:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor() as cur:
+    command = f'''
+    UPDATE events
+    SET is_complete = TRUE
+    WHERE id = {event_id}
+    RETURNING id
+    '''
+    cur.execute(command)  # type: ignore[arg-type]
+    conn.commit()
+    row = cur.fetchone()
+    return True if row else False
 
 def GetEvent(
   event_id: int
 ) -> Event:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(Event)) as cur:
-    command = """
+    command = f"""
     SELECT
       id,
       custom_event_id,
@@ -29,19 +44,18 @@ def GetEvent(
     FROM
       events_view
     WHERE
-      id = %s
+      id = {event_id}
     """
     
-    criteria = [event_id]
-    cur.execute(command, criteria)
+    cur.execute(command)  # type: ignore[arg-type]
     row = cur.fetchone()
     if not row:
       raise Exception(f'Cannot find event. ID: {event_id}')
     return row
 
-#TODO: Why did I need to force event_type_id to be an int?
+
 def CreateEvent(
-  event:EventInput,
+  event:Event,
   user_id:int
 ) -> int:
   conn = psycopg.connect(DATABASE_URL)
@@ -62,9 +76,9 @@ def CreateEvent(
     )
     VALUES
     ('{event.event_date}'
-    , {event.StoreID}
-    , {event.GameID}
-    , {event.FormatID}
+    , {event.discord_id}
+    , {event.game_id}
+    , {event.format_id}
     , 0
     , '{event.event_name}'
     , {event.event_type_id if int(event.event_type_id) > 0 else 3}
@@ -76,7 +90,7 @@ def CreateEvent(
     RETURNING id
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     conn.commit()
     event_id = cur.fetchone()
     
@@ -106,11 +120,11 @@ def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
       1
     '''
     
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows
 
-def DeleteStandingsFromEvent(event_id):
+def DeleteStandingsFromEvent(event_id:int) -> bool:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor() as cur:
     command = f'''
@@ -118,7 +132,7 @@ def DeleteStandingsFromEvent(event_id):
     WHERE event_id = {event_id}
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     conn.commit()
     return True
 
@@ -228,6 +242,6 @@ def GetHubEvents(discord_id: int, channel_id:int) -> list[Event]:
       25
     '''
 
-    cur.execute(command)
+    cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
     return rows
