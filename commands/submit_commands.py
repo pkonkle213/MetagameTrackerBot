@@ -1,4 +1,6 @@
 from views.confirm_data import ConfirmData
+from output_builder import BuildTableOutput
+from services.submit_archetype_service import OneEventDetails
 from discord import Interaction, User, app_commands
 from discord.ext import commands
 from services.event_services import EventForData
@@ -134,7 +136,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
         case DataInputEnum.Melee.value:
           save_path = BuildFilePath(objects.store, objects.game, objects.format, 'MeleeInput.txt')
-          modal = SubmitMeleeDataModal(event, save_path)
+          modal = SubmitMeleeDataModal(objects.store, event, save_path)
 
         case _:
           raise KnownError("Unknown input type")
@@ -169,6 +171,10 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
       if confirm_response == ViewButtonEnum.DoneComplete.value:
         CompleteEvent(event.id)
+        if event.last_update == 4:
+          table = OneEventDetails(event)
+          final = BuildTableOutput(table.title, table.headers, table.data)
+          await active_interaction.response.edit_message(content="Data submission canceled!", view=None)
         cont = False
 
       if confirm_response == ViewButtonEnum.DoneIncomplete.value:

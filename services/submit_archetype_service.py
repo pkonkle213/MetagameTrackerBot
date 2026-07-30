@@ -89,7 +89,7 @@ async def SubmitArchetype(
   feed_output = BuildMessage(interaction, event, archetype, player_name)
   private_output = f"Thank you for submitting the archetype for {event.event_name}!" + moxfield_error
 
-  # If added, check if the event is fully reported
+  # If added, check if the event is fully reported and complete
   public_output, full_event = CheckEventPercentage(event)
 
   # Send all output messages
@@ -146,7 +146,7 @@ def CheckEventPercentage(event: Event) -> Tuple[str | None, str | None]:
     if event.last_update + 1 < 4:
       followup = f"Congratulations! {str_date}'s {event.event_name} is now {percent_reported:.0%} reported!"
       final = None
-    else:
+    elif event.is_complete:
       followup = f"Congratulations! {str_date}'s {event.event_name} is now fully reported! Thank you to all who reported their archetypes!"
       table = OneEventDetails(event)
       final = BuildTableOutput(table.title, table.headers, table.data)
