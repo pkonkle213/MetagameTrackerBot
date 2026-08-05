@@ -1,3 +1,6 @@
+from views.confirm_event import ConfirmEvent
+from input_modals.event_selector import EventSelector
+from data.event_data import GetPlayersInEvent
 from views.confirm_data import ConfirmData
 from discord import Interaction, User, app_commands
 from discord.ext import commands
@@ -52,8 +55,56 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     else:
       await interaction.followup.send("\n".join(issues))
 
+  @app_commands.command(name="mass_archetype",description="Submit multiple archetypes for an event")
+  @app_commands.checks.has_role("MTSubmitter")
+  @app_commands.guild_only()
+  @IsStore()
+  async def MassArchetypeInput(self, interaction: Interaction):
+    objects = GetObjectsFromInteraction(interaction)
+    user_id = interaction.user.id
+
+    if not objects.store or not objects.game or not objects.format:
+      raise KnownError("No store, game, or format found.")
+
+    # User needs to select what event to submit archetypes for
+    modal = EventSelector(objects.store, objects.game, objects.format)
+    await interaction.response.send_modal(modal)
+    await modal.wait()
+
+    if not modal.is_submitted:
+      raise Exception("Modal was not submitted")
+
+    event = modal.event
+
+    view = ConfirmEvent()
+    await interaction.followup.send(f'You selected {event.event_name}. Is this correct?', view=view, ephemeral=True)
+    await view.wait()
+
+    if view.action == ViewButtonEnum.Cancel.value:
+      await interaction.followup.send('Canceled!', ephemeral=True)
+
+    # Grab by event.id all user names and current archetype submissions for those players
+    if not event:
+      raise KnownError("No event found.")
+
+    total_players = GetPlayersInEvent(event.id)
+    if len(total_players) == 0:
+      raise KnownError("No players found for this event.")
+
+    # Loop through the users 5 at a time and send a modal to submit archetypes for those players
+    for i in range(0, len(total_players), 5):
+      players = total_players[i:i+5]
+      modal = MassArchetypeSubmit(players)
+
+    # Confirm archetypes
+
+    # Continue or end loop if there are no more players
+    
+    await interaction.response.send_message("All done")
+  
   @app_commands.command(
-    name="archetype", description="Submit a player's archetype for an event"
+    name="archetype",
+    description="Submit a player's archetype for an event"
   )
   @app_commands.guild_only()
   async def SubmitArchetypeCommand(self, interaction: Interaction):
