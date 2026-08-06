@@ -1,3 +1,4 @@
+from discord_messages import MessageChannel
 from discord import Interaction
 from discord.ext import commands
 from input_modals.submit_event_modal import SubmitEventModal
@@ -11,7 +12,7 @@ async def EventForData(
   store:Store,
   game:Game,
   format:Format
-) -> tuple[Event | None, int | None, Interaction | None]:
+) -> tuple[Event | None, int | None, Interaction | None, bool]:
   modal = SubmitEventModal(store, game, format)
   await interaction.response.send_modal(modal)
   try:
@@ -55,10 +56,12 @@ Data Submission Type: {input_name}```'''
   if view.action == ViewButtonEnum.Cancel.value:
     return None, None, None
 
+  is_created = False
   if selected_event.id == 0:
     event_id = CreateEvent(selected_event, interaction.user.id)
     event = GetEvent(event_id)
+    is_created = True
   else:
     event = selected_event
 
-  return event, input_type, view.interaction
+  return event, input_type, view.interaction, is_created

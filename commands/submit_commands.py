@@ -1,6 +1,7 @@
 from views.confirm_event import ConfirmEvent
 from input_modals.event_selector import EventSelector
 from data.event_data import GetPlayersInEvent
+from discord_messages import MessageChannel
 from views.confirm_data import ConfirmData
 from discord import Interaction, User, app_commands
 from discord.ext import commands
@@ -164,14 +165,21 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     if objects.hub:
       raise KnownError("You can't submit data from a hub.")
 
-    event, input_type, active_interaction = await EventForData(
+    event, input_type, active_interaction, is_created = await EventForData(
       self.bot, interaction, objects.store, objects.game, objects.format
     )
 
     if not event or not input_type or not active_interaction:
-      #await interaction.followup.send('Event canceled!', ephemeral=True)
+      await interaction.followup.send('Event canceled!', ephemeral=True)
       return
 
+    if is_created:
+      await MessageChannel(
+        self.bot,
+        f"New data for {event.event_date.strftime('%B %-d')}'s {event.event_name} event has been submitted! Use the `/submit archetype` command to input an archetype!",
+        interaction.guild_id,
+        interaction.channel_id)
+    
     cont = True
     while cont:
       match input_type:
@@ -185,7 +193,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
         case DataInputEnum.Melee.value:
           save_path = BuildFilePath(objects.store, objects.game, objects.format, 'MeleeInput.txt')
-          modal = SubmitMeleeDataModal(event, save_path)
+          modal = SubmitMeleeDataModal(objects.store, event, save_path)
 
         case _:
           raise KnownError("Unknown input type")
