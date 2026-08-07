@@ -1,3 +1,4 @@
+from services.message_hubs_services import MessageHubs
 from discord_messages import MessageChannel
 from views.confirm_data import ConfirmData
 from discord import Interaction, User, app_commands
@@ -176,6 +177,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             interaction.guild_id,
             interaction.channel_id
           )
+          await MessageHubs(self.bot, objects.store, event)
       
         cont = False
       

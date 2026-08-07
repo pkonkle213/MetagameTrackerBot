@@ -8,7 +8,7 @@ async def MessageHubs(
   bot: commands.Bot,
   store: Store,
   event: Event,
-  message:str =''
+  message:str = ''
 ) -> None:
   """Sends a message to the hubs that a new event has been added"""
   # Find hubs in the same region as the store and format
