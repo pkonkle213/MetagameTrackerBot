@@ -103,18 +103,22 @@ def GetPlayersInEvent(event_id:int) -> list[PlayerArchetype]:
   with conn, conn.cursor(row_factory=class_row(PlayerArchetype)) as cur:
     command = f'''
     SELECT
-      player_name,
-      archetype_played
+      fs.player_name,
+      ua.archetype_played
     FROM
-      full_standings
+      full_standings fs
+      LEFT JOIN unique_archetypes ua ON ua.event_id = fs.event_id
+      AND upper(ua.player_name) = upper(fs.player_name)
     WHERE
-      event_id = {event_id}
+      fs.event_id = {event_id}
     ORDER BY
-      player_name
+      fs.player_name
     '''
     
     cur.execute(command)  # type: ignore[arg-type]
     rows = cur.fetchall()
+
+    return rows
 
 def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
   conn = psycopg.connect(DATABASE_URL)

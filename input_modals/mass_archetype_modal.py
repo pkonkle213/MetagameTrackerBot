@@ -6,6 +6,7 @@ class MassArchetypeSubmit(discord.ui.Modal, title='Submit Archetypes'):
     super().__init__()
     self.interaction: discord.Interaction | None = None
     self.players = players
+    self.new_archetypes: list[PlayerArchetype] = []
     
     num_players = len(players)
 
@@ -18,15 +19,23 @@ class MassArchetypeSubmit(discord.ui.Modal, title='Submit Archetypes'):
           text=f'{players[i].player_name}',
           component=discord.ui.TextInput(
             custom_id=str(i),
-            placeholder=f'Current archetype: {players[i].archetype_played}',
+            placeholder=f"{players[i].player_name}'s archetype",
+            default=players[i].archetype_played,
             style=discord.TextStyle.short,
             required=True,
             max_length=100,
-            min_length=10
+            min_length=2
           )
         )
       )
 
   async def on_submit(self, interaction: discord.Interaction):
+    for i in range(0, len(self.players)):
+      name = self.players[i].player_name
+      archetype = self.children[i].component.value
+      print(f"----{name}'s Archetype:----\n", archetype)
+      self.new_archetypes.append(PlayerArchetype(name, archetype))
+
     self.new_interaction = interaction
+    await interaction.response.defer(ephemeral=True)
     

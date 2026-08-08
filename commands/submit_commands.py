@@ -1,3 +1,4 @@
+from input_modals.mass_archetype_modal import MassArchetypeSubmit
 from views.confirm_event import ConfirmEvent
 from input_modals.event_selector import EventSelector
 from data.event_data import GetPlayersInEvent
@@ -84,6 +85,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     if view.action == ViewButtonEnum.Cancel.value:
       await interaction.followup.send('Canceled!', ephemeral=True)
 
+    active_interaction = view.interaction
     # Grab by event.id all user names and current archetype submissions for those players
     if not event:
       raise KnownError("No event found.")
@@ -92,16 +94,23 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     if len(total_players) == 0:
       raise KnownError("No players found for this event.")
 
+    print('----Total Players:----\n', total_players)
+    
     # Loop through the users 5 at a time and send a modal to submit archetypes for those players
     for i in range(0, len(total_players), 5):
       players = total_players[i:i+5]
       modal = MassArchetypeSubmit(players)
 
+      await active_interaction.response.send_modal(modal)
+      await modal.wait()
+
+      
+
     # Confirm archetypes
 
     # Continue or end loop if there are no more players
     
-    await interaction.response.send_message("All done")
+    
   
   @app_commands.command(
     name="archetype",
