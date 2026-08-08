@@ -1,3 +1,10 @@
+from data.archetype_data import BulkAddArchetypes
+from output_builder import BuildTableOutput
+from input_modals.mass_archetype_modal import MassArchetypeSubmit
+from views.confirm_event import ConfirmEvent
+from input_modals.event_selector import EventSelector
+from services.message_hubs_services import MessageHubs
+from discord_messages import MessageChannel
 from views.confirm_data import ConfirmData
 from output_builder import BuildTableOutput
 from services.submit_archetype_service import OneEventDetails
@@ -6,7 +13,7 @@ from discord.ext import commands
 from services.event_services import EventForData
 from checks import IsStore, isSubmitter
 from custom_errors import KnownError
-from data.event_data import GetHubEvents, GetStoreEvents, CompleteEvent
+from data.event_data import GetHubEvents, GetStoreEvents, CompleteEvent, GetPlayersInEvent
 from data.player_name_data import GetUserArchetypes, GetUserName
 from interaction_objects import GetObjectsFromInteraction
 from services.command_error_service import Error
@@ -54,8 +61,83 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     else:
       await interaction.followup.send("\n".join(issues))
 
+  @app_commands.command(name="mass_archetype",description="Submit multiple archetypes for an event")
+  @app_commands.checks.has_role("MTSubmitter")
+  @app_commands.guild_only()
+  @IsStore()
+  async def MassArchetypeInput(self, interaction: Interaction):
+    objects = GetObjectsFromInteraction(interaction)
+    user_id = interaction.user.id
+
+    if not objects.store or not objects.game or not objects.format:
+      raise KnownError("No store, game, or format found.")
+
+    # User needs to select what event to submit archetypes for
+    modal = EventSelector(objects.store, objects.game, objects.format)
+    await interaction.response.send_modal(modal)
+    await modal.wait()
+
+    if not modal.is_submitted:
+      raise Exception("Modal was not submitted")
+
+    event = modal.event
+
+    view = ConfirmEvent()
+    await interaction.followup.send(f'You selected {event.event_name}. Is this correct?', view=view, ephemeral=True)
+    await view.wait()
+
+    if view.action == ViewButtonEnum.Cancel.value:
+      await interaction.followup.send('Canceled!', ephemeral=True)
+
+    active_interaction = view.interaction
+    # Grab by event.id all user names and current archetype submissions for those players
+    if not event:
+      raise KnownError("No event found.")
+
+    total_players = GetPlayersInEvent(event.id)
+    if len(total_players) == 0:
+      raise KnownError("No players found for this event.")
+    
+    # Loop through the users 5 at a time and send a modal to submit archetypes for those players
+    for i in range(0, len(total_players), 5):
+      players = total_players[i:i+5]
+      modal = MassArchetypeSubmit(players)
+
+      await active_interaction.response.send_modal(modal)
+      await modal.wait()
+
+      if not modal.is_submitted:
+        raise KnownError("Modal was not submitted")
+
+      # Confirm archetypes
+      active_interaction = modal.new_interaction
+      archetypes = modal.new_archetypes
+
+      title = 'Please confirm the archetypes:'
+      headers = ['Name','Archetype']
+      data = archetypes
+      output = BuildTableOutput(title, headers, data)
+      
+      archetypes_output = '\n'.join([f'{player.player_name}: {player.archetype_played}' for player in archetypes])
+      view = ConfirmEvent()
+      await interaction.followup.send(f'{output}\nAre these correct?', view=view, ephemeral=True)
+      await view.wait()
+      
+      if view.action == ViewButtonEnum.Cancel.value:
+        await interaction.followup.send('Canceled!', ephemeral=True)
+        break
+
+      # Save archetypes
+      await BulkAddArchetypes(event, archetypes, user_id, interaction.user.name, interaction.guild_id, interaction.guild.name)
+
+      # Continue or end loop if there are no more players
+      active_interaction = view.interaction
+    
+    await interaction.followup.send('All archetypes have been submitted!', ephemeral=True)
+  
   @app_commands.command(
-    name="archetype", description="Submit a player's archetype for an event"
+    name="archetype",
+    description="Submit a player's archetype for an event"
   )
   @app_commands.guild_only()
   async def SubmitArchetypeCommand(self, interaction: Interaction):
@@ -115,14 +197,14 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     if objects.hub:
       raise KnownError("You can't submit data from a hub.")
 
-    event, input_type, active_interaction = await EventForData(
+    event, input_type, active_interaction, new_event = await EventForData(
       self.bot, interaction, objects.store, objects.game, objects.format
     )
 
     if not event or not input_type or not active_interaction:
-      #await interaction.followup.send('Event canceled!', ephemeral=True)
+      await interaction.followup.send('Event canceled!', ephemeral=True)
       return
-
+    
     cont = True
     while cont:
       match input_type:
@@ -169,16 +251,20 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
       elif data.pairings_data:
         AddPairingResults(event, data.pairings_data, interaction.user.id)
 
-      if confirm_response == ViewButtonEnum.DoneComplete.value:
-        CompleteEvent(event.id)
-        if event.last_update == 4:
-          table = OneEventDetails(event)
-          final = BuildTableOutput(table.title, table.headers, table.data)
-          await active_interaction.response.edit_message(content="Data submission canceled!", view=None)
+      if confirm_response == ViewButtonEnum.DoneComplete.value or confirm_response == ViewButtonEnum.DoneIncomplete.value:
+        if new_event:
+          await MessageChannel(
+            self.bot,
+            f"New data for {event.event_date.strftime('%B %-d')}'s {event.event_name} event has been submitted! Use the `/submit archetype` command to input an archetype!",
+            interaction.guild_id,
+            interaction.channel_id
+          )
+          await MessageHubs(self.bot, objects.store, event)
+      
         cont = False
-
-      if confirm_response == ViewButtonEnum.DoneIncomplete.value:
-        cont = False
+      
+        if confirm_response == ViewButtonEnum.DoneComplete.value:
+          CompleteEvent(event.id)
 
     await interaction.followup.send("Thank you for submitting data!", ephemeral=True)
 

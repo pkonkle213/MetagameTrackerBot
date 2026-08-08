@@ -11,8 +11,6 @@ class ConfirmEvent(discord.ui.View):
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.danger)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.action = ViewButtonEnum.Cancel.value
-        # Commenting until I figure out how to make this work
-        # await interaction.response.edit_message(content="Event canceled!", view=None)
         self.interaction = interaction
         self.stop()
 
@@ -21,7 +19,5 @@ class ConfirmEvent(discord.ui.View):
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
         self.action = ViewButtonEnum.Continue.value
-        # Commenting until I figure out how to make this work
-        # await interaction.response.edit_message(content="Creating event...", view=None)
         self.interaction = interaction
         self.stop()

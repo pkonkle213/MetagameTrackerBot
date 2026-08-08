@@ -2,7 +2,7 @@ from typing import Tuple
 import psycopg
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
-from tuple_conversions import Event, Format, Game, Store
+from tuple_conversions import Event, Format, Game, Store, PlayerArchetype
 
 def CompleteEvent(
   event_id: int
@@ -97,6 +97,28 @@ def CreateEvent(
     if not event_id:
       raise Exception('Unable to create event')
     return event_id
+
+def GetPlayersInEvent(event_id:int) -> list[PlayerArchetype]:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(PlayerArchetype)) as cur:
+    command = f'''
+    SELECT
+      INITCAP(fs.player_name) as player_name,
+      INITCAP(ua.archetype_played) as archetype_played
+    FROM
+      full_standings fs
+      LEFT JOIN unique_archetypes ua ON ua.event_id = fs.event_id
+      AND upper(ua.player_name) = upper(fs.player_name)
+    WHERE
+      fs.event_id = {event_id}
+    ORDER BY
+      INITCAP(fs.player_name)
+    '''
+    
+    cur.execute(command)  # type: ignore[arg-type]
+    rows = cur.fetchall()
+
+    return rows
 
 def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
   conn = psycopg.connect(DATABASE_URL)
