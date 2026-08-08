@@ -103,8 +103,8 @@ def GetPlayersInEvent(event_id:int) -> list[PlayerArchetype]:
   with conn, conn.cursor(row_factory=class_row(PlayerArchetype)) as cur:
     command = f'''
     SELECT
-      fs.player_name,
-      ua.archetype_played
+      INITCAP(fs.player_name) as player_name,
+      INITCAP(ua.archetype_played) as archetype_played
     FROM
       full_standings fs
       LEFT JOIN unique_archetypes ua ON ua.event_id = fs.event_id
@@ -112,7 +112,7 @@ def GetPlayersInEvent(event_id:int) -> list[PlayerArchetype]:
     WHERE
       fs.event_id = {event_id}
     ORDER BY
-      fs.player_name
+      INITCAP(fs.player_name)
     '''
     
     cur.execute(command)  # type: ignore[arg-type]

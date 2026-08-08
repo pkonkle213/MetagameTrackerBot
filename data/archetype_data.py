@@ -4,7 +4,7 @@ from datetime import date
 from settings import DATABASE_URL
 import psycopg
 
-from tuple_conversions import Format, Store, Game, Event
+from tuple_conversions import Format, Store, Game, Event, PlayerArchetype
 
 def PlayerInEvent(event:Event, player_name:str) -> bool:
   with psycopg.connect(DATABASE_URL) as conn:
@@ -23,6 +23,28 @@ def PlayerInEvent(event:Event, player_name:str) -> bool:
       cur.execute(command,[event.id, player_name])
       row = cur.fetchone()
       return row is not None
+
+async def BulkAddArchetypes(
+  event:Event,
+  archetypes:list[PlayerArchetype],
+  user_id:int,
+  user_name:str,
+  user_discord_id:int,
+  user_discord_name:str
+) -> int:
+  data_to_insert = [(event.id, archetype.player_name, archetype.archetype_played, user_id, user_name, user_discord_id, user_discord_name) for archetype in archetypes]
+
+  async with await psycopg.AsyncConnection.connect(DATABASE_URL) as conn:
+    async with conn.cursor() as cur:
+      command = '''
+      INSERT INTO archetype_submissions (event_id, player_name, archetype_played, date_submitted, submitter_id, submitter_username, reported, submitter_discord_id, submitter_discord_name, is_submitter)
+      VALUES (%s, %s, %s, NOW(), %s, %s, FALSE, %s, %s, TRUE)
+      '''
+
+      await cur.executemany(command, data_to_insert)
+      await conn.commit()
+      return len(archetypes)
+  
 
 def AddArchetype(
   event_id:int,
