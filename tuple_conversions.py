@@ -231,3 +231,8 @@ class Deck(NamedTuple):
     wins: int
     losses: int
     draws: int
+
+
+class PlayerArchetype(NamedTuple):
+  player_name: str
+  archetype_played: str
