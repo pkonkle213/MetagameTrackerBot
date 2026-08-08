@@ -1,4 +1,4 @@
-from typing import Tuple, NamedTuple
+from typing import Tuple
 import psycopg
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
