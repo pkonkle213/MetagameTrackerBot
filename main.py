@@ -11,6 +11,7 @@ from services.store_services import NewStoreRegistration
 from timedposts.automated_updates import UpdateDataGuild
 from services.sync_service import SyncCommands
 from discord_messages import MessageUser
+from timedposts.automated_paid_users import UpdateStores
 # from services.stripe_webhook_service import start_webhook_server
 
 intents = discord.Intents.all()
