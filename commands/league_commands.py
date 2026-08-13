@@ -73,7 +73,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
         title = f"Top Players for {league.name}"
         headers = ["Rank", "Player Name", "Points", "Win %"]
         output = BuildTableOutput(title, headers, data)
-        await interaction.followup.send(output)
+        await interaction.followup.send(output, ephemeral=True)
 
     @app_commands.command(
         name="leaderboard_race", description="Display the top players in a league"
