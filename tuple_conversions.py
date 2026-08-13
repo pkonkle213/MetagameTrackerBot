@@ -52,6 +52,7 @@ class PlayerStanding(NamedTuple):
 
 
 class TopPlayers(NamedTuple):
+    rank: int
     player_name: str
     points: int
     win_percent: float
