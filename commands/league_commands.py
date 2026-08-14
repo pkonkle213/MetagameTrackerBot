@@ -56,7 +56,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
         league = await SelectLeague(self.bot, interaction)
         data = LeagueLeaderboard(league)
         title = f"Top Players for {league.name}"
-        headers = ["Player Name", "Points", "Win %"]
+        headers = ["Rank", "Player Name", "Points", "Win %"]
         output = BuildTableOutput(title, headers, data)
         await interaction.followup.send(output)
 
