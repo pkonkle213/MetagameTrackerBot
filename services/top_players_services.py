@@ -14,5 +14,5 @@ def GetTopPlayers(interaction: Interaction, start_date:str, end_date:str) -> Out
   
   data = GetTopPlayerData(objects.store, objects.game, objects.format, date_start, date_end)
   title = f'Top Players from {date_start.strftime('%B %d')} to {date_end.strftime('%B %d')}'
-  headers = ['Name', 'Points', 'Win %']
+  headers = ['Rank', 'Name', 'Points', 'Win %']
   return OutputToBuild(title, headers, data)
