@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from typing import NamedTuple
 from settings import DATABASE_URL
 import psycopg
-from tuple_conversions import Format, Game, Store
+from tuple_conversions import Format, Game, Store, LastArchetype
 
 def GetWinPercentage(
   user_id: int,
@@ -34,10 +34,6 @@ def GetWinPercentage(
     if not row:
       raise KnownError('This person has not played any games in this format')
     return row[0]
-
-class LastArchetype(NamedTuple):
-  event_date: date
-  archetype_played: str
 
 def GetLastArchetype(
   user_id: int,

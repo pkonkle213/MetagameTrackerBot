@@ -3,7 +3,7 @@ from discord import Interaction, Member
 from custom_errors import KnownError
 from data.get_user_info_data import GetLastArchetype, GetWinPercentage, GetMostPlayed
 from interaction_objects import GetObjectsFromInteraction
-from tuple_conversions import Format, Game, Store, UserData
+from tuple_conversions import Format, Game, Store, UserData, LastArchetype
 
 def GetUserData(interaction: Interaction,
                member: Member) -> UserData:
@@ -34,8 +34,14 @@ def GetUserData(interaction: Interaction,
     objects.game,
     objects.format
   )
-    
-  return player_name, win_percent, last_played, top_decks
+
+  data = UserData(
+    player_name,
+    win_percent,
+    last_played,
+    top_decks
+  )
+  return data
 
 def GetPlayerName(member_id: int) -> str:
   """Gets the player name for the user in this discord"""
@@ -58,7 +64,7 @@ def GetWinPercent(member_id: int,
 def GetLastPlayed(member_id: int,
                 store: Store,
                 game: Game,
-                format: Format):
+                format: Format) -> LastArchetype:
   last_played = GetLastArchetype(member_id,
                                  store,
                                  game,

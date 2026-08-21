@@ -14,7 +14,7 @@ from services.league_services import (
     FullLeagueLeaderboard,
 )
 from output_builder import BuildTableOutput
-from checks import IsPaidStore
+from checks import IsStore
 
 
 class LeaguesCommands(commands.GroupCog, name="league"):
@@ -25,14 +25,14 @@ class LeaguesCommands(commands.GroupCog, name="league"):
 
     @app_commands.command(name="create", description="Create a new league")
     @app_commands.guild_only()
-    @IsPaidStore()
+    @IsStore()
     @app_commands.checks.has_role("MTSubmitter")
     async def CreateLeague(self, interaction: Interaction):
         await CreateLeague(self.bot, interaction)
 
-    @app_commands.command(name="edit", description="Exit a league")
+    @app_commands.command(name="edit", description="Edit a league")
     @app_commands.guild_only()
-    @IsPaidStore()
+    @IsStore()
     @app_commands.checks.has_role("MTSubmitter")
     async def EditLeague(self, interaction: Interaction):
         await EditLeague(self.bot, interaction)
@@ -41,7 +41,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
         name="information", description="Display information about a league"
     )
     @app_commands.guild_only()
-    @IsPaidStore()
+    @IsStore()
     async def ViewLeague(self, interaction: Interaction):
         output = await ViewLeague(self.bot, interaction)
         await interaction.followup.send(output)
@@ -50,7 +50,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
         name="leaderboard", description="Display the top players in a league"
     )
     @app_commands.guild_only()
-    @IsPaidStore()
+    @IsStore()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def TopPlayers(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
@@ -64,7 +64,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
         name="full_leaderboard", description="Display all players' ranks in a league"
     )
     @app_commands.guild_only()
-    @IsPaidStore()
+    @IsStore()
     @app_commands.checks.has_role("MTSubmitter")
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def FullLeaderboard(self, interaction: Interaction):
@@ -79,7 +79,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
         name="leaderboard_race", description="Display the top players in a league"
     )
     @app_commands.guild_only()
-    @IsPaidStore()
+    @IsStore()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.channel.id))
     async def LeaderboardRace(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
@@ -90,7 +90,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
         name="metagame", description="Display the metagame of a league"
     )
     @app_commands.guild_only()
-    @IsPaidStore()
+    @IsStore()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def LeagueMeta(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
@@ -104,7 +104,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
         name="my_status",
         description="Shows how you compare to the top players in a league",
     )
-    @IsPaidStore()
+    @IsStore()
     @app_commands.guild_only()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def MyStatus(self, interaction: Interaction):

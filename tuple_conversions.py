@@ -205,11 +205,14 @@ class LeaderboardRace(NamedTuple):
     player_name: str
     points: int
 
+class LastArchetype(NamedTuple):
+  event_date: date
+  archetype_played: str
 
 class UserData(NamedTuple):
     player_name: str
     win_percent: float
-    last_played: str
+    last_played: LastArchetype
     top_decks: list[tuple[str, str]]
 
 
