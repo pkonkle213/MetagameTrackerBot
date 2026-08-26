@@ -131,9 +131,9 @@ def GetTopPlayerData(
         GROUP BY
           player_name
         ORDER BY
-          2 DESC,
-          3 DESC,
-          1
+          points DESC,
+          win_percent DESC,
+          player_name
         LIMIT
           CEIL(
             .5 * (
