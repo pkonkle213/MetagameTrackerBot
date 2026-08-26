@@ -6,20 +6,23 @@ from psycopg.rows import class_row
 
 class Message(NamedTuple):
   discord_id: int
+  event_id: int
   game_id: int
   format_id: int
   channel_id: int
+  has_unknown: bool
 
-
-def ThreeDayOldEventsWithUnknown() -> list[Message]:
+def ThreeDayOldEvents() -> list[Message]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(Message)) as cur:
     command = """
     SELECT
       e.discord_id,
+      e.id as event_id,
       gm.game_id AS game_id,
       fm.format_id AS format_id,
-      fm.channel_id
+      fm.channel_id,
+      SUM(er.reported) < SUM(er.total_attended) AS has_unknown
     FROM
       events_reported er
       INNER JOIN events e ON e.id = er.id
@@ -31,12 +34,11 @@ def ThreeDayOldEventsWithUnknown() -> list[Message]:
       e.event_date = NOW()::date - INTERVAL '3 days'
     GROUP BY
       e.discord_id,
+      e.id,
       gm.game_id,
       gm.category_id,
       fm.format_id,
       fm.channel_id
-    HAVING
-      SUM(er.reported) < SUM(er.total_attended)
     """
 
     cur.execute(command)
