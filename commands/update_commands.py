@@ -33,10 +33,10 @@ class UpdateCommands(commands.GroupCog, name="update"):
     @IsPaidStore()
     async def UpdatePlayerNames(self, interaction: Interaction):
         objects = GetObjectsFromInteraction(interaction)
-        if not objects.store:
+        if not objects.store or not objects.game or not objects.format:
             raise Exception("No store, game, or format found.")
         
-        modal = UpdatePlayerNamesModal(objects.store)
+        modal = UpdatePlayerNamesModal(objects.store, objects.game, objects.format)
         await interaction.response.send_modal(modal)
         await modal.wait()
 
