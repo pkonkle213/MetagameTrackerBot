@@ -117,39 +117,48 @@ def GetTopPlayerData(
               {f"AND e.format_id = {format.id}" if format else ""}
               {f"AND e.game_id = {game.id}" if game else ""}
               AND s.discord_id = {store.discord_id}
+          ),
+          RANKED AS (
+            SELECT
+              ROW_NUMBER() OVER () AS rank,
+              player_name,
+              (3 * SUM(wins) + SUM(draws)) AS points,
+              ROUND(
+                100.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)),
+                2
+              ) AS win_percent
+            FROM
+              X
+            GROUP BY
+              player_name
+            ORDER BY
+              points DESC,
+              win_percent DESC,
+              player_name
           )
-        SELECT
-          ROW_NUMBER() OVER () AS rank,
-          player_name,
-          (3 * SUM(wins) + SUM(draws)) AS points,
-          ROUND(
-            100.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)),
-            2
-          ) AS win_percent
-        FROM
-          X
-        GROUP BY
-          player_name
-        ORDER BY
-          points DESC,
-          win_percent DESC,
-          player_name
-        LIMIT
-          CEIL(
-            .5 * (
-              SELECT
-                AVG(participants) AS average_participants
-              FROM
-                (
-                  SELECT
-                    count(*) AS participants
-                  FROM
-                    X
-                  GROUP BY
-                    event_id
-                )
+          SELECT
+            ROW_NUMBER() OVER () AS rank,
+            player_name,
+            points,
+            win_percent
+          FROM
+            RANKED
+          LIMIT
+            CEIL(
+              .5 * (
+                SELECT
+                  AVG(participants) AS average_participants
+                FROM
+                  (
+                    SELECT
+                      count(*) AS participants
+                    FROM
+                      X
+                    GROUP BY
+                      event_id
+                  )
+              )
             )
-          )
         """
 
         cur.execute(command)
