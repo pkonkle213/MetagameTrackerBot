@@ -96,7 +96,7 @@ def GetTopPlayerData(
     format: Format | None,
     start_date: date,
     end_date: date,
-):
+) -> list[TopPlayers]:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
         command = f"""
