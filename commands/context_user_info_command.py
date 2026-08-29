@@ -32,7 +32,7 @@ class UserInfoCommand(commands.Cog):
       output += f"Last Played: {last_played.archetype_played} ({last_played.event_date})\n"
       output += "Most Played Decks - % played:\n"
       for deck in top_decks:
-        output += f"\t{deck[0]} - {deck[1]}%\n"
+        output += f"\t{deck.chance_played} - {deck.chance_played}%\n"
       await interaction.followup.send(output, ephemeral=True)
     except KnownError as error:
       await interaction.followup.send(error.message, ephemeral=True)

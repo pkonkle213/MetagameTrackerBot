@@ -209,11 +209,17 @@ class LastArchetype(NamedTuple):
   event_date: date
   archetype_played: str
 
+
+class TopDeck(NamedTuple):
+    archetype_played: str
+    win_percentage: float
+    chance_played: float
+
 class UserData(NamedTuple):
     player_name: str
     win_percent: float
     last_played: LastArchetype
-    top_decks: list[tuple[str, str]]
+    top_decks: list[TopDeck]
 
 
 class OutputToBuild(NamedTuple):

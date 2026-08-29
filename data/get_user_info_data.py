@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from typing import NamedTuple
 from settings import DATABASE_URL
 import psycopg
-from tuple_conversions import Format, Game, Store, LastArchetype
+from tuple_conversions import Format, Game, Store, LastArchetype, TopDeck
 
 def GetWinPercentage(
   user_id: int,
@@ -67,11 +67,6 @@ def GetLastArchetype(
     if not row:
       raise KnownError('This person has not played any games in this format')
     return row
-
-class TopDeck(NamedTuple):
-  archetype_played: str
-  win_percentage: float
-  chance_played: float
   
 def GetMostPlayed(
   user_id: int,

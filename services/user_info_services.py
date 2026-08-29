@@ -3,7 +3,7 @@ from discord import Interaction, Member
 from custom_errors import KnownError
 from data.get_user_info_data import GetLastArchetype, GetWinPercentage, GetMostPlayed
 from interaction_objects import GetObjectsFromInteraction
-from tuple_conversions import Format, Game, Store, UserData, LastArchetype
+from tuple_conversions import Format, Game, Store, UserData, LastArchetype, TopDeck
 
 def GetUserData(
   interaction: Interaction,
@@ -76,7 +76,7 @@ def GetLastPlayed(member_id: int,
 def GetTopDecks(member_id: int,
                 store: Store,
                 game: Game,
-                format: Format):
+                format: Format) -> list[TopDeck]:
   most_played = GetMostPlayed(member_id,
                               store,
                               game,
