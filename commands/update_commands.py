@@ -44,10 +44,8 @@ class UpdateCommands(commands.GroupCog, name="update"):
 
     @app_commands.command(name="profile", description="Updates the hub/store profile")
     @app_commands.guild_only()
-    # @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
+    @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     @app_commands.checks.has_role("MTSubmitter")
-    # @app_commands.check(isOwner)
-    # @IsStore()
     async def UpdateProfile(self, interaction: Interaction):
         """Updates all info in the store profile"""
         result = await UpdateDetails(self.bot, interaction)
