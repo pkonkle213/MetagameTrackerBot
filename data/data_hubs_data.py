@@ -1,7 +1,67 @@
+from custom_errors import KnownError
 from psycopg.rows import class_row, scalar_row
-from tuple_conversions import Store, Event, HubsChannels
+from tuple_conversions import Store, Event, HubsChannels, Game, Format, Hub
 import psycopg
 from settings import DATABASE_URL
+
+def GetPossibleHubs(
+  store:Store,
+  game:Game | None,
+  format:Format | None
+) -> list[Hub]:
+  """Gets all hubs related to a store, game, and format"""
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Hub)) as cur:
+    command = f"""
+    (
+      SELECT
+        hv.discord_id,
+        hv.discord_name,
+        hv.hub_name,
+        hv.owner_id,
+        hv.owner_name,
+        hv.region_id,
+        hv.game_lock,
+        hv.format_lock,
+        hv.is_paid,
+        hv.invite
+      FROM
+        stores s
+        INNER JOIN hubs_view hv ON hv.region_id = s.region_id
+        INNER JOIN format_channel_maps fcm ON fcm.discord_id = hv.discord_id
+      WHERE
+        s.discord_id = {store.discord_id}
+        {f"AND fcm.format_id = {format.id}" if format else ""}
+    )
+    UNION
+    (
+      SELECT
+        hv.discord_id,
+        hv.discord_name,
+        hv.hub_name,
+        hv.owner_id,
+        hv.owner_name,
+        hv.region_id,
+        hv.game_lock,
+        hv.format_lock,
+        hv.is_paid,
+        hv.invite
+      FROM
+        stores s
+        INNER JOIN region_channel_maps rcm ON rcm.region_id = s.region_id
+        INNER JOIN hubs_view hv ON rcm.discord_id = hv.discord_id
+      WHERE
+        s.discord_id = {store.discord_id}
+        AND rcm.region_id = {store.region_id}
+        {f'AND hv.format_lock = {format.id}' if format else ''}
+    )
+    LIMIT
+      25
+    """
+
+    cur.execute(command)
+    rows = cur.fetchall()
+    return rows
 
 def GetAllHubs(event:Event) -> list[HubsChannels]:
   """Gets all hub discordIds and channelIds for an event"""

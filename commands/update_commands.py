@@ -35,28 +35,26 @@ class UpdateCommands(commands.GroupCog, name="update"):
         objects = GetObjectsFromInteraction(interaction)
         if not objects.store or not objects.game or not objects.format:
             raise Exception("No store, game, or format found.")
-        
+
         modal = UpdatePlayerNamesModal(objects.store, objects.game, objects.format)
         await interaction.response.send_modal(modal)
         await modal.wait()
 
-        await interaction.followup.send('Player names updated!', ephemeral=True)
+        await interaction.followup.send("Player names updated!", ephemeral=True)
 
     @app_commands.command(name="profile", description="Updates the hub/store profile")
     @app_commands.guild_only()
-    @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-    # @app_commands.check(isOwner)
+    # @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     @app_commands.checks.has_role("MTSubmitter")
+    # @app_commands.check(isOwner)
     # @IsStore()
     async def UpdateProfile(self, interaction: Interaction):
         """Updates all info in the store profile"""
         result = await UpdateDetails(self.bot, interaction)
         if result:
-            await interaction.followup.send("Discord profile updated!", ephemeral=True)
+            await result.followup.send("Discord profile updated!", ephemeral=True)
         else:
-            await interaction.followup.send(
-                "Discord profile unable to update.", ephemeral=True
-            )
+            await result.followup.send("Discord profile unable to update.", ephemeral=True)
 
     @UpdateProfile.error
     @UpdateArchetypes.error

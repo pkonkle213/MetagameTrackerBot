@@ -1,7 +1,8 @@
+from blinker import ANY
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
 import psycopg
-from tuple_conversions import Store, Event, ChannelFormatMapping, Hub
+from tuple_conversions import Store, Event, ChannelFormatMapping, Hub, Game, Format
 
 def UpdateHub(
   discord_id:int,
@@ -27,6 +28,43 @@ def UpdateHub(
 
     return row
 
+def UpdateApprovedHubs(
+  store: Store,
+  game: Game | None,
+  format: Format | None,
+  hubs: list[int]
+) -> bool:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=scalar_row) as cur:
+    delete_command = f'''
+    DELETE FROM stores_approved_hubs
+      WHERE store_discord_id = {store.discord_id}
+      AND game_id = {game.id if game else 'NULL'}
+      AND format_id = {format.id if format else 'NULL'}
+      AND region_id = {store.region_id if store.region_id else 'NULL'}
+    '''
+    
+    insert_command = f'''
+    INSERT INTO stores_approved_hubs (store_discord_id, hub_discord_id, game_id, format_id, region_id)
+    SELECT
+      {store.discord_id}::bigint,
+      unnest(%s::bigint[]),
+      {game.id if game else 'NULL'},
+      {format.id if format else 'NULL'},
+      {store.region_id if store.region_id else 'NULL'}
+    '''
+
+    try:
+      cur.execute(delete_command)  # type: ignore[arg-type]
+      conn.commit()
+
+      cur.execute(insert_command, [hubs])  # type: ignore[arg-type]
+      conn.commit()
+      return True
+    except Exception as e:
+      print('Error:', e)
+      return False
+
 def UpdateStore(
   discord_id:int,
   store_name:str,
@@ -34,8 +72,6 @@ def UpdateStore(
   melee_id:str | None,
   melee_secret:str | None
 ) -> int:
-  print('Store client id:', melee_id)
-  print('Store client secret:', melee_secret)
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=scalar_row) as cur:
     command = f'''
@@ -48,7 +84,7 @@ def UpdateStore(
     RETURNING discord_id
     '''
 
-    criteria = [store_name, store_address]
+    criteria:list = [store_name, store_address]
     if melee_id:
       criteria.append(melee_id)
     if melee_secret:
