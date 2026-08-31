@@ -47,7 +47,7 @@ class UpdateCommands(commands.GroupCog, name="update"):
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     @app_commands.checks.has_role("MTSubmitter")
     async def UpdateProfile(self, interaction: Interaction):
-        """Updates all info in the store profile"""
+        """Updates all info in the profile of the hub or store"""
         result = await UpdateDetails(self.bot, interaction)
         if result:
             await result.followup.send("Discord profile updated!", ephemeral=True)
