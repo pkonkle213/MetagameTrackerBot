@@ -59,44 +59,52 @@ def GetPossibleHubs(
       25
     """
 
-    cur.execute(command)
+    cur.execute(command) #type:ignore[arg-type]
     rows = cur.fetchall()
     return rows
 
+#TODO: How can I simplify this now that I have stores_approved_hubs?
 def GetAllHubs(event:Event) -> list[HubsChannels]:
   """Gets all hub discordIds and channelIds for an event"""
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(HubsChannels)) as cur:
     command = f"""
     (
+      --Region Locked Hubs
       SELECT
         hv.discord_id,
         fcm.channel_id
       FROM
         events e
         INNER JOIN stores s ON s.discord_id = e.discord_id
-        INNER JOIN hubs_view hv ON hv.region_id = s.region_id
+        INNER JOIN stores_approved_hubs sah ON sah.store_discord_id = s.discord_id
+        INNER JOIN hubs_view hv ON hv.discord_id = sah.hub_discord_id
         INNER JOIN format_channel_maps fcm ON fcm.format_id = e.format_id
         AND fcm.discord_id = hv.discord_id
       WHERE
         e.id = {event.id}
+        AND fcm.format_id = {event.format_id}
     )
     UNION ALL
     (
+      --Format Locked Hubs
       SELECT
         hv.discord_id,
         rcm.channel_id
       FROM
         events e
-        INNER JOIN hubs_view hv ON hv.format_lock = e.format_id
         INNER JOIN stores s ON e.discord_id = s.discord_id
+        INNER JOIN stores_approved_hubs sah ON sah.store_discord_id = s.discord_id
+        INNER JOIN hubs_view hv ON hv.discord_id = sah.hub_discord_id
         INNER JOIN region_channel_maps rcm ON rcm.region_id = s.region_id
         AND rcm.discord_id = hv.discord_id
       WHERE
         e.id = {event.id}
+        AND e.discord_id = {event.discord_id}
     )
     UNION ALL
     (
+      --Global Hubs
       SELECT
         hv.discord_id, fcm.channel_id
       FROM
@@ -109,7 +117,7 @@ def GetAllHubs(event:Event) -> list[HubsChannels]:
     )
     """
 
-    cur.execute(command)
+    cur.execute(command) #type:ignore[arg-type]
     rows = cur.fetchall()
     if len(rows) == 0:
       raise Exception("No hubs found")
