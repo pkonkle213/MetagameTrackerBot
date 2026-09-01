@@ -22,118 +22,128 @@ from data.archetype_data import PlayerInEvent
 
 
 async def SubmitArchetype(
-  bot: commands.Bot,
-  interaction: Interaction,
-  player_name: str,
-  event: Event,
-  archetype: str,
-  game: Game,
-  format: Format,
-  moxfield_link: str | None
+    bot: commands.Bot,
+    interaction: Interaction,
+    player_name: str,
+    event: Event,
+    archetype: str,
+    game: Game,
+    format: Format,
+    moxfield_link: str | None,
 ) -> None:
-  guild_id = interaction.guild.id
-  guild_name = interaction.guild.name
-  channel_id = interaction.channel.id
-  
-  if not PlayerInEvent(event, player_name):
-    raise KnownError(f"Player name `{player_name}` not found in event. Please try again.")
-    
-  store = GetStore(event.discord_id)
-  if store is None:
-    raise Exception("An event didn't have a store? Sus.")
+    guild_id = interaction.guild.id
+    guild_name = interaction.guild.name
+    channel_id = interaction.channel.id
 
-  # Make the call to check the archetype for banned words here
-  if ContainsBadWord(event.discord_id, archetype):
-    raise KnownError("Archetype contains a banned word")
+    if not PlayerInEvent(event, player_name):
+        raise KnownError(
+            f"Player name `{player_name}` not found in event. Please try again."
+        )
 
-  # Check if user is allowed to submit archetypes (too many banned words)
-  if not CanSubmitArchetypes(event.discord_id, interaction.user.id):
-    raise KnownError(
-      "You have submitted too many archetypes with banned words. Please contact your store owner to have them submit the archetype."
+    store = GetStore(event.discord_id)
+    if store is None:
+        raise Exception("An event didn't have a store? Sus.")
+
+    # Make the call to check the archetype for banned words here
+    if ContainsBadWord(event.discord_id, archetype):
+        raise KnownError("Archetype contains a banned word")
+
+    # Check if user is allowed to submit archetypes (too many banned words)
+    if not CanSubmitArchetypes(event.discord_id, interaction.user.id):
+        raise KnownError(
+            "You have submitted too many archetypes with banned words. Please contact your store owner to have them submit the archetype."
+        )
+
+    # TODO: I should already know this, when checking to get the appropriate events
+    is_submitter = isSubmitter(interaction.guild, interaction.user, "MTSubmitter")
+
+    # If a moxfield link is provided, get the archetype from it
+    moxfield_error = ""
+    if moxfield_link:
+        try:
+            moxfield_archetype = await GetMoxfieldArchetype(
+                moxfield_link, event, format, player_name
+            )
+            moxfield_added = AddArchetype(
+                event.id,
+                player_name,
+                moxfield_archetype,
+                None,
+                "Moxfield Import",
+                guild_id,
+                guild_name,
+                is_submitter,
+            )
+        except KnownError as e:
+            moxfield_error = (
+                " Unable to load the decklist from Moxfield. Please try again later."
+            )
+
+    # If not banned, add to the database
+    if archetype != "":
+        AddArchetype(
+            event.id,
+            player_name,
+            archetype,
+            interaction.user.id,
+            interaction.user.name,
+            guild_id,
+            guild_name,
+            is_submitter,
+        )
+
+    feed_output = BuildMessage(interaction, event, archetype, player_name)
+    private_output = (
+        f"Thank you for submitting the archetype for {event.event_name}!"
+        + moxfield_error
     )
-
-  # TODO: I should already know this, when checking to get the appropriate events
-  is_submitter = isSubmitter(interaction.guild, interaction.user, 'MTSubmitter')
-
-  # If a moxfield link is provided, get the archetype from it
-  moxfield_error = ''
-  if moxfield_link:
-    try:
-      moxfield_archetype = await GetMoxfieldArchetype(moxfield_link, event, format, player_name)
-      moxfield_added = AddArchetype(
-        event.id,
-        player_name,
-        moxfield_archetype,
-        None,
-        'Moxfield Import',
-        guild_id,
-        guild_name,
-        is_submitter
-      )
-    except KnownError as e:
-      moxfield_error = ' Unable to load the decklist from Moxfield. Please try again later.'
-  
-  # If not banned, add to the database
-  if archetype != '':
-    AddArchetype(
-      event.id,
-      player_name,
-      archetype,
-      interaction.user.id,
-      interaction.user.name,
-      guild_id,
-      guild_name,
-      is_submitter
-    )
-
-  feed_output = BuildMessage(interaction, event, archetype, player_name)
-  private_output = f"Thank you for submitting the archetype for {event.event_name}!" + moxfield_error
 
   # If added, check if the event is fully reported and complete
   public_output, full_event = CheckEventPercentage(event)
 
-  # Send all output messages
-  #TODO: This doesn't work from the hub because the guild_id and channel_id are for the hub, not the store
-  await interaction.followup.send(private_output, ephemeral=True)
-  await MessageStoreFeed(bot, feed_output, interaction)
-  format_map = GetFormatMapByEvent(event)
-  mapped_channel = format_map.channel_id
-  
-  if public_output:
-    await MessageChannel(
-      bot, public_output, event.discord_id, mapped_channel
-    )
-    
-  if full_event:
-    await MessageChannel(
-      bot, full_event, guild_id, mapped_channel
-    )
-    name = store.store_name if store.store_name else store.discord_name
-    output = f"```{name} - " + full_event[3:]
-    await MessageHubs(bot, store, event, output)
+    # Send all output messages
+    # TODO: This doesn't work from the hub because the guild_id and channel_id are for the hub, not the store
+    await interaction.followup.send(private_output, ephemeral=True)
+    await MessageStoreFeed(bot, feed_output, interaction)
+    format_map = GetFormatMapByEvent(event)
+    mapped_channel = format_map.channel_id
+
+    if public_output:
+        await MessageChannel(bot, public_output, event.discord_id, mapped_channel)
+
+    if full_event:
+        await MessageChannel(bot, full_event, guild_id, mapped_channel)
+        name = store.store_name if store.store_name else store.discord_name
+        output = f"```{name} - " + full_event[3:]
+        await MessageHubs(bot, store, event, output)
 
 
 async def MessageStoreFeed(bot, message: str, interaction: Interaction) -> None:
-  """Message the store feed channel specific to the game"""
-  try:
-    channel_id = GetArchetypeFeed(
-      interaction.guild_id, interaction.channel.category.id
-    )
-    await MessageChannel(bot, message, interaction.guild_id, channel_id)
-  except Exception as e:
-    await MessageChannel(bot, message, settings.BOTGUILDID, settings.CLAIMCHANNEL)
+    """Message the store feed channel specific to the game"""
+    try:
+        channel_id = GetArchetypeFeed(
+            interaction.guild_id, interaction.channel.category.id
+        )
+        await MessageChannel(bot, message, interaction.guild_id, channel_id)
+    except Exception as e:
+        await MessageChannel(bot, message, settings.BOTGUILDID, settings.CLAIMCHANNEL)
 
 
 def BuildMessage(
-  interaction: Interaction, event: Event, archetype: str, player_name: str
+    interaction: Interaction, event: Event, archetype: str, player_name: str
 ) -> str:
-  message_parts = []
-  message_parts.append(f"Submitter Username: {interaction.user.display_name} ({interaction.user.id})")
-  message_parts.append(f"Archetype submitted: {archetype}")
-  message_parts.append(f"For player name: {player_name}")
-  message_parts.append(f"For event name: {event.event_name}")
-  message_parts.append(f"From Discord: {interaction.guild.name} ({interaction.guild.id})")
-  return "\n".join(message_parts)
+    message_parts = ["```"]
+    message_parts.append(
+        f"Submitter Username: {interaction.user.display_name} ({interaction.user.id})"
+    )
+    message_parts.append(f"Archetype submitted: {archetype}")
+    message_parts.append(f"For player name: {player_name}")
+    message_parts.append(f"For event name: {event.event_name}")
+    message_parts.append(
+        f"From Discord: {interaction.guild.name} ({interaction.guild.id})"
+    )
+    message_parts.append("```")
+    return "\n".join(message_parts)
 
 
 def CheckEventPercentage(event: Event) -> Tuple[str | None, str | None]:
@@ -153,18 +163,19 @@ def CheckEventPercentage(event: Event) -> Tuple[str | None, str | None]:
     return followup, final
   return None, None
 
-#TODO: These should have their own service
+
+# TODO: These should have their own service
 def OneEventMeta(event: Event) -> Tuple[str, list[str], list[MetagameResult]]:
-  data = OneEventMetagame(event)
-  title = f"{event.event_name}'s Metagame"
-  headers = ["Archetype", "Metagame %", "Win %"]
-  return title, headers, data
+    data = OneEventMetagame(event)
+    title = f"{event.event_name}'s Metagame"
+    headers = ["Archetype", "Metagame %", "Win %"]
+    return title, headers, data
 
 
 def OneEventDetails(
-  event: Event,
+    event: Event,
 ) -> OutputToBuild:
-  data = GetEventDetails(event.id)
-  title = f"{event.event_name} Results ({len(data)} attended)"
-  headers = ["Archetype", "Wins", "Losses", "Draws"]
-  return OutputToBuild(title, headers, data)
+    data = GetEventDetails(event.id)
+    title = f"{event.event_name} Results ({len(data)} attended)"
+    headers = ["Archetype", "Wins", "Losses", "Draws"]
+    return OutputToBuild(title, headers, data)

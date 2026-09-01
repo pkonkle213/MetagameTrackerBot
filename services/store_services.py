@@ -6,7 +6,7 @@ from discord.ext import commands
 from custom_errors import KnownError
 from data.formats_data import AddFormatMap, GetFormatsByGameId
 from data.games_data import AddGameMap
-from data.store_data import AddStore, UpdateStore, AddDiscord, UpdateHub
+from data.store_data import AddStore, UpdateStore, AddDiscord, UpdateHub, UpdateApprovedHubs
 from input_modals.store_profile_update import StoreProfileModal
 from input_modals.hub_profile_update import HubProfileModal
 from interaction_objects import GetObjectsFromInteraction
@@ -14,25 +14,33 @@ from services.game_mapper_services import GetGameOptions
 from settings import BOTGUILDID
 from tuple_conversions import Format, Game
 
-async def UpdateDetails(bot:commands.Bot, interaction: discord.Interaction) -> str:
+async def UpdateDetails(bot:commands.Bot, interaction: discord.Interaction) -> discord.Interaction:
   """Updates the store details in the database"""
   objects = GetObjectsFromInteraction(interaction)
   if not objects.store and not objects.hub:
     raise KnownError('No registered discord found')
 
   if objects.store:
-    modal = StoreProfileModal(bot, objects.store)
+    modal = StoreProfileModal(bot, objects.store, objects.game, objects.format)
     await interaction.response.send_modal(modal)
     await modal.wait()  
 
     if not modal.is_submitted:
       raise KnownError('Modal not submitted correctly')
     
-    result = UpdateStore(objects.store.discord_id,
-                         modal.submitted_store_name,
-                         modal.submitted_store_address,
-                         modal.submitted_melee_id,
-                         modal.submitted_melee_secret)
+    result = UpdateStore(
+      interaction,
+      objects.store,
+      modal.submitted_store_name,
+      modal.submitted_store_address,
+      modal.submitted_melee_id,
+      modal.submitted_melee_secret
+    )
+    hubs = UpdateApprovedHubs(
+      objects.store,
+      objects.game,
+      objects.format,
+      modal.submitted_hubs)
 
   if objects.hub:
     modal = HubProfileModal(bot, objects.hub)
@@ -42,12 +50,15 @@ async def UpdateDetails(bot:commands.Bot, interaction: discord.Interaction) -> s
     if not modal.is_submitted:
       raise KnownError('Modal not submitted correctly')
 
-    result = UpdateHub(objects.hub.discord_id,
-                       modal.submitted_hub_name,
-                       modal.submitted_hub_invite)
+    result = UpdateHub(
+      interaction,
+      objects.hub.discord_id,
+      modal.submitted_hub_name,
+      modal.submitted_hub_invite
+    )
   
   if result:
-    return 'Profile updated!'
+    return modal.new_interaction
   else:
     raise KnownError('Profile unable to update')
   

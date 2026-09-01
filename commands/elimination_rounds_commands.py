@@ -7,7 +7,7 @@ from interaction_objects import GetObjectsFromInteraction
 from services.command_error_service import Error, KnownError
 from services.elimination_rounds_services import GetEliminationRoundData
 from settings import BOTGUILDID
-from tuple_conversions import EventType
+from tuple_conversions import EventTypeEnum
 
 
 class EliminationRoundsCommands(commands.GroupCog, name="elimination_rounds"):
@@ -32,7 +32,7 @@ class EliminationRoundsCommands(commands.GroupCog, name="elimination_rounds"):
             objects.store,
             objects.game,
             objects.format,
-            event_type=EventType.Tournament.value,
+            event_type=EventTypeEnum.Tournament.value,
         )
 
         await interaction.response.send_modal(modal)

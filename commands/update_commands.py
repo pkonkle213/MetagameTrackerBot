@@ -1,50 +1,67 @@
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsStore, isSubmitter
+from checks import IsStore, IsPaidStore, isSubmitter
 from services.command_error_service import Error
 from services.store_services import UpdateDetails
 from input_modals.update_archetype_modal import UpdateArchetypeModal
+from input_modals.update_playernames_modal import UpdatePlayerNamesModal
 from interaction_objects import GetObjectsFromInteraction
 
-class StoreProfile(commands.GroupCog, name="update"):
-  def __init__(self, bot:commands.Bot):
-    self.bot = bot
 
-  @app_commands.command(name="archetypes", description="Mass updates archetypes")
-  @app_commands.guild_only()
-  @app_commands.checks.has_role("MTSubmitter")
-  @IsStore()
-  async def UpdateArchetypes(self, interaction: Interaction):
-    objects = GetObjectsFromInteraction(interaction)
-    if not objects.store or not objects.game or not objects.format:
-      raise Exception("No store, game, or format found.")
-    modal = UpdateArchetypeModal(self.bot, objects.store, objects.game, objects.format)
-    await interaction.response.send_modal(modal)
-    await modal.wait()
+class UpdateCommands(commands.GroupCog, name="update"):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
 
-  @app_commands.command(name="profile", description="Updates the hub/store profile")
-  @app_commands.guild_only()
-  @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-  # @app_commands.check(isOwner)
-  @app_commands.checks.has_role("MTSubmitter")
-  #@IsStore()
-  async def UpdateProfile(self, interaction: Interaction):
-    """Updates all info in the store profile"""
-    result = await UpdateDetails(self.bot, interaction)
-    if result:
-      await interaction.followup.send("Discord profile updated!", ephemeral=True)
-    else:
-      await interaction.followup.send("Discord profile unable to update.", ephemeral=True)
+    @app_commands.command(name="archetypes", description="Mass updates archetypes")
+    @app_commands.guild_only()
+    @app_commands.checks.has_role("MTSubmitter")
+    @IsStore()
+    async def UpdateArchetypes(self, interaction: Interaction):
+        objects = GetObjectsFromInteraction(interaction)
+        if not objects.store or not objects.game or not objects.format:
+            raise Exception("No store, game, or format found.")
+        modal = UpdateArchetypeModal(
+            self.bot, objects.store, objects.game, objects.format
+        )
+        await interaction.response.send_modal(modal)
+        await modal.wait()
 
-  @UpdateProfile.error
-  async def Errors(
-    self,
-    interaction: Interaction,
-    error: app_commands.AppCommandError
-  ):
-    await Error(self.bot, interaction, error)
+    @app_commands.command(name="player_names", description="Mass updates player names")
+    @app_commands.guild_only()
+    @app_commands.checks.has_role("MTSubmitter")
+    @IsPaidStore()
+    async def UpdatePlayerNames(self, interaction: Interaction):
+        objects = GetObjectsFromInteraction(interaction)
+        if not objects.store or not objects.game or not objects.format:
+            raise Exception("No store, game, or format found.")
+
+        modal = UpdatePlayerNamesModal(objects.store, objects.game, objects.format)
+        await interaction.response.send_modal(modal)
+        await modal.wait()
+
+        await interaction.followup.send("Player names updated!", ephemeral=True)
+
+    @app_commands.command(name="profile", description="Updates the hub/store profile")
+    @app_commands.guild_only()
+    @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
+    @app_commands.checks.has_role("MTSubmitter")
+    async def UpdateProfile(self, interaction: Interaction):
+        """Updates all info in the profile of the hub or store"""
+        result = await UpdateDetails(self.bot, interaction)
+        if result:
+            await result.followup.send("Discord profile updated!", ephemeral=True)
+        else:
+            await result.followup.send("Discord profile unable to update.", ephemeral=True)
+
+    @UpdateProfile.error
+    @UpdateArchetypes.error
+    @UpdatePlayerNames.error
+    async def Errors(
+        self, interaction: Interaction, error: app_commands.AppCommandError
+    ):
+        await Error(self.bot, interaction, error)
 
 
-async def setup(bot:commands.Bot):
-  await bot.add_cog(StoreProfile(bot))
+async def setup(bot: commands.Bot):
+    await bot.add_cog(UpdateCommands(bot))

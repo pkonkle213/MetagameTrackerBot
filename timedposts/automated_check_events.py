@@ -1,7 +1,8 @@
 from tuple_conversions import Game, Format, Store
 from interaction_objects import GetStore, GetGameForStore
 from data.archetype_data import GetUnknownArchetypes
-from data.automated_events_data import ThreeDayOldEventsWithUnknown
+from data.automated_events_data import ThreeDayOldEvents
+from data.event_data import CompleteEvent
 from discord_messages import MessageChannel
 from services.date_functions import GetDaysAgo, GetToday
 from output_builder import BuildTableOutput
@@ -13,11 +14,14 @@ async def EventCheck(bot):
   await GetEventsWithUnkown(bot)
  
 async def GetEventsWithUnkown(bot):
-  #Find events exactly 3 days old and need archetypes
-  channels = ThreeDayOldEventsWithUnknown()
+  #Find events exactly 3 days old
+  channels = ThreeDayOldEvents()
   #Loop through channels, see what archetypes are missing, and send the appropriate message to the appropriate channel
-  try:
-    for channel in channels:
+  for channel in channels:
+    try:
+      #Complete Event
+      CompleteEvent(channel.event_id)
+
       #Get all unknown archetypes
       end_date = GetToday()
       start_date = GetDaysAgo(end_date, 3)
@@ -40,6 +44,6 @@ async def GetEventsWithUnkown(bot):
       
       #Message each channel with the unknown archetypes
       await MessageChannel(bot, output, channel.discord_id, channel.channel_id)
-  except Exception as ex:
-    await MessageUser(bot, f'Error getting events with unknown archetypes: {ex}\nChannel:{channels}', settings.PHILID)
+    except Exception as ex:
+      await MessageUser(bot, f'Error getting events with unknown archetypes: {ex}\nChannel:{channels}', settings.PHILID)
   

@@ -251,16 +251,16 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
       elif data.pairings_data:
         AddPairingResults(event, data.pairings_data, interaction.user.id)
 
-      if confirm_response == ViewButtonEnum.DoneComplete.value or confirm_response == ViewButtonEnum.DoneIncomplete.value:
-        if new_event:
-          await MessageChannel(
-            self.bot,
-            f"New data for {event.event_date.strftime('%B %-d')}'s {event.event_name} event has been submitted! Use the `/submit archetype` command to input an archetype!",
-            interaction.guild_id,
-            interaction.channel_id
-          )
-          await MessageHubs(self.bot, objects.store, event)
+      if new_event:
+        await MessageChannel(
+          self.bot,
+          f"New data for {event.event_date.strftime('%B %-d')}'s {event.event_name} event has been submitted! Use the `/submit archetype` command to input an archetype!",
+          interaction.guild_id,
+          interaction.channel_id
+        )
+        await MessageHubs(self.bot, objects.store, event)
       
+      if confirm_response == ViewButtonEnum.DoneComplete.value or confirm_response == ViewButtonEnum.DoneIncomplete.value:
         cont = False
       
         if confirm_response == ViewButtonEnum.DoneComplete.value:
