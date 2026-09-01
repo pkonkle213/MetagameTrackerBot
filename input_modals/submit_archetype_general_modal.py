@@ -90,15 +90,16 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     submitted_event:Event = GetEvent(self.previous_events, self.event_select.component.values[0])
     submitted_player_name:str = ConvertInput(self.player_name_input.component.value)
     await interaction.response.defer(thinking=False)
-    await SubmitArchetype(self.bot,
-                          interaction,
-                          submitted_player_name,
-                          submitted_event,
-                          submitted_archetype,
-                          self.game,
-                          self.format,
-                          self.moxfield_link.component.value if self.game.id == GameEnum.Magic.value else None
-                         )
+    await SubmitArchetype(
+      self.bot,
+      interaction,
+      submitted_player_name,
+      submitted_event,
+      submitted_archetype,
+      self.game,
+      self.format,
+      self.moxfield_link.component.value if self.game.id == GameEnum.Magic.value else None
+    )
 
   async def on_error(self, interaction: Interaction, error: Exception) -> None:
     await Error(self.bot, interaction, error)

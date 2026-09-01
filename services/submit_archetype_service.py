@@ -98,7 +98,7 @@ async def SubmitArchetype(
         + moxfield_error
     )
 
-    # If added, check if the event is fully reported
+    # If added, check if the event is fully reported and complete
     public_output, full_event = CheckEventPercentage(event)
 
     # Send all output messages
@@ -147,21 +147,21 @@ def BuildMessage(
 
 
 def CheckEventPercentage(event: Event) -> Tuple[str | None, str | None]:
-    percent_reported = GetEventReportedPercentage(event.id)
-    if percent_reported >= (event.last_update + 1) / 4:
-        check = UpdateEvent(event.id)
-        if check is None:
-            raise Exception(f"Unable to update event: {event.id}")
-        str_date = event.event_date.strftime("%B %-d")
-        if event.last_update + 1 < 4:
-            followup = f"Congratulations! {str_date}'s {event.event_name} is now {percent_reported:.0%} reported!"
-            final = None
-        else:
-            followup = f"Congratulations! {str_date}'s {event.event_name} is now fully reported! Thank you to all who reported their archetypes!"
-            table = OneEventDetails(event)
-            final = BuildTableOutput(table.title, table.headers, table.data)
-        return followup, final
-    return None, None
+  percent_reported = GetEventReportedPercentage(event.id)
+  if percent_reported >= (event.last_update + 1) / 4:
+    check = UpdateEvent(event.id)
+    if check is None:
+      raise Exception(f"Unable to update event: {event.id}")
+    str_date = event.event_date.strftime("%B %-d")
+    if event.last_update + 1 < 4:
+      followup = f"Congratulations! {str_date}'s {event.event_name} is now {percent_reported:.0%} reported!"
+      final = None
+    elif event.is_complete:
+      followup = f"Congratulations! {str_date}'s {event.event_name} is now fully reported! Thank you to all who reported their archetypes!"
+      table = OneEventDetails(event)
+      final = BuildTableOutput(table.title, table.headers, table.data)
+    return followup, final
+  return None, None
 
 
 # TODO: These should have their own service

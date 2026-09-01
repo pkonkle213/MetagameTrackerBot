@@ -6,6 +6,8 @@ from input_modals.event_selector import EventSelector
 from services.message_hubs_services import MessageHubs
 from discord_messages import MessageChannel
 from views.confirm_data import ConfirmData
+from output_builder import BuildTableOutput
+from services.submit_archetype_service import OneEventDetails
 from discord import Interaction, User, app_commands
 from discord.ext import commands
 from services.event_services import EventForData
@@ -126,12 +128,22 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         break
 
       # Save archetypes
-      await BulkAddArchetypes(event, archetypes, user_id, interaction.user.name, interaction.guild_id, interaction.guild.name)
+      await BulkAddArchetypes(
+        event,
+        archetypes,
+        user_id,
+        interaction.user.name,
+        interaction.guild_id,
+        interaction.guild.name
+      )
 
       # Continue or end loop if there are no more players
       active_interaction = view.interaction
     
-    await interaction.followup.send('All archetypes have been submitted!', ephemeral=True)
+    await interaction.followup.send(
+      'All archetypes have been submitted!',
+      ephemeral=True
+    )
   
   @app_commands.command(
     name="archetype",
@@ -196,7 +208,11 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
       raise KnownError("You can't submit data from a hub.")
 
     event, input_type, active_interaction, new_event = await EventForData(
-      self.bot, interaction, objects.store, objects.game, objects.format
+      self.bot,
+      interaction,
+      objects.store,
+      objects.game,
+      objects.format
     )
 
     if not event or not input_type or not active_interaction:
@@ -231,7 +247,9 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
       output = BuildReviewOutput(modal.converted_data)
       view = ConfirmData()
       await modal.interaction.followup.send(
-        f"{output}\nPlease confirm the data", ephemeral=True, view=view
+        f"{output}\nPlease confirm the data",
+        ephemeral=True,
+        view=view
       )
       await view.wait()
 
@@ -239,7 +257,10 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
       active_interaction = view.interaction
 
       if confirm_response == ViewButtonEnum.Cancel.value:
-        await active_interaction.response.edit_message(content="Data submission canceled!", view=None)
+        await active_interaction.response.edit_message(
+          content="Data submission canceled!",
+          view=None
+        )
         break
 
       data = modal.converted_data
