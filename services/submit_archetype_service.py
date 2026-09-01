@@ -98,8 +98,8 @@ async def SubmitArchetype(
         + moxfield_error
     )
 
-  # If added, check if the event is fully reported and complete
-  public_output, full_event = CheckEventPercentage(event)
+    # If added, check if the event is fully reported and complete
+    public_output, full_event = CheckEventPercentage(event)
 
     # Send all output messages
     # TODO: This doesn't work from the hub because the guild_id and channel_id are for the hub, not the store
