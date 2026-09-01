@@ -1,31 +1,41 @@
-from blinker import ANY
+from discord import Interaction, Guild, Member
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
 import psycopg
 from tuple_conversions import Store, Event, ChannelFormatMapping, Hub, Game, Format
 
 def UpdateHub(
+  interaction: Interaction,
   discord_id:int,
   hub_name:str,
   hub_invite:str
 ) -> int:
   conn = psycopg.connect(DATABASE_URL)
-  print('Hub Name:', hub_name)
-  print('Hub Invite:', hub_invite)
   with conn, conn.cursor(row_factory=scalar_row) as cur:
-    command = f'''
+    discord_command = f'''
+    UPDATE discords
+    SET discord_name = %s
+      , owner_id = %s
+      , owner_name = %s
+    WHERE discord_id = %s
+      '''
+    guild:Guild = interaction.guild
+    owner:Member = guild.owner
+    cur.execute(discord_command,[guild.name, guild.owner_id, owner.name, discord_id])
+    conn.commit()
+    
+    hub_command = f'''
     UPDATE hubs
     SET hub_name = %s
       , invite = %s
     WHERE discord_id = %s
     RETURNING discord_id
     '''
-    cur.execute(command, [hub_name, hub_invite, discord_id])
+    cur.execute(hub_command, [hub_name, hub_invite, discord_id])
     conn.commit()
     row = cur.fetchone()
     if not row:
       raise Exception(f'Unable to update hub: {discord_id}')
-
     return row
 
 def UpdateApprovedHubs(
@@ -66,7 +76,8 @@ def UpdateApprovedHubs(
       return False
 
 def UpdateStore(
-  discord_id:int,
+  interaction: Interaction,
+  store:Store,
   store_name:str,
   store_address:str,
   melee_id:str | None,
@@ -74,7 +85,19 @@ def UpdateStore(
 ) -> int:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=scalar_row) as cur:
-    command = f'''
+    discord_command = f'''
+    UPDATE discords
+    SET discord_name = %s
+      , owner_id = %s
+      , owner_name = %s
+    WHERE discord_id = %s
+      '''
+    guild:Guild = interaction.guild
+    owner:Member = guild.owner
+    cur.execute(discord_command,[guild.name, guild.owner_id, owner.name, store.discord_id])
+    conn.commit()
+    
+    store_command = f'''
     UPDATE stores
     SET store_name = %s
       , store_address = %s
@@ -89,9 +112,9 @@ def UpdateStore(
       criteria.append(melee_id)
     if melee_secret:
       criteria.append(melee_secret)
-    criteria.append(discord_id)
+    criteria.append(store.discord_id)
       
-    cur.execute(command, criteria)
+    cur.execute(store_command, criteria)
     conn.commit()
     row = cur.fetchone()
     if not row:

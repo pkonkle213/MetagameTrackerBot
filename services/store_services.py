@@ -29,7 +29,8 @@ async def UpdateDetails(bot:commands.Bot, interaction: discord.Interaction) -> d
       raise KnownError('Modal not submitted correctly')
     
     result = UpdateStore(
-      objects.store.discord_id,
+      interaction,
+      objects.store,
       modal.submitted_store_name,
       modal.submitted_store_address,
       modal.submitted_melee_id,
@@ -49,9 +50,12 @@ async def UpdateDetails(bot:commands.Bot, interaction: discord.Interaction) -> d
     if not modal.is_submitted:
       raise KnownError('Modal not submitted correctly')
 
-    result = UpdateHub(objects.hub.discord_id,
-                       modal.submitted_hub_name,
-                       modal.submitted_hub_invite)
+    result = UpdateHub(
+      interaction,
+      objects.hub.discord_id,
+      modal.submitted_hub_name,
+      modal.submitted_hub_invite
+    )
   
   if result:
     return modal.new_interaction
