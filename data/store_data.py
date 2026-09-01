@@ -55,19 +55,21 @@ def UpdateApprovedHubs(
     '''
     
     insert_command = f'''
-    INSERT INTO stores_approved_hubs (store_discord_id, hub_discord_id, game_id, format_id, region_id)
+    INSERT INTO stores_approved_hubs (store_discord_id, region_id, game_id, format_id, hub_discord_id)
     SELECT
-      {store.discord_id}::bigint,
-      unnest(%s::bigint[]),
+      {store.discord_id},
       {game.id if game else 'NULL'},
       {format.id if format else 'NULL'},
-      {store.region_id if store.region_id else 'NULL'}
+      {store.region_id if store.region_id else 'NULL'},
+      unnest(%s::bigint[])
     '''
 
     try:
+      print('----Delete Command----\n', delete_command)
       cur.execute(delete_command)  # type: ignore[arg-type]
       conn.commit()
 
+      print('----Insert Command----\n',insert_command, hubs)
       cur.execute(insert_command, [hubs])  # type: ignore[arg-type]
       conn.commit()
       return True
