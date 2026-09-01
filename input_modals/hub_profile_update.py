@@ -34,6 +34,7 @@ class HubProfileModal(discord.ui.Modal, title='Update Hub Profile'):
     self.submitted_hub_name = self.hub_name.component.value
     self.submitted_hub_invite = CleanUrl(self.hub_invite.component.value)
     self.is_submitted = True
+    self.new_interaction = interaction
     await interaction.response.defer(thinking=False)
 
 

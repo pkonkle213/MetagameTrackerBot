@@ -23,7 +23,7 @@ class Links(commands.Cog):
 
     @app_commands.command(
         name="view_hubs",
-        description="See All Hubs Connected To This Store",
+        description="See All Hubs Connected To This Store, Game, or Format",
     )
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     @IsStore()
