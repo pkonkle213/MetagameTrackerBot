@@ -65,11 +65,9 @@ def UpdateApprovedHubs(
     '''
 
     try:
-      print('----Delete Command----\n', delete_command)
       cur.execute(delete_command)  # type: ignore[arg-type]
       conn.commit()
 
-      print('----Insert Command----\n',insert_command, hubs)
       cur.execute(insert_command, [hubs])  # type: ignore[arg-type]
       conn.commit()
       return True
