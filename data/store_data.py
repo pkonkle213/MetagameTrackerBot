@@ -58,9 +58,9 @@ def UpdateApprovedHubs(
     INSERT INTO stores_approved_hubs (store_discord_id, region_id, game_id, format_id, hub_discord_id)
     SELECT
       {store.discord_id},
+      {store.region_id if store.region_id else 'NULL'},
       {game.id if game else 'NULL'},
       {format.id if format else 'NULL'},
-      {store.region_id if store.region_id else 'NULL'},
       unnest(%s::bigint[])
     '''
 
