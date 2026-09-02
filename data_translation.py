@@ -1,6 +1,6 @@
 from typing import Tuple
 import pandas as pd
-from incoming_message_conversions.magic_companion import CompanionStandings, CompanionPairings
+from incoming_message_conversions.magic_companion import CompanionStandings, CompanionPairings, TopDeckGGStandings
 from incoming_message_conversions.csv_carde_io import ConvertToPairings, ConvertToStandings
 from tuple_conversions import Game, Pairing, Standing, DataConverted, GameEnum
 
@@ -45,6 +45,10 @@ def ConvertMessageToData(
   if standings_data is None:
     #magic - companion - pairings
     pairings_data, errors, round_number = CompanionPairings(message)
+
+  if standings_data is None:
+    #magic - topdeck.gg - standings
+    standings_data, errors = TopDeckGGStandings(message)
 
   if standings_data is None and pairings_data is None:
     raise Exception("Unable to parse data. Please try again.")

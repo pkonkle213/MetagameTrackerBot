@@ -75,7 +75,6 @@ class SubmitEventModal(discord.ui.Modal, title='Select Event'):
       text="New Event Type",
       component=discord.ui.Select(
         placeholder="What type of event",
-        required=True,
         options=list_event_types,
         max_values=1,
         min_values=1

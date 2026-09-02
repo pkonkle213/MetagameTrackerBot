@@ -2,7 +2,11 @@ from custom_errors import KnownError
 from tuple_conversions import Standing, Pairing
 from typing import Tuple
 
-def CompanionStandings(message, seperator) -> Tuple[list[Standing] | None,list[str]]:
+def TopDeckGGStandings(message:str) -> None: #Tuple[list[Standing] | None, list[str]]:
+  print('----Message Received----\n', message)
+  return None
+
+def CompanionStandings(message, seperator) -> Tuple[list[Standing] | None, list[str]]:
   data = []
   errors = []
   rows = message.split('\n')
