@@ -1,3 +1,4 @@
+from input_modals.hub_league_input_modal import HubLeagueInputModal
 import pandas as pd
 from data.metagame_data import GetLeagueMetagame
 from input_modals.league_selector import LeagueSelector
@@ -122,11 +123,14 @@ async def EditLeague(bot: commands.Bot, interaction: Interaction):
 async def CreateLeague(bot: commands.Bot, interaction: Interaction):
     """Helps the store create a league"""
     objects = GetObjectsFromInteraction(interaction)
+    
 
-    if not objects.store or not objects.game or not objects.format:
-        raise KnownError(
-            "No store, game, or format found. Leagues must be created in a format mapped channel"
-        )
+    if (not objects.store and not objects.hub) or not objects.game or not objects.format:
+        raise KnownError("Insufficient mapping to complete this command")
 
-    modal = LeagueInputModal(bot, objects.store, objects.game, objects.format)
-    await interaction.response.send_modal(modal)
+    if objects.store:
+        modal = LeagueInputModal(bot, objects.store, objects.game, objects.format)
+        await interaction.response.send_modal(modal)
+    if objects.hub and objects.region:
+        modal = HubLeagueInputModal(bot, objects.hub, objects.game, objects.format, objects.region)
+        await interaction.response.send_modal(modal)

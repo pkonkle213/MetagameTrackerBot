@@ -25,7 +25,6 @@ class LeaguesCommands(commands.GroupCog, name="league"):
 
     @app_commands.command(name="create", description="Create a new league")
     @app_commands.guild_only()
-    @IsStore()
     @app_commands.checks.has_role("MTSubmitter")
     async def CreateLeague(self, interaction: Interaction):
         await CreateLeague(self.bot, interaction)

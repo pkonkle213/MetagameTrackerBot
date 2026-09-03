@@ -21,7 +21,7 @@ def ValidateLeagueInput(start_date:str,
   return date_start, date_end, top_cut_num
 
 def CreateLeagueInput(
-  store:Store,
+  discord_id:int,
   game:Game,
   format:Format,
   league_name:str,
@@ -31,12 +31,26 @@ def CreateLeagueInput(
   description:str,
   user_id:int
 ) -> League:
-  date_start, date_end, top_cut_num = ValidateLeagueInput(start_date, end_date, top_cut)
-  league = InsertLeague(league_name, description, date_start, date_end, top_cut_num, store.discord_id, game.id, format.id, user_id)
+  date_start, date_end, top_cut_num = ValidateLeagueInput(
+    start_date,
+    end_date,
+    top_cut
+  )
+  league = InsertLeague(
+    league_name,
+    description,
+    date_start,
+    date_end,
+    top_cut_num,
+    discord_id,
+    game.id,
+    format.id,
+    user_id
+  )
   return league
 
 def UpdateLeagueInput(
-  league:League,
+  league_id:int,
   league_name:str,
   start_date:str,
   end_date:str,
@@ -45,7 +59,19 @@ def UpdateLeagueInput(
   user_id:int
 ) -> League:
   """Validates input and updates a league"""
-  date_start, date_end, top_cut_num = ValidateLeagueInput(start_date, end_date, top_cut)
-  league = UpdateLeague(league.id, league_name, description, date_start, date_end, top_cut_num, user_id)
+  date_start, date_end, top_cut_num = ValidateLeagueInput(
+    start_date,
+    end_date,
+    top_cut
+  )
+  league = UpdateLeague(
+    league_id,
+    league_name,
+    description,
+    date_start,
+    date_end,
+    top_cut_num,
+    user_id
+  )
   return league
   

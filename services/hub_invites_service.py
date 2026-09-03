@@ -10,7 +10,6 @@ def GetAllHubs(interaction:Interaction) -> str:
     raise KnownError('No store or format found')
 
   hubs = GetAllHubInvites(objects.store, objects.format)
-  print('Hubs:', hubs)
   title = 'Hubs Connected To This Store'
   headers = ['Hub Name', 'Invite URL']
   data = hubs
