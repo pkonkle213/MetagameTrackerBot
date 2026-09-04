@@ -36,3 +36,32 @@ def GetAllowedStores(hub: Hub, game: Game, format: Format, region: Region) -> li
     if len(rows) == 0:
       raise KnownError('No supported stores found')
     return rows
+
+def UpdateAssociatedStores(
+  league_id:int,
+  selected_store_ids: list[int]
+) -> bool:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor() as cur:
+    delete_command = f"""
+    DELETE FROM hub_league_stores
+    WHERE league_id = %s
+    """
+
+    add_command = f"""
+    INSERT INTO hub_league_stores (league_id, store_discord_id)
+    SELECT
+      %s,
+      unnest(%s::bigint[])
+    """
+
+    try:
+      cur.execute(delete_command, [league_id])
+      conn.commit()
+
+      cur.execute(add_command, [league_id, selected_store_ids])
+      conn.commit()
+      return True
+    except Exception as e:
+      print('Error:', e)
+      return False

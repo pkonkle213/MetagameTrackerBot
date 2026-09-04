@@ -6,16 +6,19 @@ from discord_messages import MessageChannel
 from discord.ext import commands
 from tuple_conversions import League, Store, Game, Format, Hub, Region
 from services.league_input_modal_services import CreateLeagueInput, UpdateLeagueInput
-from data.hub_leagues_data import GetAllowedStores
+from data.hub_leagues_data import GetAllowedStores, UpdateAssociatedStores
 
+#TODO: When the league is being edited, the stores already associated with the league should be selected by default
 class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
-  def __init__(self,
-               bot:commands.Bot,
-               hub:Hub,
-               game:Game,
-               format:Format,
-               region:Region,
-               league:League | None = None):
+  def __init__(
+    self,
+    bot:commands.Bot,
+    hub:Hub,
+    game:Game,
+    format:Format,
+    region:Region,
+    league:League | None = None
+  ):
     super().__init__()
     self.bot = bot
     self.league = league
@@ -113,6 +116,9 @@ class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
         interaction.user.id
       )
 
+    store_ids = [int(store_id) for store_id in self.associated_stores.component.values]
+    UpdateAssociatedStores(league.id, store_ids)
+
     title = "New league created!" if not self.league else "League updated!"
     output = f'''{title}
     -------------------
@@ -137,4 +143,3 @@ class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
 
   async def on_timeout(self) -> None:
     self.is_submitted = False
-

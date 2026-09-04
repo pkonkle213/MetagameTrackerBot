@@ -9,8 +9,8 @@ def ValidateLeagueInput(start_date:str,
                        end_date:str,
                        top_cut:str)->tuple[date, date,int]:
   try:
-    date_start = ConvertToDate(start_date)
-    date_end = ConvertToDate(end_date)
+    date_start = ConvertToDate(start_date.strip())
+    date_end = ConvertToDate(end_date.strip())
     top_cut_num = int(top_cut)
   except Exception as e:
     raise KnownError('Error creating league. Please ensure all fields are filled out with the correct formatting.')
@@ -47,6 +47,7 @@ def CreateLeagueInput(
     format.id,
     user_id
   )
+  
   return league
 
 def UpdateLeagueInput(
