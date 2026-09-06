@@ -1,32 +1,9 @@
 import contextlib
 import os
-import pytz
 import pathlib
 import datetime
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-import discord
-from discord.ext import commands, tasks
-import settings
-import timedposts.automated_paid_users as apu
-from timedposts.automated_check_events import EventCheck
-from timedposts.automated_updates import UpdateDataGuild
-from services.store_services import NewStoreRegistration
-from services.sync_service import SyncCommands
-from discord_messages import MessageUser
-from timedposts.automated_paid_users import UpdateStores
-
-intents = discord.Intents.all()
-intents.message_content = True
-intents.members = True
-intents.guilds = True
-bot = commands.Bot(command_prefix="?", intents=intents)
-
-BASE_DIR = pathlib.Path(__file__).parent
-CMDS_DIR = BASE_DIR / "commands"
-
-TIME_ZONE = pytz.timezone("US/Eastern")
-
 
 class HealthCheckHandler(BaseHTTPRequestHandler):
   def do_GET(self):
@@ -48,6 +25,32 @@ def StartHealthCheckServer():
   server = ThreadingHTTPServer(("0.0.0.0", port), HealthCheckHandler)
   threading.Thread(target=server.serve_forever, daemon=True).start()
   print(f"Health check server listening on port {port}")
+
+
+StartHealthCheckServer()
+
+import pytz
+import discord
+from discord.ext import commands, tasks
+import settings
+import timedposts.automated_paid_users as apu
+from timedposts.automated_check_events import EventCheck
+from timedposts.automated_updates import UpdateDataGuild
+from services.store_services import NewStoreRegistration
+from services.sync_service import SyncCommands
+from discord_messages import MessageUser
+from timedposts.automated_paid_users import UpdateStores
+
+intents = discord.Intents.all()
+intents.message_content = True
+intents.members = True
+intents.guilds = True
+bot = commands.Bot(command_prefix="?", intents=intents)
+
+BASE_DIR = pathlib.Path(__file__).parent
+CMDS_DIR = BASE_DIR / "commands"
+
+TIME_ZONE = pytz.timezone("US/Eastern")
 
 
 @bot.event
@@ -120,5 +123,4 @@ async def before_scheduled_post():
   await bot.wait_until_ready()
 
 
-StartHealthCheckServer()
 bot.run(settings.DISCORDTOKEN)
