@@ -1,0 +1,1 @@
+- [Discord bot deployment readiness](discord-bot-deployment-readiness.md) — this VM deployment requires an HTTP readiness endpoint even though its primary workload is a Discord bot.

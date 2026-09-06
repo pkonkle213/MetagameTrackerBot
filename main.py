@@ -1,7 +1,10 @@
 import contextlib
+import os
 import pytz
 import pathlib
 import datetime
+import threading
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import discord
 from discord.ext import commands, tasks
 import settings
@@ -23,6 +26,28 @@ BASE_DIR = pathlib.Path(__file__).parent
 CMDS_DIR = BASE_DIR / "commands"
 
 TIME_ZONE = pytz.timezone("US/Eastern")
+
+
+class HealthCheckHandler(BaseHTTPRequestHandler):
+  def do_GET(self):
+    if self.path == "/":
+      self.send_response(200)
+      self.send_header("Content-Type", "text/plain; charset=utf-8")
+      self.end_headers()
+      self.wfile.write(b"OK")
+      return
+
+    self.send_error(404)
+
+  def log_message(self, format, *args):
+    pass
+
+
+def StartHealthCheckServer():
+  port = int(os.environ.get("PORT", "8080"))
+  server = ThreadingHTTPServer(("0.0.0.0", port), HealthCheckHandler)
+  threading.Thread(target=server.serve_forever, daemon=True).start()
+  print(f"Health check server listening on port {port}")
 
 
 @bot.event
@@ -95,4 +120,5 @@ async def before_scheduled_post():
   await bot.wait_until_ready()
 
 
+StartHealthCheckServer()
 bot.run(settings.DISCORDTOKEN)
