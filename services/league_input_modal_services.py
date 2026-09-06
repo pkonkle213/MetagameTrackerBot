@@ -5,9 +5,11 @@ from data.league_data import UpdateLeague, InsertLeague
 from tuple_conversions import Store, Game, Format
 from datetime import date
 
-def ValidateLeagueInput(start_date:str,
-                       end_date:str,
-                       top_cut:str)->tuple[date, date,int]:
+def ValidateLeagueInput(
+  start_date:str,
+  end_date:str,
+  top_cut:str
+) -> tuple[date, date, int]:
   try:
     date_start = ConvertToDate(start_date.strip())
     date_end = ConvertToDate(end_date.strip())

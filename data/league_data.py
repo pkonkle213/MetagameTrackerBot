@@ -3,7 +3,7 @@ import psycopg
 from settings import DATABASE_URL
 from datetime import date
 from psycopg.rows import class_row
-from tuple_conversions import League, TopPlayers, PlayerStanding, LeaderboardRace
+from tuple_conversions import League, TopPlayers, PlayerStanding, LeaderboardRace, HubLeague
 
 
 def GetActiveLeagues(discord_id: int, game_id: int, format_id: int) -> list[League]:
@@ -146,6 +146,40 @@ def GetLeagueLeaderboard(league: League) -> list[TopPlayers]:
         rows = cur.fetchall()
         return rows
 
+def GetHubLeagues(
+  discord_id: int,
+  game_id: int,
+  format_id:int
+) -> list[HubLeague]:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(HubLeague)) as cur:
+    command = f"""
+    SELECT
+      id,
+      discord_id,
+      game_id,
+      format_id,
+      name,
+      start_date,
+      end_date,
+      top_cut,
+      description,
+      store_discord_id AS store_ids
+    FROM
+      leagues l
+      LEFT JOIN hub_league_stores hls ON l.id = hls.league_id
+    WHERE
+      discord_id = {discord_id}
+      AND game_id = {game_id}
+      AND format_id = {format_id}
+    """
+
+    cur.execute(command)
+    rows = cur.fetchall()
+    if not rows or len(rows) == 0:
+      raise KnownError('No leagues found')
+    return rows
+    
 
 def GetLeagues(discord_id: int, game_id: int, format_id: int) -> list[League]:
     conn = psycopg.connect(DATABASE_URL)
@@ -163,6 +197,8 @@ def GetLeagues(discord_id: int, game_id: int, format_id: int) -> list[League]:
         """
         cur.execute(command, [discord_id, game_id, format_id])
         rows = cur.fetchall()
+        if not rows or len(rows) == 0:
+          raise KnownError('No leagues found')
         return rows
 
 

@@ -246,3 +246,16 @@ class Deck(NamedTuple):
 class PlayerArchetype(NamedTuple):
   player_name: str
   archetype_played: str
+
+
+class HubLeague(NamedTuple):
+    id: int
+    discord_id: int
+    game_id: int
+    format_id: int
+    name: str
+    start_date: date
+    end_date:date
+    top_cut: int
+    description:str
+    store_ids: list[int]

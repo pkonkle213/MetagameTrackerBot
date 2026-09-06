@@ -29,7 +29,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
     )
     @app_commands.guild_only()
     @app_commands.checks.has_role("MTSubmitter")
-    async def CreateLeague(self, interaction: Interaction):
+    async def CreateTheLeague(self, interaction: Interaction):
         await CreateLeague(self.bot, interaction)
 
     @app_commands.command(
@@ -38,7 +38,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
     )
     @app_commands.guild_only()
     @app_commands.checks.has_role("MTSubmitter")
-    async def EditLeague(self, interaction: Interaction):
+    async def EditTheLeague(self, interaction: Interaction):
         await EditLeague(self.bot, interaction)
 
     @app_commands.command(
@@ -47,7 +47,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
     )
     @app_commands.guild_only()
     @IsStore()
-    async def ViewLeague(self, interaction: Interaction):
+    async def ViewTheLeague(self, interaction: Interaction):
         output = await ViewLeague(self.bot, interaction)
         await interaction.followup.send(output)
 
@@ -126,9 +126,9 @@ class LeaguesCommands(commands.GroupCog, name="league"):
         output = BuildTableOutput(title, headers, [data])
         await interaction.followup.send(output, ephemeral=True)
 
-    @CreateLeague.error
-    @EditLeague.error
-    @ViewLeague.error
+    @CreateTheLeague.error
+    @EditTheLeague.error
+    @ViewTheLeague.error
     @TopPlayers.error
     @FullLeaderboard.error
     @LeaderboardRace.error

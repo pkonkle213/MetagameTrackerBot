@@ -4,11 +4,10 @@ import discord
 from datetime import date
 from discord_messages import MessageChannel
 from discord.ext import commands
-from tuple_conversions import League, Store, Game, Format, Hub, Region
+from tuple_conversions import HubLeague, Store, Game, Format, Hub, Region
 from services.league_input_modal_services import CreateLeagueInput, UpdateLeagueInput
 from data.hub_leagues_data import GetAllowedStores, UpdateAssociatedStores
 
-#TODO: When the league is being edited, the stores already associated with the league should be selected by default
 class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
   def __init__(
     self,
@@ -17,7 +16,7 @@ class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
     game:Game,
     format:Format,
     region:Region,
-    league:League | None = None
+    league:HubLeague | None = None
   ):
     super().__init__()
     self.bot = bot
@@ -28,7 +27,7 @@ class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
     self.region = region
     
     self.allowed_stores = GetAllowedStores(hub, game, format, region)
-    select_stores = [discord.SelectOption(label=store.store_name, value=str(store.discord_id)) for store in self.allowed_stores]
+    select_stores = BuildStoresSelect(self.allowed_stores, self.league.store_ids if self.league else None)
 
     self.league_name = discord.ui.Label(
       text="League Name",
@@ -143,3 +142,21 @@ class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
 
   async def on_timeout(self) -> None:
     self.is_submitted = False
+
+def BuildStoresSelect(
+  allowed_stores: list[Store],
+  selected_ids: list[int] | None
+) -> list[discord.SelectOption]:
+  if not selected_ids:
+    return [discord.SelectOption(label=store.store_name, value=str(store.discord_id)) for store in allowed_stores]
+  if isinstance(selected_ids, int):
+    selected_ids = [selected_ids]
+  return [
+    discord.SelectOption(
+      label=store.store_name,
+      value=str(store.discord_id),
+      default=store.discord_id in selected_ids
+    )
+    for store in allowed_stores
+  ]
+  

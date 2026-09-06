@@ -4,22 +4,24 @@ from discord.ext import commands
 import discord
 from data.league_data import GetActiveLeagues
 from custom_errors import KnownError
-from tuple_conversions import Event, Format, Game, Store, League, Hub, Region
+from tuple_conversions import Event, Format, Game, Store, HubLeague, Hub, Region
 
 class ConfirmView(discord.ui.View):
   def __init__(
     self,
     bot:commands.Bot,
-    store:Store,
+    hub:Hub,
     game:Game,
     format:Format,
-    league:League
+    region:Region,
+    league:HubLeague
   ):
     super().__init__()
     self.league = league
     self.bot = bot
-    self.store = store
+    self.hub = hub
     self.game = game
+    self.region = region
     self.format = format
 
   @discord.ui.button(
@@ -29,33 +31,36 @@ class ConfirmView(discord.ui.View):
   async def ConfirmLeague(self,
                          interaction:discord.Interaction,
                          button: discord.ui.Button):
-    modal = LeagueInputModal(
+    modal = HubLeagueInputModal(
       self.bot,
-      self.store,
+      self.hub,
       self.game,
       self.format,
+      self.region,
       league=self.league
     )
     await interaction.response.send_modal(modal)    
 
-class LeagueSelector(discord.ui.Modal, title='Select League'):
+class HubLeagueSelector(discord.ui.Modal, title='Select League'):
   def __init__(
     self,
     bot:commands.Bot,
-    store:Store,
+    hub:Hub,
     game:Game,
     format:Format,
-    leagues:list[League],
+    region:Region,
+    leagues:list[HubLeague],
     isEdit:bool = False
   ):
     super().__init__()
     self.isEdit = isEdit
     self.bot = bot
-    self.store = store
+    self.hub = hub
     self.leagues = leagues
-    if store:
-      self.discord_id = store.discord_id
+    if hub:
+      self.discord_id = hub.discord_id
     self.game = game
+    self.region = region
     self.format = format
     self.is_submitted = False
 
@@ -85,15 +90,16 @@ class LeagueSelector(discord.ui.Modal, title='Select League'):
         content=f"You selected {self.league.name}. Please fill out the form to edit the league.",
         view=ConfirmView(
           self.bot,
-          self.store,
+          self.hub,
           self.game,
           self.format,
+          self.region,
           self.league
         ),
         ephemeral=True
       )
 
-def GetLeague(league_id:int, all_leagues:list[League]) -> League:
+def GetLeague(league_id:int, all_leagues:list[HubLeague]) -> HubLeague:
   for league in all_leagues:
     if league.id == int(league_id):
       return league

@@ -2,6 +2,7 @@ from input_modals.hub_league_input_modal import HubLeagueInputModal
 import pandas as pd
 from data.metagame_data import GetLeagueMetagame
 from input_modals.league_selector import LeagueSelector
+from input_modals.hub_league_selector import HubLeagueSelector
 from tuple_conversions import (
     League,
     MetagameResult,
@@ -16,6 +17,7 @@ from data.league_data import (
     GetLeagueLeaderboard,
     GetPlayerStanding,
     GetLeaderboardTimeLapse,
+    GetHubLeagues
 )
 from custom_errors import KnownError
 from discord.ext import commands
@@ -39,23 +41,29 @@ async def SelectLeague(
 
     if objects.hub:
         discord_id = objects.hub.discord_id
+        leagues = GetHubLeagues(discord_id, objects.game.id, objects.format.id)
+        modal = HubLeagueSelector(
+            bot,
+            objects.hub,
+            objects.game,
+            objects.format,
+            objects.region,
+            leagues,
+            isEdit=isEdit
+        )
+        
     if objects.store:
         discord_id = objects.store.discord_id
+        leagues = GetLeagues(discord_id, objects.game.id, objects.format.id)
+        modal = LeagueSelector(
+            bot,
+            objects.store,
+            objects.game,
+            objects.format,
+            leagues,
+            isEdit=isEdit
+        )
         
-    leagues = GetLeagues(discord_id, objects.game.id, objects.format.id)
-    if not leagues or len(leagues) == 0:
-        raise KnownError("No leagues found for this game and format")
-
-    modal = LeagueSelector(
-        bot,
-        objects.store,
-        objects.hub,
-        objects.game,
-        objects.format,
-        objects.region,
-        leagues,
-        isEdit=isEdit
-    )
     await interaction.response.send_modal(modal)
     await modal.wait()
 
