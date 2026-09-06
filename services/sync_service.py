@@ -1,10 +1,13 @@
+from pathlib import Path
+
 import discord
+from discord.ext import commands
 from custom_errors import KnownError
 from discord_messages import MessageUser
 import settings
 from data.store_data import DeleteStore
 
-async def SyncCommands(bot, commands_directory):
+async def SyncCommands(bot: commands.Bot, commands_directory: Path):
   try: 
     for file in commands_directory.glob("*.py"):
       if file.name != "__init__.py":
