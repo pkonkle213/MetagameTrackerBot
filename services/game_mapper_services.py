@@ -1,4 +1,3 @@
-from replit import db
 from discord import Interaction, TextChannel
 from custom_errors import KnownError
 from interaction_objects import GetObjectsFromInteraction

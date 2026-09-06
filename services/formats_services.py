@@ -1,4 +1,3 @@
-from replit import db
 import discord
 from discord import Interaction
 from custom_errors import KnownError
