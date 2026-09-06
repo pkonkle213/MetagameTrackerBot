@@ -13,7 +13,7 @@ requiredFiles = [".replit", "replit.nix"]
 
 [deployment]
 run = ["python3", "main.py"]
-deploymentTarget = "gce"
+deploymentTarget = "vm"
 
 [agent]
 expertMode = true
@@ -43,10 +43,6 @@ outputType = "console"
 
 [objectStorage]
 defaultBucketID = "replit-objstore-7f38bbe0-52e1-4e3b-aba8-51bfb65b8dde"
-
-[[ports]]
-localPort = 8080
-externalPort = 80
 
 [postMerge]
 path = "scripts/post-merge.sh"
