@@ -1,3 +1,4 @@
+from custom_errors import KnownError
 from discord_messages import MessageChannel
 from discord import Interaction
 from discord.ext import commands
@@ -27,8 +28,6 @@ async def EventForData(
     
   input_type = data_submission_type
 
-
-  #TODO: This should probably loop through the enum so they're not magical strings
   if input_type == 1:
     input_name = 'Manual'
   elif input_type == 2:
@@ -36,7 +35,6 @@ async def EventForData(
   else:
     input_name = 'Melee'
 
-  #TODO: This should probably loop through the enum so they're not magical strings
   if selected_event.event_type_id == 1:
     event_type_name = 'Weekly'
   elif selected_event.event_type_id == 2:
@@ -64,5 +62,8 @@ Data Submission Type: {input_name}```'''
     is_created = True
   else:
     event = selected_event
+
+  if not view.interaction:
+    raise KnownError('No Interaction Found')
 
   return event, input_type, view.interaction, is_created
