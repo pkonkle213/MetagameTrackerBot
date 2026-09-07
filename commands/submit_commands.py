@@ -14,6 +14,7 @@ from services.event_services import EventForData
 from checks import IsStore, isSubmitter
 from custom_errors import KnownError
 from data.event_data import (
+    CreateEvent,
     GetHubEvents,
     GetStoreEvents,
     CompleteEvent,
@@ -278,6 +279,10 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                     content="Data submission canceled!", view=None
                 )
                 break
+
+            if new_event:
+                event_id = CreateEvent(event, interaction.user.id)
+                event = event._replace(id=event_id)
 
             data = modal.converted_data
 

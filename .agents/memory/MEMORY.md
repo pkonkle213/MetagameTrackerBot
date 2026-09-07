@@ -1,1 +1,2 @@
 - [Discord bot deployment readiness](discord-bot-deployment-readiness.md) — this VM deployment requires an HTTP readiness endpoint even though its primary workload is a Discord bot.
+- [Discord interaction deadlines](discord-interaction-deadlines.md) — respond with modals before synchronous production database or network work can expire component interactions.

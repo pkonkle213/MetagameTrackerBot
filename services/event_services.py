@@ -4,7 +4,6 @@ from discord import Interaction
 from discord.ext import commands
 from input_modals.submit_event_modal import SubmitEventModal
 from tuple_conversions import Format, Game, Store, Event, ViewButtonEnum
-from data.event_data import CreateEvent, GetEvent
 from views.confirm_event import ConfirmEvent
 
 
@@ -58,12 +57,5 @@ Data Submission Type: {input_name}```"""
     if view.action == ViewButtonEnum.Cancel.value:
         return None, None, None, False
 
-    is_created = False
-    if selected_event.id == 0:
-        event_id = CreateEvent(selected_event, interaction.user.id)
-        event = GetEvent(event_id)
-        is_created = True
-    else:
-        event = selected_event
-
-    return event, input_type, view.interaction, is_created
+    is_created = selected_event.id == 0
+    return selected_event, input_type, view.interaction, is_created
