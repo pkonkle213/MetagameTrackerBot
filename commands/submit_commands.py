@@ -278,6 +278,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
           interaction.channel_id
         )
         await MessageHubs(self.bot, objects.store, event)
+        new_event = False
       
       if confirm_response == ViewButtonEnum.DoneComplete.value or confirm_response == ViewButtonEnum.DoneIncomplete.value:
         cont = False

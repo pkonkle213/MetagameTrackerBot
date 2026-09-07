@@ -119,6 +119,4 @@ def GetAllHubs(event:Event) -> list[HubsChannels]:
 
     cur.execute(command) #type:ignore[arg-type]
     rows = cur.fetchall()
-    if len(rows) == 0:
-      raise Exception("No hubs found")
     return rows
