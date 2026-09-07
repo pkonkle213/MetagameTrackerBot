@@ -1,31 +1,29 @@
-from typing import Tuple
+from typing import tuple
 import psycopg
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
 from tuple_conversions import Event, Format, Game, Store, PlayerArchetype
 
-def CompleteEvent(
-  event_id: int
-) -> bool:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
-    command = f'''
+
+def CompleteEvent(event_id: int) -> bool:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor() as cur:
+        command = f"""
     UPDATE events
     SET is_complete = TRUE
     WHERE id = {event_id}
     RETURNING id
-    '''
-    cur.execute(command)  # type: ignore[arg-type]
-    conn.commit()
-    row = cur.fetchone()
-    return True if row else False
+    """
+        cur.execute(command)  # type: ignore[arg-type]
+        conn.commit()
+        row = cur.fetchone()
+        return True if row else False
 
-def GetEvent(
-  event_id: int
-) -> Event:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Event)) as cur:
-    command = f"""
+
+def GetEvent(event_id: int) -> Event:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(Event)) as cur:
+        command = f"""
     SELECT
       id,
       custom_event_id,
@@ -46,21 +44,18 @@ def GetEvent(
     WHERE
       id = {event_id}
     """
-    
-    cur.execute(command)  # type: ignore[arg-type]
-    row = cur.fetchone()
-    if not row:
-      raise Exception(f'Cannot find event. ID: {event_id}')
-    return row
+
+        cur.execute(command)  # type: ignore[arg-type]
+        row = cur.fetchone()
+        if not row:
+            raise Exception(f"Cannot find event. ID: {event_id}")
+        return row
 
 
-def CreateEvent(
-  event:Event,
-  user_id:int
-) -> int:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=scalar_row) as cur:
-    command = f'''
+def CreateEvent(event: Event, user_id: int) -> int:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=scalar_row) as cur:
+        command = f"""
     INSERT INTO Events
     (event_date
     , discord_id
@@ -84,24 +79,25 @@ def CreateEvent(
     , {event.event_type_id if int(event.event_type_id) > 0 else 3}
     , CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York'
     , {user_id}
-    {f', {-int(event.event_type_id)}' if int(event.event_type_id) < 0 else ', NULL'}
-    , {event.custom_event_id if event.custom_event_id else 'NULL'}
+    {f", {-int(event.event_type_id)}" if int(event.event_type_id) < 0 else ", NULL"}
+    , {event.custom_event_id if event.custom_event_id else "NULL"}
     )
     RETURNING id
-    '''
+    """
 
-    cur.execute(command)  # type: ignore[arg-type]
-    conn.commit()
-    event_id = cur.fetchone()
-    
-    if not event_id:
-      raise Exception('Unable to create event')
-    return event_id
+        cur.execute(command)  # type: ignore[arg-type]
+        conn.commit()
+        event_id = cur.fetchone()
 
-def GetPlayersInEvent(event_id:int) -> list[PlayerArchetype]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(PlayerArchetype)) as cur:
-    command = f'''
+        if not event_id:
+            raise Exception("Unable to create event")
+        return event_id
+
+
+def GetPlayersInEvent(event_id: int) -> list[PlayerArchetype]:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(PlayerArchetype)) as cur:
+        command = f"""
     SELECT
       INITCAP(fs.player_name) as player_name,
       INITCAP(ua.archetype_played) as archetype_played
@@ -113,17 +109,18 @@ def GetPlayersInEvent(event_id:int) -> list[PlayerArchetype]:
       fs.event_id = {event_id}
     ORDER BY
       INITCAP(fs.player_name)
-    '''
-    
-    cur.execute(command)  # type: ignore[arg-type]
-    rows = cur.fetchall()
+    """
 
-    return rows
+        cur.execute(command)  # type: ignore[arg-type]
+        rows = cur.fetchall()
 
-def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
-    command = f'''
+        return rows
+
+
+def GetEventDetails(event_id: int) -> list[tuple[str, int, int, int]]:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor() as cur:
+        command = f"""
     SELECT
       INITCAP(COALESCE(archetype_played, 'UNKNOWN')) AS archetype_played,
       wins,
@@ -140,32 +137,34 @@ def GetEventDetails(event_id:int) -> list[Tuple[str,int,int,int]]:
       4 DESC,
       3 DESC,
       1
-    '''
-    
-    cur.execute(command)  # type: ignore[arg-type]
-    rows = cur.fetchall()
-    return rows
+    """
 
-def DeleteStandingsFromEvent(event_id:int) -> bool:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
-    command = f'''
+        cur.execute(command)  # type: ignore[arg-type]
+        rows = cur.fetchall()
+        return rows
+
+
+def DeleteStandingsFromEvent(event_id: int) -> bool:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor() as cur:
+        command = f"""
     DELETE FROM standings
     WHERE event_id = {event_id}
-    '''
+    """
 
-    cur.execute(command)  # type: ignore[arg-type]
-    conn.commit()
-    return True
+        cur.execute(command)  # type: ignore[arg-type]
+        conn.commit()
+        return True
+
 
 def GetStoreEvents(
-  store:Store,
-  game:Game,
-  format:Format,
+    store: Store,
+    game: Game,
+    format: Format,
 ):
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Event)) as cur:
-    command = f'''
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(Event)) as cur:
+        command = f"""
     SELECT
       e.id,
       e.custom_event_id,
@@ -194,17 +193,18 @@ def GetStoreEvents(
     ORDER BY
       e.event_date DESC
     LIMIT 25
-    '''
+    """
 
-    cur.execute(command)  # type: ignore[arg-type]
-    rows = cur.fetchall()
+        cur.execute(command)  # type: ignore[arg-type]
+        rows = cur.fetchall()
 
-    return rows
+        return rows
 
-def GetHubEvents(discord_id: int, channel_id:int) -> list[Event]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Event)) as cur:
-    command = f'''
+
+def GetHubEvents(discord_id: int, channel_id: int) -> list[Event]:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(Event)) as cur:
+        command = f"""
     (
       SELECT
         e.id,
@@ -262,8 +262,8 @@ def GetHubEvents(discord_id: int, channel_id:int) -> list[Event]:
     )
     LIMIT
       25
-    '''
+    """
 
-    cur.execute(command)  # type: ignore[arg-type]
-    rows = cur.fetchall()
-    return rows
+        cur.execute(command)  # type: ignore[arg-type]
+        rows = cur.fetchall()
+        return rows

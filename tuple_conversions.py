@@ -1,6 +1,6 @@
-from typing import Any, NamedTuple
 from datetime import date, datetime
 from enum import Enum
+from typing import Any, NamedTuple
 
 
 class EventTypeEnum(Enum):
@@ -192,6 +192,16 @@ class InteractionObjects(NamedTuple):
     format: Format | None
 
 
+class NewPairings(NamedTuple):
+    pairings: list[Pairing] | None
+    errors: list[str]
+
+
+class NewStandings(NamedTuple):
+    standings: list[Standing] | None
+    errors: list[str]
+
+
 class DataConverted(NamedTuple):
     pairings_data: list[Pairing] | None
     standings_data: list[Standing] | None
@@ -205,15 +215,17 @@ class LeaderboardRace(NamedTuple):
     player_name: str
     points: int
 
+
 class LastArchetype(NamedTuple):
-  event_date: date
-  archetype_played: str
+    event_date: date
+    archetype_played: str
 
 
 class TopDeck(NamedTuple):
     archetype_played: str
     win_percentage: float
     chance_played: float
+
 
 class UserData(NamedTuple):
     player_name: str
@@ -244,5 +256,5 @@ class Deck(NamedTuple):
 
 
 class PlayerArchetype(NamedTuple):
-  player_name: str
-  archetype_played: str
+    player_name: str
+    archetype_played: str

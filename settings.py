@@ -1,21 +1,22 @@
-import os
+from os import environ
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.environ['DATABASE_URL']
+DATABASE_URL = environ["DATABASE_URL"]
 
-DISCORDTOKEN = os.environ['DISCORD_TOKEN']
+DISCORDTOKEN = environ["DISCORD_TOKEN"]
 
-BOTGUILDID = int(os.environ['BOT_GUILD_ID'])
-DATAGUILDID = int(os.environ['DATA_GUILD_ID'])
-FIVE6STOREID = int(os.environ['FIVE6_GUILD_ID'])
+BOTGUILDID = int(environ["BOT_GUILD_ID"])
+DATAGUILDID = int(environ["DATA_GUILD_ID"])
+FIVE6STOREID = int(environ["FIVE6_GUILD_ID"])
 
-ERRORCHANNELID = int(os.environ['BOT_ERROR_ID'])
-CLAIMCHANNEL = int(os.environ['BOT_CLAIMSTREAM_ID'])
+ERRORCHANNELID = int(environ["BOT_ERROR_ID"])
+CLAIMCHANNEL = int(environ["BOT_CLAIMSTREAM_ID"])
 
-MYBOTURL = os.environ['BOT_URL_INSTALL']
-SOPURL = os.environ['BOT_URL_SOP']
-FEEDBACKURL = os.environ['BOT_URL_FEEDBACK']
+MYBOTURL = environ["BOT_URL_INSTALL"]
+SOPURL = environ["BOT_URL_SOP"]
+FEEDBACKURL = environ["BOT_URL_FEEDBACK"]
 
-PHILID = int(os.environ['PHIL_USERID'])
+PHILID = int(environ["PHIL_USERID"])

@@ -1,29 +1,31 @@
-from typing import Tuple
+from typing import tuple
 from psycopg.rows import class_row
 from custom_errors import KnownError
 from settings import DATABASE_URL
 import psycopg
 from tuple_conversions import Format, Game, Store, Hub, Region
 
+
 def GetHub(discord_id: int) -> Hub | None:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Hub)) as cur:
-    command = f'''
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(Hub)) as cur:
+        command = f"""
     SELECT
       *
     FROM
       hubs_view
     WHERE
       discord_id = {discord_id}
-    '''
-    cur.execute(command)
-    row = cur.fetchone()
-    return row
+    """
+        cur.execute(command)
+        row = cur.fetchone()
+        return row
+
 
 def GetRegion(discord_id: int, channel_id: int) -> Region | None:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Region)) as cur:
-    command = f'''
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(Region)) as cur:
+        command = f"""
     SELECT
       r.id,
       r.region_name
@@ -33,15 +35,16 @@ def GetRegion(discord_id: int, channel_id: int) -> Region | None:
     WHERE
       hc.discord_id = {discord_id}
       AND hc.channel_id = {channel_id}
-    '''
-    cur.execute(command)
-    row = cur.fetchone()
-    return row
+    """
+        cur.execute(command)
+        row = cur.fetchone()
+        return row
+
 
 def GetGameByHub(category_id: int, hub_discord_id: int) -> Game | None:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Game)) as cur:
-    command = f"""
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(Game)) as cur:
+        command = f"""
     (
       SELECT
         g.id,
@@ -64,15 +67,16 @@ def GetGameByHub(category_id: int, hub_discord_id: int) -> Game | None:
         hv.discord_id = {hub_discord_id}
     )
     """
-    
-    cur.execute(command)
-    row = cur.fetchone()
-    return row
+
+        cur.execute(command)
+        row = cur.fetchone()
+        return row
+
 
 def GetFormatByHub(channel_id: int, hub_discord_id: int) -> Format | None:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Format)) as cur:
-    command = f"""
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(Format)) as cur:
+        command = f"""
     (
       SELECT
         f.id,
@@ -99,14 +103,15 @@ def GetFormatByHub(channel_id: int, hub_discord_id: int) -> Format | None:
         hv.discord_id = {hub_discord_id}
     )
     """
-    cur.execute(command)
-    row = cur.fetchone()
-    return row
+        cur.execute(command)
+        row = cur.fetchone()
+        return row
 
-def GetFormatByMap(channel_id: int, hub_discord_id:int) -> Format | None:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Format)) as cur:
-    command = f"""
+
+def GetFormatByMap(channel_id: int, hub_discord_id: int) -> Format | None:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(Format)) as cur:
+        command = f"""
     (
     SELECT
       f.id,
@@ -133,15 +138,15 @@ def GetFormatByMap(channel_id: int, hub_discord_id:int) -> Format | None:
         hv.discord_id = {hub_discord_id}
     )
     """
-    cur.execute(command)
-    row = cur.fetchone()
-    return row
+        cur.execute(command)
+        row = cur.fetchone()
+        return row
 
 
 def GetStoreByDiscord(discord_id: int) -> Store | None:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Store)) as cur:
-    command = f'''
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(Store)) as cur:
+        command = f"""
     SELECT
       discord_id,
       discord_name,
@@ -156,16 +161,17 @@ def GetStoreByDiscord(discord_id: int) -> Store | None:
       stores_view
     WHERE
       discord_id = {discord_id}
-    '''
+    """
 
-    cur.execute(command)
-    row = cur.fetchone()
-    return row
+        cur.execute(command)
+        row = cur.fetchone()
+        return row
+
 
 def GetHubByDiscord(discord_id: int) -> Hub | None:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Hub)) as cur:
-    command = f'''
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(Hub)) as cur:
+        command = f"""
     SELECT
       discord_id,
       discord_name,
@@ -181,16 +187,17 @@ def GetHubByDiscord(discord_id: int) -> Hub | None:
       hubs_view      
     WHERE
       discord_id = {discord_id}
-    '''
+    """
 
-    cur.execute(command)
-    row = cur.fetchone()
-    return row
+        cur.execute(command)
+        row = cur.fetchone()
+        return row
+
 
 def GetGameByMap(category_id: int, hub_discord_id: int) -> Game | None:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Game)) as cur:
-    command = f"""
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(Game)) as cur:
+        command = f"""
     (
       SELECT
         id,
@@ -214,6 +221,6 @@ def GetGameByMap(category_id: int, hub_discord_id: int) -> Game | None:
     )
     """
 
-    cur.execute(command)
-    row = cur.fetchone()
-    return row
+        cur.execute(command)
+        row = cur.fetchone()
+        return row
