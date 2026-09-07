@@ -30,6 +30,7 @@ def StartHealthCheckServer():
 StartHealthCheckServer()
 
 import pytz
+import asyncpg
 import discord
 from discord.ext import commands, tasks
 import settings
@@ -41,15 +42,30 @@ from services.sync_service import SyncCommands
 from discord_messages import MessageUser
 from timedposts.automated_paid_users import UpdateStores
 
-intents = discord.Intents.all()
-intents.message_content = True
-intents.members = True
-intents.guilds = True
-bot = commands.Bot(command_prefix="?", intents=intents)
+class Bot(commands.Bot):
+  def __init__(self):
+    intents = discord.Intents.all()
+    intents.message_content = True
+    intents.members = True
+    intents.guilds = True
+    super().__init__(command_prefix="?", intents=intents)
+    self.db_pool = None
+
+  async def setup_hook(self):
+    self.db_pool = await asyncpg.create_pool(
+      dsn=settings.DATABASE_URL
+    )
+
+  async def close(self):
+    await super().close()
+    if self.db_pool:
+      await self.db_pool.close()
+    
+
+bot = Bot()
 
 BASE_DIR = pathlib.Path(__file__).parent
 CMDS_DIR = BASE_DIR / "commands"
-
 TIME_ZONE = pytz.timezone("US/Eastern")
 
 
@@ -59,9 +75,7 @@ async def on_ready():
   data_guild_update.start()
   find_the_unknown.start()
   sync_paid_users.start()
-  # sync_paid_discords.start()
   await SyncCommands(bot, CMDS_DIR)
-  # await start_webhook_server(bot)
   print("Synced commands. Good to go")
 
 

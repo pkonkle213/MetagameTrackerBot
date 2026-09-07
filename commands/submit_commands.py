@@ -289,7 +289,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             if data.standings_data:
                 AddStandingResults(event, data.standings_data, interaction.user.id)
             elif data.pairings_data:
-                AddPairingResults(event, data.pairings_data, interaction.user.id)
+                await AddPairingResults(self.bot, event, data.pairings_data, interaction.user.id)
 
             if new_event:
                 await MessageChannel(

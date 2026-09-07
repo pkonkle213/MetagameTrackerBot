@@ -1,3 +1,4 @@
+from discord.ext import commands
 from typing import Tuple
 from output_builder import BuildTableOutput
 from custom_errors import KnownError
@@ -24,7 +25,8 @@ def AddStandingResults(
 
   return errors
 
-def AddPairingResults(
+async def AddPairingResults(
+  bot:commands.Bot,
   event:Event,
   data:list[Pairing],
   submitterId:int
@@ -53,7 +55,8 @@ def AddPairingResults(
     )
     
     if unique:      
-      db_result = InsertPairing(
+      db_result = await InsertPairing(
+        bot,
         event.id,
         pairing,
         submitterId
