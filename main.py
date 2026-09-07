@@ -1,5 +1,4 @@
 import contextlib
-import os
 import pathlib
 import datetime
 import threading
@@ -22,10 +21,10 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
 
 
 def StartHealthCheckServer():
-  port = int(os.environ.get("PORT", "8080"))
+  port = 8080
   server = ThreadingHTTPServer(("0.0.0.0", port), HealthCheckHandler)
   threading.Thread(target=server.serve_forever, daemon=True).start()
-  print(f"Health check server listening on port {port}")
+  print(f"Health check server listening on port {port}", flush=True)
 
 
 StartHealthCheckServer()
