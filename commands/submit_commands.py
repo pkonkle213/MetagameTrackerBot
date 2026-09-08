@@ -271,13 +271,17 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         AddPairingResults(event, data.pairings_data, interaction.user.id)
 
       if new_event:
+        print('New event!')
+        store_message = f"New data for {event.event_date.strftime('%B %-d')}'s {event.event_name} event has been submitted! Use the `/submit archetype` command to input an archetype!"
+        hub_message = f"New event submitted for {objects.store.store_name}: {event.event_name} ({event.event_date.strftime("%B %d")}). Waiting for archetypes..."
         await MessageChannel(
           self.bot,
-          f"New data for {event.event_date.strftime('%B %-d')}'s {event.event_name} event has been submitted! Use the `/submit archetype` command to input an archetype!",
+          store_message,
           interaction.guild_id,
           interaction.channel_id
         )
-        await MessageHubs(self.bot, objects.store, event)
+        await MessageHubs(self.bot, objects.store, event, hub_message)
+        new_event = False
       
       if confirm_response == ViewButtonEnum.DoneComplete.value or confirm_response == ViewButtonEnum.DoneIncomplete.value:
         cont = False
