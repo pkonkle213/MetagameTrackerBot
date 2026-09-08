@@ -165,7 +165,8 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         )
 
     @app_commands.command(
-        name="archetype", description="Submit a player's archetype for an event"
+        name="archetype",
+        description="Submit a player's archetype for an event"
     )
     @app_commands.guild_only()
     async def SubmitArchetypeCommand(self, interaction: Interaction):
