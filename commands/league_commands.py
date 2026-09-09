@@ -56,7 +56,6 @@ class LeaguesCommands(commands.GroupCog, name="league"):
         description="Display the top players in a league"
     )
     @app_commands.guild_only()
-    @IsStore()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def TopPlayers(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
