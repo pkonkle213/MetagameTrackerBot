@@ -292,28 +292,39 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             elif data.pairings_data:
                 await AddPairingResults(self.bot, event, data.pairings_data, interaction.user.id)
 
-      if new_event:
-        print('New event!')
-        store_message = f"New data for {event.event_date.strftime('%B %-d')}'s {event.event_name} event has been submitted! Use the `/submit archetype` command to input an archetype!"
-        hub_message = f"New event submitted for {objects.store.store_name}: {event.event_name} ({event.event_date.strftime("%B %d")}). Waiting for archetypes..."
-        await MessageChannel(
-          self.bot,
-          store_message,
-          interaction.guild_id,
-          interaction.channel_id
-        )
-        await MessageHubs(self.bot, objects.store, event, hub_message)
-        new_event = False
-      
-      if confirm_response == ViewButtonEnum.DoneComplete.value or confirm_response == ViewButtonEnum.DoneIncomplete.value:
-        cont = False
-      
-        if confirm_response == ViewButtonEnum.DoneComplete.value:
-          CompleteEvent(event.id)
+            if new_event:
+                print("New event!")
+                store_message = (
+                    f"New data for {event.event_date.strftime('%B %-d')}'s "
+                    f"{event.event_name} event has been submitted! Use the "
+                    "`/submit archetype` command to input an archetype!"
+                )
+                event_date = event.event_date.strftime("%B %d")
+                hub_message = (
+                    f"New event submitted for {objects.store.store_name}: "
+                    f"{event.event_name} ({event_date}). Waiting for archetypes..."
+                )
+                await MessageChannel(
+                    self.bot,
+                    store_message,
+                    interaction.guild_id,
+                    interaction.channel_id,
+                )
+                await MessageHubs(self.bot, objects.store, event, hub_message)
+                new_event = False
 
-        await interaction.followup.send(
-            "Thank you for submitting data!", ephemeral=True
-        )
+            if confirm_response in (
+                ViewButtonEnum.DoneComplete.value,
+                ViewButtonEnum.DoneIncomplete.value,
+            ):
+                cont = False
+
+                if confirm_response == ViewButtonEnum.DoneComplete.value:
+                    CompleteEvent(event.id)
+
+                await active_interaction.followup.send(
+                    "Thank you for submitting data!", ephemeral=True
+                )
 
     @SubmitCheck.error
     @SubmitDataCommand.error

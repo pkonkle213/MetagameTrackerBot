@@ -1,4 +1,3 @@
-from typing import tuple
 from psycopg.rows import class_row
 from custom_errors import KnownError
 from settings import DATABASE_URL

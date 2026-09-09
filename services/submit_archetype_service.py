@@ -1,5 +1,4 @@
 from checks import isSubmitter
-from typing import tuple
 import settings
 from custom_errors import KnownError
 from data.store_data import GetArchetypeFeed

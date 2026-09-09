@@ -2,6 +2,9 @@ import contextlib
 import pathlib
 import datetime
 import threading
+import settings
+from contextlib import suppress
+from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
@@ -32,6 +35,7 @@ StartHealthCheckServer()
 import pytz
 import asyncpg
 import discord
+from discord import Guild
 from discord.ext import commands, tasks
 from settings import PHILID, DISCORDTOKEN
 import timedposts.automated_paid_users as apu

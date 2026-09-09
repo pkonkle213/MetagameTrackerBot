@@ -4,17 +4,17 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
-    "asyncpg>=0.31.0",
+    "asyncpg==0.31.0",
     "bar-chart-race==0.1.0",
     "click==8.5.0",
     "cryptography==50.0.1",
-    "discord-py>=2.7.1",
-    "pandas>=3.0.5",
-    "protobuf==5.29.6",
-    "psycopg[binary]>=3.3.5",
+    "discord-py==2.7.1",
+    "pandas==3.0.5",
+    "protobuf==7.36.1",
+    "psycopg[binary]==3.3.5",
     "pyseto==1.10.0",
-    "python-dotenv>=1.2.3",
-    "pytz>=2026.3.post1",
+    "python-dotenv==1.2.3",
+    "pytz==2026.3.post1",
     "replit-object-storage==1.0.2",
-    "requests>=2.34.2",
+    "requests==2.34.2",
 ]

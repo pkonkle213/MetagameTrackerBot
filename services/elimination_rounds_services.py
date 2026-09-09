@@ -1,4 +1,3 @@
-from typing import tuple
 from data.elimination_rounds_data import GetEliminationPairings, GetEliminationStandings
 from tuple_conversions import Event, ReportedAsEnum
 

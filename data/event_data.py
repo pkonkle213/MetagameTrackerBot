@@ -1,4 +1,3 @@
-from typing import tuple
 import psycopg
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
