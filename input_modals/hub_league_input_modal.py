@@ -15,7 +15,6 @@ class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
     hub:Hub,
     game:Game,
     format:Format,
-    region:Region,
     league:HubLeague | None = None
   ):
     super().__init__()
@@ -24,9 +23,8 @@ class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
     self.hub = hub
     self.game = game
     self.format = format
-    self.region = region
     
-    self.allowed_stores = GetAllowedStores(hub, game, format, region)
+    self.allowed_stores = GetAllowedStores(hub, game, format)
     select_stores = BuildStoresSelect(self.allowed_stores, self.league.store_ids if self.league else None)
 
     self.league_name = discord.ui.Label(

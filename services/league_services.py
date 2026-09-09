@@ -138,7 +138,6 @@ async def EditLeague(bot: commands.Bot, interaction: Interaction):
 async def CreateLeague(bot: commands.Bot, interaction: Interaction):
     """Create a league"""
     objects = GetObjectsFromInteraction(interaction)
-    
 
     if (not objects.store and not objects.hub) or not objects.game or not objects.format:
         raise KnownError("Insufficient mapping to complete this command")
@@ -146,6 +145,6 @@ async def CreateLeague(bot: commands.Bot, interaction: Interaction):
     if objects.store:
         modal = LeagueInputModal(bot, objects.store, objects.game, objects.format)
         await interaction.response.send_modal(modal)
-    if objects.hub and objects.region and objects.format:
-        modal = HubLeagueInputModal(bot, objects.hub, objects.game, objects.format, objects.region)
+    if objects.hub and objects.format:
+        modal = HubLeagueInputModal(bot, objects.hub, objects.game, objects.format)
         await interaction.response.send_modal(modal)

@@ -17,7 +17,7 @@ from output_builder import BuildTableOutput
 from checks import IsStore
 
 
-class LeaguesCommands(commands.GroupCog, name="league"):
+class LeagueCommands(commands.GroupCog, name="league"):
     """A group of commands for managing Leagues"""
 
     def __init__(self, bot: commands.Bot):
@@ -141,4 +141,4 @@ class LeaguesCommands(commands.GroupCog, name="league"):
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(LeaguesCommands(bot))
+    await bot.add_cog(LeagueCommands(bot))
