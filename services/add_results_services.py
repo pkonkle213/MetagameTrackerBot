@@ -47,24 +47,24 @@ async def AddPairingResults(
             p2name,
         )
 
-    unique = CheckPairings(
-      event.id,
-      pairing.round_number,
-      pairing.player1_name,
-      pairing.player2_name
-    )
-    
-    if unique:      
-      db_result = await InsertPairing(
-        bot,
-        event.id,
-        pairing,
-        submitterId
-      )
-      
-      if not db_result:
-        errors.append(pairing)
-    else:
-      errors.append(pairing)
+        unique = CheckPairings(
+          event.id,
+          pairing.round_number,
+          pairing.player1_name,
+          pairing.player2_name
+        )
+        
+        if unique:      
+          db_result = await InsertPairing(
+            bot,
+            event.id,
+            pairing,
+            submitterId
+          )
+          
+          if not db_result:
+            errors.append(pairing)
+        else:
+          errors.append(pairing)
 
     return errors
