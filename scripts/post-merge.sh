@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
+set -e
 
-# Reconcile the Python environment with the committed lockfile after task merges.
-uv sync --frozen
+uv sync

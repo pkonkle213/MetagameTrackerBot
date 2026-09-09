@@ -1,4 +1,4 @@
-from typing import Any, tuple
+from typing import Any
 from datetime import date, datetime
 from tuple_conversions import Pairing
 

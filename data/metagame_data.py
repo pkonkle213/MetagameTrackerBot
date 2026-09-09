@@ -2,7 +2,6 @@ from psycopg.rows import class_row
 import settings
 import psycopg
 from datetime import date
-from typing import tuple, NamedTuple
 from settings import DATABASE_URL
 from tuple_conversions import Event, Format, Game, Store, League, MetagameResult
 

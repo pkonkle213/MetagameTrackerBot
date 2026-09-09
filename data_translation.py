@@ -1,5 +1,3 @@
-from typing import tuple
-
 import pandas as pd
 
 from custom_errors import KnownError

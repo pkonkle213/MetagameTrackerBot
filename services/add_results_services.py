@@ -1,5 +1,4 @@
 from discord.ext import commands
-from typing import Tuple
 from output_builder import BuildTableOutput
 from custom_errors import KnownError
 from data.add_results_data import InsertStanding, InsertPairing, CheckPairings

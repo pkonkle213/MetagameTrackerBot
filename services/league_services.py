@@ -1,6 +1,8 @@
+from input_modals.hub_league_input_modal import HubLeagueInputModal
 import pandas as pd
 from data.metagame_data import GetLeagueMetagame
 from input_modals.league_selector import LeagueSelector
+from input_modals.hub_league_selector import HubLeagueSelector
 from tuple_conversions import (
     League,
     MetagameResult,
@@ -15,6 +17,7 @@ from data.league_data import (
     GetLeagueLeaderboard,
     GetPlayerStanding,
     GetLeaderboardTimeLapse,
+    GetHubLeagues
 )
 from custom_errors import KnownError
 from discord.ext import commands
@@ -24,34 +27,47 @@ import bar_chart_race as bcr
 
 
 async def SelectLeague(
-    bot: commands.Bot, interaction: Interaction, isEdit: bool = False
+    bot: commands.Bot,
+    interaction: Interaction,
+    isEdit: bool = False
 ) -> League:
     """Selects a league from the database"""
     objects = GetObjectsFromInteraction(interaction)
 
-    if not objects.store or not objects.game or not objects.format:
+    if (not objects.hub and not objects.store) or not objects.game or not objects.format or not objects.region:
         raise KnownError(
             "No store, game, or format found. Leagues must be created in a format mapped channel"
         )
 
-    leagues = GetLeagues(objects.store.discord_id, objects.game.id, objects.format.id)
-    if not leagues or len(leagues) == 0:
-        raise KnownError("No leagues found for this game and format")
-
-    modal = LeagueSelector(
-        bot, objects.store, objects.game, objects.format, leagues, isEdit=isEdit
-    )
+    if objects.hub:
+        discord_id = objects.hub.discord_id
+        leagues = GetHubLeagues(discord_id, objects.game.id, objects.format.id)
+        modal = HubLeagueSelector(
+            bot,
+            objects.hub,
+            objects.game,
+            objects.format,
+            objects.region,
+            leagues,
+            isEdit=isEdit
+        )
+        
+    if objects.store:
+        discord_id = objects.store.discord_id
+        leagues = GetLeagues(discord_id, objects.game.id, objects.format.id)
+        modal = LeagueSelector(
+            bot,
+            objects.store,
+            objects.game,
+            objects.format,
+            leagues,
+            isEdit=isEdit
+        )
+        
     await interaction.response.send_modal(modal)
     await modal.wait()
 
-    if not modal.is_submitted:
-        raise KnownError(
-            "League Selector modal was dismissed or timed out. Please try again."
-        )
-
-    league = modal.league
-
-    return league
+    return modal.league
 
 
 def FindPlayerStanding(league: League, user_id: int, discord_id: int) -> PlayerStanding:
@@ -104,7 +120,7 @@ def LeagueMetagame(league: League) -> list[MetagameResult]:
 
 
 async def ViewLeague(bot: commands.Bot, interaction: Interaction) -> str:
-    """Helps the store view a league"""
+    """View a league"""
     league = await SelectLeague(bot, interaction)
     return f"""{league.name}
   -------------------
@@ -115,18 +131,21 @@ async def ViewLeague(bot: commands.Bot, interaction: Interaction) -> str:
 
 
 async def EditLeague(bot: commands.Bot, interaction: Interaction):
-    """Helps the store edit a league"""
+    """Edit a league"""
     await SelectLeague(bot, interaction, isEdit=True)
 
 
 async def CreateLeague(bot: commands.Bot, interaction: Interaction):
-    """Helps the store create a league"""
+    """Create a league"""
     objects = GetObjectsFromInteraction(interaction)
+    
 
-    if not objects.store or not objects.game or not objects.format:
-        raise KnownError(
-            "No store, game, or format found. Leagues must be created in a format mapped channel"
-        )
+    if (not objects.store and not objects.hub) or not objects.game or not objects.format:
+        raise KnownError("Insufficient mapping to complete this command")
 
-    modal = LeagueInputModal(bot, objects.store, objects.game, objects.format)
-    await interaction.response.send_modal(modal)
+    if objects.store:
+        modal = LeagueInputModal(bot, objects.store, objects.game, objects.format)
+        await interaction.response.send_modal(modal)
+    if objects.hub and objects.region and objects.format:
+        modal = HubLeagueInputModal(bot, objects.hub, objects.game, objects.format, objects.region)
+        await interaction.response.send_modal(modal)
