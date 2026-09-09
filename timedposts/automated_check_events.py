@@ -1,3 +1,5 @@
+from discord.ext import commands
+
 from tuple_conversions import Game, Format, Store
 from interaction_objects import GetStore, GetGameForStore
 from data.archetype_data import GetUnknownArchetypes
@@ -10,10 +12,10 @@ from discord_messages import MessageUser
 from custom_errors import KnownError
 import settings
 
-async def EventCheck(bot):
+async def EventCheck(bot:commands.Bot) -> None:
   await GetEventsWithUnkown(bot)
  
-async def GetEventsWithUnkown(bot):
+async def GetEventsWithUnkown(bot:commands.Bot):
   #Find events exactly 3 days old
   channels = ThreeDayOldEvents()
   #Loop through channels, see what archetypes are missing, and send the appropriate message to the appropriate channel

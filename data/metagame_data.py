@@ -2,16 +2,15 @@ from psycopg.rows import class_row
 import settings
 import psycopg
 from datetime import date
-from typing import Tuple, NamedTuple
+from typing import tuple, NamedTuple
 from settings import DATABASE_URL
 from tuple_conversions import Event, Format, Game, Store, League, MetagameResult
 
-def GetLeagueMetagame(
-  league:League
-) -> list[MetagameResult]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(MetagameResult)) as cur:
-    command = f'''
+
+def GetLeagueMetagame(league: League) -> list[MetagameResult]:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(MetagameResult)) as cur:
+        command = f"""
     WITH
       M AS (
         SELECT
@@ -39,18 +38,17 @@ def GetLeagueMetagame(
     ORDER BY
       2 DESC,
       3 DESC
-    '''
+    """
 
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
+        cur.execute(command)
+        rows = cur.fetchall()
+        return rows
 
-def OneEventMetagame(
-  event: Event
-) -> list[MetagameResult]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(MetagameResult)) as cur:
-    command = f'''
+
+def OneEventMetagame(event: Event) -> list[MetagameResult]:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(MetagameResult)) as cur:
+        command = f"""
     SELECT
       archetype_played,
       ROUND(metagame_percent * 100, 2) AS metagame_percent,
@@ -75,16 +73,17 @@ def OneEventMetagame(
     ORDER BY
     2 DESC,
     3 DESC
-    '''
+    """
 
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
+        cur.execute(command)
+        rows = cur.fetchall()
+        return rows
 
-def GetTheMetagame(criteria:str) -> list[MetagameResult]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(MetagameResult)) as cur:
-    command = f'''
+
+def GetTheMetagame(criteria: str) -> list[MetagameResult]:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(MetagameResult)) as cur:
+        command = f"""
     WITH
       RESULTS AS (
         {criteria}
@@ -110,8 +109,8 @@ def GetTheMetagame(criteria:str) -> list[MetagameResult]:
     ORDER BY
       2 DESC,
       3 DESC
-    '''
+    """
 
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
+        cur.execute(command)
+        rows = cur.fetchall()
+        return rows

@@ -1,23 +1,20 @@
 [project]
-name = "python-template"
+name = "repl-nix-workspace"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
-    "bar-chart-race>=0.1.0",
+    "asyncpg>=0.31.0",
+    "bar-chart-race==0.1.0",
+    "click==8.5.0",
+    "cryptography==50.0.1",
     "discord-py>=2.7.1",
-    "httpx>=0.28.1",
-    "matplotlib",
-    "mtg-parser>=0.0.1a54",
-    "numpy",
-    "pandas",
-    "psycopg",
-    "python-dotenv",
-    "pytz",
-    "replit",
-    "replit-object-storage",
-    "requests",
-    "stripe>=15.1.0",
-    "urllib3",
+    "pandas>=3.0.5",
+    "protobuf==5.29.6",
+    "psycopg[binary]>=3.3.5",
+    "pyseto==1.10.0",
+    "python-dotenv>=1.2.3",
+    "pytz>=2026.3.post1",
+    "replit-object-storage==1.0.2",
+    "requests>=2.34.2",
 ]

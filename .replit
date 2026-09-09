@@ -3,7 +3,7 @@ modules = ["postgresql-16", "python3", "python-3.12"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["cacert", "cairo", "ffmpeg-full", "freetype", "ghostscript", "glibcLocales", "gobject-introspection", "gtk3", "pkg-config", "postgresql", "qhull", "tcl", "tesseract", "tk"]
+packages = ["cacert", "cairo", "cargo", "ffmpeg-full", "freetype", "ghostscript", "glibcLocales", "gobject-introspection", "gtk3", "libiconv", "libxcrypt", "openssl", "pkg-config", "postgresql", "qhull", "rustc", "tcl", "tesseract", "tk"]
 
 [unitTest]
 language = "python3"
@@ -13,8 +13,7 @@ requiredFiles = [".replit", "replit.nix"]
 
 [deployment]
 run = ["python3", "main.py"]
-deploymentTarget = "gce"
-ignorePorts = true
+deploymentTarget = "vm"
 
 [agent]
 expertMode = true
@@ -45,10 +44,10 @@ outputType = "console"
 [objectStorage]
 defaultBucketID = "replit-objstore-7f38bbe0-52e1-4e3b-aba8-51bfb65b8dde"
 
-[[ports]]
-localPort = 8080
-externalPort = 80
-
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 60000
+
+[[ports]]
+localPort = 8080
+externalPort = 80

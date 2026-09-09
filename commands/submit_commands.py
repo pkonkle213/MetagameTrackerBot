@@ -13,7 +13,13 @@ from discord.ext import commands
 from services.event_services import EventForData
 from checks import IsStore, isSubmitter
 from custom_errors import KnownError
-from data.event_data import GetHubEvents, GetStoreEvents, CompleteEvent, GetPlayersInEvent
+from data.event_data import (
+    CreateEvent,
+    GetHubEvents,
+    GetStoreEvents,
+    CompleteEvent,
+    GetPlayersInEvent,
+)
 from data.player_name_data import GetUserArchetypes, GetUserName
 from interaction_objects import GetObjectsFromInteraction
 from services.command_error_service import Error
@@ -26,249 +32,265 @@ from input_modals.submit_csv_modal import SubmitCSVDataModal
 from input_modals.submit_melee_modal import SubmitMeleeDataModal
 from services.submit_data_services import BuildReviewOutput
 
+
 class SubmitDataChecker(commands.GroupCog, name="submit"):
-  """A group of commands to submit event data and archetypes"""
+    """A group of commands to submit event data and archetypes"""
 
-  def __init__(self, bot:commands.Bot):
-    self.bot = bot
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
 
-  @app_commands.command(name="check", description="To test if you can submit data")
-  @app_commands.guild_only()
-  @IsStore()
-  @app_commands.checks.cooldown(1, 300.0, key=lambda i: (i.guild_id, i.user.id))
-  async def SubmitCheck(self, interaction: Interaction):
-    await interaction.response.defer(ephemeral=True, thinking=False)
-    issues = ["Issues I detect:"]
-    objects = GetObjectsFromInteraction(interaction)
-    if not interaction.guild:
-      raise KnownError('How?')
-    if isinstance(interaction.user, User):
-      raise KnownError('Bad user. Need Member')
+    @app_commands.command(name="check", description="To test if you can submit data")
+    @app_commands.guild_only()
+    @IsStore()
+    @app_commands.checks.cooldown(1, 300.0, key=lambda i: (i.guild_id, i.user.id))
+    async def SubmitCheck(self, interaction: Interaction):
+        await interaction.response.defer(ephemeral=True, thinking=False)
+        issues = ["Issues I detect:"]
+        objects = GetObjectsFromInteraction(interaction)
+        if not interaction.guild:
+            raise KnownError("How?")
+        if isinstance(interaction.user, User):
+            raise KnownError("Bad user. Need Member")
 
-    if not objects.store:
-      issues.append("- Store not registered")
-    if not isSubmitter(interaction.guild, interaction.user, "MTSubmitter"):
-      issues.append("- You don't have the MTSubmitter role.")
-    if not objects.game:
-      issues.append("- Category not mapped to a game")
-    if objects.game and not objects.format:
-      issues.append("- Channel not mapped to a format")
+        if not objects.store:
+            issues.append("- Store not registered")
+        if not isSubmitter(interaction.guild, interaction.user, "MTSubmitter"):
+            issues.append("- You don't have the MTSubmitter role.")
+        if not objects.game:
+            issues.append("- Category not mapped to a game")
+        if objects.game and not objects.format:
+            issues.append("- Channel not mapped to a format")
 
-    if len(issues) == 1:
-      await interaction.followup.send(
-        "Everything looks good. Please reach out to Phil to test your data"
-      )
-    else:
-      await interaction.followup.send("\n".join(issues))
+        if len(issues) == 1:
+            await interaction.followup.send(
+                "Everything looks good. Please reach out to Phil to test your data"
+            )
+        else:
+            await interaction.followup.send("\n".join(issues))
 
-  @app_commands.command(name="mass_archetype",description="Submit multiple archetypes for an event")
-  @app_commands.checks.has_role("MTSubmitter")
-  @app_commands.guild_only()
-  @IsStore()
-  async def MassArchetypeInput(self, interaction: Interaction):
-    objects = GetObjectsFromInteraction(interaction)
-    user_id = interaction.user.id
-
-    if not objects.store or not objects.game or not objects.format:
-      raise KnownError("No store, game, or format found.")
-
-    # User needs to select what event to submit archetypes for
-    modal = EventSelector(objects.store, objects.game, objects.format)
-    await interaction.response.send_modal(modal)
-    await modal.wait()
-
-    if not modal.is_submitted:
-      raise Exception("Modal was not submitted")
-
-    event = modal.event
-
-    view = ConfirmEvent()
-    await interaction.followup.send(f'You selected {event.event_name}. Is this correct?', view=view, ephemeral=True)
-    await view.wait()
-
-    if view.action == ViewButtonEnum.Cancel.value:
-      await interaction.followup.send('Canceled!', ephemeral=True)
-
-    active_interaction = view.interaction
-    # Grab by event.id all user names and current archetype submissions for those players
-    if not event:
-      raise KnownError("No event found.")
-
-    total_players = GetPlayersInEvent(event.id)
-    if len(total_players) == 0:
-      raise KnownError("No players found for this event.")
-    
-    # Loop through the users 5 at a time and send a modal to submit archetypes for those players
-    for i in range(0, len(total_players), 5):
-      players = total_players[i:i+5]
-      modal = MassArchetypeSubmit(players)
-
-      await active_interaction.response.send_modal(modal)
-      await modal.wait()
-
-      if not modal.is_submitted:
-        raise KnownError("Modal was not submitted")
-
-      # Confirm archetypes
-      active_interaction = modal.new_interaction
-      archetypes = modal.new_archetypes
-
-      title = 'Please confirm the archetypes:'
-      headers = ['Name','Archetype']
-      data = archetypes
-      output = BuildTableOutput(title, headers, data)
-      
-      archetypes_output = '\n'.join([f'{player.player_name}: {player.archetype_played}' for player in archetypes])
-      view = ConfirmEvent()
-      await interaction.followup.send(f'{output}\nAre these correct?', view=view, ephemeral=True)
-      await view.wait()
-      
-      if view.action == ViewButtonEnum.Cancel.value:
-        await interaction.followup.send('Canceled!', ephemeral=True)
-        break
-
-      # Save archetypes
-      await BulkAddArchetypes(
-        event,
-        archetypes,
-        user_id,
-        interaction.user.name,
-        interaction.guild_id,
-        interaction.guild.name
-      )
-
-      # Continue or end loop if there are no more players
-      active_interaction = view.interaction
-    
-    await interaction.followup.send(
-      'All archetypes have been submitted!',
-      ephemeral=True
+    @app_commands.command(
+        name="mass_archetype", description="Submit multiple archetypes for an event"
     )
-  
-  @app_commands.command(
-    name="archetype",
-    description="Submit a player's archetype for an event"
-  )
-  @app_commands.guild_only()
-  async def SubmitArchetypeCommand(self, interaction: Interaction):
-    objects = GetObjectsFromInteraction(interaction)
-    userId = interaction.user.id
+    @app_commands.checks.has_role("MTSubmitter")
+    @app_commands.guild_only()
+    @IsStore()
+    async def MassArchetypeInput(self, interaction: Interaction):
+        objects = GetObjectsFromInteraction(interaction)
+        user_id = interaction.user.id
 
-    if (
-      (not objects.store and not objects.hub)
-      or not objects.game
-      or not objects.format
-    ):
-      raise KnownError("Insufficient information found.")
+        if not objects.store or not objects.game or not objects.format:
+            raise KnownError("No store, game, or format found.")
 
-    guild_id = interaction.guild_id
-    channel_id = interaction.channel_id
-
-    if not guild_id or not channel_id:
-      raise KnownError("No guild or channel found.")
-
-    player_name = GetUserName(userId)
-    player_archetypes = GetUserArchetypes(userId, objects.game, objects.format)
-
-    if objects.hub:
-      events = GetHubEvents(guild_id, channel_id)
-    elif objects.store:
-      events = GetStoreEvents(objects.store, objects.game, objects.format)
-    else:
-      raise KnownError("No store or hub found.")
-
-    if len(events) == 0:
-      raise KnownError("No events found.")
-
-    await GetArchetypeModal(
-      self.bot,
-      userId,
-      events,
-      interaction,
-      objects.game,
-      objects.format,
-      player_name,
-      player_archetypes,
-    )
-
-  @app_commands.command(name="data", description="Submitting an event's data")
-  @app_commands.checks.has_role("MTSubmitter")
-  @app_commands.guild_only()
-  @IsStore()
-  async def SubmitDataCommand(
-    self,
-    interaction: Interaction
-  ) -> None:
-    objects = GetObjectsFromInteraction(interaction)
-
-    if not objects.store or not objects.game or not objects.format:
-      raise KnownError("No store, game, or format found.")
-
-    if objects.hub:
-      raise KnownError("You can't submit data from a hub.")
-
-    event, input_type, active_interaction, new_event = await EventForData(
-      self.bot,
-      interaction,
-      objects.store,
-      objects.game,
-      objects.format
-    )
-
-    if not event or not input_type or not active_interaction:
-      await interaction.followup.send('Event canceled!', ephemeral=True)
-      return
-    
-    cont = True
-    while cont:
-      match input_type:
-        case DataInputEnum.Manual.value:
-          save_path = BuildFilePath(objects.store, objects.game, objects.format, 'ManualInput.txt')
-          modal = SubmitManualDataModal(event, save_path)
-
-        case DataInputEnum.CSV.value:
-          save_path = BuildFilePath(objects.store, objects.game, objects.format, 'CSVInput.txt')
-          modal = SubmitCSVDataModal(event, save_path)
-
-        case DataInputEnum.Melee.value:
-          save_path = BuildFilePath(objects.store, objects.game, objects.format, 'MeleeInput.txt')
-          modal = SubmitMeleeDataModal(objects.store, event, save_path)
-
-        case _:
-          raise KnownError("Unknown input type")
-
-      await active_interaction.response.send_modal(modal)
-
-      try:
+        # User needs to select what event to submit archetypes for
+        modal = EventSelector(objects.store, objects.game, objects.format)
+        await interaction.response.send_modal(modal)
         await modal.wait()
-      except Exception:
-        raise KnownError("Something went wrong. Canceling data.")
 
-      output = BuildReviewOutput(modal.converted_data)
-      view = ConfirmData()
-      await modal.interaction.followup.send(
-        f"{output}\nPlease confirm the data",
-        ephemeral=True,
-        view=view
-      )
-      await view.wait()
+        if not modal.is_submitted:
+            raise Exception("Modal was not submitted")
 
-      confirm_response = view.action
-      active_interaction = view.interaction
+        event = modal.event
 
-      if confirm_response == ViewButtonEnum.Cancel.value:
-        await active_interaction.response.edit_message(
-          content="Data submission canceled!",
-          view=None
+        view = ConfirmEvent()
+        await interaction.followup.send(
+            f"You selected {event.event_name}. Is this correct?",
+            view=view,
+            ephemeral=True,
         )
-        break
+        await view.wait()
 
-      data = modal.converted_data
+        if view.action == ViewButtonEnum.Cancel.value:
+            await interaction.followup.send("Canceled!", ephemeral=True)
 
-      if data.standings_data:
-        AddStandingResults(event, data.standings_data, interaction.user.id)
-      elif data.pairings_data:
-        AddPairingResults(event, data.pairings_data, interaction.user.id)
+        active_interaction = view.interaction
+        # Grab by event.id all user names and current archetype submissions for those players
+        if not event:
+            raise KnownError("No event found.")
+
+        total_players = GetPlayersInEvent(event.id)
+        if len(total_players) == 0:
+            raise KnownError("No players found for this event.")
+
+        # Loop through the users 5 at a time and send a modal to submit archetypes for those players
+        for i in range(0, len(total_players), 5):
+            players = total_players[i : i + 5]
+            modal = MassArchetypeSubmit(players)
+
+            await active_interaction.response.send_modal(modal)
+            await modal.wait()
+
+            if not modal.is_submitted:
+                raise KnownError("Modal was not submitted")
+
+            # Confirm archetypes
+            active_interaction = modal.new_interaction
+            archetypes = modal.new_archetypes
+
+            title = "Please confirm the archetypes:"
+            headers = ["Name", "Archetype"]
+            data = archetypes
+            output = BuildTableOutput(title, headers, data)
+
+            archetypes_output = "\n".join(
+                [
+                    f"{player.player_name}: {player.archetype_played}"
+                    for player in archetypes
+                ]
+            )
+            view = ConfirmEvent()
+            await interaction.followup.send(
+                f"{output}\nAre these correct?", view=view, ephemeral=True
+            )
+            await view.wait()
+
+            if view.action == ViewButtonEnum.Cancel.value:
+                await interaction.followup.send("Canceled!", ephemeral=True)
+                break
+
+            # Save archetypes
+            await BulkAddArchetypes(
+                event,
+                archetypes,
+                user_id,
+                interaction.user.name,
+                interaction.guild_id,
+                interaction.guild.name,
+            )
+
+            # Continue or end loop if there are no more players
+            active_interaction = view.interaction
+
+        await interaction.followup.send(
+            "All archetypes have been submitted!", ephemeral=True
+        )
+
+    @app_commands.command(
+        name="archetype",
+        description="Submit a player's archetype for an event"
+    )
+    @app_commands.guild_only()
+    async def SubmitArchetypeCommand(self, interaction: Interaction):
+        objects = GetObjectsFromInteraction(interaction)
+        userId = interaction.user.id
+
+        if (
+            (not objects.store and not objects.hub)
+            or not objects.game
+            or not objects.format
+        ):
+            raise KnownError("Insufficient information found.")
+
+        guild_id = interaction.guild_id
+        channel_id = interaction.channel_id
+
+        if not guild_id or not channel_id:
+            raise KnownError("No guild or channel found.")
+
+        player_name = GetUserName(userId)
+        player_archetypes = GetUserArchetypes(userId, objects.game, objects.format)
+
+        if objects.hub:
+            events = GetHubEvents(guild_id, channel_id)
+        elif objects.store:
+            events = GetStoreEvents(objects.store, objects.game, objects.format)
+        else:
+            raise KnownError("No store or hub found.")
+
+        if len(events) == 0:
+            raise KnownError("No events found.")
+
+        await GetArchetypeModal(
+            self.bot,
+            userId,
+            events,
+            interaction,
+            objects.game,
+            objects.format,
+            player_name,
+            player_archetypes,
+        )
+
+    @app_commands.command(name="data", description="Submitting an event's data")
+    @app_commands.checks.has_role("MTSubmitter")
+    @app_commands.guild_only()
+    @IsStore()
+    async def SubmitDataCommand(self, interaction: Interaction) -> None:
+        objects = GetObjectsFromInteraction(interaction)
+
+        if not objects.store or not objects.game or not objects.format:
+            raise KnownError("No store, game, or format found.")
+
+        if objects.hub:
+            raise KnownError("You can't submit data from a hub.")
+
+        event, input_type, active_interaction, new_event = await EventForData(
+            self.bot, interaction, objects.store, objects.game, objects.format
+        )
+
+        if not event or not input_type or not active_interaction:
+            await interaction.followup.send("Event canceled!", ephemeral=True)
+            return
+
+        cont = True
+        while cont:
+            match input_type:
+                case DataInputEnum.Manual.value:
+                    save_path = BuildFilePath(
+                        objects.store, objects.game, objects.format, "ManualInput.txt"
+                    )
+                    modal = SubmitManualDataModal(event, save_path)
+
+                case DataInputEnum.CSV.value:
+                    save_path = BuildFilePath(
+                        objects.store, objects.game, objects.format, "CSVInput.txt"
+                    )
+                    modal = SubmitCSVDataModal(event, save_path)
+
+                case DataInputEnum.Melee.value:
+                    save_path = BuildFilePath(
+                        objects.store, objects.game, objects.format, "MeleeInput.txt"
+                    )
+                    modal = SubmitMeleeDataModal(objects.store, event, save_path)
+
+                case _:
+                    raise KnownError("Unknown input type")
+
+            await active_interaction.response.send_modal(modal)
+
+            try:
+                await modal.wait()
+            except Exception:
+                raise KnownError("Something went wrong. Canceling data.")
+
+            output = BuildReviewOutput(modal.converted_data)
+            view = ConfirmData()
+            await modal.interaction.followup.send(
+                f"{output}\nPlease confirm the data", ephemeral=True, view=view
+            )
+            await view.wait()
+
+            confirm_response = view.action
+            active_interaction = view.interaction
+
+            if not active_interaction:
+                raise KnownError("No interaction found after confirmation")
+
+            if confirm_response == ViewButtonEnum.Cancel.value:
+                await active_interaction.response.edit_message(
+                    content="Data submission canceled!", view=None
+                )
+                break
+
+            if new_event:
+                event_id = CreateEvent(event, interaction.user.id)
+                event = event._replace(id=event_id)
+
+            data = modal.converted_data
+
+            if data.standings_data:
+                AddStandingResults(event, data.standings_data, interaction.user.id)
+            elif data.pairings_data:
+                await AddPairingResults(self.bot, event, data.pairings_data, interaction.user.id)
 
       if new_event:
         print('New event!')
@@ -289,18 +311,18 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         if confirm_response == ViewButtonEnum.DoneComplete.value:
           CompleteEvent(event.id)
 
-    await interaction.followup.send("Thank you for submitting data!", ephemeral=True)
+        await interaction.followup.send(
+            "Thank you for submitting data!", ephemeral=True
+        )
+
+    @SubmitCheck.error
+    @SubmitDataCommand.error
+    @SubmitArchetypeCommand.error
+    async def Errors(
+        self, interaction: Interaction, error: app_commands.AppCommandError
+    ):
+        await Error(self.bot, interaction, error)
 
 
-  @SubmitCheck.error
-  @SubmitDataCommand.error
-  @SubmitArchetypeCommand.error
-  async def Errors(
-    self,
-    interaction: Interaction,  
-    error: app_commands.AppCommandError
-  ):
-    await Error(self.bot, interaction, error)
-
-async def setup(bot:commands.Bot):
-  await bot.add_cog(SubmitDataChecker(bot))
+async def setup(bot: commands.Bot):
+    await bot.add_cog(SubmitDataChecker(bot))

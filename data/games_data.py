@@ -1,3 +1,4 @@
+from custom_errors import KnownError
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
 import psycopg
@@ -24,11 +25,11 @@ def AddGameMap(
     RETURNING *
     '''
 
-    print('AddGameMap command:', command)
     cur.execute(command)
     conn.commit()
     row = cur.fetchone()
-    print('Row returned:', row)
+    if not row:
+      raise KnownError('Unable to add game map')
     return row
 
 def GetAllGames() -> list[Game]:

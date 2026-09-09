@@ -1,16 +1,17 @@
 from settings import DATABASE_URL
+from discord.ext import commands
+from psycopg.rows import scalar_row
 import psycopg
 from tuple_conversions import Standing, Pairing
 
-#TODO: Why am is this not receiving a Pairing object?
-def InsertPairing(
+async def InsertPairing(
+  bot:commands.Bot,
   event_id: int,
   pairing: Pairing,
   submitter_id: int
 ) -> int | None:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor() as cur:
-    try:
+  try:
+    async with bot.db_pool.acquire() as conn:
       command = '''
       INSERT INTO pairings
       (event_id,
@@ -20,31 +21,26 @@ def InsertPairing(
       player1_name,
       player2_name,
       submitter_id)
-      VALUES (%s,
-      %s,
-      %s,
-      %s,
-      %s,
-      %s,
-      %s)
-      RETURNING event_id
+      VALUES ($1,
+      $2,
+      $3,
+      $4,
+      $5,
+      $6,
+      $7)
+      RETURNING event_id;
       '''
-
-      criteria = [
-        event_id,
-        pairing.round_number,
-        pairing.player1_game_wins,
-        pairing.player2_game_wins,
-        pairing.player1_name,
-        pairing.player2_name,
-        submitter_id
-      ]
-      cur.execute(command, criteria)
-      conn.commit()
-      row = cur.fetchone()
-      return row[0] if row else None
-    except psycopg.errors.UniqueViolation:
-      return None
+  
+        
+      id = await conn.fetchval(command,  event_id,
+                                pairing.round_number,
+                                pairing.player1_game_wins,
+                                pairing.player2_game_wins,
+                                pairing.player1_name,
+                                pairing.player2_name,
+                                submitter_id)
+  except psycopg.errors.UniqueViolation:
+    return None
 
 
 def CheckPairings(

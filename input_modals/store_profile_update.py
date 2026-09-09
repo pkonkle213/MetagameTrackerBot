@@ -19,7 +19,7 @@ class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
     self.bot = bot
     
 
-    possible_hubs = GetPossibleHubs(store, game, format)
+    possible_hubs = GetPossibleHubs(store, game, format) if store.region_id else []
     self.select_hubs = [discord.SelectOption(label=hub.hub_name, value=str(hub.discord_id)) for hub in possible_hubs]
 
     self.store_name = discord.ui.Label(

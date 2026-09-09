@@ -1,3 +1,4 @@
+from discord.ext import commands
 from typing import Tuple
 from output_builder import BuildTableOutput
 from custom_errors import KnownError
@@ -6,44 +7,46 @@ from services.input_services import ConvertInput
 from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
 from tuple_conversions import Standing, Pairing, Event, ReportedAsEnum
 
+
 def AddStandingResults(
-  event:Event,
-  data:list[Standing],
-  submitterId:int
+    event: Event, data: list[Standing], submitterId: int
 ) -> list[Standing]:
-  errors:list[Standing] = []
-  for person in data:
-    if person.player_name != '':
-      person = Standing(ConvertInput(person.player_name),
-                        person.wins,
-                        person.losses,
-                        person.draws)
-      output = InsertStanding(event.id, person, submitterId)
-      if not output:
-        errors.append(person)
+    errors: list[Standing] = []
+    for person in data:
+        if person.player_name != "":
+            person = Standing(
+                ConvertInput(person.player_name),
+                person.wins,
+                person.losses,
+                person.draws,
+            )
+            output = InsertStanding(event.id, person, submitterId)
+            if not output:
+                errors.append(person)
 
-  return errors
+    return errors
 
-def AddPairingResults(
+async def AddPairingResults(
+  bot:commands.Bot,
   event:Event,
   data:list[Pairing],
   submitterId:int
 ) -> list[Pairing]:
-  errors:list[Pairing] = []
-  output = ''
- 
-  for table in data:
-    p1name = ConvertInput(table.player1_name)
-    p2name = ConvertInput(table.player2_name)
-    round_number = table.round_number
-    
-    pairing = Pairing(
-      round_number,
-      p1name,
-      table.player1_game_wins,
-      table.player2_game_wins,
-      p2name
-    )
+    errors: list[Pairing] = []
+    output = ""
+
+    for table in data:
+        p1name = ConvertInput(table.player1_name)
+        p2name = ConvertInput(table.player2_name)
+        round_number = table.round_number
+
+        pairing = Pairing(
+            round_number,
+            p1name,
+            table.player1_game_wins,
+            table.player2_game_wins,
+            p2name,
+        )
 
     unique = CheckPairings(
       event.id,
@@ -53,7 +56,8 @@ def AddPairingResults(
     )
     
     if unique:      
-      db_result = InsertPairing(
+      db_result = await InsertPairing(
+        bot,
         event.id,
         pairing,
         submitterId
@@ -64,5 +68,4 @@ def AddPairingResults(
     else:
       errors.append(pairing)
 
-  return errors
-  
+    return errors
