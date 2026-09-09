@@ -165,29 +165,17 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         )
 
     @app_commands.command(
-        name="archetype",
-        description="Submit a player's archetype for an event"
+        name="archetype", description="Submit a player's archetype for an event"
     )
     @app_commands.guild_only()
     async def SubmitArchetypeCommand(self, interaction: Interaction):
-        objects = GetObjectsFromInteraction(interaction)
-        userId = interaction.user.id
-
-        if (
-            (not objects.store and not objects.hub)
-            or not objects.game
-            or not objects.format
-        ):
-            raise KnownError("Insufficient information found.")
-
-        guild_id = interaction.guild_id
-        channel_id = interaction.channel_id
-
-        if not guild_id or not channel_id:
-            raise KnownError("No guild or channel found.")
-
-        player_name = GetUserName(userId)
-        player_archetypes = GetUserArchetypes(userId, objects.game, objects.format)
+        discord_id = interaction.guild.id
+        channel_id = interaction.channel.id
+        category_id = interaction.channel.category.id
+        user_id = interaction.user.id
+        
+        player_name = GetUserName(discord_id, user_id)
+        player_archetypes = GetUserArchetypes(user_id, category_id, channel_id)
 
         if objects.hub:
             events = GetHubEvents(guild_id, channel_id)
@@ -290,7 +278,9 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             if data.standings_data:
                 AddStandingResults(event, data.standings_data, interaction.user.id)
             elif data.pairings_data:
-                await AddPairingResults(self.bot, event, data.pairings_data, interaction.user.id)
+                await AddPairingResults(
+                    self.bot, event, data.pairings_data, interaction.user.id
+                )
 
             if new_event:
                 await MessageChannel(
