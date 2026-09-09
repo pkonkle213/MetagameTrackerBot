@@ -1,6 +1,5 @@
-from contextlib import suppress
-import os
-from pathlib import Path
+import contextlib
+import pathlib
 import datetime
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -22,16 +21,17 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
 
 
 def StartHealthCheckServer():
-    port = int(os.environ.get("PORT", "8080"))
-    server = ThreadingHTTPServer(("0.0.0.0", port), HealthCheckHandler)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    print(f"Health check server listening on port {port}")
+  port = 8080
+  server = ThreadingHTTPServer(("0.0.0.0", port), HealthCheckHandler)
+  threading.Thread(target=server.serve_forever, daemon=True).start()
+  print(f"Health check server listening on port {port}", flush=True)
 
 
 StartHealthCheckServer()
 
-from pytz import timezone
-from discord import Intents, Guild
+import pytz
+import asyncpg
+import discord
 from discord.ext import commands, tasks
 from settings import PHILID, DISCORDTOKEN
 import timedposts.automated_paid_users as apu
@@ -41,28 +41,41 @@ from services.store_services import NewStoreRegistration
 from services.sync_service import SyncCommands
 from discord_messages import MessageUser
 
-intents = Intents.all()
-intents.message_content = True
-intents.members = True
-intents.guilds = True
-bot = commands.Bot(command_prefix="?", intents=intents)
+class Bot(commands.Bot):
+  def __init__(self):
+    intents = discord.Intents.all()
+    intents.message_content = True
+    intents.members = True
+    intents.guilds = True
+    super().__init__(command_prefix="?", intents=intents)
+    self.db_pool = None
+
+  async def setup_hook(self):
+    self.db_pool = await asyncpg.create_pool(
+      dsn=settings.DATABASE_URL
+    )
+
+  async def close(self):
+    await super().close()
+    if self.db_pool:
+      await self.db_pool.close()
+    
+
+bot = Bot()
 
 BASE_DIR = Path(__file__).parent
 CMDS_DIR = BASE_DIR / "commands"
-
-TIME_ZONE = timezone("US/Eastern")
+TIME_ZONE = pytz.timezone("US/Eastern")
 
 
 @bot.event
 async def on_ready():
-    print(f"Logged on as {format(bot.user)}!")
-    data_guild_update.start()
-    find_the_unknown.start()
-    sync_paid_users.start()
-    # sync_paid_discords.start()
-    await SyncCommands(bot, CMDS_DIR)
-    # await start_webhook_server(bot)
-    print("Synced commands. Good to go")
+  print(f"Logged on as {format(bot.user)}!")
+  data_guild_update.start()
+  find_the_unknown.start()
+  sync_paid_users.start()
+  await SyncCommands(bot, CMDS_DIR)
+  print("Synced commands. Good to go")
 
 
 @bot.event
