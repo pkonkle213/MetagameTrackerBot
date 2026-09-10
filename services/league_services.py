@@ -86,7 +86,7 @@ def FullLeagueLeaderboard(league: League) -> list[TopPlayers]:
     return GetFullLeagueLeaderboard(league)
 
 
-def HubLeagueLeaderboard(league: League) -> list[TopPlayers]:
+def HubLeagueLeaderboard(league: HubLeague) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
     return GetHubLeagueLeaderboard(league)
 

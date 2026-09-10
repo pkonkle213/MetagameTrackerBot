@@ -1,6 +1,6 @@
-from tuple_conversions import HubLeague
-from services.command_error_service import KnownError
-from services.command_error_service import Error
+from tuple_conversions import HubLeague, League
+from services.command_error_service import KnownError, Error
+
 from discord.ext import commands
 from discord import app_commands, Interaction
 from services.league_services import (
@@ -56,7 +56,7 @@ class LeagueCommands(commands.GroupCog, name="league"):
         league = await SelectLeague(self.bot, interaction)
         if isinstance(league, HubLeague):
             data = HubLeagueLeaderboard(league)
-        else:
+        elif isinstance(league, League):
             data = LeagueLeaderboard(league)
         title = f"Top Players for {league.name}"
         headers = ["Rank", "Player Name", "Points", "Win %"]

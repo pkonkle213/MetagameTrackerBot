@@ -170,24 +170,14 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     )
     @app_commands.guild_only()
     async def SubmitArchetypeCommand(self, interaction: Interaction):
-        objects = GetObjectsFromInteraction(interaction)
+        discord_id = interaction.guild_id
+        channel_id = interaction.channel_id
+        category_id = interaction.channel.category_id
         userId = interaction.user.id
 
-        if (
-            (not objects.store and not objects.hub)
-            or not objects.game
-            or not objects.format
-        ):
-            raise KnownError("Insufficient information found.")
-
-        guild_id = interaction.guild_id
-        channel_id = interaction.channel_id
-
-        if not guild_id or not channel_id:
-            raise KnownError("No guild or channel found.")
-
         player_name = GetUserName(userId)
-        player_archetypes = GetUserArchetypes(userId, objects.game, objects.format)
+        player_archetypes = GetUserArchetypes(userId, category_id, channel_id)
+        events = GetRecentEvents()
 
         if objects.hub:
             events = GetHubEvents(guild_id, channel_id)
@@ -290,7 +280,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             if data.standings_data:
                 AddStandingResults(event, data.standings_data, interaction.user.id)
             elif data.pairings_data:
-                await AddPairingResults(self.bot, event, data.pairings_data, interaction.user.id)
+                await AddPairingResults(event, data.pairings_data, interaction.user.id)
 
             if new_event:
                 print("New event!")
