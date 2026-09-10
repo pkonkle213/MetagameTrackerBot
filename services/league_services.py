@@ -13,9 +13,11 @@ from tuple_conversions import (
 )
 from interaction_objects import GetObjectsFromInteraction
 from data.league_data import (
-    GetFullLeagueLeaderboard,
     GetLeagues,
+    GetHubLeagueLeaderboard,
+    GetHubFullLeagueLeaderboard,
     GetLeagueLeaderboard,
+    GetFullLeagueLeaderboard,
     GetPlayerStanding,
     GetLeaderboardTimeLapse,
     GetHubLeagues,
@@ -82,6 +84,16 @@ def LeagueLeaderboard(league: League) -> list[TopPlayers]:
 def FullLeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
     return GetFullLeagueLeaderboard(league)
+
+
+def HubLeagueLeaderboard(league: League) -> list[TopPlayers]:
+    """Displays the leaderboard of a league"""
+    return GetHubLeagueLeaderboard(league)
+
+
+def HubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
+    """Displays the leaderboard of a league"""
+    return GetHubFullLeagueLeaderboard(league)
 
 
 def LeagueTimeLapse(league: League) -> File:  # TODO: Should return a file, probably?
