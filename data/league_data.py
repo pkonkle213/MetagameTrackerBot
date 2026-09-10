@@ -117,7 +117,7 @@ def GetFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
           points,
           win_percent
         FROM
-          league_leaderboards
+          store_league_leaderboards
         WHERE
           league_id = {league.id}
         """
@@ -125,6 +125,159 @@ def GetFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
         rows = cur.fetchall()
         return rows
 
+def GetHubFullLeagueLeaderboard(league:League) -> list[TopPlayers]:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
+    command = f"""
+    WITH
+      weekly_scores AS (
+        SELECT
+          date_trunc('week', event_date) AS week_start,
+          INITCAP(player_name) AS player_name,
+          LEAST(9, sum(3 * wins + draws)) AS week_points,
+          sum(wins) AS wins,
+          sum(losses) AS losses,
+          sum(draws) AS draws
+        FROM
+          leagues l
+          INNER JOIN hub_league_stores hls ON hls.league_id = l.id
+          INNER JOIN events e ON e.discord_id = hls.store_discord_id
+          AND e.event_date >= l.start_date
+          AND e.event_date <= l.end_date
+          AND e.format_id = l.format_id
+          INNER JOIN full_standings fs ON fs.event_id = e.id
+        WHERE
+          l.id = {league.id}
+        GROUP BY
+          date_trunc('week', event_date),
+          initcap(player_name)
+        ORDER BY
+          week_start,
+          player_name
+      ),
+      top_ten AS (
+        SELECT
+          player_name,
+          week_points,
+          wins,
+          losses,
+          draws,
+          ROW_NUMBER() OVER (
+            PARTITION BY
+              player_name
+            ORDER BY
+              week_points DESC
+          ) AS rank
+        FROM
+          weekly_scores
+      ),
+      grouped AS (
+        SELECT
+          player_name,
+          sum(week_points) AS total_points,
+          1.0 * sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percent
+        FROM
+          top_ten
+        WHERE
+          rank <= 12
+        GROUP BY
+          player_name
+      )
+    SELECT
+      ROW_NUMBER() OVER (
+        ORDER BY
+          total_points DESC,
+          win_percent DESC,
+          player_name
+      ) AS rank,
+      player_name,
+      total_points as points,
+      win_percent
+    FROM
+      grouped
+    """
+
+    cur.execute(command)
+    rows = cur.fetchall()
+    return rows
+
+def GetHubLeagueLeaderboard(league:League) -> list[TopPlayers]:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
+    command = f"""
+    WITH
+      weekly_scores AS (
+        SELECT
+          date_trunc('week', event_date) AS week_start,
+          INITCAP(player_name) AS player_name,
+          LEAST(9, sum(3 * wins + draws)) AS week_points,
+          sum(wins) AS wins,
+          sum(losses) AS losses,
+          sum(draws) AS draws
+        FROM
+          leagues l
+          INNER JOIN hub_league_stores hls ON hls.league_id = l.id
+          INNER JOIN events e ON e.discord_id = hls.store_discord_id
+          AND e.event_date >= l.start_date
+          AND e.event_date <= l.end_date
+          AND e.format_id = l.format_id
+          INNER JOIN full_standings fs ON fs.event_id = e.id
+        WHERE
+          l.id = {league.id}
+        GROUP BY
+          date_trunc('week', event_date),
+          initcap(player_name)
+        ORDER BY
+          week_start,
+          player_name
+      ),
+      top_ten AS (
+        SELECT
+          player_name,
+          week_points,
+          wins,
+          losses,
+          draws,
+          ROW_NUMBER() OVER (
+            PARTITION BY
+              player_name
+            ORDER BY
+              week_points DESC
+          ) AS rank
+        FROM
+          weekly_scores
+      ),
+      grouped AS (
+        SELECT
+          player_name,
+          sum(week_points) AS total_points,
+          1.0 * sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percent
+        FROM
+          top_ten
+        WHERE
+          rank <= 12
+        GROUP BY
+          player_name
+      )
+    SELECT
+      ROW_NUMBER() OVER (
+        ORDER BY
+          total_points DESC,
+          win_percent DESC,
+          player_name
+      ) AS rank,
+      player_name,
+      total_points as points,
+      win_percent
+    FROM
+      grouped
+    LIMIT
+      8
+    """
+
+    cur.execute(command)
+    rows = cur.fetchall()
+    return rows
 
 def GetLeagueLeaderboard(league: League) -> list[TopPlayers]:
     conn = psycopg.connect(DATABASE_URL)
@@ -136,12 +289,13 @@ def GetLeagueLeaderboard(league: League) -> list[TopPlayers]:
           points,
           win_percent
         FROM
-          league_leaderboards
+          store_league_leaderboards
         WHERE
           league_id = {league.id}
         LIMIT
           {league.top_cut}
         """
+      
         cur.execute(command)
         rows = cur.fetchall()
         return rows
