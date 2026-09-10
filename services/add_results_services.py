@@ -4,11 +4,13 @@ from custom_errors import KnownError
 from data.add_results_data import InsertStanding, InsertPairing, CheckPairings
 from services.input_services import ConvertInput
 from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
-from tuple_conversions import Standing, Pairing, Event, ReportedAsEnum
+from tuple_conversions import Standing, Pairing, Event
 
 
 def AddStandingResults(
-    event: Event, data: list[Standing], submitterId: int
+    event: Event,
+    data: list[Standing],
+    submitterId: int
 ) -> list[Standing]:
     errors: list[Standing] = []
     for person in data:
@@ -17,7 +19,7 @@ def AddStandingResults(
                 ConvertInput(person.player_name),
                 person.wins,
                 person.losses,
-                person.draws,
+                person.draws
             )
             output = InsertStanding(event.id, person, submitterId)
             if not output:
@@ -25,11 +27,11 @@ def AddStandingResults(
 
     return errors
 
+
 async def AddPairingResults(
-  bot:commands.Bot,
-  event:Event,
-  data:list[Pairing],
-  submitterId:int
+    event: Event,
+    data: list[Pairing],
+    submitterId: int
 ) -> list[Pairing]:
     errors: list[Pairing] = []
     output = ""
@@ -48,23 +50,15 @@ async def AddPairingResults(
         )
 
         unique = CheckPairings(
-          event.id,
-          pairing.round_number,
-          pairing.player1_name,
-          pairing.player2_name
+            event.id, pairing.round_number, pairing.player1_name, pairing.player2_name
         )
-        
-        if unique:      
-          db_result = await InsertPairing(
-            bot,
-            event.id,
-            pairing,
-            submitterId
-          )
-          
-          if not db_result:
-            errors.append(pairing)
+
+        if unique:
+            db_result = await InsertPairing(event.id, pairing, submitterId)
+
+            if not db_result:
+                errors.append(pairing)
         else:
-          errors.append(pairing)
+            errors.append(pairing)
 
     return errors

@@ -201,7 +201,7 @@ def GetHubFullLeagueLeaderboard(league:HubLeague) -> list[TopPlayers]:
     rows = cur.fetchall()
     return rows
 
-def GetHubLeagueLeaderboard(league:League) -> list[TopPlayers]:
+def GetHubLeagueLeaderboard(league:HubLeague) -> list[TopPlayers]:
   conn = psycopg.connect(DATABASE_URL)
   with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
     command = f"""
