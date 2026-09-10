@@ -21,27 +21,11 @@ def GetObjectsFromInteraction(interaction: discord.Interaction) -> InteractionOb
   if not channel_id:
     raise KnownError('No channel found.')
 
-  store = GetStore(discord_id)
-  hub = GetHub(discord_id)
-  
-  if store:
-    region = DetermineRegion(store, 0)
-    game = GetGameForStore(category_id, discord_id)
-    format = GetFormatForStore(game, channel_id, discord_id)
-  elif hub:
-    region = DetermineRegion(hub, channel_id)
-    game = GetGameForHub(category_id, discord_id)
-    format = GetFormatForHub(channel_id, discord_id)
-  else:
-    raise Exception("You lied! There's no store or hub found.")
+  user_id = interaction.user.id
 
-  return InteractionObjects(store, hub, region, game, format)
+  return InteractionObjects(discord_id, category_id, channel_id, user_id)
 
 def DetermineRegion(hub: Hub | Store, channel_id:int) -> Region | None:
-  if hub.region_id:
-    #TODO: This should probably get the region from the database in case I need its name
-    return Region(hub.region_id, '')
-
   region = db.GetRegion(hub.discord_id, channel_id)
   return region
 
