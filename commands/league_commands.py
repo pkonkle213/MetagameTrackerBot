@@ -1,3 +1,4 @@
+from tuple_conversions import HubLeague
 from services.command_error_service import KnownError
 from services.command_error_service import Error
 from discord.ext import commands
@@ -8,10 +9,12 @@ from services.league_services import (
     ViewLeague,
     SelectLeague,
     LeagueMetagame,
-    LeagueLeaderboard,
     FindPlayerStanding,
     LeagueTimeLapse,
+    LeagueLeaderboard,
     FullLeagueLeaderboard,
+    HubLeagueLeaderboard,
+    HubFullLeagueLeaderboard,
 )
 from output_builder import BuildTableOutput
 from checks import IsStore
@@ -23,27 +26,20 @@ class LeaguesCommands(commands.GroupCog, name="league"):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @app_commands.command(
-        name="create",
-        description="Create a new league"
-    )
+    @app_commands.command(name="create", description="Create a new league")
     @app_commands.guild_only()
     @app_commands.checks.has_role("MTSubmitter")
     async def CreateTheLeague(self, interaction: Interaction):
         await CreateLeague(self.bot, interaction)
 
-    @app_commands.command(
-        name="edit",
-        description="Edit a league"
-    )
+    @app_commands.command(name="edit", description="Edit a league")
     @app_commands.guild_only()
     @app_commands.checks.has_role("MTSubmitter")
     async def EditTheLeague(self, interaction: Interaction):
         await EditLeague(self.bot, interaction)
 
     @app_commands.command(
-        name="information",
-        description="Display information about a league"
+        name="information", description="Display information about a league"
     )
     @app_commands.guild_only()
     @IsStore()
@@ -52,38 +48,40 @@ class LeaguesCommands(commands.GroupCog, name="league"):
         await interaction.followup.send(output)
 
     @app_commands.command(
-        name="leaderboard",
-        description="Display the top players in a league"
+        name="leaderboard", description="Display the top players in a league"
     )
     @app_commands.guild_only()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def TopPlayers(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
-        data = LeagueLeaderboard(league)
+        if isinstance(league, HubLeague):
+            data = HubLeagueLeaderboard(league)
+        else:
+            data = LeagueLeaderboard(league)
         title = f"Top Players for {league.name}"
         headers = ["Rank", "Player Name", "Points", "Win %"]
         output = BuildTableOutput(title, headers, data)
         await interaction.followup.send(output)
 
     @app_commands.command(
-        name="full_leaderboard",
-        description="Display all players' ranks in a league"
+        name="full_leaderboard", description="Display all players' ranks in a league"
     )
     @app_commands.guild_only()
-    @IsStore()
     @app_commands.checks.has_role("MTSubmitter")
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def FullLeaderboard(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
-        data = FullLeagueLeaderboard(league)
+        if isinstance(league, HubLeague):
+            data = HubFullLeagueLeaderboard(league)
+        else:
+            data = FullLeagueLeaderboard(league)
         title = f"Top Players for {league.name}"
         headers = ["Rank", "Player Name", "Points", "Win %"]
         output = BuildTableOutput(title, headers, data)
         await interaction.followup.send(output, ephemeral=True)
 
     @app_commands.command(
-        name="leaderboard_race",
-        description="Display the top players in a league"
+        name="leaderboard_race", description="Display the top players in a league"
     )
     @app_commands.guild_only()
     @IsStore()
@@ -94,8 +92,7 @@ class LeaguesCommands(commands.GroupCog, name="league"):
         await interaction.followup.send(file=data)
 
     @app_commands.command(
-        name="metagame",
-        description="Display the metagame of a league"
+        name="metagame", description="Display the metagame of a league"
     )
     @app_commands.guild_only()
     @IsStore()
