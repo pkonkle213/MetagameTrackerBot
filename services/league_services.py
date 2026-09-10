@@ -9,6 +9,7 @@ from tuple_conversions import (
     TopPlayers,
     PlayerStanding,
     LeaderboardRace,
+    HubLeague,
 )
 from interaction_objects import GetObjectsFromInteraction
 from data.league_data import (
@@ -17,7 +18,7 @@ from data.league_data import (
     GetLeagueLeaderboard,
     GetPlayerStanding,
     GetLeaderboardTimeLapse,
-    GetHubLeagues
+    GetHubLeagues,
 )
 from custom_errors import KnownError
 from discord.ext import commands
@@ -27,14 +28,17 @@ import bar_chart_race as bcr
 
 
 async def SelectLeague(
-    bot: commands.Bot,
-    interaction: Interaction,
-    isEdit: bool = False
-) -> League:
+    bot: commands.Bot, interaction: Interaction, isEdit: bool = False
+) -> League | HubLeague:
     """Selects a league from the database"""
     objects = GetObjectsFromInteraction(interaction)
 
-    if (not objects.hub and not objects.store) or not objects.game or not objects.format or not objects.region:
+    if (
+        (not objects.hub and not objects.store)
+        or not objects.game
+        or not objects.format
+        or not objects.region
+    ):
         raise KnownError(
             "No store, game, or format found. Leagues must be created in a format mapped channel"
         )
@@ -49,21 +53,16 @@ async def SelectLeague(
             objects.format,
             objects.region,
             leagues,
-            isEdit=isEdit
+            isEdit=isEdit,
         )
-        
+
     if objects.store:
         discord_id = objects.store.discord_id
         leagues = GetLeagues(discord_id, objects.game.id, objects.format.id)
         modal = LeagueSelector(
-            bot,
-            objects.store,
-            objects.game,
-            objects.format,
-            leagues,
-            isEdit=isEdit
+            bot, objects.store, objects.game, objects.format, leagues, isEdit=isEdit
         )
-        
+
     await interaction.response.send_modal(modal)
     await modal.wait()
 
@@ -139,7 +138,11 @@ async def CreateLeague(bot: commands.Bot, interaction: Interaction):
     """Create a league"""
     objects = GetObjectsFromInteraction(interaction)
 
-    if (not objects.store and not objects.hub) or not objects.game or not objects.format:
+    if (
+        (not objects.store and not objects.hub)
+        or not objects.game
+        or not objects.format
+    ):
         raise KnownError("Insufficient mapping to complete this command")
 
     if objects.store:
@@ -147,4 +150,4 @@ async def CreateLeague(bot: commands.Bot, interaction: Interaction):
         await interaction.response.send_modal(modal)
     if objects.hub and objects.format:
         modal = HubLeagueInputModal(bot, objects.hub, objects.game, objects.format)
-        await interaction.response.send_modal(modal)
+    await interaction.response.send_modal(modal)
