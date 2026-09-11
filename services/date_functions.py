@@ -12,7 +12,7 @@ TIMEZONE = pytz.timezone('America/New_York')
 def BuildDateRange(
   start_date: str,
   end_date: str,
-  format: Format | None,
+  format: Format | None = None,
   weeks: int = 8
 ) -> Tuple[date, date]:
   date_end = GetToday() if end_date == '' else ConvertToDate(end_date)

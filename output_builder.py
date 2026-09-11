@@ -1,3 +1,4 @@
+from tuple_conversions import OutputToBuild
 from typing import Any
 
 def MaxLength(headers: list[str], collection: list[Any]):
@@ -16,8 +17,11 @@ def MaxLength(headers: list[str], collection: list[Any]):
   maxLengths[len(maxLengths) - 1] -= 2
   return maxLengths
 
-def BuildTableOutput(title: str, headers: list[str], items: list[Any]) -> str:
+def BuildTableOutput(table: OutputToBuild) -> str:
   """Builds a table output out of the title, headers, and items provided"""
+  headers = table.headers
+  items = table.data
+  title = table.title
   if headers == []:
     raise Exception("No headers provided")
   column_widths = MaxLength(headers, items)

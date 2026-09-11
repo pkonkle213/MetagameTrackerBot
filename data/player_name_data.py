@@ -37,7 +37,7 @@ def GetUserArchetypes(
         return [row[0] for row in rows]
 
 
-def GetUserName(discord_id: int, user_id: int) -> str:
+def GetUserName(user_id: int) -> str:
     """Gets the user's name from the database"""
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor() as cur:
@@ -46,13 +46,8 @@ def GetUserName(discord_id: int, user_id: int) -> str:
             player_name
         FROM
             player_names pn
-            LEFT JOIN stores_approved_hubs sah ON sah.store_discord_id = pn.discord_id
         WHERE
             submitter_id = {user_id}
-            AND (
-                pn.discord_id = {discord_id}
-                OR sah.hub_discord_id = {discord_id}
-            )
         GROUP BY
             player_name
         ORDER BY
