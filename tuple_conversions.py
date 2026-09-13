@@ -84,6 +84,20 @@ class League(NamedTuple):
     last_updated: date
     created_date: date
     updated_by: int
+    store_ids: list[int]
+
+
+class HubLeague(NamedTuple):
+    id: int
+    discord_id: int
+    game_id: int
+    format_id: int
+    name: str
+    start_date: date
+    end_date:date
+    top_cut: int
+    description:str
+    store_ids: list[int]
 
 
 class ChannelFormatMapping(NamedTuple):
@@ -259,15 +273,3 @@ class PlayerArchetype(NamedTuple):
   player_name: str
   archetype_played: str
 
-
-class HubLeague(NamedTuple):
-    id: int
-    discord_id: int
-    game_id: int
-    format_id: int
-    name: str
-    start_date: date
-    end_date:date
-    top_cut: int
-    description:str
-    store_ids: list[int]
