@@ -9,7 +9,7 @@ from data.games_data import AddGameMap
 from data.store_data import AddStore, UpdateStore, AddDiscord, UpdateHub, UpdateApprovedHubs
 from input_modals.store_profile_update import StoreProfileModal
 from input_modals.hub_profile_update import HubProfileModal
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from services.game_mapper_services import GetGameOptions
 from settings import BOTGUILDID
 from tuple_conversions import Format, Game

@@ -3,7 +3,7 @@ from discord import File, Interaction
 from io import BytesIO
 from services.date_functions import BuildDateRange
 from data.download_data import GetStoreStandingData, GetStorePairingData, GetPlayerPairingData, GetPlayerStandingData
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from services.command_error_service import KnownError
 
 def GetStoreData(interaction: Interaction, start_date:str, end_date:str) -> tuple[str, list[File]]:

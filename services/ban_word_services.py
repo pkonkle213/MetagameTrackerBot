@@ -1,4 +1,4 @@
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from data.ban_word_data import AddWord, GetWord, MatchDisabledArchetypes, DisableMatchingWords, AddBadWordBridge, CheckStoreBannedWords, GetOffenders
 from discord import Interaction
 

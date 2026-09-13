@@ -1,6 +1,6 @@
 from discord import Interaction
 from services.date_functions import BuildDateRange
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from data.store_attendance_data import GetStoreAttendance, GetHubAttendance
 from settings import DATAGUILDID
 from services.command_error_service import KnownError

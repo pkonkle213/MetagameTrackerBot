@@ -1,6 +1,6 @@
 from discord import Interaction
 from services.date_functions import BuildDateRange
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from data.player_data import GetTopPlayerData
 from services.command_error_service import KnownError
 from tuple_conversions import OutputToBuild

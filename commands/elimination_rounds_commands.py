@@ -3,7 +3,7 @@ from discord.ext import commands
 
 from checks import IsStore
 from input_modals.event_selector import EventSelector
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from services.command_error_service import Error, KnownError
 from services.elimination_rounds_services import GetEliminationRoundData
 from settings import BOTGUILDID

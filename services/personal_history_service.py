@@ -1,6 +1,6 @@
 import discord
 from custom_errors import KnownError
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from data.personal_history_data import GetStandingsHistory, GetPairingsHistory
 from output_builder import BuildTableOutput
 from services.date_functions import BuildDateRange

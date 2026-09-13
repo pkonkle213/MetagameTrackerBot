@@ -21,7 +21,7 @@ from data.event_data import (
     GetPlayersInEvent,
 )
 from data.player_name_data import GetUserArchetypes, GetUserName
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from services.command_error_service import Error
 from services.determine_archetype_input import GetArchetypeModal
 from tuple_conversions import DataInputEnum, ViewButtonEnum
@@ -169,22 +169,17 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         description="Submit a player's archetype for an event"
     )
     @app_commands.guild_only()
+    @IsStore()
     async def SubmitArchetypeCommand(self, interaction: Interaction):
-        discord_id = interaction.guild_id
-        channel_id = interaction.channel_id
-        category_id = interaction.channel.category_id
+        objects = GetObjectsFromInteraction(interaction)
+        if not objects.store or not objects.game or not objects.format:
+            raise KnownError('A format must be mapped to this channel')
         userId = interaction.user.id
 
         player_name = GetUserName(userId)
-        player_archetypes = GetUserArchetypes(userId, category_id, channel_id)
-        events = GetRecentEvents()
-
-        if objects.hub:
-            events = GetHubEvents(guild_id, channel_id)
-        elif objects.store:
-            events = GetStoreEvents(objects.store, objects.game, objects.format)
-        else:
-            raise KnownError("No store or hub found.")
+        player_archetypes = GetUserArchetypes(userId, objects.game, objects.format)
+        #events = GetRecentEvents()
+        events = GetStoreEvents(objects.store, objects.game, objects.format)
 
         if len(events) == 0:
             raise KnownError("No events found.")

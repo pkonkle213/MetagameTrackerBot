@@ -1,6 +1,6 @@
 from discord import Interaction, User
 from data.archetype_data import GetUnknownArchetypes
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from services.date_functions import BuildDateRange
 from checks import isSubmitter
 from services.command_error_service import KnownError

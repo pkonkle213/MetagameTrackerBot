@@ -1,6 +1,6 @@
 from discord import Interaction
 from data.personal_matchup_data import GetPersonalMatchups
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from services.date_functions import BuildDateRange
 from services.command_error_service import KnownError
 from tuple_conversions import OutputToBuild

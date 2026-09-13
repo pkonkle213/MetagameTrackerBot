@@ -1,7 +1,7 @@
 from discord import Interaction
 from custom_errors import KnownError
 from data.map_claim_feed_data import AddClaimFeedMap
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 
 def MapClaimFeed(interaction:Interaction) -> str:
   objects = GetObjectsFromInteraction(interaction)

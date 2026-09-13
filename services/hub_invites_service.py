@@ -1,7 +1,7 @@
 from discord import Interaction
 from output_builder import BuildTableOutput
 from data.invites_data import GetAllHubInvites
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from custom_errors import KnownError
 
 def GetAllHubs(interaction:Interaction) -> str:

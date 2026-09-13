@@ -5,11 +5,12 @@ from custom_errors import KnownError
 import settings
 from output_builder import BuildTableOutput
 from data.automated_updates_data import GetDataChannels
-from interaction_objects import GetHub, GetGameForStore, GetFormatForStore
 from services.date_functions import BuildDateRange
 from services.metagame_services import GetWholeMetagame
 
 async def UpdateDataGuild(bot:commands.Bot):
+  raise KnownError('Needs reimplemented')
+  
   target_channels = GetDataChannels(settings.DATAGUILDID)
   store = GetHub(settings.DATAGUILDID)
   for data_channel in target_channels:

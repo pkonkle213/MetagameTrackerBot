@@ -19,6 +19,23 @@ def GetRegions(hub:Hub) -> list[Region]:
     rows = cur.fetchall()
     return rows
 
+def GetHub(discord_id:int) -> Hub:
+  conn = psycopg.connect(DATABASE_URL)
+  with conn, conn.cursor(row_factory=class_row(Hub)) as cur:
+    command = f"""
+    SELECT
+      *
+    FROM hubs_view
+    WHERE discord_id = {discord_id}
+    """
+
+    cur.execute(command)
+    conn.commit()
+    row = cur.fetchone()
+    if not row:
+      raise KnownError('No hub found')
+    return row
+
 def AddRegionMap(hub:Hub,
                  channel_id: int,
                  region:Region) -> tuple[int, int, int]:

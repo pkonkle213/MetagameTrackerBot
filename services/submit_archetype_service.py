@@ -13,13 +13,13 @@ from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from output_builder import BuildTableOutput
 from data.metagame_data import OneEventMetagame
 from discord_messages import MessageChannel
+from data.interaction_data import GetObjectsFromInteraction
 from tuple_conversions import Event, Format, Store, Game, MetagameResult, OutputToBuild
 from discord.ext import commands
 from services.message_hubs_services import MessageHubs
-from interaction_objects import GetStore
 from data.archetype_data import PlayerInEvent
 
-
+#TODO: This really needs fixed and rethought out
 async def SubmitArchetype(
     bot: commands.Bot,
     interaction: Interaction,
@@ -30,6 +30,7 @@ async def SubmitArchetype(
     format: Format,
     moxfield_link: str | None,
 ) -> None:
+    objects = GetObjectsFromInteraction(interaction)
     guild_id = interaction.guild.id
     guild_name = interaction.guild.name
     channel_id = interaction.channel.id
@@ -39,7 +40,7 @@ async def SubmitArchetype(
             f"Player name `{player_name}` not found in event. Please try again."
         )
 
-    store = GetStore(event.discord_id)
+    store = objects.store
     if store is None:
         raise Exception("An event didn't have a store? Sus.")
 

@@ -1,6 +1,6 @@
 from discord import Interaction, TextChannel
 from custom_errors import KnownError
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from data.games_data import AddGameMap, GetAllGames
 from tuple_conversions import Game
 

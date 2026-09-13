@@ -1,7 +1,7 @@
 import discord
 from discord import Interaction
 from custom_errors import KnownError
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from data.formats_data import AddFormatMap, GetFormatsByGameId
 from tuple_conversions import Format
 

@@ -1,6 +1,6 @@
 import discord
 from data.submitted_archetypes_data import GetSubmittedArchetypes
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from services.date_functions import ConvertToDate
 from services.input_services import ConvertInput
 from tuple_conversions import OutputToBuild

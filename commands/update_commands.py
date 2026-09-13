@@ -6,7 +6,7 @@ from services.command_error_service import Error
 from services.store_services import UpdateDetails
 from input_modals.update_archetype_modal import UpdateArchetypeModal
 from input_modals.update_playernames_modal import UpdatePlayerNamesModal
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 
 
 class UpdateCommands(commands.GroupCog, name="update"):

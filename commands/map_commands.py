@@ -3,12 +3,11 @@ from discord.ext import commands
 
 from checks import IsHub, IsStore
 from custom_errors import KnownError
-from data.hubs_data import GetRegions
-from data.interaction_data import GetHub
+from data.hubs_data import GetRegions, GetHub
 from input_modals.map_format_modal import MapFormatModal
 from input_modals.map_game_modal import MapGameModal
 from input_modals.map_region_modal import MapRegionModal
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from services.command_error_service import Error
 from services.map_claim_feed import MapClaimFeed
 

@@ -4,7 +4,7 @@ from services.one_event_decklists import OneEventDecklists
 from checks import IsStore
 from custom_errors import KnownError
 from input_modals.event_selector import EventSelector
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from services.submit_archetype_service import OneEventDetails, OneEventMeta

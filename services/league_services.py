@@ -11,7 +11,7 @@ from tuple_conversions import (
     LeaderboardRace,
     HubLeague,
 )
-from interaction_objects import GetObjectsFromInteraction
+from data.interaction_data import GetObjectsFromInteraction
 from data.league_data import (
     GetLeagues,
     GetHubLeagueLeaderboard,
