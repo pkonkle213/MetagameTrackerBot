@@ -1,3 +1,4 @@
+from services.one_event_details import OneEventDetails
 from checks import isSubmitter
 import settings
 from custom_errors import KnownError
@@ -19,7 +20,8 @@ from discord.ext import commands
 from services.message_hubs_services import MessageHubs
 from data.archetype_data import PlayerInEvent
 
-#TODO: This really needs fixed and rethought out
+
+# TODO: This really needs fixed and rethought out
 async def SubmitArchetype(
     bot: commands.Bot,
     interaction: Interaction,
@@ -170,12 +172,3 @@ def OneEventMeta(event: Event) -> tuple[str, list[str], list[MetagameResult]]:
     title = f"{event.event_name}'s Metagame"
     headers = ["Archetype", "Metagame %", "Win %"]
     return title, headers, data
-
-
-def OneEventDetails(
-    event: Event,
-) -> OutputToBuild:
-    data = GetEventDetails(event.id)
-    title = f"{event.event_name} Results ({len(data)} attended)"
-    headers = ["Archetype", "Wins", "Losses", "Draws"]
-    return OutputToBuild(title, headers, data)

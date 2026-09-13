@@ -4,21 +4,23 @@ import psycopg
 from psycopg.rows import class_row
 
 
-class Message(NamedTuple):
+class StaleEvents(NamedTuple):
   discord_id: int
   event_id: int
+  is_complete: bool
   game_id: int
   format_id: int
   channel_id: int
   has_unknown: bool
 
-def ThreeDayOldEvents() -> list[Message]:
+def ThreeDayOldEvents() -> list[StaleEvents]:
   conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Message)) as cur:
+  with conn, conn.cursor(row_factory=class_row(StaleEvents)) as cur:
     command = """
     SELECT
       e.discord_id,
       e.id as event_id,
+      e.is_complete,
       gm.game_id AS game_id,
       fm.format_id AS format_id,
       fm.channel_id,

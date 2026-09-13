@@ -8,11 +8,12 @@ def CompleteEvent(event_id: int) -> bool:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor() as cur:
         command = f"""
-    UPDATE events
-    SET is_complete = TRUE
-    WHERE id = {event_id}
-    RETURNING id
-    """
+        UPDATE events
+        SET is_complete = TRUE
+        WHERE id = {event_id}
+        RETURNING id
+        """
+        
         cur.execute(command)  # type: ignore[arg-type]
         conn.commit()
         row = cur.fetchone()
@@ -23,26 +24,26 @@ def GetEvent(event_id: int) -> Event:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(Event)) as cur:
         command = f"""
-    SELECT
-      id,
-      custom_event_id,
-      discord_id,
-      event_date,
-      game_id,
-      format_id,
-      last_update,
-      event_type_id,
-      event_name,
-      reported_as,
-      league_id,
-      created_by,
-      created_at,
-      is_complete
-    FROM
-      events_view
-    WHERE
-      id = {event_id}
-    """
+        SELECT
+            id,
+            custom_event_id,
+            discord_id,
+            event_date,
+            game_id,
+            format_id,
+            last_update,
+            event_type_id,
+            event_name,
+            reported_as,
+            league_id,
+            created_by,
+            created_at,
+            is_complete
+        FROM
+            events_view
+        WHERE
+            id = {event_id}
+        """
 
         cur.execute(command)  # type: ignore[arg-type]
         row = cur.fetchone()
@@ -55,34 +56,34 @@ def CreateEvent(event: Event, user_id: int) -> int:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=scalar_row) as cur:
         command = f"""
-    INSERT INTO Events
-    (event_date
-    , discord_id
-    , game_id
-    , format_id
-    , last_update
-    , event_name
-    , event_type_id
-    , created_at
-    , created_by
-    , league_id
-    , custom_event_id
-    )
-    VALUES
-    ('{event.event_date}'
-    , {event.discord_id}
-    , {event.game_id}
-    , {event.format_id}
-    , 0
-    , '{event.event_name}'
-    , {event.event_type_id if int(event.event_type_id) > 0 else 3}
-    , CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York'
-    , {user_id}
-    {f", {-int(event.event_type_id)}" if int(event.event_type_id) < 0 else ", NULL"}
-    , {event.custom_event_id if event.custom_event_id else "NULL"}
-    )
-    RETURNING id
-    """
+        INSERT INTO Events
+        (event_date
+        , discord_id
+        , game_id
+        , format_id
+        , last_update
+        , event_name
+        , event_type_id
+        , created_at
+        , created_by
+        , league_id
+        , custom_event_id
+        )
+        VALUES
+        ('{event.event_date}'
+        , {event.discord_id}
+        , {event.game_id}
+        , {event.format_id}
+        , 0
+        , '{event.event_name}'
+        , {event.event_type_id if int(event.event_type_id) > 0 else 3}
+        , CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York'
+        , {user_id}
+        {f", {-int(event.event_type_id)}" if int(event.event_type_id) < 0 else ", NULL"}
+        , {event.custom_event_id if event.custom_event_id else "NULL"}
+        )
+        RETURNING id
+        """
 
         cur.execute(command)  # type: ignore[arg-type]
         conn.commit()
@@ -97,18 +98,18 @@ def GetPlayersInEvent(event_id: int) -> list[PlayerArchetype]:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(PlayerArchetype)) as cur:
         command = f"""
-    SELECT
-      INITCAP(fs.player_name) as player_name,
-      INITCAP(ua.archetype_played) as archetype_played
-    FROM
-      full_standings fs
-      LEFT JOIN unique_archetypes ua ON ua.event_id = fs.event_id
-      AND upper(ua.player_name) = upper(fs.player_name)
-    WHERE
-      fs.event_id = {event_id}
-    ORDER BY
-      INITCAP(fs.player_name)
-    """
+        SELECT
+            INITCAP(fs.player_name) as player_name,
+            INITCAP(ua.archetype_played) as archetype_played
+        FROM
+            full_standings fs
+            LEFT JOIN unique_archetypes ua ON ua.event_id = fs.event_id
+            AND upper(ua.player_name) = upper(fs.player_name)
+        WHERE
+            fs.event_id = {event_id}
+        ORDER BY
+            INITCAP(fs.player_name)
+        """
 
         cur.execute(command)  # type: ignore[arg-type]
         rows = cur.fetchall()
@@ -120,23 +121,23 @@ def GetEventDetails(event_id: int) -> list[tuple[str, int, int, int]]:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor() as cur:
         command = f"""
-    SELECT
-      INITCAP(COALESCE(archetype_played, 'UNKNOWN')) AS archetype_played,
-      wins,
-      losses,
-      draws
-    FROM
-      full_standings fp
-      LEFT JOIN unique_archetypes ua ON ua.event_id = fp.event_id
-      AND UPPER(ua.player_name) = UPPER(fp.player_name)
-    WHERE
-      fp.event_id = {event_id}
-    ORDER BY
-      2 DESC,
-      4 DESC,
-      3 DESC,
-      1
-    """
+        SELECT
+            INITCAP(COALESCE(archetype_played, 'UNKNOWN')) AS archetype_played,
+            wins,
+            losses,
+            draws
+        FROM
+            full_standings fp
+            LEFT JOIN unique_archetypes ua ON ua.event_id = fp.event_id
+            AND UPPER(ua.player_name) = UPPER(fp.player_name)
+        WHERE
+            fp.event_id = {event_id}
+        ORDER BY
+            2 DESC,
+            4 DESC,
+            3 DESC,
+            1
+        """
 
         cur.execute(command)  # type: ignore[arg-type]
         rows = cur.fetchall()
@@ -147,9 +148,9 @@ def DeleteStandingsFromEvent(event_id: int) -> bool:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor() as cur:
         command = f"""
-    DELETE FROM standings
-    WHERE event_id = {event_id}
-    """
+        DELETE FROM standings
+        WHERE event_id = {event_id}
+        """
 
         cur.execute(command)  # type: ignore[arg-type]
         conn.commit()
@@ -164,35 +165,35 @@ def GetStoreEvents(
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(Event)) as cur:
         command = f"""
-    SELECT
-      e.id,
-      e.custom_event_id,
-      e.discord_id,
-      e.event_date,
-      e.game_id,
-      e.format_id,
-      e.last_update,
-      e.event_name,
-      e.event_type_id,
-      e.reported_as,
-      e.created_by,
-      e.created_at,
-      e.league_id,
-      e.is_complete
-    FROM
-      events_view e
-      INNER JOIN stores s ON s.discord_id = e.discord_id
-      INNER JOIN games g ON g.id = e.game_id
-      INNER JOIN formats f ON f.id = e.format_id
-    WHERE
-      s.discord_id = {store.discord_id}
-      AND e.game_id = {game.id}
-      AND e.format_id = {format.id}
-      AND e.event_date >= CURRENT_DATE - INTERVAL '4 weeks'
-    ORDER BY
-      e.event_date DESC
-    LIMIT 25
-    """
+        SELECT
+            e.id,
+            e.custom_event_id,
+            e.discord_id,
+            e.event_date,
+            e.game_id,
+            e.format_id,
+            e.last_update,
+            e.event_name,
+            e.event_type_id,
+            e.reported_as,
+            e.created_by,
+            e.created_at,
+            e.league_id,
+            e.is_complete
+        FROM
+            events_view e
+            INNER JOIN stores s ON s.discord_id = e.discord_id
+            INNER JOIN games g ON g.id = e.game_id
+            INNER JOIN formats f ON f.id = e.format_id
+        WHERE
+            s.discord_id = {store.discord_id}
+            AND e.game_id = {game.id}
+            AND e.format_id = {format.id}
+            AND e.event_date >= CURRENT_DATE - INTERVAL '4 weeks'
+        ORDER BY
+            e.event_date DESC
+        LIMIT 25
+        """
 
         cur.execute(command)  # type: ignore[arg-type]
         rows = cur.fetchall()
@@ -204,64 +205,64 @@ def GetHubEvents(discord_id: int, channel_id: int) -> list[Event]:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(Event)) as cur:
         command = f"""
-    (
-      SELECT
-        e.id,
-        e.discord_id,
-        e.event_date,
-        e.game_id,
-        e.format_id,
-        e.last_update,
-        e.event_type_id,
-        s.store_name || ' - ' || e.event_name AS event_name,
-        e.custom_event_id,
-        e.created_at,
-        e.created_by,
-        e.league_id,
-        e.reported_as,
-        e.is_complete
-      FROM
-        events_view e
-        INNER JOIN stores_view s ON s.discord_id = e.discord_id
-        INNER JOIN region_channel_maps rcm ON rcm.region_id = s.region_id
-        INNER JOIN hubs_view h ON h.discord_id = rcm.discord_id
-      WHERE
-        h.discord_id = {discord_id}
-        AND rcm.channel_id = {channel_id}
-      ORDER BY
-        e.event_date DESC
-    )
-    UNION ALL
-    (
-      SELECT
-        e.id,
-        e.discord_id,
-        e.event_date,
-        e.game_id,
-        e.format_id,
-        e.last_update,
-        e.event_type_id,
-        s.store_name || ' - ' || e.event_name AS event_name,
-        e.custom_event_id,
-        e.created_at,
-        e.created_by,
-        e.league_id,
-        e.reported_as,
-        e.is_complete
-      FROM
-        events_view e
-        INNER JOIN stores_view s ON s.discord_id = e.discord_id
-        INNER JOIN format_channel_maps fcm ON fcm.format_id = e.format_id
-        INNER JOIN hubs_view h ON h.discord_id = fcm.discord_id
-      WHERE
-        h.discord_id = {discord_id}
-        AND fcm.channel_id = {channel_id}
-      ORDER BY
-        e.event_date DESC
-    )
-    LIMIT
-      25
-    """
+        (
+            SELECT
+                e.id,
+                e.discord_id,
+                e.event_date,
+                e.game_id,
+                e.format_id,
+                e.last_update,
+                e.event_type_id,
+                s.store_name || ' - ' || e.event_name AS event_name,
+                e.custom_event_id,
+                e.created_at,
+                e.created_by,
+                e.league_id,
+                e.reported_as,
+                e.is_complete
+            FROM
+                events_view e
+                INNER JOIN stores_view s ON s.discord_id = e.discord_id
+                INNER JOIN region_channel_maps rcm ON rcm.region_id = s.region_id
+                INNER JOIN hubs_view h ON h.discord_id = rcm.discord_id
+            WHERE
+                h.discord_id = {discord_id}
+                AND rcm.channel_id = {channel_id}
+            ORDER BY
+                e.event_date DESC
+        )
+        UNION ALL
+        (
+            SELECT
+                e.id,
+                e.discord_id,
+                e.event_date,
+                e.game_id,
+                e.format_id,
+                e.last_update,
+                e.event_type_id,
+                s.store_name || ' - ' || e.event_name AS event_name,
+                e.custom_event_id,
+                e.created_at,
+                e.created_by,
+                e.league_id,
+                e.reported_as,
+                e.is_complete
+            FROM
+                events_view e
+                INNER JOIN stores_view s ON s.discord_id = e.discord_id
+                INNER JOIN format_channel_maps fcm ON fcm.format_id = e.format_id
+                INNER JOIN hubs_view h ON h.discord_id = fcm.discord_id
+            WHERE
+                h.discord_id = {discord_id}
+                AND fcm.channel_id = {channel_id}
+            ORDER BY
+                e.event_date DESC
+        )
+        LIMIT
+            25
+        """
 
         cur.execute(command)  # type: ignore[arg-type]
         rows = cur.fetchall()

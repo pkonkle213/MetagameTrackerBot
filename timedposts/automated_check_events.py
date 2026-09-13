@@ -1,5 +1,7 @@
+from data.event_data import GetEvent
+from services.one_event_details import OneEventDetails
 from discord.ext import commands
-
+from data.event_data import GetEventDetails
 from tuple_conversions import Game, Format, Store
 from data.interaction_data import GetObjectsFromInteraction
 from data.archetype_data import GetUnknownArchetypes
@@ -14,35 +16,41 @@ import settings
 
 async def EventCheck(bot:commands.Bot) -> None:
   #Find events exactly 3 days old
-  channels = ThreeDayOldEvents()
+  events = ThreeDayOldEvents()
   #Loop through channels, see what archetypes are missing, and send the appropriate message to the appropriate channel
-  for channel in channels:
+  for event in events:
     try:
-      #Complete Event
-      CompleteEvent(channel.event_id)
+      #Mark event as complete
+      CompleteEvent(event.event_id)
+      #TODO: If the event wasn't complete and doesn't have unknown archetypes, it should display the one_event output
 
       #Get all unknown archetypes
       end_date = GetToday()
       start_date = GetDaysAgo(end_date, 3)
       
       #Setting up dummy variables as all I need are the IDs
-      store = Store(channel.discord_id, "", "", -1, "", "", False, -1, False)
-      game = Game(channel.game_id, "")
-      format = Format(channel.format_id, "", None, False)
+      store = Store(event.discord_id, "", "", -1, "", "", False, -1, False)
+      game = Game(event.game_id, "")
+      format = Format(event.format_id, "", None, False)
       
-      archetypes = GetUnknownArchetypes(store,
-                                        game,
-                                        format,
-                                        start_date,
-                                        end_date)
-      if not archetypes or len(archetypes) == 0:
-        print(f'No unknown archetypes found for {channel.discord_id}, {channel.game_id}, {channel.format_id}') #raise KnownError('No unknown archetypes found')
-  
-      output = BuildTableOutput('We need your help with these archetypes!', ['Date', 'Event Name', 'Player Name'], archetypes)
-      output = output[:1940] + "\nTo submit an archetype, use the command `/submit archetype`"
-      
-      #Message each channel with the unknown archetypes
-      await MessageChannel(bot, output, channel.discord_id, channel.channel_id)
+      needed_archetypes = GetUnknownArchetypes(
+        store,
+        game,        
+        format,
+        start_date,
+        end_date
+      )
+      if len(needed_archetypes) > 0:  
+        output = BuildTableOutput('We need your help with these archetypes!', ['Date', 'Event Name', 'Player Name'], needed_archetypes)
+        output = output[:1940] + "\nTo submit an archetype, use the command `/submit archetype`"
+        #Message each channel with the unknown archetypes
+        await MessageChannel(bot, output, event.discord_id, event.channel_id)
+      elif not event.is_complete:
+        real_event = GetEvent(event.event_id)
+        table = OneEventDetails(real_event) 
+        output = BuildTableOutput(table.title, table.headers, table.data)
+        # Message the newly completed event's details
+        await MessageChannel(bot, output, event.discord_id, event.channel_id)
     except Exception as ex:
-      await MessageUser(bot, f'Error getting events with unknown archetypes: {ex}\nChannel:{channels}', settings.PHILID)
+      await MessageUser(bot, f'Error getting events with unknown archetypes: {ex}\nChannel:{events}', settings.PHILID)
   
