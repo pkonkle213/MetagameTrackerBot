@@ -117,7 +117,7 @@ def GetFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
           points,
           win_percent
         FROM
-          store_league_leaderboards
+          league_leaderboards
         WHERE
           league_id = {league.id}
         """
@@ -289,7 +289,7 @@ def GetLeagueLeaderboard(league: League) -> list[TopPlayers]:
           points,
           win_percent
         FROM
-          store_league_leaderboards
+          league_leaderboards
         WHERE
           league_id = {league.id}
         LIMIT
