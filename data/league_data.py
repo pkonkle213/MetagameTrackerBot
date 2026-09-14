@@ -251,7 +251,7 @@ def GetHubLeagueLeaderboard(league:HubLeague) -> list[TopPlayers]:
         SELECT
           player_name,
           sum(week_points) AS total_points,
-          1.0 * sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percent
+          100.0 * sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percent
         FROM
           top_ten
         WHERE
@@ -268,7 +268,7 @@ def GetHubLeagueLeaderboard(league:HubLeague) -> list[TopPlayers]:
       ) AS rank,
       player_name,
       total_points as points,
-      win_percent
+      ROUND(win_percent, 2) as win_percent
     FROM
       grouped
     LIMIT
