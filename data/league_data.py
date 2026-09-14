@@ -318,7 +318,7 @@ def GetHubLeagues(
       end_date,
       top_cut,
       description,
-      store_discord_id AS store_ids
+      ARRAY_AGG(store_discord_id) AS store_ids
     FROM
       leagues l
       LEFT JOIN hub_league_stores hls ON l.id = hls.league_id
@@ -326,6 +326,8 @@ def GetHubLeagues(
       discord_id = {discord_id}
       AND game_id = {game_id}
       AND format_id = {format_id}
+    GROUP BY
+      l.id
     """
 
     cur.execute(command)
