@@ -54,7 +54,7 @@ def OneEventMetagame(event: Event) -> list[MetagameResult]:
       ROUND(win_percent * 100, 2) AS win_percent
     FROM (
       SELECT
-        COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,
+        COALESCE(REGEXP_REPLACE(INITCAP(ua.archetype_played), '''S', '''s', 'g'), 'Unknown') AS archetype_played,
         1.0 * sum(fp.wins) / (sum(fp.wins) + sum(fp.losses) + sum(fp.draws)) AS win_percent,
         COUNT(*) * 1.0 / SUM(count(*)) OVER () AS Metagame_Percent
       FROM
