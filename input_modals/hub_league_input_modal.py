@@ -4,7 +4,7 @@ import discord
 from datetime import date
 from discord_messages import MessageChannel
 from discord.ext import commands
-from tuple_conversions import HubLeague, Store, Game, Format, Hub, Region
+from tuple_conversions import League, Store, Game, Format, Hub, Region
 from services.league_input_modal_services import CreateLeagueInput, UpdateLeagueInput
 from data.hub_leagues_data import GetAllowedStores, UpdateAssociatedStores
 
@@ -15,7 +15,7 @@ class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
     hub:Hub,
     game:Game,
     format:Format,
-    league:HubLeague | None = None
+    league:League | None = None
   ):
     super().__init__()
     self.bot = bot

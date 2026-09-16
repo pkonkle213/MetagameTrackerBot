@@ -2,14 +2,12 @@ from input_modals.hub_league_input_modal import HubLeagueInputModal
 import pandas as pd
 from data.metagame_data import GetLeagueMetagame
 from input_modals.league_selector import LeagueSelector
-from input_modals.hub_league_selector import HubLeagueSelector
 from tuple_conversions import (
     League,
     MetagameResult,
     TopPlayers,
     PlayerStanding,
     LeaderboardRace,
-    HubLeague,
 )
 from data.interaction_data import GetObjectsFromInteraction
 from data.league_data import (
@@ -20,7 +18,6 @@ from data.league_data import (
     GetFullLeagueLeaderboard,
     GetPlayerStanding,
     GetLeaderboardTimeLapse,
-    GetHubLeagues,
 )
 from custom_errors import KnownError
 from discord.ext import commands
@@ -31,7 +28,7 @@ import bar_chart_race as bcr
 
 async def SelectLeague(
     bot: commands.Bot, interaction: Interaction, isEdit: bool = False
-) -> League | HubLeague:
+) -> League:
     """Selects a league from the database"""
     objects = GetObjectsFromInteraction(interaction)
 
@@ -86,17 +83,17 @@ def FullLeagueLeaderboard(league: League) -> list[TopPlayers]:
     return GetFullLeagueLeaderboard(league)
 
 
-def HubLeagueLeaderboard(league: HubLeague) -> list[TopPlayers]:
+def HubLeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
     return GetHubLeagueLeaderboard(league)
 
 
-def HubFullLeagueLeaderboard(league: HubLeague) -> list[TopPlayers]:
+def HubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
     return GetHubFullLeagueLeaderboard(league)
 
 
-def LeagueTimeLapse(league: League) -> File:  # TODO: Should return a file, probably?
+def LeagueTimeLapse(league: League) -> File:
     """Gets data for a racing leaderboard of a league"""
     rows = GetLeaderboardTimeLapse(league)
 

@@ -3,7 +3,7 @@ import psycopg
 from settings import DATABASE_URL
 from datetime import date
 from psycopg.rows import class_row
-from tuple_conversions import League, TopPlayers, PlayerStanding, LeaderboardRace, HubLeague
+from tuple_conversions import League, TopPlayers, PlayerStanding, LeaderboardRace
 
 
 def GetActiveLeagues(discord_id: int, game_id: int, format_id: int) -> list[League]:
@@ -125,10 +125,11 @@ def GetFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
         rows = cur.fetchall()
         return rows
 
-def GetHubFullLeagueLeaderboard(league:HubLeague) -> list[TopPlayers]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
-    command = f"""
+
+def GetHubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
+        command = f"""
     WITH
       weekly_scores AS (
         SELECT
@@ -197,14 +198,15 @@ def GetHubFullLeagueLeaderboard(league:HubLeague) -> list[TopPlayers]:
       grouped
     """
 
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
+        cur.execute(command)
+        rows = cur.fetchall()
+        return rows
 
-def GetHubLeagueLeaderboard(league:HubLeague) -> list[TopPlayers]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
-    command = f"""
+
+def GetHubLeagueLeaderboard(league: League) -> list[TopPlayers]:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
+        command = f"""
     WITH
       weekly_scores AS (
         SELECT
@@ -275,9 +277,10 @@ def GetHubLeagueLeaderboard(league:HubLeague) -> list[TopPlayers]:
       8
     """
 
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
+        cur.execute(command)
+        rows = cur.fetchall()
+        return rows
+
 
 def GetLeagueLeaderboard(league: League) -> list[TopPlayers]:
     conn = psycopg.connect(DATABASE_URL)
@@ -295,66 +298,40 @@ def GetLeagueLeaderboard(league: League) -> list[TopPlayers]:
         LIMIT
           {league.top_cut}
         """
-      
+
         cur.execute(command)
         rows = cur.fetchall()
         return rows
 
-def GetHubLeagues(
-  discord_id: int,
-  game_id: int,
-  format_id:int
-) -> list[HubLeague]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(HubLeague)) as cur:
-    command = f"""
-    SELECT
-      id,
-      discord_id,
-      game_id,
-      format_id,
-      name,
-      start_date,
-      end_date,
-      top_cut,
-      description,
-      ARRAY_AGG(store_discord_id) AS store_ids
-    FROM
-      leagues l
-      LEFT JOIN hub_league_stores hls ON l.id = hls.league_id
-    WHERE
-      discord_id = {discord_id}
-      AND game_id = {game_id}
-      AND format_id = {format_id}
-    GROUP BY
-      l.id
-    """
-
-    cur.execute(command)
-    rows = cur.fetchall()
-    if not rows or len(rows) == 0:
-      raise KnownError('No leagues found')
-    return rows
-    
 
 def GetLeagues(discord_id: int, game_id: int, format_id: int) -> list[League]:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(League)) as cur:
         command = f"""
         SELECT
-          *
+          id,
+          discord_id,
+          game_id,
+          format_id,
+          name,
+          start_date,
+          end_date,
+          top_cut,
+          description,
+          store_ids
         FROM
-          leagues
+          leagues_view l
         WHERE
-          discord_id = %s
-          AND game_id = %s
-          AND format_id = %s
-        ORDER BY end_date DESC, start_date DESC
+          discord_id = {discord_id}
+          AND game_id = {game_id}
+          AND format_id = {format_id}
+        ORDER BY
+          end_date DESC, start_date DESC
         """
         cur.execute(command, [discord_id, game_id, format_id])
         rows = cur.fetchall()
         if not rows or len(rows) == 0:
-          raise KnownError('No leagues found')
+            raise KnownError("No leagues found")
         return rows
 
 
