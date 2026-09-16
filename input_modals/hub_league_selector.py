@@ -36,7 +36,6 @@ class ConfirmView(discord.ui.View):
       self.hub,
       self.game,
       self.format,
-      self.region,
       league=self.league
     )
     await interaction.response.send_modal(modal)    
