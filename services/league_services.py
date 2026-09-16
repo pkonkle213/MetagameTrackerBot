@@ -44,23 +44,18 @@ async def SelectLeague(
 
     if objects.hub:
         discord_id = objects.hub.discord_id
-        leagues = GetHubLeagues(discord_id, objects.game.id, objects.format.id)
-        modal = HubLeagueSelector(
-            bot,
-            objects.hub,
-            objects.game,
-            objects.format,
-            objects.region,
-            leagues,
-            isEdit=isEdit,
-        )
-
+        
     if objects.store:
         discord_id = objects.store.discord_id
-        leagues = GetLeagues(discord_id, objects.game.id, objects.format.id)
-        modal = LeagueSelector(
-            bot, objects.store, objects.game, objects.format, leagues, isEdit=isEdit
-        )
+    leagues = GetLeagues(discord_id, objects.game.id, objects.format.id)
+    modal = LeagueSelector(
+        bot,
+        objects.store,
+        objects.hub,
+        objects.game,
+        objects.format,
+        leagues, isEdit=isEdit
+    )
 
     await interaction.response.send_modal(modal)
     await modal.wait()

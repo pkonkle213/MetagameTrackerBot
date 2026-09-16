@@ -21,6 +21,7 @@ class ConfirmView(discord.ui.View):
         self.league = league
         self.bot = bot
         self.store = store
+        self.hub = hub
         self.game = game
         self.format = format
 
@@ -49,6 +50,7 @@ class LeagueSelector(discord.ui.Modal, title="Select League"):
         self.isEdit = isEdit
         self.bot = bot
         self.store = store
+        self.hub = hub
         self.leagues = leagues
         self.game = game
         self.format = format
@@ -61,7 +63,7 @@ class LeagueSelector(discord.ui.Modal, title="Select League"):
             discord.SelectOption(label=league.name, value=str(league.id))
             for league in self.leagues
         ]
-        
+
         self.selected_league = discord.ui.Label(
             text="Select a League",
             component=discord.ui.Select(
@@ -83,7 +85,7 @@ class LeagueSelector(discord.ui.Modal, title="Select League"):
             await interaction.response.send_message(
                 content=f"You selected {self.league.name}. Please fill out the form to edit the league.",
                 view=ConfirmView(
-                    self.bot, self.store, self.game, self.format, self.league
+                    self.bot, self.store, self.hub, self.game, self.format, self.league
                 ),
                 ephemeral=True,
             )

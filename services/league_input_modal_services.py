@@ -67,7 +67,8 @@ def UpdateLeagueInput(
     date_start, date_end, top_cut_num = ValidateLeagueInput(
         start_date, end_date, top_cut
     )
-    league = UpdateLeague(
+    updated_league_id = UpdateLeague(
         league_id, league_name, description, date_start, date_end, top_cut_num, user_id
     )
+    league = GetLeague(updated_league_id)
     return league
