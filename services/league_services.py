@@ -1,6 +1,6 @@
 from input_modals.hub_league_input_modal import HubLeagueInputModal
 import pandas as pd
-from data.metagame_data import GetLeagueMetagame
+from data.metagame_data import GetHubLeagueMetagame, GetStoreLeagueMetagame
 from input_modals.league_selector import LeagueSelector
 from tuple_conversions import (
     League,
@@ -120,7 +120,12 @@ def LeagueTimeLapse(league: League) -> File:
 
 def LeagueMetagame(league: League) -> list[MetagameResult]:
     """Displays the metagame of a league"""
-    return GetLeagueMetagame(league)
+    data: list[MetagameResult] = []
+    if len(league.store_ids) > 0:
+        data = GetHubLeagueMetagame(league)
+    else:
+        data = GetStoreLeagueMetagame(league)
+    return data
 
 
 async def ViewLeague(bot: commands.Bot, interaction: Interaction) -> str:

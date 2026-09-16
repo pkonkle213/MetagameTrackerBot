@@ -101,7 +101,6 @@ class LeagueCommands(commands.GroupCog, name="league"):
         name="metagame", description="Display the metagame of a league"
     )
     @app_commands.guild_only()
-    @IsStore()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def LeagueMeta(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
