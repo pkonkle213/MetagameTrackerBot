@@ -58,10 +58,13 @@ class LeagueCommands(commands.GroupCog, name="league"):
             data = HubLeagueLeaderboard(league)
         else:
             data = LeagueLeaderboard(league)
-        title = f"Top Players for {league.name}"
-        headers = ["Rank", "Player Name", "Points", "Win %"]
-        output = BuildTableOutput(title, headers, data)
-        await interaction.followup.send(output)
+        if len(data) > 0:
+            title = f"Top Players for {league.name}"
+            headers = ["Rank", "Player Name", "Points", "Win %"]
+            output = BuildTableOutput(title, headers, data)
+            await interaction.followup.send(output)
+        else:
+            await interaction.followup.send("No players found")
 
     @app_commands.command(
         name="full_leaderboard", description="Display all players' ranks in a league"
@@ -75,10 +78,13 @@ class LeagueCommands(commands.GroupCog, name="league"):
             data = HubFullLeagueLeaderboard(league)
         else:
             data = FullLeagueLeaderboard(league)
-        title = f"Top Players for {league.name}"
-        headers = ["Rank", "Player Name", "Points", "Win %"]
-        output = BuildTableOutput(title, headers, data)
-        await interaction.followup.send(output, ephemeral=True)
+        if len(data) > 0:
+            title = f"Top Players for {league.name}"
+            headers = ["Rank", "Player Name", "Points", "Win %"]
+            output = BuildTableOutput(title, headers, data)
+            await interaction.followup.send(output, ephemeral=True)
+        else:
+            await interaction.followup.send("No players found")
 
     @app_commands.command(
         name="leaderboard_race", description="Display the top players in a league"

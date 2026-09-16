@@ -44,7 +44,7 @@ async def SelectLeague(
 
     if objects.hub:
         discord_id = objects.hub.discord_id
-        
+
     if objects.store:
         discord_id = objects.store.discord_id
     leagues = GetLeagues(discord_id, objects.game.id, objects.format.id)
@@ -54,7 +54,8 @@ async def SelectLeague(
         objects.hub,
         objects.game,
         objects.format,
-        leagues, isEdit=isEdit
+        leagues,
+        isEdit=isEdit,
     )
 
     await interaction.response.send_modal(modal)
