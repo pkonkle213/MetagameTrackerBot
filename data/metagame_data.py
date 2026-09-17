@@ -7,7 +7,7 @@ from tuple_conversions import Event, Format, Game, Store, League, MetagameResult
 
 
 def GetHubLeagueMetagame(league: League) -> list[MetagameResult]:
-    metagame = """
+    metagame = f"""
     SELECT
         INITCAP(COALESCE(ua.archetype_played, 'Unknown')) AS archetype_played,
         sum(fs.wins) / (sum(fs.wins) + sum(fs.losses) + sum(fs.draws)) AS win_percent,
@@ -18,7 +18,7 @@ def GetHubLeagueMetagame(league: League) -> list[MetagameResult]:
         INNER JOIN hub_league_stores hls ON e.discord_id = hls.store_discord_id
         LEFT JOIN unique_archetypes ua ON fs.event_id = ua.event_id AND UPPER(fs.player_name) = upper(ua.player_name)
     WHERE
-        hls.league_id = 28
+        hls.league_id = {league.id}
     GROUP BY
         archetype_played
     """
@@ -26,7 +26,7 @@ def GetHubLeagueMetagame(league: League) -> list[MetagameResult]:
     return data
 
 def GetStoreLeagueMetagame(league: League) -> list[MetagameResult]:
-    metagame = """
+    metagame = f"""
     SELECT
         COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,
         sum(fp.wins) / (sum(fp.wins) + sum(fp.losses) + sum(fp.draws)) AS win_percent,
