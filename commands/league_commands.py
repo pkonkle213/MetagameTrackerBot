@@ -63,7 +63,7 @@ class LeagueCommands(commands.GroupCog, name="league"):
             output = BuildTableOutput(title, headers, data)
             await interaction.followup.send(output)
         else:
-            await interaction.followup.send("No players found")
+            await interaction.followup.send("No players found", ephemeral=True)
 
     @app_commands.command(
         name="full_leaderboard", description="Display all players' ranks in a league"
@@ -83,7 +83,7 @@ class LeagueCommands(commands.GroupCog, name="league"):
             output = BuildTableOutput(title, headers, data)
             await interaction.followup.send(output, ephemeral=True)
         else:
-            await interaction.followup.send("No players found")
+            await interaction.followup.send("No players found", ephemeral=True)
 
     @app_commands.command(
         name="leaderboard_race", description="Display the top players in a league"
