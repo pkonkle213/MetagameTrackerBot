@@ -1,4 +1,4 @@
-from tuple_conversions import HubLeague, League
+from tuple_conversions import League
 from services.command_error_service import KnownError, Error
 
 from discord.ext import commands
@@ -42,7 +42,6 @@ class LeagueCommands(commands.GroupCog, name="league"):
         name="information", description="Display information about a league"
     )
     @app_commands.guild_only()
-    @IsStore()
     async def ViewTheLeague(self, interaction: Interaction):
         output = await ViewLeague(self.bot, interaction)
         await interaction.followup.send(output)
@@ -54,14 +53,17 @@ class LeagueCommands(commands.GroupCog, name="league"):
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def TopPlayers(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
-        if isinstance(league, HubLeague):
+        if league.store_ids[0]:
             data = HubLeagueLeaderboard(league)
-        elif isinstance(league, League):
+        else:
             data = LeagueLeaderboard(league)
-        title = f"Top Players for {league.name}"
-        headers = ["Rank", "Player Name", "Points", "Win %"]
-        output = BuildTableOutput(title, headers, data)
-        await interaction.followup.send(output)
+        if len(data) > 0:
+            title = f"Top Players for {league.name}"
+            headers = ["Rank", "Player Name", "Points", "Win %"]
+            output = BuildTableOutput(title, headers, data)
+            await interaction.followup.send(output)
+        else:
+            await interaction.followup.send("No players found")
 
     @app_commands.command(
         name="full_leaderboard", description="Display all players' ranks in a league"
@@ -71,14 +73,17 @@ class LeagueCommands(commands.GroupCog, name="league"):
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def FullLeaderboard(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
-        if isinstance(league, HubLeague):
+        if league.store_ids[0]:
             data = HubFullLeagueLeaderboard(league)
         else:
             data = FullLeagueLeaderboard(league)
-        title = f"Top Players for {league.name}"
-        headers = ["Rank", "Player Name", "Points", "Win %"]
-        output = BuildTableOutput(title, headers, data)
-        await interaction.followup.send(output, ephemeral=True)
+        if len(data) > 0:
+            title = f"Top Players for {league.name}"
+            headers = ["Rank", "Player Name", "Points", "Win %"]
+            output = BuildTableOutput(title, headers, data)
+            await interaction.followup.send(output, ephemeral=True)
+        else:
+            await interaction.followup.send("No players found")
 
     @app_commands.command(
         name="leaderboard_race", description="Display the top players in a league"
@@ -95,7 +100,6 @@ class LeagueCommands(commands.GroupCog, name="league"):
         name="metagame", description="Display the metagame of a league"
     )
     @app_commands.guild_only()
-    @IsStore()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def LeagueMeta(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
@@ -109,7 +113,6 @@ class LeagueCommands(commands.GroupCog, name="league"):
         name="my_status",
         description="Shows how you compare to the top players in a league",
     )
-    @IsStore()
     @app_commands.guild_only()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def MyStatus(self, interaction: Interaction):

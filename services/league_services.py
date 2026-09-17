@@ -1,26 +1,22 @@
 from input_modals.hub_league_input_modal import HubLeagueInputModal
 import pandas as pd
-from data.metagame_data import GetLeagueMetagame
+from data.metagame_data import GetHubLeagueMetagame, GetStoreLeagueMetagame
 from input_modals.league_selector import LeagueSelector
-from input_modals.hub_league_selector import HubLeagueSelector
 from tuple_conversions import (
     League,
     MetagameResult,
     TopPlayers,
     PlayerStanding,
     LeaderboardRace,
-    HubLeague,
 )
 from data.interaction_data import GetObjectsFromInteraction
 from data.league_data import (
     GetLeagues,
-    GetHubLeagueLeaderboard,
     GetHubFullLeagueLeaderboard,
-    GetLeagueLeaderboard,
     GetFullLeagueLeaderboard,
-    GetPlayerStanding,
+    GetStorePlayerStanding,
+    GetHubPlayerStanding,
     GetLeaderboardTimeLapse,
-    GetHubLeagues,
 )
 from custom_errors import KnownError
 from discord.ext import commands
@@ -31,7 +27,7 @@ import bar_chart_race as bcr
 
 async def SelectLeague(
     bot: commands.Bot, interaction: Interaction, isEdit: bool = False
-) -> League | HubLeague:
+) -> League:
     """Selects a league from the database"""
     objects = GetObjectsFromInteraction(interaction)
 
@@ -47,23 +43,19 @@ async def SelectLeague(
 
     if objects.hub:
         discord_id = objects.hub.discord_id
-        leagues = GetHubLeagues(discord_id, objects.game.id, objects.format.id)
-        modal = HubLeagueSelector(
-            bot,
-            objects.hub,
-            objects.game,
-            objects.format,
-            objects.region,
-            leagues,
-            isEdit=isEdit,
-        )
 
     if objects.store:
         discord_id = objects.store.discord_id
-        leagues = GetLeagues(discord_id, objects.game.id, objects.format.id)
-        modal = LeagueSelector(
-            bot, objects.store, objects.game, objects.format, leagues, isEdit=isEdit
-        )
+    leagues = GetLeagues(discord_id, objects.game.id, objects.format.id)
+    modal = LeagueSelector(
+        bot,
+        objects.store,
+        objects.hub,
+        objects.game,
+        objects.format,
+        leagues,
+        isEdit=isEdit,
+    )
 
     await interaction.response.send_modal(modal)
     await modal.wait()
@@ -73,12 +65,16 @@ async def SelectLeague(
 
 def FindPlayerStanding(league: League, user_id: int, discord_id: int) -> PlayerStanding:
     """Displays the player's standing in a league"""
-    return GetPlayerStanding(league, user_id, discord_id)
+    if league.store_ids[0]:
+        return GetHubPlayerStanding(league, user_id)
+    else:
+        return GetStorePlayerStanding(league, user_id)
 
 
 def LeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
-    return GetLeagueLeaderboard(league)
+    top_players = GetFullLeagueLeaderboard(league)
+    return top_players[:league.top_cut]
 
 
 def FullLeagueLeaderboard(league: League) -> list[TopPlayers]:
@@ -86,17 +82,18 @@ def FullLeagueLeaderboard(league: League) -> list[TopPlayers]:
     return GetFullLeagueLeaderboard(league)
 
 
-def HubLeagueLeaderboard(league: HubLeague) -> list[TopPlayers]:
+def HubLeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
-    return GetHubLeagueLeaderboard(league)
+    top_players = GetHubFullLeagueLeaderboard(league)
+    return top_players[:league.top_cut]
 
 
-def HubFullLeagueLeaderboard(league: HubLeague) -> list[TopPlayers]:
+def HubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
     return GetHubFullLeagueLeaderboard(league)
 
 
-def LeagueTimeLapse(league: League) -> File:  # TODO: Should return a file, probably?
+def LeagueTimeLapse(league: League) -> File:
     """Gets data for a racing leaderboard of a league"""
     rows = GetLeaderboardTimeLapse(league)
 
@@ -127,7 +124,12 @@ def LeagueTimeLapse(league: League) -> File:  # TODO: Should return a file, prob
 
 def LeagueMetagame(league: League) -> list[MetagameResult]:
     """Displays the metagame of a league"""
-    return GetLeagueMetagame(league)
+    data: list[MetagameResult] = []
+    if league.store_ids[0]:
+        data = GetHubLeagueMetagame(league)
+    else:
+        data = GetStoreLeagueMetagame(league)
+    return data
 
 
 async def ViewLeague(bot: commands.Bot, interaction: Interaction) -> str:
@@ -159,7 +161,7 @@ async def CreateLeague(bot: commands.Bot, interaction: Interaction):
 
     if objects.store:
         modal = LeagueInputModal(bot, objects.store, objects.game, objects.format)
-        await interaction.response.send_modal(modal)
     if objects.hub and objects.format:
         modal = HubLeagueInputModal(bot, objects.hub, objects.game, objects.format)
     await interaction.response.send_modal(modal)
+    await modal.wait()

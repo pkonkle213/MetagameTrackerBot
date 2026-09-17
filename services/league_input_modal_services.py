@@ -1,80 +1,74 @@
 from tuple_conversions import League
 from services.date_functions import ConvertToDate
 from services.command_error_service import KnownError
-from data.league_data import UpdateLeague, InsertLeague
+from data.league_data import UpdateLeague, InsertLeague, GetLeague
 from tuple_conversions import Store, Game, Format
 from datetime import date
 
+
 def ValidateLeagueInput(
-  start_date:str,
-  end_date:str,
-  top_cut:str
+    start_date: str, end_date: str, top_cut: str
 ) -> tuple[date, date, int]:
-  try:
-    date_start = ConvertToDate(start_date.strip())
-    date_end = ConvertToDate(end_date.strip())
-    top_cut_num = int(top_cut)
-  except Exception as e:
-    raise KnownError('Error creating league. Please ensure all fields are filled out with the correct formatting.')
+    try:
+        date_start = ConvertToDate(start_date.strip())
+        date_end = ConvertToDate(end_date.strip())
+        top_cut_num = int(top_cut)
+    except Exception as e:
+        raise KnownError(
+            "Error creating league. Please ensure all fields are filled out with the correct formatting."
+        )
 
-  if date_start > date_end:
-    raise KnownError('Start date must be before end date')
+    if date_start > date_end:
+        raise KnownError("Start date must be before end date")
 
-  return date_start, date_end, top_cut_num
+    return date_start, date_end, top_cut_num
+
 
 def CreateLeagueInput(
-  discord_id:int,
-  game:Game,
-  format:Format,
-  league_name:str,
-  start_date:str,
-  end_date:str,
-  top_cut:str,
-  description:str,
-  user_id:int
+    discord_id: int,
+    game: Game,
+    format: Format,
+    league_name: str,
+    start_date: str,
+    end_date: str,
+    top_cut: str,
+    description: str,
+    user_id: int,
 ) -> League:
-  date_start, date_end, top_cut_num = ValidateLeagueInput(
-    start_date,
-    end_date,
-    top_cut
-  )
-  league = InsertLeague(
-    league_name,
-    description,
-    date_start,
-    date_end,
-    top_cut_num,
-    discord_id,
-    game.id,
-    format.id,
-    user_id
-  )
-  
-  return league
+    date_start, date_end, top_cut_num = ValidateLeagueInput(
+        start_date, end_date, top_cut
+    )
+    league_id = InsertLeague(
+        league_name,
+        description,
+        date_start,
+        date_end,
+        top_cut_num,
+        discord_id,
+        game.id,
+        format.id,
+        user_id,
+    )
+    league = GetLeague(league_id)
+
+    return league
+
 
 def UpdateLeagueInput(
-  league_id:int,
-  league_name:str,
-  start_date:str,
-  end_date:str,
-  top_cut:str,
-  description:str,
-  user_id:int
+    league_id: int,
+    league_name: str,
+    start_date: str,
+    end_date: str,
+    top_cut: str,
+    description: str,
+    user_id: int,
 ) -> League:
-  """Validates input and updates a league"""
-  date_start, date_end, top_cut_num = ValidateLeagueInput(
-    start_date,
-    end_date,
-    top_cut
-  )
-  league = UpdateLeague(
-    league_id,
-    league_name,
-    description,
-    date_start,
-    date_end,
-    top_cut_num,
-    user_id
-  )
-  return league
-  
+    """Validates input and updates a league"""
+    date_start, date_end, top_cut_num = ValidateLeagueInput(
+        start_date, end_date, top_cut
+    )
+    updated_league_id = UpdateLeague(
+        league_id, league_name, description, date_start, date_end, top_cut_num, user_id
+    )
+    league = GetLeague(updated_league_id)
+    return league

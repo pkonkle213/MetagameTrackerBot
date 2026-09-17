@@ -2,8 +2,24 @@ from custom_errors import KnownError
 import psycopg
 from settings import DATABASE_URL
 from datetime import date
-from psycopg.rows import class_row
-from tuple_conversions import League, TopPlayers, PlayerStanding, LeaderboardRace, HubLeague
+from psycopg.rows import class_row, scalar_row
+from tuple_conversions import League, TopPlayers, PlayerStanding, LeaderboardRace
+
+
+def GetLeague(league_id: int) -> League:
+    conn = psycopg.connect(DATABASE_URL)
+    with conn, conn.cursor(row_factory=class_row(League)) as cur:
+        command = f"""
+            SELECT *
+            FROM leagues_view
+            WHERE id = %s
+            """
+
+        cur.execute(command, [league_id])
+        row = cur.fetchone()
+        if not row:
+            raise KnownError("No league found with that id")
+        return row
 
 
 def GetActiveLeagues(discord_id: int, game_id: int, format_id: int) -> list[League]:
@@ -25,25 +41,68 @@ def GetActiveLeagues(discord_id: int, game_id: int, format_id: int) -> list[Leag
         return rows
 
 
-def GetPlayerStanding(league: League, user_id: int, discord_id: int) -> PlayerStanding:
+def GetHubPlayerStanding(league: League, user_id: int) -> PlayerStanding:
+    results = f"""
+    SELECT
+      INITCAP(fs.player_name) AS player_name,
+      e.discord_id,
+      wins,
+      losses,
+      draws
+    FROM
+      full_standings fs
+      INNER JOIN events e ON fs.event_id = e.id
+      INNER JOIN hub_league_stores hls ON e.discord_id = hls.store_discord_id
+      INNER JOIN leagues l ON l.id = hls.league_id
+      AND e.event_date >= l.start_date
+      AND e.event_date <= l.end_date
+    WHERE
+      hls.league_id = {league.id}
+    """
+
+    standing = GetPlayerStanding(results, user_id)
+    return standing
+
+
+def GetStorePlayerStanding(league: League, user_id: int) -> PlayerStanding:
+    results = f"""
+    SELECT
+      INITCAP(fs.player_name) AS player_name,
+      e.discord_id,
+      wins,
+      losses,
+      draws
+    FROM
+      full_standings fs
+      INNER JOIN events e ON fs.event_id = e.id
+    WHERE
+      e.league_id = {league.id}
+    """
+
+    standing = GetPlayerStanding(results, user_id)
+    return standing
+
+
+def GetPlayerStanding(results: str, user_id: int) -> PlayerStanding:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(PlayerStanding)) as cur:
         command = f"""
         WITH
-          X AS (
-            SELECT
-              INITCAP(player_name) AS player_name,
-              wins,
-              losses,
-              draws
-            FROM
-              full_standings fs
-              INNER JOIN events e ON fs.event_id = e.id
-              INNER JOIN stores_view s ON e.discord_id = s.discord_id
-            WHERE
-              e.league_id = {league.id}
+          league_results AS (
+            {results}
           ),
-          Y AS (
+          name_translate AS (
+              SELECT
+                COALESCE(pn.submitter_id::text, lr.player_name) AS player_name,
+                wins,
+                losses,
+                draws
+              FROM
+                league_results lr
+                LEFT JOIN player_names pn ON pn.discord_id = lr.discord_id
+                AND UPPER(pn.player_name) = UPPER(lr.player_name)
+          ),
+          grouped AS (
             SELECT
               player_name,
               (3 * SUM(wins) + SUM(draws)) AS points,
@@ -52,31 +111,29 @@ def GetPlayerStanding(league: League, user_id: int, discord_id: int) -> PlayerSt
                 2
               ) AS win_percent
             FROM
-              X
+              name_translate
             GROUP BY
               player_name
             ORDER BY
-              2 DESC,
-              3 DESC,
-              1
+              points DESC,
+              win_percent DESC,
+              player_name
           ),
-          Z AS (
+          ranked AS (
             SELECT
               *,
               ROW_NUMBER() OVER () AS rank
             FROM
-              Y
+              grouped
           )
         SELECT
           points,
           win_percent,
           rank
         FROM
-          Z
-          LEFT JOIN player_names pn ON UPPER(Z.player_name) = UPPER(pn.player_name)
+          ranked r
         WHERE
-          pn.submitter_id = {user_id}
-          AND pn.discord_id = {discord_id}
+          r.player_name = {user_id}::text          
         """
 
         cur.execute(command)
@@ -92,17 +149,19 @@ def GetLeaderboardTimeLapse(league: League) -> list[LeaderboardRace]:
     with conn, conn.cursor(row_factory=class_row(LeaderboardRace)) as cur:
         command = f"""
         SELECT
-          e.event_date,
-          INITCAP(fs.player_name) as player_name,
-          3 * wins + draws AS points
+            e.event_date,
+            INITCAP(fs.player_name) as player_name,
+            3 * wins + draws AS points
         FROM
-          full_standings fs
-          INNER JOIN events e ON fs.event_id = e.id
-        WHERE e.league_id = {league.id}
-        ORDER BY e.event_date
+            full_standings fs
+            INNER JOIN events e ON fs.event_id = e.id
+        WHERE
+            e.league_id = %s
+        ORDER BY
+            e.event_date
         """
 
-        cur.execute(command)
+        cur.execute(command, [league.id])
         rows = cur.fetchall()
         return rows
 
@@ -112,249 +171,153 @@ def GetFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
     with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
         command = f"""
         SELECT
-          rank,
-          player_name,
-          points,
-          win_percent
+            rank,
+            player_name,
+            points,
+            win_percent
         FROM
-          league_leaderboards
+            league_leaderboards
         WHERE
-          league_id = {league.id}
+            league_id = %s
         """
-        cur.execute(command)
+        cur.execute(command, [league.id])
         rows = cur.fetchall()
         return rows
 
-def GetHubFullLeagueLeaderboard(league:HubLeague) -> list[TopPlayers]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
-    command = f"""
-    WITH
-      weekly_scores AS (
-        SELECT
-          date_trunc('week', event_date) AS week_start,
-          INITCAP(player_name) AS player_name,
-          LEAST(9, sum(3 * wins + draws)) AS week_points,
-          sum(wins) AS wins,
-          sum(losses) AS losses,
-          sum(draws) AS draws
-        FROM
-          leagues l
-          INNER JOIN hub_league_stores hls ON hls.league_id = l.id
-          INNER JOIN events e ON e.discord_id = hls.store_discord_id
-          AND e.event_date >= l.start_date
-          AND e.event_date <= l.end_date
-          AND e.format_id = l.format_id
-          INNER JOIN full_standings fs ON fs.event_id = e.id
-        WHERE
-          l.id = {league.id}
-        GROUP BY
-          date_trunc('week', event_date),
-          initcap(player_name)
-        ORDER BY
-          week_start,
-          player_name
-      ),
-      top_ten AS (
-        SELECT
-          player_name,
-          week_points,
-          wins,
-          losses,
-          draws,
-          ROW_NUMBER() OVER (
-            PARTITION BY
-              player_name
-            ORDER BY
-              week_points DESC
-          ) AS rank
-        FROM
-          weekly_scores
-      ),
-      grouped AS (
-        SELECT
-          player_name,
-          sum(week_points) AS total_points,
-          100.0 * sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percent
-        FROM
-          top_ten
-        WHERE
-          rank <= 12
-        GROUP BY
-          player_name
-      )
-    SELECT
-      ROW_NUMBER() OVER (
-        ORDER BY
-          total_points DESC,
-          win_percent DESC,
-          player_name
-      ) AS rank,
-      player_name,
-      total_points as points,
-      ROUND(win_percent, 2) as win_percent
-    FROM
-      grouped
-    """
 
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
-
-def GetHubLeagueLeaderboard(league:HubLeague) -> list[TopPlayers]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
-    command = f"""
-    WITH
-      weekly_scores AS (
-        SELECT
-          date_trunc('week', event_date) AS week_start,
-          INITCAP(player_name) AS player_name,
-          LEAST(9, sum(3 * wins + draws)) AS week_points,
-          sum(wins) AS wins,
-          sum(losses) AS losses,
-          sum(draws) AS draws
-        FROM
-          leagues l
-          INNER JOIN hub_league_stores hls ON hls.league_id = l.id
-          INNER JOIN events e ON e.discord_id = hls.store_discord_id
-          AND e.event_date >= l.start_date
-          AND e.event_date <= l.end_date
-          AND e.format_id = l.format_id
-          INNER JOIN full_standings fs ON fs.event_id = e.id
-        WHERE
-          l.id = {league.id}
-        GROUP BY
-          date_trunc('week', event_date),
-          initcap(player_name)
-        ORDER BY
-          week_start,
-          player_name
-      ),
-      top_ten AS (
-        SELECT
-          player_name,
-          week_points,
-          wins,
-          losses,
-          draws,
-          ROW_NUMBER() OVER (
-            PARTITION BY
-              player_name
-            ORDER BY
-              week_points DESC
-          ) AS rank
-        FROM
-          weekly_scores
-      ),
-      grouped AS (
-        SELECT
-          player_name,
-          sum(week_points) AS total_points,
-          100.0 * sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percent
-        FROM
-          top_ten
-        WHERE
-          rank <= 12
-        GROUP BY
-          player_name
-      )
-    SELECT
-      ROW_NUMBER() OVER (
-        ORDER BY
-          total_points DESC,
-          win_percent DESC,
-          player_name
-      ) AS rank,
-      player_name,
-      total_points as points,
-      ROUND(win_percent, 2) as win_percent
-    FROM
-      grouped
-    LIMIT
-      8
-    """
-
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
-
-def GetLeagueLeaderboard(league: League) -> list[TopPlayers]:
+def GetHubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
         command = f"""
+        WITH
+          weekly_scores AS (
+            SELECT
+              date_trunc('week', event_date) AS week_start,
+              INITCAP(player_name) AS player_name,
+              e.discord_id,
+              LEAST(9, sum(3 * wins + draws)) AS week_points,
+              sum(wins) AS wins,
+              sum(losses) AS losses,
+              sum(draws) AS draws
+            FROM
+              leagues l
+              INNER JOIN hub_league_stores hls ON hls.league_id = l.id
+              INNER JOIN events e ON e.discord_id = hls.store_discord_id
+              AND e.event_date >= l.start_date
+              AND e.event_date <= l.end_date
+              AND e.format_id = l.format_id
+              INNER JOIN full_standings fs ON fs.event_id = e.id
+            WHERE
+              l.id = %s
+            GROUP BY
+              date_trunc('week', event_date),
+              initcap(player_name),
+              e.discord_id
+            ORDER BY
+              week_start,
+              player_name
+          ),
+          name_translate AS (
+            SELECT
+              week_start,
+              COALESCE(pn.submitter_id::text, ws.player_name) AS player_name,
+              week_points,
+              wins,
+              losses,
+              draws
+            FROM
+              weekly_scores ws
+              LEFT JOIN player_names pn ON pn.discord_id = ws.discord_id
+              AND UPPER(pn.player_name) = UPPER(ws.player_name)
+          ),
+          top_ten AS (
+            SELECT
+              player_name,
+              week_points,
+              wins,
+              losses,
+              draws,
+              ROW_NUMBER() OVER (
+                PARTITION BY
+                  player_name
+                ORDER BY
+                  week_points DESC
+              ) AS rank
+            FROM
+              name_translate
+          ),
+          known_names AS (
+            SELECT DISTINCT
+              submitter_id,
+              player_name
+            FROM
+              player_names
+          ),
+          grouped AS (
+            SELECT
+              COALESCE(kn.player_name, tt.player_name) AS player_name,
+              sum(week_points) AS total_points,
+              100.0 * sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percent
+            FROM
+              top_ten tt
+              LEFT JOIN known_names kn ON tt.player_name = kn.submitter_id::text
+            WHERE
+              rank <= 12
+            GROUP BY
+              1
+          )
         SELECT
-          rank,
+          ROW_NUMBER() OVER (
+            ORDER BY
+              total_points DESC,
+              win_percent DESC,
+              player_name
+          ) AS rank,
           player_name,
-          points,
-          win_percent
+          total_points AS points,
+          ROUND(win_percent, 2) AS win_percent
         FROM
-          league_leaderboards
-        WHERE
-          league_id = {league.id}
-        LIMIT
-          {league.top_cut}
+          grouped
         """
-      
-        cur.execute(command)
+
+        cur.execute(command, [league.id])
         rows = cur.fetchall()
         return rows
 
-def GetHubLeagues(
-  discord_id: int,
-  game_id: int,
-  format_id:int
-) -> list[HubLeague]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(HubLeague)) as cur:
-    command = f"""
-    SELECT
-      id,
-      discord_id,
-      game_id,
-      format_id,
-      name,
-      start_date,
-      end_date,
-      top_cut,
-      description,
-      ARRAY_AGG(store_discord_id) AS store_ids
-    FROM
-      leagues l
-      LEFT JOIN hub_league_stores hls ON l.id = hls.league_id
-    WHERE
-      discord_id = {discord_id}
-      AND game_id = {game_id}
-      AND format_id = {format_id}
-    GROUP BY
-      l.id
-    """
-
-    cur.execute(command)
-    rows = cur.fetchall()
-    if not rows or len(rows) == 0:
-      raise KnownError('No leagues found')
-    return rows
-    
 
 def GetLeagues(discord_id: int, game_id: int, format_id: int) -> list[League]:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(League)) as cur:
         command = f"""
         SELECT
-          *
+            id,
+            discord_id,
+            game_id,
+            format_id,
+            name,
+            start_date,
+            end_date,
+            top_cut,
+            description,
+            created_by,
+            last_updated,
+            created_date,
+            updated_by,
+            store_ids
         FROM
-          leagues
+            leagues_view l
         WHERE
-          discord_id = %s
-          AND game_id = %s
-          AND format_id = %s
-        ORDER BY end_date DESC, start_date DESC
+            discord_id = %s
+            AND game_id = %s
+            AND format_id = %s
+        ORDER BY
+            end_date DESC, start_date DESC
         """
+
         cur.execute(command, [discord_id, game_id, format_id])
         rows = cur.fetchall()
         if not rows or len(rows) == 0:
-          raise KnownError('No leagues found')
+            raise KnownError("No leagues found")
         return rows
 
 
@@ -366,21 +329,21 @@ def UpdateLeague(
     end_date: date,
     top_cut: int,
     user_id: int,
-) -> League:
+) -> int:
     conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(League)) as cur:
+    with conn, conn.cursor(row_factory=scalar_row) as cur:
         command = f"""
         UPDATE leagues
         SET
-          name = %s,
-          description = %s,
-          start_date = %s,
-          end_date = %s,
-          top_cut = %s,
-          last_updated = NOW(),
-          updated_by = %s
+            name = %s,
+            description = %s,
+            start_date = %s,
+            end_date = %s,
+            top_cut = %s,
+            last_updated = NOW(),
+            updated_by = %s
         WHERE id = %s
-        RETURNING *
+        RETURNING id
         """
 
         criteria = [
@@ -409,35 +372,35 @@ def InsertLeague(
     game_id: int,
     format_id: int,
     user_id: int,
-) -> League:
+) -> int:
     conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(League)) as cur:
+    with conn, conn.cursor() as cur:
         command = f"""
         INSERT INTO leagues (
-          name,
-          description,
-          start_date,
-          end_date,
-          top_cut,
-          discord_id,
-          game_id,
-          format_id,
-          created_by,
-          created_date
+            name,
+            description,
+            start_date,
+            end_date,
+            top_cut,
+            discord_id,
+            game_id,
+            format_id,
+            created_by,
+            created_date
         )
         VALUES (
-          %s,
-          %s,
-          %s,
-          %s,
-          %s,
-          %s,
-          %s,
-          %s,
-          %s,
-          NOW()
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            %s,
+            NOW()
         )
-        RETURNING *
+        RETURNING id
         """
 
         criteria = [
@@ -452,7 +415,8 @@ def InsertLeague(
             user_id,
         ]
         cur.execute(command, criteria)
-        row = cur.fetchone()
-        if not row:
+        league_id = cur.fetchone()
+        if not league_id:
             raise KnownError("Unable to create league")
-        return row
+
+        return league_id[0]

@@ -1,13 +1,14 @@
 import discord
 from discord_messages import MessageChannel
 from discord.ext import commands
-from tuple_conversions import League, Store, Game, Format
+from tuple_conversions import League, Store, Game, Format, Hub
 from services.league_input_modal_services import CreateLeagueInput, UpdateLeagueInput
 
 class LeagueInputModal(discord.ui.Modal, title="League Input"):
   def __init__(self,
                bot:commands.Bot,
-               store:Store,
+               store:Store | None,
+               hub:Hub | None,
                game:Game,
                format:Format,
                league:League | None = None):
@@ -15,6 +16,7 @@ class LeagueInputModal(discord.ui.Modal, title="League Input"):
     self.bot = bot
     self.league = league
     self.store = store
+    self.hub = hub
     self.game = game
     self.format = format
 

@@ -87,19 +87,6 @@ class League(NamedTuple):
     store_ids: list[int]
 
 
-class HubLeague(NamedTuple):
-    id: int
-    discord_id: int
-    game_id: int
-    format_id: int
-    name: str
-    start_date: date
-    end_date:date
-    top_cut: int
-    description:str
-    store_ids: list[int]
-
-
 class ChannelFormatMapping(NamedTuple):
     discord_id: int
     channel_id: int
@@ -270,6 +257,5 @@ class Deck(NamedTuple):
 
 
 class PlayerArchetype(NamedTuple):
-  player_name: str
-  archetype_played: str
-
+    player_name: str
+    archetype_played: str
