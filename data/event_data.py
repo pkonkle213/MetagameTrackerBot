@@ -122,7 +122,7 @@ def GetEventDetails(event_id: int) -> list[tuple[str, int, int, int]]:
     with conn, conn.cursor() as cur:
         command = f"""
         SELECT
-            INITCAP(COALESCE(archetype_played, 'UNKNOWN')) AS archetype_played,
+            COALESCE(REGEXP_REPLACE(INITCAP(archetype_played), '''S', '''s', 'g'), 'Unknown') AS archetype_played,
             wins,
             losses,
             draws
