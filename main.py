@@ -34,8 +34,7 @@ StartHealthCheckServer()
 
 import pytz
 import asyncpg
-import discord
-from discord import Guild
+from discord import Guild, Interaction, app_commands, Intents, NotFound, Forbidden
 from discord.ext import commands, tasks
 from settings import PHILID, DISCORDTOKEN
 import timedposts.automated_paid_users as apu
@@ -45,7 +44,7 @@ from services.store_services import NewStoreRegistration
 from services.sync_service import SyncCommands
 from discord_messages import MessageUser
 
-intents = discord.Intents.all()
+intents = Intents.all()
 intents.message_content = True
 intents.members = True
 intents.guilds = True
@@ -82,6 +81,45 @@ async def on_guild_join(guild: Guild):
         output += "- Stores check has failed"
     await MessageUser(bot, f"New guild joined: {guild.name}\n{output}", PHILID)
 
+@bot.event
+async def on_app_command_completion(interaction: Interaction, command: app_commands.Command):
+    """Logs successfully executed slash commands using the interaction object."""
+    # 2. Extract user and command details
+    username = str(interaction.user)  
+    command_name = command.name
+
+    # 3. Extract parameter values from the interaction's namespace
+    # interaction.namespace holds the arguments passed by the user
+    if interaction.namespace:
+        # Converts the namespace arguments into a readable string
+        params = ", ".join(f"{name}: {value}" for name, value in interaction.namespace)
+    else:
+        params = "None"
+
+    # 4. Format the log message
+    log_message = (
+        f"```Slash Command Executed\n"
+        f"User: {username} (ID: {interaction.user.id})\n"
+        f"Command: /{command_name}\n"
+        f"Arguments: {params}\n"
+        f"Channel: {interaction.channel.mention if interaction.channel else 'DM'}```"
+    )
+
+    # 1. Fetch the target channel
+    channel = bot.get_channel(settings.BOTLOGCHANNEL)
+    if channel is None:
+        try:
+            channel = await bot.fetch_channel(settings.BOTLOGCHANNEL)
+        except (NotFound, Forbidden):
+            print(f"Log channel not found or bot lacks permissions.\n{log_message}")
+            return
+
+
+    # 5. Send the log
+    try:
+        await channel.send(log_message)
+    except Forbidden:
+        print(f"Bot doesn't have permission to send messages in the log channel.\n{log_message}")
 
 @tasks.loop(time=datetime.time(hour=18, minute=00, tzinfo=TIME_ZONE))
 async def find_the_unknown():
