@@ -81,12 +81,29 @@ async def on_guild_join(guild: Guild):
         output += "- Stores check has failed"
     await MessageUser(bot, f"New guild joined: {guild.name}\n{output}", PHILID)
 
+
 @bot.event
-async def on_app_command_completion(interaction: Interaction, command: app_commands.Command):
+async def on_app_command_completion(
+    interaction: Interaction, command: app_commands.Command
+):
     """Logs successfully executed slash commands using the interaction object."""
     # 2. Extract user and command details
-    username = str(interaction.user)  
+    username = str(interaction.user)
     command_name = command.name
+    group_names = []
+
+    current_parent = command.parent
+    while current_parent is not None:
+        group_names.insert(0, current_parent.name)
+        current_parent = current_parent.parent
+
+    # Combine groups if they exist (e.g., "mod user" or "economy")
+    full_group_name = " ".join(group_names) if group_names else "None"
+
+    # Construct the full visual command string (e.g., "/mod user ban")
+    full_command_path = f"/{' '.join(group_names)} {command_name}".replace(
+        "  ", " "
+    ).strip()
 
     # 3. Extract parameter values from the interaction's namespace
     # interaction.namespace holds the arguments passed by the user
@@ -100,10 +117,12 @@ async def on_app_command_completion(interaction: Interaction, command: app_comma
     log_message = (
         f"```Slash Command Executed\n"
         f"User: {username} (ID: {interaction.user.id})\n"
-        f"Command: /{command_name}\n"
+        f"Command Group: {full_group_name}\n"
+        f"Command Name: {command_name}\n"
+        f"Full Invocation: {full_command_path}\n"
         f"Arguments: {params}\n"
         f"Guild: {interaction.guild.name}\n"
-        f"Channel: {interaction.channel.mention if interaction.channel else 'DM'}```"
+        f"Channel: {interaction.channel.id if interaction.channel else 'DM'}```"
     )
 
     # 1. Fetch the target channel
@@ -115,12 +134,14 @@ async def on_app_command_completion(interaction: Interaction, command: app_comma
             print(f"Log channel not found or bot lacks permissions.\n{log_message}")
             return
 
-
     # 5. Send the log
     try:
         await channel.send(log_message)
     except Forbidden:
-        print(f"Bot doesn't have permission to send messages in the log channel.\n{log_message}")
+        print(
+            f"Bot doesn't have permission to send messages in the log channel.\n{log_message}"
+        )
+
 
 @tasks.loop(time=datetime.time(hour=18, minute=00, tzinfo=TIME_ZONE))
 async def find_the_unknown():
