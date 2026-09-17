@@ -102,7 +102,7 @@ async def on_app_command_completion(interaction: Interaction, command: app_comma
         f"User: {username} (ID: {interaction.user.id})\n"
         f"Command: /{command_name}\n"
         f"Arguments: {params}\n"
-        f"Guild: {str(interaction.guild)}"
+        f"Guild: {interaction.guild.name}\n"
         f"Channel: {interaction.channel.mention if interaction.channel else 'DM'}```"
     )
 
