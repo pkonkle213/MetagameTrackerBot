@@ -12,11 +12,10 @@ from tuple_conversions import (
 from data.interaction_data import GetObjectsFromInteraction
 from data.league_data import (
     GetLeagues,
-    GetHubLeagueLeaderboard,
     GetHubFullLeagueLeaderboard,
-    GetLeagueLeaderboard,
     GetFullLeagueLeaderboard,
-    GetPlayerStanding,
+    GetStorePlayerStanding,
+    GetHubPlayerStanding,
     GetLeaderboardTimeLapse,
 )
 from custom_errors import KnownError
@@ -66,12 +65,16 @@ async def SelectLeague(
 
 def FindPlayerStanding(league: League, user_id: int, discord_id: int) -> PlayerStanding:
     """Displays the player's standing in a league"""
-    return GetPlayerStanding(league, user_id, discord_id)
+    if league.store_ids[0]:
+        return GetHubPlayerStanding(league, user_id)
+    else:
+        return GetStorePlayerStanding(league, user_id)
 
 
 def LeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
-    return GetLeagueLeaderboard(league)
+    top_players = GetFullLeagueLeaderboard(league)
+    return top_players[:league.top_cut]
 
 
 def FullLeagueLeaderboard(league: League) -> list[TopPlayers]:
@@ -81,7 +84,8 @@ def FullLeagueLeaderboard(league: League) -> list[TopPlayers]:
 
 def HubLeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
-    return GetHubLeagueLeaderboard(league)
+    top_players = GetHubFullLeagueLeaderboard(league)
+    return top_players[:league.top_cut]
 
 
 def HubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
@@ -121,7 +125,7 @@ def LeagueTimeLapse(league: League) -> File:
 def LeagueMetagame(league: League) -> list[MetagameResult]:
     """Displays the metagame of a league"""
     data: list[MetagameResult] = []
-    if len(league.store_ids) > 0:
+    if league.store_ids[0]:
         data = GetHubLeagueMetagame(league)
     else:
         data = GetStoreLeagueMetagame(league)

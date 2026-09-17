@@ -42,7 +42,6 @@ class LeagueCommands(commands.GroupCog, name="league"):
         name="information", description="Display information about a league"
     )
     @app_commands.guild_only()
-    @IsStore()
     async def ViewTheLeague(self, interaction: Interaction):
         output = await ViewLeague(self.bot, interaction)
         await interaction.followup.send(output)
@@ -54,7 +53,7 @@ class LeagueCommands(commands.GroupCog, name="league"):
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def TopPlayers(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
-        if len(league.store_ids) > 0:
+        if league.store_ids[0]:
             data = HubLeagueLeaderboard(league)
         else:
             data = LeagueLeaderboard(league)
@@ -74,7 +73,7 @@ class LeagueCommands(commands.GroupCog, name="league"):
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def FullLeaderboard(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
-        if len(league.store_ids) > 0:
+        if league.store_ids[0]:
             data = HubFullLeagueLeaderboard(league)
         else:
             data = FullLeagueLeaderboard(league)
@@ -114,7 +113,6 @@ class LeagueCommands(commands.GroupCog, name="league"):
         name="my_status",
         description="Shows how you compare to the top players in a league",
     )
-    @IsStore()
     @app_commands.guild_only()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def MyStatus(self, interaction: Interaction):
