@@ -84,7 +84,6 @@ async def on_app_command_completion(
     interaction: Interaction, command: app_commands.Command
 ):
     """Logs successfully executed slash commands using the interaction object."""
-    # 2. Extract user and command details
     username = str(interaction.user)
     command_name = command.name
     group_names = []
@@ -94,23 +93,17 @@ async def on_app_command_completion(
         group_names.insert(0, current_parent.name)
         current_parent = current_parent.parent
 
-    # Combine groups if they exist (e.g., "mod user" or "economy")
     full_group_name = " ".join(group_names) if group_names else "None"
 
-    # Construct the full visual command string (e.g., "/mod user ban")
     full_command_path = f"/{' '.join(group_names)} {command_name}".replace(
         "  ", " "
     ).strip()
 
-    # 3. Extract parameter values from the interaction's namespace
-    # interaction.namespace holds the arguments passed by the user
     if interaction.namespace:
-        # Converts the namespace arguments into a readable string
         params = ", ".join(f"{name}: {value}" for name, value in interaction.namespace)
     else:
         params = "None"
 
-    # 4. Format the log message
     log_message = (
         f"```Slash Command Executed\n"
         f"User: {username} (ID: {interaction.user.id})\n"
@@ -122,7 +115,6 @@ async def on_app_command_completion(
         f"Channel: {interaction.channel.id if interaction.channel else 'DM'}```"
     )
 
-    # 1. Fetch the target channel
     channel = bot.get_channel(settings.BOTLOGCHANNEL)
     if channel is None:
         try:
@@ -131,7 +123,6 @@ async def on_app_command_completion(
             print(f"Log channel not found or bot lacks permissions.\n{log_message}")
             return
 
-    # 5. Send the log
     try:
         await channel.send(log_message)
     except Forbidden:
