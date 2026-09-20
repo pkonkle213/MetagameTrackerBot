@@ -13,7 +13,7 @@ def CompleteEvent(event_id: int) -> bool:
         WHERE id = {event_id}
         RETURNING id
         """
-        
+
         cur.execute(command)  # type: ignore[arg-type]
         conn.commit()
         row = cur.fetchone()
@@ -84,7 +84,6 @@ async def CreateEvent(event: Event, user_id: int) -> int:
             )
             RETURNING id
             """
-
 
             await cur.execute(command)  # type: ignore[arg-type]
             event_id = await cur.fetchone()

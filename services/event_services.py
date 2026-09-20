@@ -16,11 +16,8 @@ async def EventForData(
 ) -> tuple[Event | None, int | None, Interaction | None, bool]:
     modal = SubmitEventModal(store, game, format)
     await interaction.response.send_modal(modal)
-    try:
-        await modal.wait()
-    except:
-        raise Exception("Unable to find the event")
-
+    await modal.wait()
+    
     selected_event = modal.submitted_event
     data_submission_type = modal.data_submission_type
     if not selected_event or not data_submission_type:
@@ -28,6 +25,7 @@ async def EventForData(
 
     input_type = data_submission_type
 
+    #TODO: This could instead be a property of modal 
     if input_type == 1:
         input_name = "Manual"
     elif input_type == 2:
