@@ -1,3 +1,4 @@
+from custom_errors import KnownError
 import psycopg
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
@@ -6,15 +7,19 @@ from tuple_conversions import Event, Format, Game, Store, PlayerArchetype
 
 def CompleteEvent(event_id: int) -> bool:
     conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor() as cur:
-        command = f"""
-        UPDATE events
-        SET is_complete = TRUE
-        WHERE id = {event_id}
-        RETURNING id
+    with conn, conn.cursor(row_factory=scalar_row) as cur:
+        command = """
+        UPDATE
+            events
+        SET
+            is_complete = TRUE
+        WHERE
+            id = %s
+        RETURNING
+            id
         """
 
-        cur.execute(command)  # type: ignore[arg-type]
+        cur.execute(command, [event_id])
         conn.commit()
         row = cur.fetchone()
         return True if row else False
@@ -48,7 +53,7 @@ def GetEvent(event_id: int) -> Event:
         cur.execute(command)  # type: ignore[arg-type]
         row = cur.fetchone()
         if not row:
-            raise Exception(f"Cannot find event. ID: {event_id}")
+            raise KnownError(f"Cannot find event. ID: {event_id}")
         return row
 
 
@@ -89,7 +94,7 @@ async def CreateEvent(event: Event, user_id: int) -> int:
             event_id = await cur.fetchone()
 
             if not event_id:
-                raise Exception("Unable to create event")
+                raise KnownError("Unable to create event")
             return event_id
 
 

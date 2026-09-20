@@ -6,7 +6,7 @@ from input_modals.submit_event_modal import SubmitEventModal
 from tuple_conversions import Format, Game, Store, Event, ViewButtonEnum
 from views.confirm_event import ConfirmEvent
 
-
+# Name update: SelectOrCreateEvent
 async def EventForData(
     bot: commands.Bot,
     interaction: Interaction,

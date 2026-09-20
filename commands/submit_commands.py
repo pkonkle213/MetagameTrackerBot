@@ -245,11 +245,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                     raise KnownError("Unknown input type")
 
             await active_interaction.response.send_modal(modal)
-
-            try:
-                await modal.wait()
-            except Exception:
-                raise KnownError("Something went wrong. Canceling data.")
+            await modal.wait()
 
             output = BuildReviewOutput(modal.converted_data)
             view = ConfirmData()

@@ -44,7 +44,9 @@ class HubProfileModal(discord.ui.Modal, title='Update Hub Profile'):
   async def on_timeout(self) -> None:
     self.is_submitted = False
 
-def CleanUrl(url:str) -> str:
+def CleanUrl(url:str) -> str | None:
+  if len(url) == 0:
+    return None
   slash = url.rfind('/')  
   invite = 'https://discord.gg/' + url[slash+1:]
   return invite

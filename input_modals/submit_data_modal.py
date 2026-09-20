@@ -28,3 +28,4 @@ class SubmitManualDataModal(discord.ui.Modal, title="Submit Data"):
         self.converted_data = ConvertAndUploadMessage(
             self.event, self.file_path, self.manual_data.component.value
         )
+        self.stop()
