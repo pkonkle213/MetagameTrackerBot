@@ -14,7 +14,7 @@ async def MessageHubs(
   """Sends a message to the hubs that a new event has been added"""
   print('Messaging hubs!')
   try:
-    hubs = GetAllHubs(event)
+    hubs = await GetAllHubs(event)
     name = store.store_name if store.store_name else store.discord_name
     for hub in hubs:
       try:

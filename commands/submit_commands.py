@@ -165,20 +165,19 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         )
 
     @app_commands.command(
-        name="archetype",
-        description="Submit a player's archetype for an event"
+        name="archetype", description="Submit a player's archetype for an event"
     )
     @app_commands.guild_only()
     @IsStore()
     async def SubmitArchetypeCommand(self, interaction: Interaction):
         objects = GetObjectsFromInteraction(interaction)
         if not objects.store or not objects.game or not objects.format:
-            raise KnownError('A format must be mapped to this channel')
+            raise KnownError("A format must be mapped to this channel")
         userId = interaction.user.id
 
         player_name = GetUserName(userId)
         player_archetypes = GetUserArchetypes(userId, objects.game, objects.format)
-        #events = GetRecentEvents()
+        # events = GetRecentEvents()
         events = GetStoreEvents(objects.store, objects.game, objects.format)
 
         if len(events) == 0:
@@ -215,6 +214,10 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         if not event or not input_type or not active_interaction:
             await interaction.followup.send("Event canceled!", ephemeral=True)
             return
+
+        if new_event:
+            event_id = await CreateEvent(event, interaction.user.id)
+            event = event._replace(id=event_id)
 
         cont = True
         while cont:
@@ -265,10 +268,6 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                     content="Data submission canceled!", view=None
                 )
                 break
-
-            if new_event:
-                event_id = CreateEvent(event, interaction.user.id)
-                event = event._replace(id=event_id)
 
             data = modal.converted_data
 
