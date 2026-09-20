@@ -217,7 +217,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
         if new_event:
             event_id = await CreateEvent(event, interaction.user.id)
-            await interaction.followup.send("Event created!", ephemeral=True)
+            #await interaction.followup.send("Event created!", ephemeral=True)
             event = event._replace(id=event_id)
 
         cont = True
