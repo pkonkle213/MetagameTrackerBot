@@ -1,7 +1,7 @@
 import psycopg
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
-from tuple_conversions import Event, Format, Game, Store, PlayerArchetype
+from tuple_conversions import Event, Format, Game, Store, PlayerArchetype, Region, Hub
 
 
 def CompleteEvent(event_id: int) -> bool:
@@ -13,7 +13,7 @@ def CompleteEvent(event_id: int) -> bool:
         WHERE id = {event_id}
         RETURNING id
         """
-        
+
         cur.execute(command)  # type: ignore[arg-type]
         conn.commit()
         row = cur.fetchone()
@@ -158,44 +158,57 @@ def DeleteStandingsFromEvent(event_id: int) -> bool:
 
 
 def GetStoreEvents(
-    store: Store,
+    store: Store | None,
+    hub: Hub | None,
     game: Game,
     format: Format,
+    region: Region | None,
 ):
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(Event)) as cur:
         command = f"""
         SELECT
-            e.id,
-            e.custom_event_id,
-            e.discord_id,
-            e.event_date,
-            e.game_id,
-            e.format_id,
-            e.last_update,
-            e.event_name,
-            e.event_type_id,
-            e.reported_as,
-            e.created_by,
-            e.created_at,
-            e.league_id,
-            e.is_complete
+          e.id,
+          CASE
+              WHEN {hub.discord_id if hub else 'NULL'} IS NULL THEN e.event_name
+              ELSE CONCAT(s.store_name,' - ',e.event_name)
+          END as event_name,
+          e.custom_event_id,
+          e.discord_id,
+          e.event_date,
+          e.game_id,
+          e.format_id,
+          e.last_update,
+          e.event_type_id,
+          e.reported_as,
+          e.created_by,
+          e.created_at,
+          e.league_id,
+          e.is_complete
         FROM
-            events_view e
-            INNER JOIN stores s ON s.discord_id = e.discord_id
-            INNER JOIN games g ON g.id = e.game_id
-            INNER JOIN formats f ON f.id = e.format_id
+          events_view e
+          INNER JOIN stores s ON s.discord_id = e.discord_id
+          LEFT JOIN stores_approved_hubs sah ON sah.store_discord_id = e.discord_id
+          AND sah.format_id = e.format_id
+          AND sah.region_id = s.region_id
         WHERE
-            s.discord_id = {store.discord_id}
-            AND e.game_id = {game.id}
-            AND e.format_id = {format.id}
-            AND e.event_date >= CURRENT_DATE - INTERVAL '4 weeks'
+          e.event_date >= CURRENT_DATE - INTERVAL '4 weeks'
+          AND e.game_id = 1
+          AND e.format_id = 1
+          AND (
+            e.discord_id = {store.discord_id if store else 'NULL'}
+            OR (
+              sah.hub_discord_id = {hub.discord_id if hub else 'NULL'}
+              AND sah.region_id = {region.id if region else 'NULL'}
+            )
+          )
         ORDER BY
-            e.event_date DESC
+          event_date DESC
         LIMIT 25
         """
 
         cur.execute(command)  # type: ignore[arg-type]
+        print("----GetStoreEvents Command----\n", command)
         rows = cur.fetchall()
 
         return rows
