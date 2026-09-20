@@ -109,7 +109,7 @@ class SubmitEventModal(discord.ui.Modal, title='Select Event'):
     self.data_submission_type = int(self.data_input.component.values[0])
     self.is_submitted = True
     self.stop()
-    await interaction.response.defer(thinking=False, ephemeral=True)
+    await interaction.response.defer(thinking=True, ephemeral=True)
 
 def SetEventInfo(
   continued_event_id: int,
