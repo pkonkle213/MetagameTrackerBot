@@ -273,30 +273,11 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             data = modal.converted_data
 
             if data.standings_data:
-                await AddStandingResults(event, data.standings_data, interaction.user.id)
+                await AddStandingResults(
+                    event, data.standings_data, interaction.user.id
+                )
             elif data.pairings_data:
                 await AddPairingResults(event, data.pairings_data, interaction.user.id)
-
-            if new_event:
-                print("New event!")
-                store_message = (
-                    f"New data for {event.event_date.strftime('%B %-d')}'s "
-                    f"{event.event_name} event has been submitted! Use the "
-                    "`/submit archetype` command to input an archetype!"
-                )
-                event_date = event.event_date.strftime("%B %d")
-                hub_message = (
-                    f"New event submitted for {objects.store.store_name}: "
-                    f"{event.event_name} ({event_date}). Waiting for archetypes..."
-                )
-                await MessageChannel(
-                    self.bot,
-                    store_message,
-                    interaction.guild_id,
-                    interaction.channel_id,
-                )
-                await MessageHubs(self.bot, objects.store, event, hub_message)
-                new_event = False
 
             if confirm_response in (
                 ViewButtonEnum.DoneComplete.value,
@@ -306,6 +287,26 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
                 if confirm_response == ViewButtonEnum.DoneComplete.value:
                     CompleteEvent(event.id)
+
+                if new_event:
+                    print("New event!")
+                    store_message = (
+                        f"New data for {event.event_date.strftime('%B %-d')}'s "
+                        f"{event.event_name} event has been submitted! Use the "
+                        "`/submit archetype` command to input an archetype!"
+                    )
+                    event_date = event.event_date.strftime("%B %d")
+                    hub_message = (
+                        f"New event submitted for {objects.store.store_name}: "
+                        f"{event.event_name} ({event_date}). Waiting for archetypes..."
+                    )
+                    await MessageChannel(
+                        self.bot,
+                        store_message,
+                        interaction.guild_id,
+                        interaction.channel_id,
+                    )
+                    await MessageHubs(self.bot, objects.store, event, hub_message)
 
                 await active_interaction.followup.send(
                     "Thank you for submitting data!", ephemeral=True
