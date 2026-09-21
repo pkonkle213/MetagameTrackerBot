@@ -215,6 +215,10 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             await interaction.followup.send("Event canceled!", ephemeral=True)
             return
 
+        if new_event:
+            event_id = await CreateEvent(event, interaction.user.id)
+            event = event._replace(id=event_id)
+
         cont = True
         while cont:
             match input_type:
@@ -264,10 +268,6 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                     content="Data submission canceled!", view=None
                 )
                 break
-
-            if is_new_event:
-                event_id = CreateEvent(event, interaction.user.id)
-                event = event._replace(id=event_id)
 
             data = modal.converted_data
 

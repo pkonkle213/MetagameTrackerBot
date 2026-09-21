@@ -1,8 +1,6 @@
-import contextlib
-import pathlib
-import datetime
-import threading
+from datetime import datetime as dt, time, timezone
 import settings
+from threading import Thread
 from contextlib import suppress
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -26,14 +24,13 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
 def StartHealthCheckServer():
     port = 8080
     server = ThreadingHTTPServer(("0.0.0.0", port), HealthCheckHandler)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
+    Thread(target=server.serve_forever, daemon=True).start()
     print(f"Health check server listening on port {port}", flush=True)
 
 
 StartHealthCheckServer()
 
-import pytz
-import asyncpg
+from pytz import timezone
 from discord import Guild, Interaction, app_commands, Intents, NotFound, Forbidden
 from discord.ext import commands, tasks
 from settings import PHILID, DISCORDTOKEN
@@ -52,7 +49,7 @@ bot = commands.Bot(command_prefix="?", intents=intents)
 
 BASE_DIR = Path(__file__).parent
 CMDS_DIR = BASE_DIR / "commands"
-TIME_ZONE = pytz.timezone("US/Eastern")
+TIME_ZONE = timezone("US/Eastern")
 
 
 @bot.event
@@ -87,7 +84,6 @@ async def on_app_command_completion(
     interaction: Interaction, command: app_commands.Command
 ):
     """Logs successfully executed slash commands using the interaction object."""
-    # 2. Extract user and command details
     username = str(interaction.user)
     command_name = command.name
     group_names = []
@@ -97,23 +93,17 @@ async def on_app_command_completion(
         group_names.insert(0, current_parent.name)
         current_parent = current_parent.parent
 
-    # Combine groups if they exist (e.g., "mod user" or "economy")
     full_group_name = " ".join(group_names) if group_names else "None"
 
-    # Construct the full visual command string (e.g., "/mod user ban")
     full_command_path = f"/{' '.join(group_names)} {command_name}".replace(
         "  ", " "
     ).strip()
 
-    # 3. Extract parameter values from the interaction's namespace
-    # interaction.namespace holds the arguments passed by the user
     if interaction.namespace:
-        # Converts the namespace arguments into a readable string
         params = ", ".join(f"{name}: {value}" for name, value in interaction.namespace)
     else:
         params = "None"
 
-    # 4. Format the log message
     log_message = (
         f"```Slash Command Executed\n"
         f"User: {username} (ID: {interaction.user.id})\n"
@@ -125,7 +115,6 @@ async def on_app_command_completion(
         f"Channel: {interaction.channel.id if interaction.channel else 'DM'}```"
     )
 
-    # 1. Fetch the target channel
     channel = bot.get_channel(settings.BOTLOGCHANNEL)
     if channel is None:
         try:
@@ -134,7 +123,6 @@ async def on_app_command_completion(
             print(f"Log channel not found or bot lacks permissions.\n{log_message}")
             return
 
-    # 5. Send the log
     try:
         await channel.send(log_message)
     except Forbidden:
@@ -143,7 +131,7 @@ async def on_app_command_completion(
         )
 
 
-@tasks.loop(time=datetime.time(hour=18, minute=00, tzinfo=TIME_ZONE))
+@tasks.loop(time=time(hour=18, minute=00, tzinfo=TIME_ZONE))
 async def find_the_unknown():
     """Every day at 6:00 PM EST, the bot will check for events that are 3 days old and have unknown archetypes."""
     await EventCheck(bot)
@@ -170,10 +158,10 @@ async def before_sync_paid_users():
     await bot.wait_until_ready()
 
 
-@tasks.loop(time=datetime.time(hour=10, minute=00, tzinfo=TIME_ZONE))
+@tasks.loop(time=time(hour=10, minute=00, tzinfo=TIME_ZONE))
 async def data_guild_update():
     """Every Friday at 10:00 AM EST, the data guild is updated with new data"""
-    time_now = datetime.datetime.now(datetime.timezone.utc)
+    time_now = dt.now(timezone.utc)
     if time_now.weekday() == 4:  # Check if it's Friday, 0 = Monday
         try:
             await UpdateDataGuild(bot)
