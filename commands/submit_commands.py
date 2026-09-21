@@ -91,7 +91,13 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
         event = modal.event
 
-        view = ConfirmEvent()
+        total_players = GetPlayersInEvent(event.id)
+        if len(total_players) == 0:
+            raise KnownError("No players found for this event.")
+
+        first_players = total_players[:5]
+        active_modal = MassArchetypeSubmit(first_players)
+        view = ConfirmEvent(next_modal=active_modal)
         await interaction.followup.send(
             f"You selected {event.event_name}. Is this correct?",
             view=view,
@@ -100,23 +106,14 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         await view.wait()
 
         if view.action == ViewButtonEnum.Cancel.value:
-            await interaction.followup.send("Canceled!", ephemeral=True)
-
-        active_interaction = view.interaction
-        # Grab by event.id all user names and current archetype submissions for those players
-        if not event:
-            raise KnownError("No event found.")
-
-        total_players = GetPlayersInEvent(event.id)
-        if len(total_players) == 0:
-            raise KnownError("No players found for this event.")
+            return
 
         # Loop through the users 5 at a time and send a modal to submit archetypes for those players
         for i in range(0, len(total_players), 5):
-            players = total_players[i : i + 5]
-            modal = MassArchetypeSubmit(players)
+            modal = active_modal
+            if modal is None:
+                raise KnownError("Unable to prepare the next archetype form.")
 
-            await active_interaction.response.send_modal(modal)
             await modal.wait()
 
             if not modal.is_submitted:
@@ -137,15 +134,19 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                     for player in archetypes
                 ]
             )
-            view = ConfirmEvent()
-            await interaction.followup.send(
+            next_modal = (
+                MassArchetypeSubmit(total_players[i + 5 : i + 10])
+                if i + 5 < len(total_players)
+                else None
+            )
+            view = ConfirmEvent(next_modal=next_modal)
+            await modal.new_interaction.followup.send(
                 f"{output}\nAre these correct?", view=view, ephemeral=True
             )
             await view.wait()
 
             if view.action == ViewButtonEnum.Cancel.value:
-                await interaction.followup.send("Canceled!", ephemeral=True)
-                break
+                return
 
             # Save archetypes
             await BulkAddArchetypes(
@@ -158,7 +159,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             )
 
             # Continue or end loop if there are no more players
-            active_interaction = view.interaction
+            active_modal = next_modal
 
         await interaction.followup.send(
             "All archetypes have been submitted!", ephemeral=True
@@ -207,11 +208,36 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         if objects.hub:
             raise KnownError("You can't submit data from a hub.")
 
-        event, input_type, active_interaction, new_event = await EventForData(
-            self.bot, interaction, objects.store, objects.game, objects.format
+        def build_data_modal(event, input_type):
+            match input_type:
+                case DataInputEnum.Manual.value:
+                    save_path = BuildFilePath(
+                        objects.store, objects.game, objects.format, "ManualInput.txt"
+                    )
+                    return SubmitManualDataModal(event, save_path)
+                case DataInputEnum.CSV.value:
+                    save_path = BuildFilePath(
+                        objects.store, objects.game, objects.format, "CSVInput.txt"
+                    )
+                    return SubmitCSVDataModal(event, save_path)
+                case DataInputEnum.Melee.value:
+                    save_path = BuildFilePath(
+                        objects.store, objects.game, objects.format, "MeleeInput.txt"
+                    )
+                    return SubmitMeleeDataModal(objects.store, event, save_path)
+                case _:
+                    raise KnownError("Unknown input type")
+
+        event, input_type, active_interaction, new_event, modal = await EventForData(
+            self.bot,
+            interaction,
+            objects.store,
+            objects.game,
+            objects.format,
+            build_data_modal,
         )
 
-        if not event or not input_type or not active_interaction:
+        if not event or not input_type or not active_interaction or not modal:
             await interaction.followup.send("Event canceled!", ephemeral=True)
             return
 
@@ -221,48 +247,21 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
         cont = True
         while cont:
-            match input_type:
-                case DataInputEnum.Manual.value:
-                    save_path = BuildFilePath(
-                        objects.store, objects.game, objects.format, "ManualInput.txt"
-                    )
-                    modal = SubmitManualDataModal(event, save_path)
-
-                case DataInputEnum.CSV.value:
-                    save_path = BuildFilePath(
-                        objects.store, objects.game, objects.format, "CSVInput.txt"
-                    )
-                    modal = SubmitCSVDataModal(event, save_path)
-
-                case DataInputEnum.Melee.value:
-                    save_path = BuildFilePath(
-                        objects.store, objects.game, objects.format, "MeleeInput.txt"
-                    )
-                    modal = SubmitMeleeDataModal(objects.store, event, save_path)
-
-                case _:
-                    raise KnownError("Unknown input type")
-
-            await active_interaction.response.send_modal(modal)
             await modal.wait()
 
             output = BuildReviewOutput(modal.converted_data)
-            view = ConfirmData()
+            next_modal = build_data_modal(event, input_type)
+            view = ConfirmData(next_modal=next_modal)
             await modal.interaction.followup.send(
                 f"{output}\nPlease confirm the data", ephemeral=True, view=view
             )
             await view.wait()
 
             confirm_response = view.action
-            active_interaction = view.interaction
-
-            if not active_interaction:
+            if not view.interaction:
                 raise KnownError("No interaction found after confirmation")
 
             if confirm_response == ViewButtonEnum.Cancel.value:
-                await active_interaction.response.edit_message(
-                    content="Data submission canceled!", view=None
-                )
                 break
 
             data = modal.converted_data
@@ -302,9 +301,11 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                 if confirm_response == ViewButtonEnum.DoneComplete.value:
                     CompleteEvent(event.id)
 
-                await active_interaction.followup.send(
+                await view.interaction.followup.send(
                     "Thank you for submitting data!", ephemeral=True
                 )
+            else:
+                modal = next_modal
 
     @SubmitCheck.error
     @SubmitDataCommand.error
