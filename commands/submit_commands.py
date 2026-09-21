@@ -219,35 +219,40 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             event_id = await CreateEvent(event, interaction.user.id)
             event = event._replace(id=event_id)
 
-        cont = True
-        while cont:
+        def build_data_modal():
             match input_type:
                 case DataInputEnum.Manual.value:
                     save_path = BuildFilePath(
                         objects.store, objects.game, objects.format, "ManualInput.txt"
                     )
-                    modal = SubmitManualDataModal(event, save_path)
+                    return SubmitManualDataModal(event, save_path)
 
                 case DataInputEnum.CSV.value:
                     save_path = BuildFilePath(
                         objects.store, objects.game, objects.format, "CSVInput.txt"
                     )
-                    modal = SubmitCSVDataModal(event, save_path)
+                    return SubmitCSVDataModal(event, save_path)
 
                 case DataInputEnum.Melee.value:
                     save_path = BuildFilePath(
                         objects.store, objects.game, objects.format, "MeleeInput.txt"
                     )
-                    modal = SubmitMeleeDataModal(objects.store, event, save_path)
+                    return SubmitMeleeDataModal(objects.store, event, save_path)
 
                 case _:
                     raise KnownError("Unknown input type")
 
-            await active_interaction.response.send_modal(modal)
+        modal = None
+        cont = True
+        while cont:
+            if modal is None:
+                modal = build_data_modal()
+                await active_interaction.response.send_modal(modal)
             await modal.wait()
 
             output = BuildReviewOutput(modal.converted_data)
-            view = ConfirmData()
+            next_modal = build_data_modal()
+            view = ConfirmData(next_modal=next_modal)
             await modal.interaction.followup.send(
                 f"{output}\nPlease confirm the data", ephemeral=True, view=view
             )
@@ -305,6 +310,8 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                 await active_interaction.followup.send(
                     "Thank you for submitting data!", ephemeral=True
                 )
+            else:
+                modal = next_modal
 
     @SubmitCheck.error
     @SubmitDataCommand.error
