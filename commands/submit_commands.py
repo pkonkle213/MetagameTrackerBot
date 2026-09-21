@@ -268,7 +268,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             data = modal.converted_data
 
             if data.standings_data:
-                AddStandingResults(event, data.standings_data, interaction.user.id)
+                await AddStandingResults(event, data.standings_data, interaction.user.id)
             elif data.pairings_data:
                 await AddPairingResults(event, data.pairings_data, interaction.user.id)
 

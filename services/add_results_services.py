@@ -7,7 +7,7 @@ from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
 from tuple_conversions import Standing, Pairing, Event
 
 
-def AddStandingResults(
+async def AddStandingResults(
     event: Event,
     data: list[Standing],
     submitterId: int
@@ -21,7 +21,7 @@ def AddStandingResults(
                 person.losses,
                 person.draws
             )
-            output = InsertStanding(event.id, person, submitterId)
+            output = await InsertStanding(event.id, person, submitterId)
             if not output:
                 errors.append(person)
 
