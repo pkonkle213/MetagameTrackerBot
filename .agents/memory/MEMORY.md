@@ -1,1 +1,0 @@
-- [Discord interaction acknowledgements](discord-interactions.md) — acknowledge component callbacks immediately; open next modals from the button callback.

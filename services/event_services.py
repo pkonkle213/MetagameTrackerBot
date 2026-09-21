@@ -2,7 +2,6 @@ from custom_errors import KnownError
 from discord_messages import MessageChannel
 from discord import Interaction
 from discord.ext import commands
-from collections.abc import Callable
 from input_modals.submit_event_modal import SubmitEventModal
 from tuple_conversions import Format, Game, Store, Event, ViewButtonEnum
 from views.confirm_event import ConfirmEvent
@@ -14,8 +13,7 @@ async def EventForData(
     store: Store,
     game: Game,
     format: Format,
-    modal_factory: Callable[[Event, int], object] | None = None,
-) -> tuple[Event | None, int | None, Interaction | None, bool, object | None]:
+) -> tuple[Event | None, int | None, Interaction | None, bool]:
     modal = SubmitEventModal(store, game, format)
     await interaction.response.send_modal(modal)
     await modal.wait()
@@ -48,15 +46,14 @@ Event Date: {selected_event.event_date.strftime("%m/%d/%Y")}
 Event Type: {event_type_name}
 Data Submission Type: {input_name}```"""
 
-    next_modal = modal_factory(selected_event, input_type) if modal_factory else None
-    view = ConfirmEvent(next_modal=next_modal)
+    view = ConfirmEvent()
     await interaction.followup.send(
         f"{event_output}\nIs this correct?", view=view, ephemeral=True
     )
     await view.wait()
 
     if view.action == ViewButtonEnum.Cancel.value:
-        return None, None, None, False, None
+        return None, None, None, False
 
     is_created = selected_event.id == 0
-    return selected_event, input_type, view.interaction, is_created, next_modal
+    return selected_event, input_type, view.interaction, is_created
