@@ -7,7 +7,7 @@ from input_modals.event_selector import EventSelector
 from data.interaction_data import GetObjectsFromInteraction
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
-from services.submit_archetype_service import OneEventDetails, OneEventMeta
+from services.one_event_details import OneEventDetails, OneEventMeta
 
 
 class OneEventCommands(commands.GroupCog, name="one_event"):
@@ -21,7 +21,7 @@ class OneEventCommands(commands.GroupCog, name="one_event"):
   @app_commands.guild_only()
   @IsStore()
   @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-  async def OneEventMeta(self, interaction: Interaction):
+  async def OneEventMetaCommand(self, interaction: Interaction):
     objects = GetObjectsFromInteraction(interaction)
     if not objects.store or not objects.game or not objects.format:
       raise KnownError("No store, game, or format found.")

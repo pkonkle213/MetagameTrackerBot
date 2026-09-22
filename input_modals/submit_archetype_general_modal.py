@@ -21,7 +21,8 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     userId: int,
     events: list[Event],
     player_name: str,
-    prev_archetypes: list[str]
+    prev_archetypes: list[str],
+    is_submitter
   ):
     super().__init__()
     self.bot = bot
@@ -29,6 +30,7 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
     self.hub = hub
     self.game = game
     self.format = format
+    self.is_submitter = is_submitter
 
     self.previous_events = events
     past_events:list[discord.SelectOption] = []
@@ -104,7 +106,8 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
       self.hub,
       self.game,
       self.format,
-      self.moxfield_link.component.value if self.game.id == GameEnum.Magic.value else None
+      self.moxfield_link.component.value if self.game.id == GameEnum.Magic.value else None,
+      self.is_submitter
     )
 
   async def on_error(self, interaction: Interaction, error: Exception) -> None:

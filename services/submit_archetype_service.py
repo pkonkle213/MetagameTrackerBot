@@ -12,7 +12,6 @@ from services.input_services import ConvertInput
 from api_calls.moxfield_decklist import GetMoxfieldArchetype
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
 from output_builder import BuildTableOutput
-from data.metagame_data import OneEventMetagame
 from discord_messages import MessageChannel
 from data.interaction_data import GetObjectsFromInteraction
 from tuple_conversions import (
@@ -20,7 +19,6 @@ from tuple_conversions import (
     Format,
     Store,
     Game,
-    MetagameResult,
     OutputToBuild,
     Hub,
 )
@@ -69,6 +67,7 @@ async def SubmitArchetype(
     game: Game,
     format: Format,
     moxfield_link: str | None,
+    is_submitter: bool,
 ) -> None:
     guild_id = interaction.guild.id
     guild_name = interaction.guild.name
@@ -89,9 +88,6 @@ async def SubmitArchetype(
             "You have submitted too many archetypes with banned words. "
             "Please contact your store owner to have them submit the archetype."
         )
-
-    # TODO: Should I already know this, when checking to get the appropriate events?
-    is_submitter = isSubmitter(interaction.guild, interaction.user, "MTSubmitter")
 
     # If a moxfield link is provided, get the archetype from it
     moxfield_error = ""
@@ -182,11 +178,3 @@ def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
             final = BuildTableOutput(table.title, table.headers, table.data)
         return followup, final
     return None, None
-
-
-# TODO: These should have their own service
-def OneEventMeta(event: Event) -> tuple[str, list[str], list[MetagameResult]]:
-    data = OneEventMetagame(event)
-    title = f"{event.event_name}'s Metagame"
-    headers = ["Archetype", "Metagame %", "Win %"]
-    return title, headers, data

@@ -168,7 +168,9 @@ def GetEvents(
     game: Game,
     format: Format,
     region: Region | None,
+    is_submitter: bool,
 ) -> list[Event]:
+    time_range = 4 if is_submitter else 2
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(Event)) as cur:
         command = f"""
@@ -204,7 +206,7 @@ def GetEvents(
             AND c.game_id = e.game_id
             AND c.format_id = e.format_id
           WHERE
-            e.event_date >= CURRENT_DATE - INTERVAL '4 weeks'
+            e.event_date >= CURRENT_DATE - INTERVAL '{time_range} weeks'
         )
         UNION ALL
         (
@@ -237,6 +239,8 @@ def GetEvents(
             AND c.game_id = h.game_lock
             AND c.format_id = h.format_lock
             AND c.region_id = rcm.region_id
+          WHERE
+            e.event_date >= CURRENT_DATE - INTERVAL '{time_range} weeks'
         )
         ORDER BY
           event_date DESC

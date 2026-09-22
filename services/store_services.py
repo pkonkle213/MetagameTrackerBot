@@ -64,7 +64,7 @@ async def UpdateDetails(bot:commands.Bot, interaction: discord.Interaction) -> d
   
 
 async def NewStoreRegistration(
-  bot:discord.Client,
+  bot:commands.Bot,
   guild: discord.Guild
 ) -> str:
   """Goes through steps to register a new store and automap categories and channels"""

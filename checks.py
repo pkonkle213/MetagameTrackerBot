@@ -37,6 +37,7 @@ def IsHub():
     raise app_commands.CheckFailure("This command must be executed in a hub guild")
   return app_commands.check(predicate)
 
+#TOOD: Since this is named "is SUBMITTER", "MTSubmitter should probably be a constant"
 def isSubmitter(guild:Guild, author: Member, role_name:str) -> bool:
   role = utils.find(lambda r: r.name == role_name, guild.roles)
   return role in author.roles

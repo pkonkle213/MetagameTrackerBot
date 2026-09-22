@@ -177,11 +177,17 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             raise KnownError("A format must be mapped to this channel")
 
         user_id = interaction.user.id
+        is_submitter = isSubmitter(interaction.guild, interaction.user, "MTSubmitter")
 
         player = GetArchetypeModalDetails(user_id, objects.game, objects.format)
-            
+
         events = GetEvents(
-            objects.store, objects.hub, objects.game, objects.format, objects.region
+            objects.store,
+            objects.hub,
+            objects.game,
+            objects.format,
+            objects.region,
+            is_submitter,
         )
 
         if len(events) == 0:
@@ -198,6 +204,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             objects.format,
             player.player_name,
             player.archetypes,
+            is_submitter,
         )
 
     @app_commands.command(name="data", description="Submitting an event's data")
