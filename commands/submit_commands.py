@@ -92,7 +92,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
         view = ConfirmEvent()
         await interaction.followup.send(
-            f"You selected {event.event_name}. Is this correct?",
+            f"You selected {event.event_date.strftime('%m/%d')} - {event.event_name}. Is this correct?",
             view=view,
             ephemeral=True,
         )
@@ -125,7 +125,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             active_interaction = modal.new_interaction
             archetypes = modal.new_archetypes
 
-            title = "Please confirm the archetypes:"
+            title = "Please confirm the new archetypes:"
             headers = ["Name", "Archetype"]
             data = archetypes
             output = BuildTableOutput(title, headers, data)
