@@ -1,7 +1,7 @@
 import psycopg
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
-from tuple_conversions import Event, Format, Game, Store, PlayerArchetype, Region, Hub
+from tuple_conversions import Event, Format, Game, Store, PlayerArchetype, Hub, Region
 
 
 def CompleteEvent(event_id: int) -> bool:
@@ -23,7 +23,7 @@ def CompleteEvent(event_id: int) -> bool:
 def GetEvent(event_id: int) -> Event:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(Event)) as cur:
-        command = f"""
+        command = """
         SELECT
             id,
             custom_event_id,
@@ -42,10 +42,10 @@ def GetEvent(event_id: int) -> Event:
         FROM
             events_view
         WHERE
-            id = {event_id}
+            id = %s
         """
 
-        cur.execute(command)  # type: ignore[arg-type]
+        cur.execute(command, [event_id])
         row = cur.fetchone()
         if not row:
             raise Exception(f"Cannot find event. ID: {event_id}")
@@ -84,7 +84,6 @@ async def CreateEvent(event: Event, user_id: int) -> int:
             )
             RETURNING id
             """
-
 
             await cur.execute(command)  # type: ignore[arg-type]
             event_id = await cur.fetchone()
@@ -157,7 +156,8 @@ def DeleteStandingsFromEvent(event_id: int) -> bool:
         return True
 
 
-def GetStoreEvents(
+# TODO: Check this. I don't like it, something smells off
+def GetEvents(
     store: Store | None,
     hub: Hub | None,
     game: Game,
@@ -167,114 +167,98 @@ def GetStoreEvents(
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(Event)) as cur:
         command = f"""
-        SELECT
-          e.id,
-          CASE
-              WHEN {hub.discord_id if hub else 'NULL'} IS NULL THEN e.event_name
-              ELSE CONCAT(s.store_name,' - ',e.event_name)
-          END as event_name,
-          e.custom_event_id,
-          e.discord_id,
-          e.event_date,
-          e.game_id,
-          e.format_id,
-          e.last_update,
-          e.event_type_id,
-          e.reported_as,
-          e.created_by,
-          e.created_at,
-          e.league_id,
-          e.is_complete
-        FROM
-          events_view e
-          INNER JOIN stores s ON s.discord_id = e.discord_id
-          LEFT JOIN stores_approved_hubs sah ON sah.store_discord_id = e.discord_id
-          AND sah.format_id = e.format_id
-          AND sah.region_id = s.region_id
-        WHERE
-          e.event_date >= CURRENT_DATE - INTERVAL '4 weeks'
-          AND e.game_id = 1
-          AND e.format_id = 1
-          AND (
-            e.discord_id = {store.discord_id if store else 'NULL'}
-            OR (
-              sah.hub_discord_id = {hub.discord_id if hub else 'NULL'}
-              AND sah.region_id = {region.id if region else 'NULL'}
-            )
-          )
-        ORDER BY
-          event_date DESC
-        LIMIT 25
-        """
-
-        cur.execute(command)  # type: ignore[arg-type]
-        print("----GetStoreEvents Command----\n", command)
-        rows = cur.fetchall()
-
-        return rows
-
-
-def GetHubEvents(discord_id: int, channel_id: int) -> list[Event]:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(Event)) as cur:
-        command = f"""
         (
-            SELECT
-                e.id,
-                e.discord_id,
-                e.event_date,
-                e.game_id,
-                e.format_id,
-                e.last_update,
-                e.event_type_id,
-                s.store_name || ' - ' || e.event_name AS event_name,
-                e.custom_event_id,
-                e.created_at,
-                e.created_by,
-                e.league_id,
-                e.reported_as,
-                e.is_complete
-            FROM
-                events_view e
-                INNER JOIN stores_view s ON s.discord_id = e.discord_id
-                INNER JOIN region_channel_maps rcm ON rcm.region_id = s.region_id
-                INNER JOIN hubs_view h ON h.discord_id = rcm.discord_id
-            WHERE
-                h.discord_id = {discord_id}
-                AND rcm.channel_id = {channel_id}
-            ORDER BY
-                e.event_date DESC
+          --Store Events
+          SELECT
+            e.id,
+            e.custom_event_id,
+            e.discord_id,
+            e.event_date,
+            e.game_id,
+            e.format_id,
+            e.last_update,
+            e.event_name,
+            e.event_type_id,
+            e.reported_as,
+            e.created_by,
+            e.created_at,
+            e.league_id,
+            e.is_complete
+          FROM
+            events_view e
+            INNER JOIN stores s ON s.discord_id = e.discord_id
+            INNER JOIN games g ON g.id = e.game_id
+            INNER JOIN formats f ON f.id = e.format_id
+          WHERE
+            s.discord_id = {store.discord_id if store else "NULL"}
+            AND e.game_id = {game.id}
+            AND e.format_id = {format.id}
+            AND e.event_date >= CURRENT_DATE - INTERVAL '4 weeks'
         )
         UNION ALL
         (
-            SELECT
-                e.id,
-                e.discord_id,
-                e.event_date,
-                e.game_id,
-                e.format_id,
-                e.last_update,
-                e.event_type_id,
-                s.store_name || ' - ' || e.event_name AS event_name,
-                e.custom_event_id,
-                e.created_at,
-                e.created_by,
-                e.league_id,
-                e.reported_as,
-                e.is_complete
-            FROM
-                events_view e
-                INNER JOIN stores_view s ON s.discord_id = e.discord_id
-                INNER JOIN format_channel_maps fcm ON fcm.format_id = e.format_id
-                INNER JOIN hubs_view h ON h.discord_id = fcm.discord_id
-            WHERE
-                h.discord_id = {discord_id}
-                AND fcm.channel_id = {channel_id}
-            ORDER BY
-                e.event_date DESC
+          --Format locked hubs events
+          SELECT
+            e.id,
+            e.custom_event_id,
+            e.discord_id,
+            e.event_date,
+            e.game_id,
+            e.format_id,
+            e.last_update,
+            s.store_name || ' - ' || e.event_name AS event_name,
+            e.event_type_id,
+            e.reported_as,
+            e.created_by,
+            e.created_at,
+            e.league_id,
+            e.is_complete
+          FROM
+            events_view e
+            INNER JOIN stores_view s ON s.discord_id = e.discord_id
+            INNER JOIN stores_approved_hubs sah ON sah.store_discord_id = s.discord_id
+            INNER JOIN hubs_view h ON h.discord_id = sah.hub_discord_id
+            AND h.format_lock = sah.format_id
+          WHERE
+            h.discord_id = {hub.discord_id if hub else "NULL"}
+            AND e.format_id = {format.id}
+            AND s.region_id = {region.id if region else "NULL"}
+            AND e.event_date >= CURRENT_DATE - INTERVAL '4 weeks'
         )
+        UNION ALL
+        (
+          --Region locked hub events
+          SELECT
+            e.id,
+            e.custom_event_id,
+            e.discord_id,
+            e.event_date,
+            e.game_id,
+            e.format_id,
+            e.last_update,
+            s.store_name || ' - ' || e.event_name AS event_name,
+            e.event_type_id,
+            e.reported_as,
+            e.created_by,
+            e.created_at,
+            e.league_id,
+            e.is_complete
+          FROM
+            events_view e
+            INNER JOIN stores_view s ON s.discord_id = e.discord_id
+            INNER JOIN stores_approved_hubs sah ON sah.store_discord_id = s.discord_id
+            INNER JOIN hubs_view h ON h.discord_id = sah.hub_discord_id
+            AND h.region_id = s.region_id
+          WHERE
+            h.discord_id = {hub.discord_id if hub else "NULL"}
+            AND e.format_id = {format.id}
+            AND s.region_id = {region.id if region else "NULL"}
+            AND e.event_date >= CURRENT_DATE - INTERVAL '4 weeks'
+        )
+        ORDER BY
+          event_date DESC
         LIMIT
-            25
+          25
         """
 
         cur.execute(command)  # type: ignore[arg-type]
