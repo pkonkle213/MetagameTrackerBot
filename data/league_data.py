@@ -10,10 +10,10 @@ def GetLeague(league_id: int) -> League:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(League)) as cur:
         command = f"""
-            SELECT *
-            FROM leagues_view
-            WHERE id = %s
-            """
+        SELECT *
+        FROM leagues_view
+        WHERE id = %s
+        """
 
         cur.execute(command, [league_id])
         row = cur.fetchone()
@@ -188,17 +188,16 @@ def GetFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
 def GetHubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
-        command = f"""
+        command = """
         WITH
-          weekly_scores AS (
+          all_events AS (
             SELECT
               date_trunc('week', event_date) AS week_start,
-              INITCAP(player_name) AS player_name,
-              e.discord_id,
-              LEAST(9, sum(3 * wins + draws)) AS week_points,
-              sum(wins) AS wins,
-              sum(losses) AS losses,
-              sum(draws) AS draws
+              INITCAP(fs.player_name) AS player_name,
+              3 * wins + draws AS event_points,
+              wins,
+              losses,
+              draws
             FROM
               leagues l
               INNER JOIN hub_league_stores hls ON hls.league_id = l.id
@@ -209,26 +208,23 @@ def GetHubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
               INNER JOIN full_standings fs ON fs.event_id = e.id
             WHERE
               l.id = %s
-            GROUP BY
-              date_trunc('week', event_date),
-              initcap(player_name),
-              e.discord_id
             ORDER BY
               week_start,
               player_name
           ),
-          name_translate AS (
+          weekly_scores AS (
             SELECT
               week_start,
-              COALESCE(pn.submitter_id::text, ws.player_name) AS player_name,
-              week_points,
-              wins,
-              losses,
-              draws
+              player_name,
+              LEAST(9, max(event_points)) AS week_points,
+              sum(wins) AS wins,
+              sum(losses) AS losses,
+              sum(draws) AS draws
             FROM
-              weekly_scores ws
-              LEFT JOIN player_names pn ON pn.discord_id = ws.discord_id
-              AND UPPER(pn.player_name) = UPPER(ws.player_name)
+              all_events
+            GROUP BY
+              week_start,
+              player_name
           ),
           top_ten AS (
             SELECT
@@ -244,27 +240,19 @@ def GetHubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
                   week_points DESC
               ) AS rank
             FROM
-              name_translate
-          ),
-          known_names AS (
-            SELECT DISTINCT
-              submitter_id,
-              player_name
-            FROM
-              player_names
+              weekly_scores
           ),
           grouped AS (
             SELECT
-              COALESCE(kn.player_name, tt.player_name) AS player_name,
+              player_name,
               sum(week_points) AS total_points,
               100.0 * sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percent
             FROM
-              top_ten tt
-              LEFT JOIN known_names kn ON tt.player_name = kn.submitter_id::text
+              top_ten
             WHERE
               rank <= 12
             GROUP BY
-              1
+              player_name
           )
         SELECT
           ROW_NUMBER() OVER (

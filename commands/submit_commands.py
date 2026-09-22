@@ -211,7 +211,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         if objects.hub:
             raise KnownError("You can't submit data from a hub.")
 
-        event, input_type, active_interaction, new_event = await EventForData(
+        event, input_type, active_interaction, is_new_event = await EventForData(
             self.bot, interaction, objects.store, objects.game, objects.format
         )
 
@@ -280,7 +280,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             elif data.pairings_data:
                 await AddPairingResults(event, data.pairings_data, interaction.user.id)
 
-            if new_event:
+            if is_new_event:
                 store_message = (
                     f"New data for {event.event_date.strftime('%B %-d')}'s "
                     f"{event.event_name} event has been submitted! Use the "
@@ -298,7 +298,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                     interaction.channel_id,
                 )
                 await MessageHubs(self.bot, objects.store, event, hub_message)
-                new_event = False
+                is_new_event = False
 
             if confirm_response in (
                 ViewButtonEnum.DoneComplete.value,
