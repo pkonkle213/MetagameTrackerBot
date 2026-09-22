@@ -70,7 +70,6 @@ async def SubmitArchetype(
     format: Format,
     moxfield_link: str | None,
 ) -> None:
-    """objects = GetObjectsFromInteraction(interaction)"""
     guild_id = interaction.guild.id
     guild_name = interaction.guild.name
     channel_id = interaction.channel.id
@@ -97,7 +96,9 @@ async def SubmitArchetype(
     # If a moxfield link is provided, get the archetype from it
     moxfield_error = ""
     if moxfield_link:
-        moxfield_archetype, moxfield_error, moxfield_success = await Moxfield(moxfield_link)
+        moxfield_archetype, moxfield_error, moxfield_success = await Moxfield(
+            moxfield_link
+        )
 
     # If not banned, add to the database
     if archetype != "":
