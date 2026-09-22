@@ -134,8 +134,7 @@ async def SubmitArchetype(
 
     if full_event:
         await MessageChannel(bot, full_event, guild_id, mapped_channel)
-        name = store.store_name if store else hub.hub_name if hub else "idk something"
-        output = f"```{name} - " + full_event[3:]
+        output = f"```{event.event_name} - " + full_event[3:]
         await MessageHubs(bot, store, event, output)
 
 
