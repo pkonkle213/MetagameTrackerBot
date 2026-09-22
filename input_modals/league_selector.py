@@ -33,6 +33,7 @@ class ConfirmView(discord.ui.View):
             self.bot, self.store, self.hub, self.game, self.format, league=self.league
         )
         await interaction.response.send_modal(modal)
+        await modal.wait()
 
 
 class LeagueSelector(discord.ui.Modal, title="Select League"):
