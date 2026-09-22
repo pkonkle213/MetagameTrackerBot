@@ -1,11 +1,11 @@
 from custom_errors import KnownError
 from services.input_services import ConvertInput
 import discord
-from tuple_conversions import Event, Game, Format, Store, GameEnum
+from tuple_conversions import Event, Game, Format, Store, GameEnum, Hub
 from discord import ui, Interaction
 from data.data_input_menus import GetPreviousEvents
 from services.command_error_service import Error
-from data.player_name_data import GetUserArchetypes, GetUserName
+from data.player_name_data import GetArchetypeModalDetails, GetUserName
 from discord.ext import commands
 from services.command_error_service import Error
 from services.submit_archetype_service import SubmitArchetype
@@ -14,6 +14,8 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
   def __init__(
     self,
     bot: commands.Bot,
+    store: Store | None,
+    hub: Hub | None,
     game: Game,
     format: Format,
     userId: int,
@@ -23,6 +25,8 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
   ):
     super().__init__()
     self.bot = bot
+    self.store = store
+    self.hub = hub
     self.game = game
     self.format = format
 
@@ -96,6 +100,8 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
       submitted_player_name,
       submitted_event,
       submitted_archetype,
+      self.store,
+      self.hub,
       self.game,
       self.format,
       self.moxfield_link.component.value if self.game.id == GameEnum.Magic.value else None
