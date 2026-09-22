@@ -32,13 +32,11 @@ class MassArchetypeSubmit(discord.ui.Modal, title="Submit Archetypes"):
             name = self.players[i].player_name
             old_archetype = self.players[i].archetype_played
             new_archetype = self.children[i].component.value
-            print("--Player Name--\n", name)
-            print("--Old archetype--\n", f"|{old_archetype}|")
-            print("--Archetype--\n", f"|{new_archetype}|")
-            if old_archetype.title() != new_archetype.title():
+            if (
+                not old_archetype or old_archetype.title() != new_archetype.title()
+            ) and new_archetype != "":
                 self.new_archetypes.append(PlayerArchetype(name, new_archetype.title()))
 
-        print("--Player archetypes--\n", self.new_archetypes)
         self.new_interaction = interaction
         await interaction.response.defer(ephemeral=True)
         self.is_submitted = True

@@ -125,7 +125,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             active_interaction = modal.new_interaction
             archetypes = modal.new_archetypes
 
-            title = "Please confirm the archetypes:"
+            title = "Please confirm the new archetypes:"
             headers = ["Name", "Archetype"]
             data = archetypes
             output = BuildTableOutput(title, headers, data)
