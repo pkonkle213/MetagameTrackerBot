@@ -165,8 +165,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         )
 
     @app_commands.command(
-        name="archetype",
-        description="Submit a player's archetype for an event"
+        name="archetype", description="Submit a player's archetype for an event"
     )
     @app_commands.guild_only()
     async def SubmitArchetypeCommand(self, interaction: Interaction):
@@ -212,13 +211,17 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         if objects.hub:
             raise KnownError("You can't submit data from a hub.")
 
-        event, input_type, active_interaction, new_event = await EventForData(
+        event, input_type, active_interaction, is_new_event = await EventForData(
             self.bot, interaction, objects.store, objects.game, objects.format
         )
 
         if not event or not input_type or not active_interaction:
             await interaction.followup.send("Event canceled!", ephemeral=True)
             return
+
+        if new_event:
+            event_id = await CreateEvent(event, interaction.user.id)
+            event = event._replace(id=event_id)
 
         cont = True
         while cont:
@@ -270,10 +273,6 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                 )
                 break
 
-            if new_event:
-                event_id = CreateEvent(event, interaction.user.id)
-                event = event._replace(id=event_id)
-
             data = modal.converted_data
 
             if data.standings_data:
@@ -281,8 +280,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             elif data.pairings_data:
                 await AddPairingResults(event, data.pairings_data, interaction.user.id)
 
-            if new_event:
-                print("New event!")
+            if is_new_event:
                 store_message = (
                     f"New data for {event.event_date.strftime('%B %-d')}'s "
                     f"{event.event_name} event has been submitted! Use the "
@@ -300,7 +298,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                     interaction.channel_id,
                 )
                 await MessageHubs(self.bot, objects.store, event, hub_message)
-                new_event = False
+                is_new_event = False
 
             if confirm_response in (
                 ViewButtonEnum.DoneComplete.value,

@@ -61,64 +61,64 @@ def GetPossibleHubs(store: Store, game: Game, format: Format) -> list[Hub]:
         return rows
 
 
-def GetAllHubs(event: Event) -> list[HubsChannels]:
+# TODO: How can I simplify this now that I have stores_approved_hubs?
+async def GetAllHubs(event: Event) -> list[HubsChannels]:
     """Gets all hub discordIds and channelIds for an event"""
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(HubsChannels)) as cur:
-        command = """
-        WITH
-            selected_event AS (
+    async with await psycopg.AsyncConnection.connect(DATABASE_URL) as conn:
+        async with conn.cursor(row_factory=class_row(HubsChannels)) as cur:
+            command = """
+            WITH
+                selected_event AS (
+                    SELECT
+                        *
+                    FROM
+                        events
+                    WHERE
+                        id = %s
+                )
+            (
+                --Region Locked Hubs
                 SELECT
-                    *
+                    hv.discord_id,
+                    fcm.channel_id
                 FROM
-                    events
-                WHERE
-                    id = %s
+                    selected_event e
+                    INNER JOIN stores s ON s.discord_id = e.discord_id
+                    INNER JOIN stores_approved_hubs sah ON sah.store_discord_id = s.discord_id
+                    AND sah.format_id = e.format_id
+                    INNER JOIN hubs_view hv ON hv.discord_id = sah.hub_discord_id
+                    INNER JOIN format_channel_maps fcm ON fcm.format_id = e.format_id
+                    AND fcm.discord_id = hv.discord_id
             )
-        (
-            --Region Locked Hubs
-            SELECT
-                hv.discord_id,
-                fcm.channel_id
-            FROM
-                selected_event e
-                INNER JOIN stores s ON s.discord_id = e.discord_id
-                INNER JOIN stores_approved_hubs sah ON sah.store_discord_id = s.discord_id
-                AND sah.format_id = e.format_id
-                INNER JOIN hubs_view hv ON hv.discord_id = sah.hub_discord_id
-                INNER JOIN format_channel_maps fcm ON fcm.format_id = e.format_id
-                AND fcm.discord_id = hv.discord_id
-        )
-        UNION
-        (
-            --Format Locked Hubs
-            SELECT
-                hv.discord_id,
-                rcm.channel_id
-            FROM
-                selected_event e
-                INNER JOIN stores s ON e.discord_id = s.discord_id
-                INNER JOIN stores_approved_hubs sah ON sah.store_discord_id = s.discord_id
-                AND sah.format_id = e.format_id
-                INNER JOIN hubs_view hv ON hv.discord_id = sah.hub_discord_id
-                INNER JOIN region_channel_maps rcm ON rcm.region_id = s.region_id
-                AND rcm.discord_id = hv.discord_id
-        )
-        UNION
-        (
-            --Global Hubs
-            SELECT
-                hv.discord_id,
-                fcm.channel_id
-            FROM
-                hubs_view hv
-                INNER JOIN format_channel_maps fcm ON fcm.discord_id = hv.discord_id
-                INNER JOIN selected_event e ON fcm.format_id = e.format_id
-            WHERE
-                region_id = 0
-        )
-        """
+            UNION
+            (
+                --Format Locked Hubs
+                SELECT
+                    hv.discord_id,
+                    rcm.channel_id
+                FROM
+                    selected_event e
+                    INNER JOIN stores s ON e.discord_id = s.discord_id
+                    INNER JOIN stores_approved_hubs sah ON sah.store_discord_id = s.discord_id
+                    AND sah.format_id = e.format_id
+                    INNER JOIN hubs_view hv ON hv.discord_id = sah.hub_discord_id
+                    INNER JOIN region_channel_maps rcm ON rcm.region_id = s.region_id
+                    AND rcm.discord_id = hv.discord_id
+            )
+            UNION
+            (
+                --Global Hubs
+                SELECT
+                    hv.discord_id,
+                    fcm.channel_id
+                FROM
+                    hubs_view hv
+                    INNER JOIN format_channel_maps fcm ON fcm.discord_id = hv.discord_id
+                    INNER JOIN selected_event e ON fcm.format_id = e.format_id
+                WHERE
+                    region_id = 0
+            )
+            """
 
-        cur.execute(command, [event.id])
-        rows = cur.fetchall()
-        return rows
+            await cur.execute(command, [event.id])
+            return await cur.fetchall()

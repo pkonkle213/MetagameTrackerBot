@@ -52,46 +52,46 @@ def GetEvent(event_id: int) -> Event:
         return row
 
 
-def CreateEvent(event: Event, user_id: int) -> int:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=scalar_row) as cur:
-        command = f"""
-        INSERT INTO Events
-        (event_date
-        , discord_id
-        , game_id
-        , format_id
-        , last_update
-        , event_name
-        , event_type_id
-        , created_at
-        , created_by
-        , league_id
-        , custom_event_id
-        )
-        VALUES
-        ('{event.event_date}'
-        , {event.discord_id}
-        , {event.game_id}
-        , {event.format_id}
-        , 0
-        , '{event.event_name}'
-        , {event.event_type_id if int(event.event_type_id) > 0 else 3}
-        , CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York'
-        , {user_id}
-        {f", {-int(event.event_type_id)}" if int(event.event_type_id) < 0 else ", NULL"}
-        , {event.custom_event_id if event.custom_event_id else "NULL"}
-        )
-        RETURNING id
-        """
+async def CreateEvent(event: Event, user_id: int) -> int:
+    async with await psycopg.AsyncConnection.connect(DATABASE_URL) as conn:
+        async with conn.cursor(row_factory=scalar_row) as cur:
+            command = f"""
+            INSERT INTO Events
+            (event_date
+            , discord_id
+            , game_id
+            , format_id
+            , last_update
+            , event_name
+            , event_type_id
+            , created_at
+            , created_by
+            , league_id
+            , custom_event_id
+            )
+            VALUES
+            ('{event.event_date}'
+            , {event.discord_id}
+            , {event.game_id}
+            , {event.format_id}
+            , 0
+            , '{event.event_name}'
+            , {event.event_type_id if int(event.event_type_id) > 0 else 3}
+            , CURRENT_TIMESTAMP AT TIME ZONE 'America/New_York'
+            , {user_id}
+            , {-int(event.event_type_id) if int(event.event_type_id) < 0 else "NULL"}
+            , {event.custom_event_id if event.custom_event_id else "NULL"}
+            )
+            RETURNING id
+            """
 
-        cur.execute(command)  # type: ignore[arg-type]
-        conn.commit()
-        event_id = cur.fetchone()
 
-        if not event_id:
-            raise Exception("Unable to create event")
-        return event_id
+            await cur.execute(command)  # type: ignore[arg-type]
+            event_id = await cur.fetchone()
+
+            if not event_id:
+                raise Exception("Unable to create event")
+            return event_id
 
 
 def GetPlayersInEvent(event_id: int) -> list[PlayerArchetype]:

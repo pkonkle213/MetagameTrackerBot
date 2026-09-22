@@ -49,8 +49,11 @@ async def AddPairingResults(
             p2name,
         )
 
-        unique = CheckPairings(
-            event.id, pairing.round_number, pairing.player1_name, pairing.player2_name
+        unique = await CheckPairings(
+            event.id,
+            pairing.round_number,
+            pairing.player1_name,
+            pairing.player2_name
         )
 
         if unique:
