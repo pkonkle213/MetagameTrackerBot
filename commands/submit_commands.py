@@ -15,8 +15,7 @@ from checks import IsStore, isSubmitter
 from custom_errors import KnownError
 from data.event_data import (
     CreateEvent,
-    GetHubEvents,
-    GetStoreEvents,
+    GetEvents,
     CompleteEvent,
     GetPlayersInEvent,
 )
@@ -168,17 +167,22 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         name="archetype", description="Submit a player's archetype for an event"
     )
     @app_commands.guild_only()
-    @IsStore()
     async def SubmitArchetypeCommand(self, interaction: Interaction):
         objects = GetObjectsFromInteraction(interaction)
-        if not objects.store or not objects.game or not objects.format:
+        if (
+            (not objects.store and not objects.hub)
+            or not objects.game
+            or not objects.format
+        ):
             raise KnownError("A format must be mapped to this channel")
         userId = interaction.user.id
 
+        # TODO: These two can probably be wrapped together in a single call
         player_name = GetUserName(userId)
         player_archetypes = GetUserArchetypes(userId, objects.game, objects.format)
-        # events = GetRecentEvents()
-        events = GetStoreEvents(objects.store, objects.game, objects.format)
+        events = GetEvents(
+            objects.store, objects.hub, objects.game, objects.format, objects.region
+        )
 
         if len(events) == 0:
             raise KnownError("No events found.")
@@ -277,7 +281,6 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                 await AddPairingResults(event, data.pairings_data, interaction.user.id)
 
             if new_event:
-                print("New event!")
                 store_message = (
                     f"New data for {event.event_date.strftime('%B %-d')}'s "
                     f"{event.event_name} event has been submitted! Use the "

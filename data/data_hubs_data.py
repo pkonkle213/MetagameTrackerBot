@@ -63,7 +63,6 @@ def GetPossibleHubs(
         return rows
 
 
-# TODO: How can I simplify this now that I have stores_approved_hubs?
 async def GetAllHubs(event: Event) -> list[HubsChannels]:
     """Gets all hub discordIds and channelIds for an event"""
     async with await psycopg.AsyncConnection.connect(DATABASE_URL) as conn:
