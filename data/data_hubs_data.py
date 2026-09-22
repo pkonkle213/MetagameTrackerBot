@@ -5,9 +5,7 @@ import psycopg
 from settings import DATABASE_URL
 
 
-def GetPossibleHubs(
-    store: Store, game: Game | None, format: Format | None
-) -> list[Hub]:
+def GetPossibleHubs(store: Store, game: Game, format: Format) -> list[Hub]:
     """Gets all hubs related to a store, game, and format"""
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=class_row(Hub)) as cur:
@@ -30,7 +28,7 @@ def GetPossibleHubs(
                 INNER JOIN format_channel_maps fcm ON fcm.discord_id = hv.discord_id
             WHERE
                 s.discord_id = {store.discord_id}
-                {f"AND fcm.format_id = {format.id}" if format else ""}
+                AND fcm.format_id = {format.id}
         )
         UNION
         (
@@ -52,7 +50,7 @@ def GetPossibleHubs(
             WHERE
                 s.discord_id = {store.discord_id}
                 AND rcm.region_id = {store.region_id}
-                {f"AND hv.format_lock = {format.id}" if format else ""}
+                AND hv.format_lock = {format.id}
         )
         LIMIT
             25
