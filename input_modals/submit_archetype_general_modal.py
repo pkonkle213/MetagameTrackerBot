@@ -5,7 +5,7 @@ from tuple_conversions import Event, Game, Format, Store, GameEnum
 from discord import ui, Interaction
 from data.data_input_menus import GetPreviousEvents
 from services.command_error_service import Error
-from data.player_name_data import GetUserArchetypes, GetUserName
+from data.player_name_data import GetArchetypeModalDetails, GetUserName
 from discord.ext import commands
 from services.command_error_service import Error
 from services.submit_archetype_service import SubmitArchetype

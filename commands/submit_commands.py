@@ -19,7 +19,7 @@ from data.event_data import (
     CompleteEvent,
     GetPlayersInEvent,
 )
-from data.player_name_data import GetUserArchetypes, GetUserName
+from data.player_name_data import GetArchetypeModalDetails, GetUserName
 from data.interaction_data import GetObjectsFromInteraction
 from services.command_error_service import Error
 from services.determine_archetype_input import GetArchetypeModal
@@ -175,11 +175,11 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             or not objects.format
         ):
             raise KnownError("A format must be mapped to this channel")
-        userId = interaction.user.id
 
-        # TODO: These two can probably be wrapped together in a single call
-        player_name = GetUserName(userId)
-        player_archetypes = GetUserArchetypes(userId, objects.game, objects.format)
+        user_id = interaction.user.id
+
+        player = GetArchetypeModalDetails(user_id, objects.game, objects.format)
+            
         events = GetEvents(
             objects.store, objects.hub, objects.game, objects.format, objects.region
         )
@@ -189,13 +189,13 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
         await GetArchetypeModal(
             self.bot,
-            userId,
+            user_id,
             events,
             interaction,
             objects.game,
             objects.format,
-            player_name,
-            player_archetypes,
+            player.player_name,
+            player.archetypes,
         )
 
     @app_commands.command(name="data", description="Submitting an event's data")
@@ -219,7 +219,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             await interaction.followup.send("Event canceled!", ephemeral=True)
             return
 
-        if new_event:
+        if is_new_event:
             event_id = await CreateEvent(event, interaction.user.id)
             event = event._replace(id=event_id)
 
