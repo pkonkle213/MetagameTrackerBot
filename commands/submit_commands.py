@@ -168,17 +168,21 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         name="archetype", description="Submit a player's archetype for an event"
     )
     @app_commands.guild_only()
-    @IsStore()
     async def SubmitArchetypeCommand(self, interaction: Interaction):
         objects = GetObjectsFromInteraction(interaction)
-        if not objects.store or not objects.game or not objects.format:
-            raise KnownError("A format must be mapped to this channel")
+        if (not objects.store and not objects.hub) or not objects.game or not objects.format:
+            raise KnownError('A format must be mapped to this channel')
         userId = interaction.user.id
 
         player_name = GetUserName(userId)
         player_archetypes = GetUserArchetypes(userId, objects.game, objects.format)
-        # events = GetRecentEvents()
-        events = GetStoreEvents(objects.store, objects.game, objects.format)
+        events = GetStoreEvents(
+            objects.store,
+            objects.hub,
+            objects.game,
+            objects.format,
+            objects.region
+        )
 
         if len(events) == 0:
             raise KnownError("No events found.")
@@ -207,7 +211,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         if objects.hub:
             raise KnownError("You can't submit data from a hub.")
 
-        event, input_type, active_interaction, new_event = await EventForData(
+        event, input_type, active_interaction, is_new_event = await EventForData(
             self.bot, interaction, objects.store, objects.game, objects.format
         )
 
