@@ -87,7 +87,7 @@ class OneEventCommands(commands.GroupCog, name="one_event"):
     event = modal.event
     await OneEventDecklists(interaction, event)
 
-  @OneEventMeta.error
+  @OneEventMetaCommand.error
   @OneEvent.error
   async def Errors(
     self, interaction: Interaction, error: app_commands.AppCommandError
