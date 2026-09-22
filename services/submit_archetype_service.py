@@ -15,24 +15,62 @@ from output_builder import BuildTableOutput
 from data.metagame_data import OneEventMetagame
 from discord_messages import MessageChannel
 from data.interaction_data import GetObjectsFromInteraction
-from tuple_conversions import Event, Format, Store, Game, MetagameResult, OutputToBuild
+from tuple_conversions import (
+    Event,
+    Format,
+    Store,
+    Game,
+    MetagameResult,
+    OutputToBuild,
+    Hub,
+)
 from discord.ext import commands
 from services.message_hubs_services import MessageHubs
 from data.archetype_data import PlayerInEvent
 
 
-# TODO: This really needs fixed and rethought out
+async def Moxfield(link: str) -> tuple[str, str, bool]:
+    moxfield_archetype = ""
+    moxfield_error = ""
+    success = False
+    try:
+        moxfield_archetype = await GetMoxfieldArchetype(
+            moxfield_link, event, format, player_name
+        )
+
+        AddArchetype(
+            event.id,
+            player_name,
+            moxfield_archetype,
+            None,
+            "Moxfield Import",
+            guild_id,
+            guild_name,
+            is_submitter,
+        )
+
+        moxfield_archetype += " decklist "
+        success = True
+    except KnownError as e:
+        moxfield_error = (
+            " Unable to load the decklist from Moxfield. Please try again later."
+        )
+    return moxfield_archetype, moxfield_error, success
+
+
 async def SubmitArchetype(
     bot: commands.Bot,
     interaction: Interaction,
     player_name: str,
     event: Event,
     archetype: str,
+    store: Store | None,
+    hub: Hub | None,
     game: Game,
     format: Format,
     moxfield_link: str | None,
 ) -> None:
-    objects = GetObjectsFromInteraction(interaction)
+    """objects = GetObjectsFromInteraction(interaction)"""
     guild_id = interaction.guild.id
     guild_name = interaction.guild.name
     channel_id = interaction.channel.id
@@ -42,10 +80,6 @@ async def SubmitArchetype(
             f"Player name `{player_name}` not found in event. Please try again."
         )
 
-    store = objects.store
-    if store is None:
-        raise Exception("An event didn't have a store? Sus.")
-
     # Make the call to check the archetype for banned words here
     if ContainsBadWord(event.discord_id, archetype):
         raise KnownError("Archetype contains a banned word")
@@ -53,33 +87,17 @@ async def SubmitArchetype(
     # Check if user is allowed to submit archetypes (too many banned words)
     if not CanSubmitArchetypes(event.discord_id, interaction.user.id):
         raise KnownError(
-            "You have submitted too many archetypes with banned words. Please contact your store owner to have them submit the archetype."
+            "You have submitted too many archetypes with banned words. "
+            "Please contact your store owner to have them submit the archetype."
         )
 
-    # TODO: I should already know this, when checking to get the appropriate events
+    # TODO: Should I already know this, when checking to get the appropriate events?
     is_submitter = isSubmitter(interaction.guild, interaction.user, "MTSubmitter")
 
     # If a moxfield link is provided, get the archetype from it
     moxfield_error = ""
     if moxfield_link:
-        try:
-            moxfield_archetype = await GetMoxfieldArchetype(
-                moxfield_link, event, format, player_name
-            )
-            moxfield_added = AddArchetype(
-                event.id,
-                player_name,
-                moxfield_archetype,
-                None,
-                "Moxfield Import",
-                guild_id,
-                guild_name,
-                is_submitter,
-            )
-        except KnownError as e:
-            moxfield_error = (
-                " Unable to load the decklist from Moxfield. Please try again later."
-            )
+        moxfield_archetype, moxfield_error, moxfield_success = await Moxfield(moxfield_link)
 
     # If not banned, add to the database
     if archetype != "":
@@ -115,7 +133,7 @@ async def SubmitArchetype(
 
     if full_event:
         await MessageChannel(bot, full_event, guild_id, mapped_channel)
-        name = store.store_name if store.store_name else store.discord_name
+        name = store.store_name if store else hub.hub_name if hub else "idk something"
         output = f"```{name} - " + full_event[3:]
         await MessageHubs(bot, store, event, output)
 

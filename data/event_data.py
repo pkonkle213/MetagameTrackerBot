@@ -175,11 +175,11 @@ def GetEvents(
         WITH
           criteria AS (
             SELECT
-              {store.discord_id if store else 'NULL::BIGINT'} AS store_discord_id,
-              {hub.discord_id if hub else 'NULL::BIGINT'} as hub_discord_id,
+              {store.discord_id if store else "NULL::BIGINT"} AS store_discord_id,
+              {hub.discord_id if hub else "NULL::BIGINT"} as hub_discord_id,
               {game.id} AS game_id,
               {format.id} AS format_id,
-              {region.id if region else 'NULL::INT'} AS region_id
+              {region.id if region else "NULL::INT"} AS region_id
           )
         (
           --Store Events
@@ -217,7 +217,7 @@ def GetEvents(
             e.game_id,
             e.format_id,
             e.last_update,
-            e.event_name,
+            s.store_name || ' - ' || e.event_name AS event_name,
             e.event_type_id,
             e.reported_as,
             e.created_by,
@@ -244,6 +244,6 @@ def GetEvents(
           25
         """
 
-        cur.execute(command, [discord_id, category_id, channel_id])
+        cur.execute(command)  # type: ignore[arg-type]
         rows = cur.fetchall()
         return rows

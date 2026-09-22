@@ -58,7 +58,7 @@ def GetArchetypeModalDetails(user_id: int, game: Game, format: Format) -> Player
             )
         SELECT
             n.player_name,
-            ARRAY_AGG(a.archetype_played)
+            ARRAY_AGG(a.archetype_played) as archetypes
         FROM
             name n
             INNER JOIN archetypes a ON a.player_name = n.player_name

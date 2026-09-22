@@ -192,6 +192,8 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             user_id,
             events,
             interaction,
+            objects.store,
+            objects.hub,
             objects.game,
             objects.format,
             player.player_name,
