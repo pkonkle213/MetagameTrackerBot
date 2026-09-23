@@ -13,4 +13,8 @@ def BuildReviewOutput(data: DataConverted) -> str:
     table_data = data.pairings_data
     output = BuildTableOutput(title, headers, table_data)
 
+  if data.errors:
+    for error in data.errors:
+      output += f'\n`{error}`'
+
   return output
