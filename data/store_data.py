@@ -1,3 +1,4 @@
+from custom_errors import KnownError
 from discord import Interaction, Guild, Member
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
@@ -94,7 +95,13 @@ def UpdateStore(
         guild: Guild = interaction.guild
         owner: Member = guild.owner
         cur.execute(
-            discord_command, [guild.name, guild.owner_id, owner.name, store.discord_id]
+            discord_command,
+            [
+                guild.name,
+                guild.owner_id,
+                owner.name,
+                store.discord_id
+            ]
         )
         conn.commit()
 
@@ -119,7 +126,7 @@ def UpdateStore(
         conn.commit()
         row = cur.fetchone()
         if not row:
-            raise Exception(f"Unable to update store: {discord_id}")
+            raise KnownError(f"Unable to update store: {store.discord_id}")
         return row
 
 
@@ -154,7 +161,7 @@ def GetFormatMapByEvent(event: Event) -> ChannelFormatMapping:
         cur.execute(command)
         row = cur.fetchone()
         if not row:
-            raise Exception(f"Unable to find format map for event: {event.id}")
+            raise KnownError(f"Unable to find format map for event: {event.id}")
         return row
 
 
@@ -176,7 +183,7 @@ def AddDiscord(
         conn.commit()
         row = cur.fetchone()
         if not row:
-            raise Exception(f"Unable to add discord: {discord_id}")
+            raise KnownError(f"Unable to add discord: {discord_id}")
         return row
 
 
@@ -193,29 +200,27 @@ def AddStore(discord_id: int) -> int:
         conn.commit()
         row = cur.fetchone()
         if not row:
-            raise Exception(f"Unable to add store: {discord_id}")
+            raise KnownError(f"Unable to add store: {discord_id}")
         return row
 
 
-def GetArchetypeFeed(discord_id: int, category_id: int) -> int:
+def GetArchetypeFeed(discord_id: int, game_id: int) -> int:
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor(row_factory=scalar_row) as cur:
         command = f"""
         SELECT
             channel_id
         FROM
-            archetype_feeds cc
-            INNER JOIN game_category_maps gcm ON cc.discord_id = gcm.discord_id
-            AND cc.game_id = gcm.game_id
+            archetype_feeds
         WHERE
-            cc.discord_id = {discord_id}
-            AND gcm.category_id = {category_id}
+            discord_id = {discord_id}
+            AND game_id = {game_id}
         """
 
         cur.execute(command)
         row = cur.fetchone()
         if not row:
-            raise Exception(
+            raise KnownError(
                 f"Unable to find archetype submission feed for store: {discord_id}"
             )
         return row

@@ -119,9 +119,8 @@ async def SubmitArchetype(
     public_output, full_event = CheckEventPercentage(event)
 
     # Send all output messages
-    # TODO: This doesn't work from the hub because the guild_id and channel_id are for the hub, not the store
     await interaction.followup.send(private_output, ephemeral=True)
-    await MessageStoreFeed(bot, feed_output, interaction)
+    await MessageStoreFeed(bot, feed_output, event)
     format_map = GetFormatMapByEvent(event)
     mapped_channel = format_map.channel_id
 
@@ -134,13 +133,13 @@ async def SubmitArchetype(
         await MessageHubs(bot, store, event, output)
 
 
-async def MessageStoreFeed(bot, message: str, interaction: Interaction) -> None:
+async def MessageStoreFeed(bot, message: str, event: Event) -> None:
     """Message the store feed channel specific to the game"""
     try:
         channel_id = GetArchetypeFeed(
-            interaction.guild_id, interaction.channel.category.id
+            event.discord_id, event.game_id
         )
-        await MessageChannel(bot, message, interaction.guild_id, channel_id)
+        await MessageChannel(bot, message, event.discord_id, channel_id)
     except Exception as e:
         await MessageChannel(bot, message, settings.BOTGUILDID, settings.CLAIMCHANNEL)
 
