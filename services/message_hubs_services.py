@@ -3,7 +3,7 @@ from data.data_hubs_data import GetAllHubs
 from discord_messages import MessageChannel, MessageUser
 from tuple_conversions import Event, Store
 from discord.ext import commands
-import settings
+from settings import PHILID, BOTGUILDID, ERRORCHANNELID
 
 async def MessageHubs(
   bot: commands.Bot,
@@ -12,7 +12,6 @@ async def MessageHubs(
   message:str = ''
 ) -> None:
   """Sends a message to the hubs that a new event has been added"""
-  print('Messaging hubs!')
   try:
     hubs = await GetAllHubs(event)
     name = store.store_name if store.store_name else store.discord_name
@@ -20,7 +19,7 @@ async def MessageHubs(
       try:
         await MessageChannel(bot, message, hub.discord_id, hub.channel_id)
       except Exception as e:
-        await MessageChannel(bot, str(e), settings.BOTGUILDID, settings.ERRORCHANNELID)
-        await MessageUser(bot, f"Error messaging hub {hub.discord_id}: {e}", settings.PHILID)
+        await MessageChannel(bot, str(e), BOTGUILDID, ERRORCHANNELID)
+        await MessageUser(bot, f"Error messaging hub {hub.discord_id}: {e}", PHILID)
   except KnownError as e:
     return

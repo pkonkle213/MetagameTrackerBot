@@ -264,10 +264,11 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             await modal.wait()
 
             output = BuildReviewOutput(modal.converted_data)
+
             next_modal = build_data_modal()
             view = ConfirmData(next_modal=next_modal)
             await modal.interaction.followup.send(
-                f"{output}\nPlease confirm the data", ephemeral=True, view=view
+                f"{output}\n\nPlease select continue if the data is accurate", ephemeral=True, view=view
             )
             await view.wait()
 
@@ -279,7 +280,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
             if confirm_response == ViewButtonEnum.Cancel.value:
                 await active_interaction.response.edit_message(
-                    content="Data submission canceled!", view=None
+                    content="Data submission for this round canceled!", view=None
                 )
                 break
 
@@ -301,8 +302,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                 if confirm_response == ViewButtonEnum.DoneComplete.value:
                     CompleteEvent(event.id)
 
-                if new_event:
-                    print("New event!")
+                if is_new_event:
                     store_message = (
                         f"New data for {event.event_date.strftime('%B %-d')}'s "
                         f"{event.event_name} event has been submitted! Use the "
@@ -321,7 +321,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                     )
                     await MessageHubs(self.bot, objects.store, event, hub_message)
 
-                await active_interaction.followup.send(
+                await active_interaction.response.send_message(
                     "Thank you for submitting data!", ephemeral=True
                 )
             else:

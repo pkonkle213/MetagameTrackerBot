@@ -42,7 +42,18 @@ def CompanionPairings(message: str) -> NewPairings:
     data: list[Pairing] = []
     errors: list[str] = []
     rows = message.split("\n")
-    for i in range(0, len(rows), 6):
+
+    start = 0
+    beginning = False
+
+    while not beginning:
+        try:
+            int(rows[start])
+            beginning = True
+        except ValueError:
+            start += 1
+
+    for i in range(start, len(rows), 6):
         row = rows[i : i + 6]
         try:
             if row[3].upper() != "Bye".upper():
@@ -76,7 +87,9 @@ def CompanionPairings(message: str) -> NewPairings:
             result = Pairing(roundnumber, p1name, p1gw, p2gw, p2name)
             data.append(result)
         except ValueError:
-            errors.append(f"Unable to parse the record for row {i + 4}: {rows[i + 3]}")
+            errors.append(
+                f"Unable to parse the player {rows[i + 3]}'s record in row {i + 4}"
+            )
         except KnownError as exception:
             errors.append(exception.message)
         except Exception:
