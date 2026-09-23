@@ -1,6 +1,7 @@
 from settings import DATABASE_URL
 from psycopg.rows import scalar_row
-import psycopg
+from psycopg import AsyncConnection
+from psycopg.errors import UniqueViolation
 from tuple_conversions import Standing, Pairing
 
 
@@ -8,7 +9,7 @@ async def InsertPairing(
     event_id: int, pairing: Pairing, submitter_id: int
 ) -> int | None:
     try:
-        async with await psycopg.AsyncConnection.connect(DATABASE_URL) as conn:
+        async with await AsyncConnection.connect(DATABASE_URL) as conn:
             async with conn.cursor(row_factory=scalar_row) as cur:
                 command = """
                 INSERT INTO pairings
@@ -41,14 +42,14 @@ async def InsertPairing(
                 await cur.execute(command, criteria)
                 row = await cur.fetchone()
                 return row
-    except psycopg.errors.UniqueViolation:
+    except UniqueViolation:
         return None
 
 
 async def CheckPairings(
     event_id: int, round_number: int, p1name: str, p2name: str
 ) -> bool:
-    async with await psycopg.AsyncConnection.connect(DATABASE_URL) as conn:
+    async with await AsyncConnection.connect(DATABASE_URL) as conn:
         async with conn.cursor() as cur:
             command = """
             SELECT
@@ -75,7 +76,7 @@ async def CheckPairings(
 async def InsertStanding(
     event_id: int, player: Standing, submitter_id: int
 ) -> int | None:
-    async with await psycopg.AsyncConnection.connect(DATABASE_URL) as conn:
+    async with await AsyncConnection.connect(DATABASE_URL) as conn:
         async with conn.cursor() as cur:
             try:
                 command = """
@@ -109,5 +110,5 @@ async def InsertStanding(
                 await conn.commit()
                 row = await cur.fetchone()
                 return row[0] if row else None
-            except psycopg.errors.UniqueViolation:
+            except UniqueViolation:
                 return None

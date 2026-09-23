@@ -1,15 +1,14 @@
-from typing import NamedTuple
-from psycopg.rows import class_row, scalar_row
 from datetime import date
-from settings import DATABASE_URL
 from psycopg import connect, AsyncConnection
-
+from psycopg.rows import class_row, scalar_row
+from settings import DATABASE_URL
 from tuple_conversions import Format, Store, Game, Event, PlayerArchetype
+from typing import NamedTuple
 
 
-def PlayerInEvent(event: Event, player_name: str) -> bool:
-    with connect(DATABASE_URL) as conn:
-        with conn.cursor(row_factory=scalar_row) as cur:
+async def PlayerInEvent(event: Event, player_name: str) -> bool:
+    async with await AsyncConnection.connect(DATABASE_URL) as conn:
+        async with conn.cursor(row_factory=scalar_row) as cur:
             command = f"""
             SELECT
                 e.id
@@ -21,11 +20,11 @@ def PlayerInEvent(event: Event, player_name: str) -> bool:
                 AND UPPER(fs.player_name) = UPPER(%s)
             """
 
-            cur.execute(command, [event.id, player_name])
-            row = cur.fetchone()
+            await cur.execute(command, [event.id, player_name])
+            row = await cur.fetchone()
             return row is not None
 
-#TODO: Can I consolidate this and adding one archetype?
+
 async def BulkAddArchetypes(
     event: Event,
     archetypes: list[PlayerArchetype],
@@ -33,6 +32,7 @@ async def BulkAddArchetypes(
     user_name: str,
     user_discord_id: int,
     user_discord_name: str,
+    is_submitter: bool = True)
 ) -> int:
     data_to_insert = [
         (
@@ -43,6 +43,7 @@ async def BulkAddArchetypes(
             user_name,
             user_discord_id,
             user_discord_name,
+            is_submitter,
         )
         for archetype in archetypes
     ]
@@ -71,58 +72,12 @@ async def BulkAddArchetypes(
             FALSE,
             %s,
             %s,
-            TRUE)
+            %s)
             """
 
             await cur.executemany(command, data_to_insert)
             await conn.commit()
             return len(archetypes)
-
-
-def AddArchetype(
-    event_id: int,
-    player_name: str,
-    archetype_played: str,
-    submitter_id: int | None,
-    submitter_name: str,
-    submitter_guild_id: int,
-    submitter_guild_name: str,
-    is_submitter: bool,
-) -> None:
-    criteria = [player_name, archetype_played]
-    with connect(DATABASE_URL) as conn:
-        with conn.cursor() as cur:
-            command = f"""
-            INSERT INTO archetype_submissions
-            (event_id,
-            player_name,
-            archetype_played,
-            date_submitted,
-            submitter_id,
-            submitter_username,
-            submitter_discord_id,
-            submitter_discord_name,
-            reported,
-            is_submitter)
-            VALUES
-            ({event_id},
-            %s,
-            %s,
-            NOW(),
-            {submitter_id if submitter_id else "NULL"},
-            '{submitter_name}',
-            {submitter_guild_id},
-            '{submitter_guild_name}',
-            {False},
-            {is_submitter})
-            RETURNING *
-            """
-
-            cur.execute(command, criteria)
-            conn.commit()
-            row = cur.fetchone()
-            if not row:
-                raise Exception("Unable to add archetype")
 
 
 class UnknownArchetypes(NamedTuple):
@@ -132,10 +87,14 @@ class UnknownArchetypes(NamedTuple):
 
 
 def GetUnknownArchetypes(
-    discord_id: int, game_id: int, format_id: int, start_date: date, end_date: date
+    discord_id: int,
+    game_id: int,
+    format_id: int,
+    start_date: date,
+    end_date: date
 ) -> list[UnknownArchetypes]:
-    with connect(DATABASE_URL) as conn:
-        with conn.cursor(row_factory=class_row(UnknownArchetypes)) as cur:
+    async with await AsyncConnection.connect(DATABASE_URL) as conn:
+        async with conn.cursor(row_factory=class_row(UnknownArchetypes)) as cur:
             command = f"""
             SELECT
                 TO_CHAR(event_date, 'MM/DD/YYYY') as event_date,
@@ -144,15 +103,24 @@ def GetUnknownArchetypes(
             FROM
                 unknown_archetypes ua
             WHERE
-                event_date BETWEEN '{start_date}' AND '{end_date}'
-                AND game_id = {game_id}
-                AND format_id = {format_id}
-                AND discord_id = {discord_id}
+                event_date BETWEEN %s AND %s
+                AND game_id = %s
+                AND format_id = %s
+                AND discord_id = %s
             ORDER BY
                 event_date desc,
                 INITCAP(player_name)
             """
 
-            cur.execute(command)
-            rows = cur.fetchall()
+            await cur.execute(
+                command,
+                [
+                    start_date,
+                    end_date,
+                    game_id,
+                    format_id,
+                    discord_id
+                ]
+            )
+            rows =  await cur.fetchall()
             return rows
