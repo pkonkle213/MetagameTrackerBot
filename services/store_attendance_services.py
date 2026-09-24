@@ -4,10 +4,9 @@ from data.interaction_data import GetObjectsFromInteraction
 from data.store_attendance_data import GetStoreAttendance, GetHubAttendance
 from settings import DATAGUILDID
 from services.command_error_service import KnownError
-from tuple_conversions import OutputToBuild
+from tuple_conversions import OutputToBuild, InteractionObjects
 
-def GetAttendance(interaction:Interaction, start_date:str, end_date:str) -> OutputToBuild:
-  objects = GetObjectsFromInteraction(interaction)
+def GetAttendance(objects:InteractionObjects, start_date:str, end_date:str) -> OutputToBuild:
   if (not objects.store and not objects.hub) or not objects.game or (not objects.format and not objects.region):
     raise KnownError('No store, hub, game, or region found')
   date_start, date_end = BuildDateRange(start_date, end_date, objects.format)

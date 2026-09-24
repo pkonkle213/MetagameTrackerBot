@@ -1,3 +1,4 @@
+from tuple_conversions import InteractionObjects
 from datetime import datetime as dt, time, timezone
 import settings
 from threading import Thread
@@ -40,12 +41,30 @@ from timedposts.automated_updates import UpdateDataGuild
 from services.store_services import NewStoreRegistration
 from services.sync_service import SyncCommands
 from discord_messages import MessageUser
+from data.interaction_data import GetObjectsFromInteraction
+
+
+async def get_interaction_objects(interaction: Interaction) -> InteractionObjects:
+    return await GetObjectsFromInteraction(interaction)
+
+
+class DatabaseCommandTree(app_commands.CommandTree):
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        # Ping your DB every time a slash command is invoked
+        db_data = await get_interaction_objects(interaction.user.id)
+
+        # Attach the resulting object directly to the interaction object
+        interaction.db_object = db_data
+
+        # Return True to allow command execution to proceed
+        return True
+
 
 intents = Intents.all()
 intents.message_content = True
 intents.members = True
 intents.guilds = True
-bot = commands.Bot(command_prefix="?", intents=intents)
+bot = commands.Bot(command_prefix="?", intents=intents, tree_cls=DatabaseCommandTree)
 
 BASE_DIR = Path(__file__).parent
 CMDS_DIR = BASE_DIR / "commands"
