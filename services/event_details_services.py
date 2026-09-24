@@ -2,8 +2,8 @@ from data.event_details_data import GetAllEventsStats
 from tuple_conversions import OutputToBuild, Game, Store, Format
 
 
-def GetEventStats(store: Store, game: Game, format: Format) -> OutputToBuild:
-    data = GetAllEventsStats(store, game, format)
+async def GetEventStats(store: Store, game: Game, format: Format) -> OutputToBuild:
+    data = await GetAllEventsStats(store, game, format)
     title = "Event Statistics"
     headers = [
         "Event Date",

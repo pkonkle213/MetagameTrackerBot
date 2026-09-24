@@ -22,10 +22,10 @@ class UniqueSubmitters(commands.Cog):
     @IsStore()
     async def MyEventsReported(self, interaction: Interaction):
         await interaction.response.defer(thinking=True)
-        objects = GetObjectsFromInteraction(interaction)
+        objects = await GetObjectsFromInteraction(interaction)
         if not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
-        table = GetEventStats(objects.store, objects.game, objects.format)
+        table = await GetEventStats(objects.store, objects.game, objects.format)
         output = BuildTableOutput(table.title, table.headers, table.data)
         await interaction.followup.send(output, ephemeral=True)
 

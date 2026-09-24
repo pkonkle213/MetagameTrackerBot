@@ -2,7 +2,7 @@ from typing import Any, NamedTuple
 
 from psycopg import AsyncConnection
 from psycopg.errors import UniqueViolation
-from psycopg.rows import class_row, scalar_row
+from psycopg.rows import class_row, scalar_row, TupleRow
 
 from custom_errors import KnownError
 from settings import DATABASE_URL
@@ -14,30 +14,27 @@ class Word(NamedTuple):
     banned_word: str
 
 
-async def AddWord(word: str) -> Word | None:
+async def AddWord(word: str) -> Word:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor(row_factory=class_row(Word)) as cur,
     ):
-        try:
-            criteria = [word]
-            command = """
-            INSERT INTO BadWords (badword)
-            VALUES (%s)
-            RETURNING id, banned_word
-            """
+        criteria = [word]
+        command = """
+        INSERT INTO BadWords (badword)
+        VALUES (%s)
+        RETURNING id, banned_word
+        """
 
-            await cur.execute(command, criteria)
-            await conn.commit()
-            row = await cur.fetchone()
-            if not row:
-                raise KnownError("Unable to add word")
-            return row
-        except UniqueViolation:
-            return None
+        await cur.execute(command, criteria)
+        await conn.commit()
+        row = await cur.fetchone()
+        if not row:
+            raise KnownError("Unable to add word")
+        return row
 
 
-async def GetWord(word: str) -> Word:
+async def GetWord(word: str) -> Word | None:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor(row_factory=class_row(Word)) as cur,
@@ -45,19 +42,16 @@ async def GetWord(word: str) -> Word:
         command = """
         SELECT
             id,
-            banned_word
+            INITCAP(banned_word) as banned_word
         FROM
             banned_words
         WHERE
-            banned_word = %s
+            UPPER(banned_word) = UPPER(%s)
         """
 
         criteria = [word]
         await cur.execute(command, criteria)
         row = await cur.fetchone()
-
-        if not row:
-            raise KnownError("Unable to find the word")
         return row
 
 
@@ -86,7 +80,7 @@ async def MatchDisabledArchetypes(discord_id: int, user_id: int) -> int:
         return count if count else 0
 
 
-async def DisableMatchingWords(discord_id: int, word: str) -> list[Any]:
+async def DisableMatchingWords(discord_id: int, word: str) -> None:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor() as cur,
@@ -101,14 +95,11 @@ async def DisableMatchingWords(discord_id: int, word: str) -> list[Any]:
             WHERE discord_id = %s
         )
         AND archetype_played LIKE %s
-        RETURNING *
         """
 
         criteria = [discord_id, word_inject]
         await cur.execute(command, criteria)
         await conn.commit()
-        row = await cur.fetchall()
-        return row
 
 
 async def AddBadWordBridge(discord_id: int, word_id: int) -> bool:
@@ -129,7 +120,7 @@ async def AddBadWordBridge(discord_id: int, word_id: int) -> bool:
         return bool(row)
 
 
-async def CheckStoreBannedWords(discord_id: int, archetype: str) -> int:
+async def CheckStoreBannedWords(discord_id: int, archetype: str) -> bool:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor() as cur,
@@ -148,11 +139,12 @@ async def CheckStoreBannedWords(discord_id: int, archetype: str) -> int:
         criteria = [discord_id, archetype]
         await cur.execute(command, criteria)
         rows = await cur.fetchall()
-        return len(rows)
+        return len(rows) > 0
 
 
-# TODO: Make more concrete
-async def GetOffenders(game: Game, format: Format, store: Store) -> list[Any]:
+async def GetOffenders(
+    game: Game | None, format: Format | None, store: Store
+) -> list[TupleRow]:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor() as cur,

@@ -4,14 +4,7 @@ from psycopg import AsyncConnection
 from psycopg.rows import class_row
 
 from settings import DATABASE_URL
-from tuple_conversions import Event
-
-
-class EliminationStandings(NamedTuple):
-    archetype_played: str
-    wins: int
-    losses: int
-    draws: int
+from tuple_conversions import Event, EliminationPairings, EliminationStandings
 
 
 async def GetEliminationStandings(event: Event) -> list[EliminationStandings]:
@@ -65,14 +58,6 @@ async def GetEliminationStandings(event: Event) -> list[EliminationStandings]:
     return rows
 
 
-class EliminationPairings(NamedTuple):
-    round_number: int
-    player1_archetype: str
-    player1_game_wins: int
-    player2_archetype: str
-    player2_game_wins: int
-
-
 async def GetEliminationPairings(event: Event) -> list[EliminationPairings]:
     """Gets the elimination rounds for events submitting with Pairings"""
     async with (
@@ -95,17 +80,17 @@ async def GetEliminationPairings(event: Event) -> list[EliminationPairings]:
         WHERE
             p.event_id = {event.id}
             AND round_number > CEIL(
-            LOG(
-                2,
-                (
-                SELECT
-                    COUNT(*)
-                FROM
-                    full_standings
-                WHERE
-                    event_id = {event.id}
+                LOG(
+                    2,
+                    (
+                    SELECT
+                        COUNT(*)
+                    FROM
+                        full_standings
+                    WHERE
+                        event_id = {event.id}
+                    )
                 )
-            )
             )
         ORDER BY
             round_number DESC

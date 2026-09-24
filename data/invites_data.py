@@ -5,7 +5,7 @@ from settings import DATABASE_URL, DATAGUILDID
 from tuple_conversions import Format, HubInvite, Store
 
 
-async def GetAllHubInvites(store: Store, format: Format) -> list[HubInvite]:
+async def GetConnectedHubsInvites(store: Store, format: Format) -> list[HubInvite]:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor(row_factory=class_row(HubInvite)) as cur,

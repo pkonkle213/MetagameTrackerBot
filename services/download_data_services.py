@@ -2,76 +2,105 @@ from typing import Any
 from discord import File, Interaction
 from io import BytesIO
 from services.date_functions import BuildDateRange
-from data.download_data import GetStoreStandingData, GetStorePairingData, GetPlayerPairingData, GetPlayerStandingData
+from data.download_data import (
+    GetStoreStandingData,
+    GetStorePairingData,
+    GetPlayerPairingData,
+    GetPlayerStandingData,
+)
 from data.interaction_data import GetObjectsFromInteraction
 from services.command_error_service import KnownError
 
-def GetStoreData(interaction: Interaction, start_date:str, end_date:str) -> tuple[str, list[File]]:
-  objects = GetObjectsFromInteraction(interaction)
-  if not objects.store:
-    raise KnownError('No store found')
 
-  date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
+async def GetStoreData(
+    interaction: Interaction, start_date: str, end_date: str
+) -> tuple[str, list[File]]:
+    objects = await GetObjectsFromInteraction(interaction)
+    if not objects.store:
+        raise KnownError("No store found")
 
-  name = objects.store.store_name if objects.store.store_name else objects.store.discord_name
-  message = f'Here is the data for {name.title()} between {date_start.strftime("%m/%d/%Y")} and {date_end.strftime("%m/%d/%Y")}:'
-  files:list[File] = []
+    date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
 
-  participant_data = GetStoreStandingData(objects.store, objects.game, objects.format, date_start, date_end)
-  if len(participant_data) != 0:
-    header = 'GAME,FORMAT,DATE,PLAYER_NAME,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS'
-    files.append(ConvertRowsToFile(participant_data, 'MyStoreParticipantData', header))
-    message += ' Participant data is attached.'
+    name = (
+        objects.store.store_name
+        if objects.store.store_name
+        else objects.store.discord_name
+    )
+    message = f"Here is the data for {name.title()} between {date_start.strftime('%m/%d/%Y')} and {date_end.strftime('%m/%d/%Y')}:"
+    files: list[File] = []
 
-  round_data = GetStorePairingData(objects.store, objects.game, objects.format, date_start, date_end)
-  if len(round_data) != 0:
-    header = 'GAME,FORMAT,DATE,ROUND,PLAYER_NAME,ARCHETYPE_PLAYED,OPPONENT_NAME,OPPONENT_ARCHETYPE,RESULT'
-    files.append(ConvertRowsToFile(round_data, 'MyStoreRoundByRoundData', header))
-    message += ' Round by round data is attached.'
+    participant_data = await GetStoreStandingData(
+        objects.store, objects.game, objects.format, date_start, date_end
+    )
+    if len(participant_data) != 0:
+        header = "GAME,FORMAT,DATE,PLAYER_NAME,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS"
+        files.append(
+            ConvertRowsToFile(participant_data, "MyStoreParticipantData", header)
+        )
+        message += " Participant data is attached."
 
-  return message, files
+    round_data = await GetStorePairingData(
+        objects.store, objects.game, objects.format, date_start, date_end
+    )
+    if len(round_data) != 0:
+        header = "GAME,FORMAT,DATE,ROUND,PLAYER_NAME,ARCHETYPE_PLAYED,OPPONENT_NAME,OPPONENT_ARCHETYPE,RESULT"
+        files.append(ConvertRowsToFile(round_data, "MyStoreRoundByRoundData", header))
+        message += " Round by round data is attached."
 
-def GetPlayerData(interaction: Interaction, start_date:str, end_date:str) -> tuple[str, list[File]]:
-  objects = GetObjectsFromInteraction(interaction)
-  if not objects.store:
-    raise KnownError('No store found')
-    
-  user_id = interaction.user.id
+    return message, files
 
-  date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
-  
-  name = objects.store.store_name if objects.store.store_name else objects.store.discord_name
-  message = f'Here is the data for {name.title()} between {date_start.strftime("%m/%d/%Y")} and {date_end.strftime("%m/%d/%Y")}:'
-  files:list[File] = []
 
-  participant_data = GetPlayerStandingData(objects.store, objects.game, objects.format, date_start, date_end, user_id)
-  if len(participant_data) != 0:
-    header = 'GAME,FORMAT,DATE,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS'
-    files.append(ConvertRowsToFile(participant_data, 'MyEventResultsData', header))
+async def GetPlayerData(
+    interaction: Interaction, start_date: str, end_date: str
+) -> tuple[str, list[File]]:
+    objects = await GetObjectsFromInteraction(interaction)
+    if not objects.store:
+        raise KnownError("No store found")
 
-  round_data = GetPlayerPairingData(objects.store, objects.game, objects.format, date_start, date_end, user_id)
-  if len(round_data) != 0:
-    header = 'GAME,FORMAT,DATE,ROUND,ARCHETYPE_PLAYED,OPPONENT_ARCHETYPE,RESULT'
-    files.append(ConvertRowsToFile(round_data, 'MyRoundByRoundData', header))
-    
-  return message, files
+    user_id = interaction.user.id
 
-def ConvertRowsToFile(data: list[Any], filename:str, header:str):
-  data_list:list[str] = []
-  data_list.append(header + '\n')
-  for row in data:
-    max = len(row)
-    row_string = ''
-    for i in range(max):
-      row_string += f'{row[i]}'
-      if i != max - 1:
-        row_string += ','
-      else:
-        row_string += '\n'
+    date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
 
-    data_list.append(row_string)
+    name = (
+        objects.store.store_name
+        if objects.store.store_name
+        else objects.store.discord_name
+    )
+    message = f"Here is the data for {name.title()} between {date_start.strftime('%m/%d/%Y')} and {date_end.strftime('%m/%d/%Y')}:"
+    files: list[File] = []
 
-  as_bytes = map(str.encode, data_list)
-  content = b''.join(as_bytes)
-  return File(BytesIO(content), filename=f'{filename}.csv')
-  
+    participant_data = await GetPlayerStandingData(
+        objects.store, objects.game, objects.format, date_start, date_end, user_id
+    )
+    if len(participant_data) != 0:
+        header = "GAME,FORMAT,DATE,ARCHETYPE_PLAYED,WINS,LOSSES,DRAWS"
+        files.append(ConvertRowsToFile(participant_data, "MyEventResultsData", header))
+
+    round_data = await GetPlayerPairingData(
+        objects.store, objects.game, objects.format, date_start, date_end, user_id
+    )
+    if len(round_data) != 0:
+        header = "GAME,FORMAT,DATE,ROUND,ARCHETYPE_PLAYED,OPPONENT_ARCHETYPE,RESULT"
+        files.append(ConvertRowsToFile(round_data, "MyRoundByRoundData", header))
+
+    return message, files
+
+
+def ConvertRowsToFile(data: list[Any], filename: str, header: str):
+    data_list: list[str] = []
+    data_list.append(header + "\n")
+    for row in data:
+        max = len(row)
+        row_string = ""
+        for i in range(max):
+            row_string += f"{row[i]}"
+            if i != max - 1:
+                row_string += ","
+            else:
+                row_string += "\n"
+
+        data_list.append(row_string)
+
+    as_bytes = map(str.encode, data_list)
+    content = b"".join(as_bytes)
+    return File(BytesIO(content), filename=f"{filename}.csv")

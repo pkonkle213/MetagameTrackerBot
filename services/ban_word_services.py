@@ -1,3 +1,7 @@
+from tuple_conversions import OutputToBuild
+from custom_errors import KnownError
+from typing import Any
+from pyparsing import Word
 from data.interaction_data import GetObjectsFromInteraction
 from data.ban_word_data import (
     AddWord,
@@ -11,36 +15,36 @@ from data.ban_word_data import (
 from discord import Interaction
 
 
-def AddBadWord(interaction: Interaction, bad_word: str):
-    word = GetWord(bad_word)
-    if word is None:
-        word = AddWord(bad_word)
-        if word is None:
-            raise Exception("Unable to add word")
+async def AddBadWord(interaction: Interaction, bad_word: str) -> None:
+    word = await GetWord(bad_word)
+    if not word:
+        word = await AddWord(bad_word)
 
-    bridge_check = AddBadWordBridge(interaction.guild_id, word.ID)
+    discord_id = interaction.guild_id
+    if not discord_id:
+        raise KnownError("Only able to ban words from stores")
+
+    bridge_check = await AddBadWordBridge(discord_id, word.id)
     if bridge_check is None:
-        raise Exception("Unable to add bad word bridge")
+        raise KnownError("Unable to ban the word for this store")
 
-    archetypes = DisableMatchingWords(interaction.guild_id, bad_word.upper())
-    if archetypes is None:
-        raise Exception("No archetypes found to disable")
-    return (word, archetypes)
+    await DisableMatchingWords(discord_id, bad_word.upper())
 
 
-def ContainsBadWord(discord_id: int, archetype: str):
-    words = CheckStoreBannedWords(discord_id, archetype)
-    return True if words else False
+async def ContainsBadWord(discord_id: int, archetype: str) -> bool:
+    return await CheckStoreBannedWords(discord_id, archetype)
 
 
-async def CanSubmitArchetypes(discord_id: int, user_id: int):
+async def CanSubmitArchetypes(discord_id: int, user_id: int) -> bool:
     offenses = await MatchDisabledArchetypes(discord_id, user_id)
     return offenses < 3
 
 
-def Offenders(interaction: Interaction):
-    objects = GetObjectsFromInteraction(interaction)
-    offenders = GetOffenders(objects.game, objects.format, objects.store)
+async def Offenders(interaction: Interaction) -> OutputToBuild:
+    objects = await GetObjectsFromInteraction(interaction)
+    if not objects.store:
+        raise KnownError("This command is only available to stores")
+    offenders = await GetOffenders(objects.game, objects.format, objects.store)
     headers = [
         "Date Submitted",
         "Submitter",
@@ -54,4 +58,4 @@ def Offenders(interaction: Interaction):
     if not objects.game:
         headers.insert(5, "Game")
     title = "Those who have been flagged for bad words/phrases"
-    return offenders, title, headers
+    return OutputToBuild(title, headers, offenders)

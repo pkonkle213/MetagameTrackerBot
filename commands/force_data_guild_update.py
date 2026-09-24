@@ -1,6 +1,6 @@
 from discord import Interaction, app_commands, Object
 from discord.ext import commands
-import settings
+from settings import BOTGUILDID
 from timedposts.automated_updates import UpdateDataGuild
 import timedposts.automated_paid_users as apu
 
@@ -15,22 +15,22 @@ class ForceDataGuildUpdate(commands.GroupCog, name="force_update"):
     async def UpdatePaidObjects(self, interaction: Interaction):
         await interaction.response.defer(thinking=True)
         try:
-          apu.UpdateStores()
-          apu.UpdateHubs()
-          apu.UpdatePaidUsers()
-          apu.UpdatePaidStores()
-          apu.UpdatePaidHubs()
-          
-          await interaction.followup.send("All paid objects successfully updated!")
+            apu.UpdateStores()
+            apu.UpdateHubs()
+            apu.UpdatePaidUsers()
+            apu.UpdatePaidStores()
+            apu.UpdatePaidHubs()
+
+            await interaction.followup.send("All paid objects successfully updated!")
         except Exception as exception:
-          await interaction.followup.send(
-            f"Error updating paid objects: {exception}", ephemeral=True
-          )
+            await interaction.followup.send(
+                f"Error updating paid objects: {exception}", ephemeral=True
+            )
 
     @app_commands.command(
         name="data_guild", description="Force an update of the data guild"
     )
-    @app_commands.guilds(settings.BOTGUILDID)
+    @app_commands.guilds(BOTGUILDID)
     async def ForceUpdate(self, interaction: Interaction):
         await interaction.response.defer(thinking=False)
         try:
@@ -41,4 +41,4 @@ class ForceDataGuildUpdate(commands.GroupCog, name="force_update"):
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(ForceDataGuildUpdate(bot), guild=Object(settings.BOTGUILDID))
+    await bot.add_cog(ForceDataGuildUpdate(bot), guild=Object(BOTGUILDID))

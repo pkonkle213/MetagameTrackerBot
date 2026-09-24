@@ -1,8 +1,12 @@
 from data.elimination_rounds_data import GetEliminationPairings, GetEliminationStandings
-from tuple_conversions import Event, ReportedAsEnum
+from tuple_conversions import (
+    Event,
+    ReportedAsEnum,
+    EliminationPairings,
+    EliminationStandings,
+)
 
 
-# TOOD: WHAT IS THIS?
 async def GetEliminationRoundData(event: Event) -> str:
     title = f"{event.event_date.strftime('%m/%d/%Y')} - {event.event_name}'s Top 8:"
     output = ""
@@ -22,19 +26,18 @@ async def GetEliminationRoundData(event: Event) -> str:
     return output
 
 
-def BuildEliminationStandingOutput(data: list[tuple[int, str, int, str, int]]) -> str:
+# TODO: Test this, as I'm not sure if the lines work like this.
+def BuildEliminationStandingOutput(data: list[EliminationStandings]) -> str:
     """Builds the output for the elimination rounds when the event is submitted via standings"""
-    output = f"""
-Winner:
-  {data[0][0]}
-  
-Runner Up:
-  {data[1][0]}
-  
-Semifinalists:
-  {data[2][0]}
-  {data[3][0]}
-"""
+    output = "Winner:"
+    f"  {data[0][0]}"
+    ""
+    "Runner Up:"
+    f"  {data[1][0]}"
+    ""
+    "Semifinalists:"
+    f"  {data[2][0]}"
+    f"  {data[3][0]}"
 
     if len(data) > 4:
         output += f"""
@@ -46,7 +49,7 @@ Quarterfinalists:
     return output
 
 
-def BuildEliminationPairingOutput(data: list[tuple[int, str, int, str, int]]) -> str:
+def BuildEliminationPairingOutput(data: list[EliminationPairings]) -> str:
     """Builds the output for the elimination rounds when the event is submitted via pairings"""
     output = ""
 

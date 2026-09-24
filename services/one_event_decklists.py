@@ -56,7 +56,7 @@ async def OneEventDecklists(interaction: discord.Interaction, event: Event) -> N
     # 2) For all decks, make a list of ids
 
     # 3) Get all decklists for those decks
-    decklists = GetDecklists(event)
+    decklists = await GetDecklists(event)
 
     # 4) For each deck, create the title of '{archetype} ({wins} - {losses} - {draws})'
     # 5) For each deck, create a list of cards like:
