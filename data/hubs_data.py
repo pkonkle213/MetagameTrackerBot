@@ -1,56 +1,77 @@
-from custom_errors import KnownError
-from settings import DATABASE_URL
-import psycopg
-from tuple_conversions import Region, Hub
+from typing import NamedTuple
+
+from psycopg import AsyncConnection
 from psycopg.rows import class_row
 
-def GetRegions(hub:Hub) -> list[Region]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Region)) as cur:
-    command = f"""
-    SELECT
-      id,
-      region_name
-    FROM
-      regions
-    ORDER BY region_name
-    """
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
+from custom_errors import KnownError
+from settings import DATABASE_URL
+from tuple_conversions import Hub, Region
 
-def GetHub(discord_id:int) -> Hub:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Hub)) as cur:
-    command = f"""
-    SELECT
-      *
-    FROM hubs_view
-    WHERE discord_id = {discord_id}
-    """
 
-    cur.execute(command)
-    conn.commit()
-    row = cur.fetchone()
-    if not row:
-      raise KnownError('No hub found')
-    return row
+async def GetRegions() -> list[Region]:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(Region)) as cur,
+    ):
+        command = """
+        SELECT
+            id,
+            region_name
+        FROM
+            regions
+        ORDER BY
+            region_name
+        """
 
-def AddRegionMap(hub:Hub,
-                 channel_id: int,
-                 region:Region) -> tuple[int, int, int]:
-   conn = psycopg.connect(DATABASE_URL)
-   with conn, conn.cursor() as cur:
-      command = f"""
-      INSERT INTO region_channel_maps (discord_id, channel_id, region_id)
-      VALUES ({hub.discord_id}, {channel_id}, {region.id})
-      ON CONFLICT (discord_id, channel_id) DO UPDATE
-      SET region_id = {region.id}
-      RETURNING *
-      """
-      cur.execute(command)
-      conn.commit()
-      row = cur.fetchone()
-      if not row:
-         raise KnownError('Failed to map region. Please try again later.')
-      return row
+        await cur.execute(command)
+        rows = await cur.fetchall()
+        return rows
+
+
+async def GetHub(discord_id: int) -> Hub:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(Hub)) as cur,
+    ):
+        command = """
+        SELECT
+            *
+        FROM
+            hubs_view
+        WHERE
+            discord_id = %s
+        """
+
+        await cur.execute(command, [discord_id])
+
+        row = await cur.fetchone()
+        if not row:
+            raise KnownError("No hub found")
+        return row
+
+
+class RegionMap(NamedTuple):
+    discord_id: int
+    channel_id: int
+    region_id: int
+
+
+async def AddRegionMap(hub: Hub, channel_id: int, region: Region) -> RegionMap:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(RegionMap)) as cur,
+    ):
+        command = f"""
+        INSERT INTO region_channel_maps (discord_id, channel_id, region_id)
+        VALUES ({hub.discord_id}, {channel_id}, {region.id})
+        ON CONFLICT (discord_id, channel_id) DO UPDATE
+        SET region_id = {region.id}
+        RETURNING *
+        """
+
+        await cur.execute(command)  # type: ignore[arg-type]
+        await conn.commit()
+        row = await cur.fetchone()
+        if not row:
+            raise KnownError("Failed to map region. Please try again later.")
+        return row

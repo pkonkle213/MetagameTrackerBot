@@ -2,14 +2,15 @@ from data.elimination_rounds_data import GetEliminationPairings, GetEliminationS
 from tuple_conversions import Event, ReportedAsEnum
 
 
-def GetEliminationRoundData(event: Event) -> str:
+# TOOD: WHAT IS THIS?
+async def GetEliminationRoundData(event: Event) -> str:
     title = f"{event.event_date.strftime('%m/%d/%Y')} - {event.event_name}'s Top 8:"
     output = ""
 
     # If the selected tournament is submitted via standings, obtain the top 8 that way
     if event.reported_as == ReportedAsEnum.Standings.value:
         data = GetEliminationStandings(event)
-        output = BuildEliminationStandingOutput(data)
+        output = await BuildEliminationStandingOutput(data)
 
     # If the selected tournament is submitted via pairings, obtain the top 8 that way
     elif event.reported_as == ReportedAsEnum.Pairings.value:

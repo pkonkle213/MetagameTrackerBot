@@ -15,7 +15,7 @@ from services.map_claim_feed import MapClaimFeed
 class MappingCommands(commands.GroupCog, name="map"):
     """A group of commands for mapping channels to games, formats, and claim feeds"""
 
-    def __init__(self, bot:commands.Bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @app_commands.command(
@@ -42,7 +42,7 @@ class MappingCommands(commands.GroupCog, name="map"):
             raise KnownError("No hub found. Please register your hub.")
         if not hub.format_lock:
             raise KnownError("This hub does not have format locking enabled.")
-        regions = GetRegions(hub)
+        regions = GetRegions()
         if not regions or len(regions) == 0:
             raise KnownError("No regions found. Please contact the bot owner.")
         modal = MapRegionModal(hub, regions)
@@ -84,5 +84,5 @@ class MappingCommands(commands.GroupCog, name="map"):
         await Error(self.bot, interaction, error)
 
 
-async def setup(bot:commands.Bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(MappingCommands(bot))

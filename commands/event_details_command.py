@@ -1,13 +1,12 @@
-from data.interaction_data import GetObjectsFromInteraction
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import isPhil
+from checks import IsStore
+from custom_errors import KnownError
+from data.interaction_data import GetObjectsFromInteraction
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from services.event_details_services import GetEventStats
-from settings import BOTGUILDID
-from checks import IsStore
 
 
 class UniqueSubmitters(commands.Cog):
@@ -25,7 +24,7 @@ class UniqueSubmitters(commands.Cog):
         await interaction.response.defer(thinking=True)
         objects = GetObjectsFromInteraction(interaction)
         if not objects.store or not objects.game or not objects.format:
-            raise Exception("No store, game, or format found.")
+            raise KnownError("No store, game, or format found.")
         table = GetEventStats(objects.store, objects.game, objects.format)
         output = BuildTableOutput(table.title, table.headers, table.data)
         await interaction.followup.send(output, ephemeral=True)

@@ -1,28 +1,32 @@
 from datetime import date
-from psycopg import connect, AsyncConnection
-from psycopg.rows import class_row, scalar_row
-from settings import DATABASE_URL
-from tuple_conversions import Format, Store, Game, Event, PlayerArchetype
 from typing import NamedTuple
+
+from psycopg import AsyncConnection
+from psycopg.rows import class_row, scalar_row
+
+from settings import DATABASE_URL
+from tuple_conversions import Event, PlayerArchetype
 
 
 async def PlayerInEvent(event: Event, player_name: str) -> bool:
-    async with await AsyncConnection.connect(DATABASE_URL) as conn:
-        async with conn.cursor(row_factory=scalar_row) as cur:
-            command = f"""
-            SELECT
-                e.id
-            FROM
-                events e
-                INNER JOIN full_standings fs ON fs.event_id = e.id
-            WHERE
-                e.id = %s
-                AND UPPER(fs.player_name) = UPPER(%s)
-            """
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=scalar_row) as cur,
+    ):
+        command = """
+        SELECT
+            e.id
+        FROM
+            events e
+            INNER JOIN full_standings fs ON fs.event_id = e.id
+        WHERE
+            e.id = %s
+            AND UPPER(fs.player_name) = UPPER(%s)
+        """
 
-            await cur.execute(command, [event.id, player_name])
-            row = await cur.fetchone()
-            return row is not None
+        await cur.execute(command, [event.id, player_name])
+        row = await cur.fetchone()
+        return row is not None
 
 
 async def BulkAddArchetypes(
@@ -32,7 +36,7 @@ async def BulkAddArchetypes(
     user_name: str,
     user_discord_id: int,
     user_discord_name: str,
-    is_submitter: bool = True)
+    is_submitter: bool = True,
 ) -> int:
     data_to_insert = [
         (
@@ -48,36 +52,39 @@ async def BulkAddArchetypes(
         for archetype in archetypes
     ]
 
-    async with await AsyncConnection.connect(DATABASE_URL) as conn:
-        async with conn.cursor() as cur:
-            command = """
-            INSERT INTO archetype_submissions 
-            (event_id,
-            player_name,
-            archetype_played,
-            date_submitted,
-            submitter_id,
-            submitter_username,
-            reported,
-            submitter_discord_id,
-            submitter_discord_name,
-            is_submitter)
-            VALUES
-            (%s,
-            %s,
-            %s,
-            NOW(),
-            %s,
-            %s,
-            FALSE,
-            %s,
-            %s,
-            %s)
-            """
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor() as cur,
+    ):
+        # TODO: Is this how it's formatted when prettier? It looks bad to my eyes
+        command = """
+        INSERT INTO archetype_submissions 
+        (event_id,
+        player_name,
+        archetype_played,
+        date_submitted,
+        submitter_id,
+        submitter_username,
+        reported,
+        submitter_discord_id,
+        submitter_discord_name,
+        is_submitter)
+        VALUES
+        (%s,
+        %s,
+        %s,
+        NOW(),
+        %s,
+        %s,
+        FALSE,
+        %s,
+        %s,
+        %s)
+        """
 
-            await cur.executemany(command, data_to_insert)
-            await conn.commit()
-            return len(archetypes)
+        await cur.executemany(command, data_to_insert)
+        await conn.commit()
+        return len(archetypes)
 
 
 class UnknownArchetypes(NamedTuple):
@@ -86,41 +93,32 @@ class UnknownArchetypes(NamedTuple):
     player_name: str
 
 
-def GetUnknownArchetypes(
-    discord_id: int,
-    game_id: int,
-    format_id: int,
-    start_date: date,
-    end_date: date
+async def GetUnknownArchetypes(
+    discord_id: int, game_id: int, format_id: int, start_date: date, end_date: date
 ) -> list[UnknownArchetypes]:
-    async with await AsyncConnection.connect(DATABASE_URL) as conn:
-        async with conn.cursor(row_factory=class_row(UnknownArchetypes)) as cur:
-            command = f"""
-            SELECT
-                TO_CHAR(event_date, 'MM/DD/YYYY') as event_date,
-                INITCAP(event_name) as event_name,
-                INITCAP(player_name) as player_name
-            FROM
-                unknown_archetypes ua
-            WHERE
-                event_date BETWEEN %s AND %s
-                AND game_id = %s
-                AND format_id = %s
-                AND discord_id = %s
-            ORDER BY
-                event_date desc,
-                INITCAP(player_name)
-            """
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(UnknownArchetypes)) as cur,
+    ):
+        command = """
+        SELECT
+            TO_CHAR(event_date, 'MM/DD/YYYY') as event_date,
+            INITCAP(event_name) as event_name,
+            INITCAP(player_name) as player_name
+        FROM
+            unknown_archetypes ua
+        WHERE
+            event_date BETWEEN %s AND %s
+            AND game_id = %s
+            AND format_id = %s
+            AND discord_id = %s
+        ORDER BY
+            event_date desc,
+            INITCAP(player_name)
+        """
 
-            await cur.execute(
-                command,
-                [
-                    start_date,
-                    end_date,
-                    game_id,
-                    format_id,
-                    discord_id
-                ]
-            )
-            rows =  await cur.fetchall()
-            return rows
+        await cur.execute(
+            command, [start_date, end_date, game_id, format_id, discord_id]
+        )
+        rows = await cur.fetchall()
+        return rows
