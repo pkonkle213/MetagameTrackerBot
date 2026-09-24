@@ -1,12 +1,12 @@
+from psycopg import AsyncConnection
 from psycopg.rows import class_row
-import settings
-import psycopg
-from datetime import date
+
 from settings import DATABASE_URL
-from tuple_conversions import Event, Format, Game, Store, League, MetagameResult
+from tuple_conversions import Event, League, MetagameResult
 
 
-def GetHubLeagueMetagame(league: League) -> list[MetagameResult]:
+# TODO: Something feels like I could consolidate these into fewer functions
+async def GetHubLeagueMetagame(league: League) -> list[MetagameResult]:
     metagame = f"""
     SELECT
         INITCAP(COALESCE(ua.archetype_played, 'Unknown')) AS archetype_played,
@@ -22,10 +22,11 @@ def GetHubLeagueMetagame(league: League) -> list[MetagameResult]:
     GROUP BY
         archetype_played
     """
-    data = GetLeagueMetagame(metagame)
+    data = await GetLeagueMetagame(metagame)
     return data
 
-def GetStoreLeagueMetagame(league: League) -> list[MetagameResult]:
+
+async def GetStoreLeagueMetagame(league: League) -> list[MetagameResult]:
     metagame = f"""
     SELECT
         COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,
@@ -41,13 +42,15 @@ def GetStoreLeagueMetagame(league: League) -> list[MetagameResult]:
     GROUP BY
         INITCAP(ua.archetype_played)
     """
-    data = GetLeagueMetagame(metagame)
+    data = await GetLeagueMetagame(metagame)
     return data
 
 
-def GetLeagueMetagame(metagame: str) -> list[MetagameResult]:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(MetagameResult)) as cur:
+async def GetLeagueMetagame(metagame: str) -> list[MetagameResult]:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(MetagameResult)) as cur,
+    ):
         command = f"""
         WITH
             metagame AS (
@@ -66,49 +69,55 @@ def GetLeagueMetagame(metagame: str) -> list[MetagameResult]:
             3 DESC
         """
 
-        cur.execute(command)
-        rows = cur.fetchall()
+        await cur.execute(command)  # type: ignore[arg-type]
+        rows = await cur.fetchall()
         return rows
 
 
-def OneEventMetagame(event: Event) -> list[MetagameResult]:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(MetagameResult)) as cur:
-        command = f"""
-        SELECT
-            archetype_played,
-            ROUND(metagame_percent * 100, 2) AS metagame_percent,
-            ROUND(win_percent * 100, 2) AS win_percent
-        FROM (
+async def OneEventMetagame(event: Event) -> list[MetagameResult]:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(MetagameResult)) as cur,
+    ):
+        command = """
+        WITH metagame AS (
             SELECT
                 COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,
-                1.0 * sum(fp.wins) / (sum(fp.wins) + sum(fp.losses) + sum(fp.draws)) AS win_percent,
-                COUNT(*) * 1.0 / SUM(count(*)) OVER () AS Metagame_Percent
+                COUNT(*) * 1.0 / SUM(count(*)) OVER () AS metagame_Percent,
+                1.0 * sum(fp.wins) / (sum(fp.wins) + sum(fp.losses) + sum(fp.draws)) AS win_percent
             FROM
                 full_standings fp
                 LEFT JOIN unique_archetypes ua ON fp.event_id = ua.event_id AND UPPER(fp.player_name) = UPPER(ua.player_name)
                 INNER JOIN events e ON fp.event_id = e.id
                 INNER JOIN stores s ON e.discord_id = s.discord_id
             WHERE
-                e.id = {event.id}
+                e.id = %s
             GROUP BY
                 INITCAP(ua.archetype_played)
             )
+        SELECT
+            archetype_played,
+            ROUND(metagame_percent * 100, 2) AS metagame_percent,
+            ROUND(win_percent * 100, 2) AS win_percent
+        FROM
+            metagame
         WHERE
-        metagame_percent >= 0.02
+            metagame_percent >= 0.02
         ORDER BY
-        2 DESC,
-        3 DESC
+            2 DESC,
+            3 DESC
         """
 
-        cur.execute(command)
-        rows = cur.fetchall()
+        await cur.execute(command, [event.id])
+        rows = await cur.fetchall()
         return rows
 
 
-def GetTheMetagame(criteria: str) -> list[MetagameResult]:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(MetagameResult)) as cur:
+async def GetTheMetagame(criteria: str) -> list[MetagameResult]:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(MetagameResult)) as cur,
+    ):
         command = f"""
         WITH
             RESULTS AS (
@@ -137,6 +146,6 @@ def GetTheMetagame(criteria: str) -> list[MetagameResult]:
             3 DESC
         """
 
-        cur.execute(command)
-        rows = cur.fetchall()
+        await cur.execute(command)  # type: ignore[arg-type]
+        rows = await cur.fetchall()
         return rows
