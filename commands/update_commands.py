@@ -18,7 +18,7 @@ class UpdateCommands(commands.GroupCog, name="update"):
     @app_commands.checks.has_role("MTSubmitter")
     @IsStore()
     async def UpdateArchetypes(self, interaction: Interaction):
-        objects = GetObjectsFromInteraction(interaction)
+        objects = await GetObjectsFromInteraction(interaction)
         if not objects.store or not objects.game or not objects.format:
             raise Exception("No store, game, or format found.")
         modal = UpdateArchetypeModal(
@@ -32,7 +32,7 @@ class UpdateCommands(commands.GroupCog, name="update"):
     @app_commands.checks.has_role("MTSubmitter")
     @IsPaidStore()
     async def UpdatePlayerNames(self, interaction: Interaction):
-        objects = GetObjectsFromInteraction(interaction)
+        objects = await GetObjectsFromInteraction(interaction)
         if not objects.store or not objects.game or not objects.format:
             raise Exception("No store, game, or format found.")
 
@@ -52,7 +52,9 @@ class UpdateCommands(commands.GroupCog, name="update"):
         if result:
             await result.followup.send("Discord profile updated!", ephemeral=True)
         else:
-            await result.followup.send("Discord profile unable to update.", ephemeral=True)
+            await result.followup.send(
+                "Discord profile unable to update.", ephemeral=True
+            )
 
     @UpdateProfile.error
     @UpdateArchetypes.error

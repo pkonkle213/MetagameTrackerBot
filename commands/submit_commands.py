@@ -31,6 +31,8 @@ from input_modals.submit_csv_modal import SubmitCSVDataModal
 from input_modals.submit_melee_modal import SubmitMeleeDataModal
 from services.submit_data_services import BuildReviewOutput
 
+# TODO: That's a lot of imports. Any chance I could clean this up any?
+
 
 class SubmitDataChecker(commands.GroupCog, name="submit"):
     """A group of commands to submit event data and archetypes"""
@@ -45,7 +47,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     async def SubmitCheck(self, interaction: Interaction):
         await interaction.response.defer(ephemeral=True, thinking=False)
         issues = ["Issues I detect:"]
-        objects = GetObjectsFromInteraction(interaction)
+        objects = await GetObjectsFromInteraction(interaction)
         if not interaction.guild:
             raise KnownError("How?")
         if isinstance(interaction.user, User):
@@ -74,7 +76,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     @app_commands.guild_only()
     @IsStore()
     async def MassArchetypeInput(self, interaction: Interaction):
-        objects = GetObjectsFromInteraction(interaction)
+        objects = await GetObjectsFromInteraction(interaction)
         user_id = interaction.user.id
 
         if not objects.store or not objects.game or not objects.format:
@@ -106,7 +108,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         if not event:
             raise KnownError("No event found.")
 
-        total_players = GetPlayersInEvent(event.id)
+        total_players = await GetPlayersInEvent(event.id)
         if len(total_players) == 0:
             raise KnownError("No players found for this event.")
 
@@ -168,7 +170,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     )
     @app_commands.guild_only()
     async def SubmitArchetypeCommand(self, interaction: Interaction):
-        objects = GetObjectsFromInteraction(interaction)
+        objects = await GetObjectsFromInteraction(interaction)
         if (
             (not objects.store and not objects.hub)
             or not objects.game
@@ -181,7 +183,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
         player = GetArchetypeModalDetails(user_id, objects.game, objects.format)
 
-        events = GetEvents(
+        events = await GetEvents(
             objects.store,
             objects.hub,
             objects.game,
@@ -212,7 +214,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     @app_commands.guild_only()
     @IsStore()
     async def SubmitDataCommand(self, interaction: Interaction) -> None:
-        objects = GetObjectsFromInteraction(interaction)
+        objects = await GetObjectsFromInteraction(interaction)
 
         if not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
@@ -268,7 +270,9 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             next_modal = build_data_modal()
             view = ConfirmData(next_modal=next_modal)
             await modal.interaction.followup.send(
-                f"{output}\n\nPlease select continue if the data is accurate", ephemeral=True, view=view
+                f"{output}\n\nPlease select continue if the data is accurate",
+                ephemeral=True,
+                view=view,
             )
             await view.wait()
 
@@ -300,7 +304,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                 cont = False
 
                 if confirm_response == ViewButtonEnum.DoneComplete.value:
-                    CompleteEvent(event.id)
+                    await CompleteEvent(event.id)
 
                 if is_new_event:
                     store_message = (
