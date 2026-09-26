@@ -26,14 +26,8 @@ class PersonalStatisticsGroup(commands.GroupCog, name="personal_stats"):
         self, interaction: Interaction, start_date: str = "", end_date: str = ""
     ):
         await interaction.response.defer(ephemeral=True, thinking=True)
-        table = await PersonalMatchups(interaction, start_date, end_date)
-        if len(table.data) == 0:
-            await interaction.followup.send(
-                "No matchup data found for this store and/or format", ephemeral=True
-            )
-        else:
-            output = BuildTableOutput(table.title, table.headers, table.data)
-            await interaction.followup.send(output, ephemeral=True)
+        start_date = "1/1/2026"
+        await PersonalMatchups(interaction, start_date, end_date)
 
     @app_commands.command(
         name="wlrecord", description="Look up your win/loss record(s)"
