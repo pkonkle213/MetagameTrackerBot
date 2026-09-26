@@ -13,7 +13,7 @@ from tuple_conversions import EventTypeEnum
 class EliminationRoundsCommands(commands.GroupCog, name="elimination_rounds"):
     """A group of commands to view elimination rounds"""
 
-    def __init__(self, bot:commands.Bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @app_commands.command(
@@ -24,7 +24,7 @@ class EliminationRoundsCommands(commands.GroupCog, name="elimination_rounds"):
     @IsStore()
     @app_commands.guilds(BOTGUILDID)
     async def EliminationRounds(self, interaction: Interaction):
-        objects = GetObjectsFromInteraction(interaction)
+        objects = await GetObjectsFromInteraction(interaction)
         if not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
 
@@ -41,7 +41,7 @@ class EliminationRoundsCommands(commands.GroupCog, name="elimination_rounds"):
         if not modal.is_submitted:
             await interaction.followup.send("Modal not submitted")
 
-        output = GetEliminationRoundData(modal.event)
+        output = await GetEliminationRoundData(modal.event)
 
         await interaction.followup.send(output)
 
@@ -52,5 +52,5 @@ class EliminationRoundsCommands(commands.GroupCog, name="elimination_rounds"):
         await Error(self.bot, interaction, error)
 
 
-async def setup(bot:commands.Bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(EliminationRoundsCommands(bot))

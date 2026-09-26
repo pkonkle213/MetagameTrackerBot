@@ -1,13 +1,15 @@
+from services.command_error_service import Error
 from checks import IsStore
-from services.hub_invites_service import GetAllHubs
+from services.hub_invites_service import GetConnectedHubs
 from discord import Interaction, app_commands
 from discord.ext import commands
 import settings
 
+
 class Links(commands.Cog):
     """A group of commands for getting links"""
 
-    def __init__(self, bot:commands.Bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @app_commands.command(
@@ -23,18 +25,15 @@ class Links(commands.Cog):
 
     @app_commands.command(
         name="view_hubs",
-        description="See All Hubs Connected To This Store, Game, or Format",
+        description="See all hubs connected to this store, game, and/or format",
     )
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     @IsStore()
-    async def ViewAllData(self, interaction: Interaction):
-        output = GetAllHubs(interaction)
+    async def ViewHubInvites(self, interaction: Interaction):
+        output = await GetConnectedHubs(interaction)
         await interaction.response.send_message(output)
 
-    @app_commands.command(
-        name="get_sop",
-        description="Display the url to get the SOP"
-    )
+    @app_commands.command(name="get_sop", description="Display the url to get the SOP")
     @app_commands.guild_only()
     @app_commands.guilds(settings.BOTGUILDID)
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
@@ -52,6 +51,12 @@ class Links(commands.Cog):
             f"Follow this link: {settings.FEEDBACKURL}"
         )
 
+    @ViewHubInvites.error
+    async def Errors(
+        self, interaction: Interaction, error: app_commands.AppCommandError
+    ):
+        await Error(self.bot, interaction, error)
 
-async def setup(bot:commands.Bot):
+
+async def setup(bot: commands.Bot):
     await bot.add_cog(Links(bot))

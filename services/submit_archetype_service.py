@@ -6,7 +6,7 @@ from data.store_data import GetArchetypeFeed
 from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
 from data.store_data import GetFormatMapByEvent
-from data.archetype_data import AddArchetype
+from data.archetype_data import BulkAddArchetypes
 from data.event_data import GetEventDetails
 from services.input_services import ConvertInput
 from api_calls.moxfield_decklist import GetMoxfieldArchetype
@@ -73,7 +73,7 @@ async def SubmitArchetype(
     guild_name = interaction.guild.name
     channel_id = interaction.channel.id
 
-    if not PlayerInEvent(event, player_name):
+    if not await PlayerInEvent(event, player_name):
         raise KnownError(
             f"Player name `{player_name}` not found in event. Please try again."
         )
@@ -98,10 +98,9 @@ async def SubmitArchetype(
 
     # If not banned, add to the database
     if archetype != "":
-        AddArchetype(
+        await BulkAddArchetypes(
             event.id,
-            player_name,
-            archetype,
+            [(player_name, archetype)],
             interaction.user.id,
             interaction.user.name,
             guild_id,
@@ -136,9 +135,7 @@ async def SubmitArchetype(
 async def MessageStoreFeed(bot, message: str, event: Event) -> None:
     """Message the store feed channel specific to the game"""
     try:
-        channel_id = GetArchetypeFeed(
-            event.discord_id, event.game_id
-        )
+        channel_id = GetArchetypeFeed(event.discord_id, event.game_id)
         await MessageChannel(bot, message, event.discord_id, channel_id)
     except Exception as e:
         await MessageChannel(bot, message, settings.BOTGUILDID, settings.CLAIMCHANNEL)

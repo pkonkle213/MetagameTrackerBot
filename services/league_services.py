@@ -63,39 +63,39 @@ async def SelectLeague(
     return modal.league
 
 
-def FindPlayerStanding(league: League, user_id: int, discord_id: int) -> PlayerStanding:
+async def FindPlayerStanding(league: League, user_id: int, discord_id: int) -> PlayerStanding:
     """Displays the player's standing in a league"""
     if league.store_ids[0]:
-        return GetHubPlayerStanding(league, user_id)
+        return await GetHubPlayerStanding(league, user_id)
     else:
-        return GetStorePlayerStanding(league, user_id)
+        return await GetStorePlayerStanding(league, user_id)
 
 
-def LeagueLeaderboard(league: League) -> list[TopPlayers]:
+async def LeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
     top_players = GetFullLeagueLeaderboard(league)
-    return top_players[:league.top_cut]
+    return await top_players[: league.top_cut]
 
 
-def FullLeagueLeaderboard(league: League) -> list[TopPlayers]:
+async def FullLeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
-    return GetFullLeagueLeaderboard(league)
+    return await GetFullLeagueLeaderboard(league)
 
 
-def HubLeagueLeaderboard(league: League) -> list[TopPlayers]:
+async def HubLeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
-    top_players = GetHubFullLeagueLeaderboard(league)
-    return top_players[:league.top_cut]
+    top_players = await GetHubFullLeagueLeaderboard(league)
+    return top_players[: league.top_cut]
 
 
-def HubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
+async def HubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
-    return GetHubFullLeagueLeaderboard(league)
+    return await GetHubFullLeagueLeaderboard(league)
 
 
-def LeagueTimeLapse(league: League) -> File:
+async def LeagueTimeLapse(league: League) -> File:
     """Gets data for a racing leaderboard of a league"""
-    rows = GetLeaderboardTimeLapse(league)
+    rows = await GetLeaderboardTimeLapse(league)
 
     if len(rows) == 0:
         raise KnownError("No data found for this league")
@@ -122,13 +122,13 @@ def LeagueTimeLapse(league: League) -> File:
     return file
 
 
-def LeagueMetagame(league: League) -> list[MetagameResult]:
+async def LeagueMetagame(league: League) -> list[MetagameResult]:
     """Displays the metagame of a league"""
     data: list[MetagameResult] = []
     if league.store_ids[0]:
-        data = GetHubLeagueMetagame(league)
+        data = await GetHubLeagueMetagame(league)
     else:
-        data = GetStoreLeagueMetagame(league)
+        data = await GetStoreLeagueMetagame(league)
     return data
 
 

@@ -10,7 +10,7 @@ from services.download_data_services import GetPlayerData, GetStoreData
 class DownloadDataGroup(commands.GroupCog, name="download"):
     """A group of commands for downloading data"""
 
-    def __init__(self, bot:commands.Bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @app_commands.command(
@@ -32,7 +32,7 @@ class DownloadDataGroup(commands.GroupCog, name="download"):
           End of Date Range (MM/DD/YYYY)
         """
         await interaction.response.defer(ephemeral=True, thinking=False)
-        message, files = GetStoreData(interaction, start_date, end_date)
+        message, files = await GetStoreData(interaction, start_date, end_date)
         if len(files) == 0:
             await interaction.followup.send("No data found for this store")
         else:
@@ -61,7 +61,7 @@ class DownloadDataGroup(commands.GroupCog, name="download"):
           End of Date Range (MM/DD/YYYY)
         """
         await interaction.response.defer(ephemeral=True, thinking=False)
-        title, files = GetPlayerData(interaction, start_date, end_date)
+        title, files = await GetPlayerData(interaction, start_date, end_date)
         if len(files) == 0:
             await interaction.followup.send("No data found for this player")
         else:
@@ -76,5 +76,5 @@ class DownloadDataGroup(commands.GroupCog, name="download"):
         await Error(self.bot, interaction, error)
 
 
-async def setup(bot:commands.Bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(DownloadDataGroup(bot))

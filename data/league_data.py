@@ -1,31 +1,37 @@
 from custom_errors import KnownError
-import psycopg
+from psycopg import AsyncConnection
 from settings import DATABASE_URL
 from datetime import date
 from psycopg.rows import class_row, scalar_row
 from tuple_conversions import League, TopPlayers, PlayerStanding, LeaderboardRace
 
 
-def GetLeague(league_id: int) -> League:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(League)) as cur:
-        command = f"""
+async def GetLeague(league_id: int) -> League:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(League)) as cur,
+    ):
+        command = """
         SELECT *
         FROM leagues_view
         WHERE id = %s
         """
 
-        cur.execute(command, [league_id])
-        row = cur.fetchone()
+        await cur.execute(command, [league_id])
+        row = await cur.fetchone()
         if not row:
             raise KnownError("No league found with that id")
         return row
 
 
-def GetActiveLeagues(discord_id: int, game_id: int, format_id: int) -> list[League]:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(League)) as cur:
-        command = f"""
+async def GetActiveLeagues(
+    discord_id: int, game_id: int, format_id: int
+) -> list[League]:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(League)) as cur,
+    ):
+        command = """
         SELECT *
         FROM leagues
         WHERE discord_id = %s
@@ -36,12 +42,12 @@ def GetActiveLeagues(discord_id: int, game_id: int, format_id: int) -> list[Leag
         ORDER BY end_date DESC, start_date DESC
         """
 
-        cur.execute(command, [discord_id, game_id, format_id])
-        rows = cur.fetchall()
+        await cur.execute(command, [discord_id, game_id, format_id])
+        rows = await cur.fetchall()
         return rows
 
 
-def GetHubPlayerStanding(league: League, user_id: int) -> PlayerStanding:
+async def GetHubPlayerStanding(league: League, user_id: int) -> PlayerStanding:
     results = f"""
     SELECT
       INITCAP(fs.player_name) AS player_name,
@@ -60,11 +66,11 @@ def GetHubPlayerStanding(league: League, user_id: int) -> PlayerStanding:
       hls.league_id = {league.id}
     """
 
-    standing = GetPlayerStanding(results, user_id)
+    standing = await GetPlayerStanding(results, user_id)
     return standing
 
 
-def GetStorePlayerStanding(league: League, user_id: int) -> PlayerStanding:
+async def GetStorePlayerStanding(league: League, user_id: int) -> PlayerStanding:
     results = f"""
     SELECT
       INITCAP(fs.player_name) AS player_name,
@@ -79,13 +85,15 @@ def GetStorePlayerStanding(league: League, user_id: int) -> PlayerStanding:
       e.league_id = {league.id}
     """
 
-    standing = GetPlayerStanding(results, user_id)
+    standing = await GetPlayerStanding(results, user_id)
     return standing
 
 
-def GetPlayerStanding(results: str, user_id: int) -> PlayerStanding:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(PlayerStanding)) as cur:
+async def GetPlayerStanding(results: str, user_id: int) -> PlayerStanding:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(PlayerStanding)) as cur,
+    ):
         command = f"""
         WITH
           league_results AS (
@@ -136,18 +144,19 @@ def GetPlayerStanding(results: str, user_id: int) -> PlayerStanding:
           r.player_name = {user_id}::text          
         """
 
-        cur.execute(command)
-        row = cur.fetchone()
+        await cur.execute(command)  # type: ignore[arg-type]
+        row = await cur.fetchone()
         if not row:
             raise KnownError("Unable to find player standing")
-
         return row
 
 
-def GetLeaderboardTimeLapse(league: League) -> list[LeaderboardRace]:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(LeaderboardRace)) as cur:
-        command = f"""
+async def GetLeaderboardTimeLapse(league: League) -> list[LeaderboardRace]:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(LeaderboardRace)) as cur,
+    ):
+        command = """
         SELECT
             e.event_date,
             INITCAP(fs.player_name) as player_name,
@@ -161,15 +170,17 @@ def GetLeaderboardTimeLapse(league: League) -> list[LeaderboardRace]:
             e.event_date
         """
 
-        cur.execute(command, [league.id])
-        rows = cur.fetchall()
+        await cur.execute(command, [league.id])
+        rows = await cur.fetchall()
         return rows
 
 
-def GetFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
-        command = f"""
+async def GetFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(TopPlayers)) as cur,
+    ):
+        command = """
         SELECT
             rank,
             player_name,
@@ -180,14 +191,17 @@ def GetFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
         WHERE
             league_id = %s
         """
-        cur.execute(command, [league.id])
-        rows = cur.fetchall()
+
+        await cur.execute(command, [league.id])
+        rows = await cur.fetchall()
         return rows
 
 
-def GetHubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
+async def GetHubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(TopPlayers)) as cur,
+    ):
         command = """
         WITH
           all_events AS (
@@ -268,15 +282,17 @@ def GetHubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
           grouped
         """
 
-        cur.execute(command, [league.id])
-        rows = cur.fetchall()
+        await cur.execute(command, [league.id])
+        rows = await cur.fetchall()
         return rows
 
 
-def GetLeagues(discord_id: int, game_id: int, format_id: int) -> list[League]:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(League)) as cur:
-        command = f"""
+async def GetLeagues(discord_id: int, game_id: int, format_id: int) -> list[League]:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(League)) as cur,
+    ):
+        command = """
         SELECT
             id,
             discord_id,
@@ -302,14 +318,14 @@ def GetLeagues(discord_id: int, game_id: int, format_id: int) -> list[League]:
             end_date DESC, start_date DESC
         """
 
-        cur.execute(command, [discord_id, game_id, format_id])
-        rows = cur.fetchall()
+        await cur.execute(command, [discord_id, game_id, format_id])
+        rows = await cur.fetchall()
         if not rows or len(rows) == 0:
             raise KnownError("No leagues found")
         return rows
 
 
-def UpdateLeague(
+async def UpdateLeague(
     league_id: int,
     league_name: str,
     description: str,
@@ -318,9 +334,11 @@ def UpdateLeague(
     top_cut: int,
     user_id: int,
 ) -> int:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=scalar_row) as cur:
-        command = f"""
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=scalar_row) as cur,
+    ):
+        command = """
         UPDATE leagues
         SET
             name = %s,
@@ -343,14 +361,15 @@ def UpdateLeague(
             user_id,
             league_id,
         ]
-        cur.execute(command, criteria)
-        row = cur.fetchone()
+
+        await cur.execute(command, criteria)
+        row = await cur.fetchone()
         if not row:
             raise KnownError("Unable to update league")
         return row
 
 
-def InsertLeague(
+async def InsertLeague(
     league_name: str,
     description: str,
     start_date: date,
@@ -361,9 +380,11 @@ def InsertLeague(
     format_id: int,
     user_id: int,
 ) -> int:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor() as cur:
-        command = f"""
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=scalar_row) as cur,
+    ):
+        command = """
         INSERT INTO leagues (
             name,
             description,
@@ -402,9 +423,10 @@ def InsertLeague(
             format_id,
             user_id,
         ]
-        cur.execute(command, criteria)
-        league_id = cur.fetchone()
+
+        await cur.execute(command, criteria)
+        league_id = await cur.fetchone()
         if not league_id:
             raise KnownError("Unable to create league")
 
-        return league_id[0]
+        return league_id

@@ -15,7 +15,7 @@ from services.map_claim_feed import MapClaimFeed
 class MappingCommands(commands.GroupCog, name="map"):
     """A group of commands for mapping channels to games, formats, and claim feeds"""
 
-    def __init__(self, bot:commands.Bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @app_commands.command(
@@ -27,7 +27,7 @@ class MappingCommands(commands.GroupCog, name="map"):
     @IsStore()
     async def AddClaimFeedMap(self, interaction: Interaction):
         await interaction.response.defer(ephemeral=True, thinking=False)
-        output = MapClaimFeed(interaction)
+        output = await MapClaimFeed(interaction)
         await interaction.followup.send(output, ephemeral=True)
 
     @app_commands.command(name="region", description="Map your channel to a region")
@@ -37,12 +37,12 @@ class MappingCommands(commands.GroupCog, name="map"):
     async def AddRegionMap(self, interaction: Interaction):
         if not interaction.guild_id:
             raise KnownError("No guild found.")
-        hub = GetHub(interaction.guild_id)
+        hub = await GetHub(interaction.guild_id)
         if not hub:
             raise KnownError("No hub found. Please register your hub.")
         if not hub.format_lock:
             raise KnownError("This hub does not have format locking enabled.")
-        regions = GetRegions(hub)
+        regions = await GetRegions()
         if not regions or len(regions) == 0:
             raise KnownError("No regions found. Please contact the bot owner.")
         modal = MapRegionModal(hub, regions)
@@ -54,7 +54,7 @@ class MappingCommands(commands.GroupCog, name="map"):
     @app_commands.guild_only()
     @IsStore()
     async def AddGameMap(self, interaction: Interaction):
-        objects = GetObjectsFromInteraction(interaction)
+        objects = await GetObjectsFromInteraction(interaction)
         if not objects.store:
             raise KnownError("No store found. Please register your store.")
         modal = MapGameModal(objects.store)
@@ -66,7 +66,7 @@ class MappingCommands(commands.GroupCog, name="map"):
     @app_commands.guild_only()
     @IsStore()
     async def AddFormatMap(self, interaction: Interaction):
-        objects = GetObjectsFromInteraction(interaction)
+        objects = await GetObjectsFromInteraction(interaction)
         if not objects.game or not objects.store:
             raise KnownError(
                 "No store or game found. Please map a game to this category first."
@@ -84,5 +84,5 @@ class MappingCommands(commands.GroupCog, name="map"):
         await Error(self.bot, interaction, error)
 
 
-async def setup(bot:commands.Bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(MappingCommands(bot))

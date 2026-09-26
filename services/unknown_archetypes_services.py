@@ -7,10 +7,10 @@ from services.command_error_service import KnownError
 from tuple_conversions import OutputToBuild
 
 
-def GetAllUnknown(
+async def GetAllUnknown(
     interaction: Interaction, start_date: str, end_date: str
 ) -> OutputToBuild:
-    objects = GetObjectsFromInteraction(interaction)
+    objects = await GetObjectsFromInteraction(interaction)
     if not objects.store or not objects.game or not objects.format:
         raise KnownError("No Store Found")
     if not interaction.guild or isinstance(interaction.user, User):
@@ -22,7 +22,7 @@ def GetAllUnknown(
         objects.format,
         weeks,
     )
-    data = GetUnknownArchetypes(
+    data = await GetUnknownArchetypes(
         objects.store.discord_id,
         objects.game.id,
         objects.format.id,

@@ -1,240 +1,255 @@
 from datetime import date
 from typing import NamedTuple
 
+from psycopg import AsyncConnection
 from psycopg.rows import class_row
-from settings import DATABASE_URL
-import psycopg
 
+from settings import DATABASE_URL
 from tuple_conversions import Format, Game, Store
 
+
 class StoreStandingData(NamedTuple):
-  game_name: str
-  format_name: str
-  event_date: str
-  event_name: str
-  player_name: str
-  archetype_played: str
-  wins: int
-  losses: int
-  draws: int
+    game_name: str
+    format_name: str
+    event_date: str
+    event_name: str
+    player_name: str
+    archetype_played: str
+    wins: int
+    losses: int
+    draws: int
 
-def GetStoreStandingData(
-  store:Store,
-  game:Game | None,
-  format:Format | None,
-  start_date:date,
-  end_date:date
+
+async def GetStoreStandingData(
+    store: Store,
+    game: Game | None,
+    format: Format | None,
+    start_date: date,
+    end_date: date,
 ) -> list[StoreStandingData]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(StoreStandingData)) as cur:
-    command =  f'''
-    SELECT
-      INITCAP(g.game_name) AS game_name,
-      INITCAP(f.format_name) AS format_name,
-      TO_CHAR(e.event_date,'MM/DD/YYYY') AS event_date,
-      e.event_name,
-      INITCAP(fp.Player_Name) AS player_name,
-      INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
-      fp.wins,
-      fp.losses,
-      fp.draws
-    FROM
-      full_standings fp
-      LEFT JOIN unique_archetypes ua ON fp.event_id = ua.event_id
-      AND UPPER(fp.player_name) = UPPER(ua.player_name)
-      INNER JOIN events e ON e.id = fp.event_id
-      INNER JOIN stores s ON s.discord_id = e.discord_id
-      INNER JOIN games g ON g.id = e.game_id
-      INNER JOIN formats f ON f.id = e.format_id
-    WHERE
-      e.discord_id = {store.discord_id}
-      {f'AND e.game_id = {game.id}' if game else ''}
-      {f'AND e.format_id = {format.id}' if format else ''}
-      AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-    ORDER BY
-      event_date DESC,
-      game_name,
-      format_name,
-      wins desc,
-      draws desc
-    '''
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(StoreStandingData)) as cur,
+    ):
+        command = f"""
+        SELECT
+            INITCAP(g.game_name) AS game_name,
+            INITCAP(f.format_name) AS format_name,
+            TO_CHAR(e.event_date,'MM/DD/YYYY') AS event_date,
+            e.event_name,
+            INITCAP(fp.Player_Name) AS player_name,
+            INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
+            fp.wins,
+            fp.losses,
+            fp.draws
+        FROM
+            full_standings fp
+            LEFT JOIN unique_archetypes ua ON fp.event_id = ua.event_id
+            AND UPPER(fp.player_name) = UPPER(ua.player_name)
+            INNER JOIN events e ON e.id = fp.event_id
+            INNER JOIN stores s ON s.discord_id = e.discord_id
+            INNER JOIN games g ON g.id = e.game_id
+            INNER JOIN formats f ON f.id = e.format_id
+        WHERE
+            e.discord_id = {store.discord_id}
+            {f"AND e.game_id = {game.id}" if game else ""}
+            {f"AND e.format_id = {format.id}" if format else ""}
+            AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+        ORDER BY
+            event_date DESC,
+            game_name,
+            format_name,
+            wins desc,
+            draws desc
+        """
 
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
+        await cur.execute(command)  # type: ignore[arg-type]
+        rows = await cur.fetchall()
+        return rows
+
 
 class StorePairingData(NamedTuple):
-  game_name: str
-  format_name: str
-  event_date: str
-  event_name: str
-  round_number: int
-  player_name: str
-  archetype_played: str
-  opponent_name: str
-  opponent_archetype: str
-  result: str
+    game_name: str
+    format_name: str
+    event_date: str
+    event_name: str
+    round_number: int
+    player_name: str
+    archetype_played: str
+    opponent_name: str
+    opponent_archetype: str
+    result: str
 
-def GetStorePairingData(
-  store:Store,
-  game:Game | None,
-  format:Format | None,
-  start_date:date,
-  end_date:date
+
+async def GetStorePairingData(
+    store: Store,
+    game: Game | None,
+    format: Format | None,
+    start_date: date,
+    end_date: date,
 ) -> list[StorePairingData]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(StorePairingData)) as cur:
-    command = f'''
-    SELECT
-      INITCAP(g.game_name) AS game_name,
-      INITCAP(f.format_name) AS format_name,
-      TO_CHAR(e.event_date,'MM/DD/YYYY') as event_date,
-      e.event_name,
-      frr.round_number,
-      INITCAP(frr.player_name) as player_name,
-      INITCAP(COALESCE(ua1.archetype_played, 'UNKNOWN')) AS player_archetype,
-      INITCAP(frr.opponent_name),
-      INITCAP(COALESCE(ua2.archetype_played, 'UNKNOWN')) AS opponent_archetype,
-      INITCAP(frr.result) as result
-    FROM
-      full_pairings frr
-      INNER JOIN events e ON e.id = frr.event_id
-      INNER JOIN stores s ON s.discord_id = e.discord_id
-      INNER JOIN Games g ON g.id = e.game_id
-      INNER JOIN formats f ON f.id = e.format_id
-      LEFT JOIN unique_archetypes ua1 ON ua1.event_id = e.id
-      AND upper(ua1.player_name) = upper(frr.player_name)
-      LEFT JOIN unique_archetypes ua2 ON ua2.event_id = e.id
-      AND upper(ua2.player_name) = upper(frr.opponent_name)
-    WHERE
-      s.discord_id = {store.discord_id}  
-      {f'AND e.game_id = {game.id}' if game else ''}
-      {f'AND e.format_id = {format.id}' if format else ''}
-      AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-    ORDER BY
-      g.game_name,
-      f.format_name,
-      e.event_date DESC,
-      round_number,
-      frr.player_name
-    '''
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(StorePairingData)) as cur,
+    ):
+        command = f"""
+        SELECT
+            INITCAP(g.game_name) AS game_name,
+            INITCAP(f.format_name) AS format_name,
+            TO_CHAR(e.event_date,'MM/DD/YYYY') as event_date,
+            e.event_name,
+            frr.round_number,
+            INITCAP(frr.player_name) as player_name,
+            INITCAP(COALESCE(ua1.archetype_played, 'UNKNOWN')) AS player_archetype,
+            INITCAP(frr.opponent_name),
+            INITCAP(COALESCE(ua2.archetype_played, 'UNKNOWN')) AS opponent_archetype,
+            INITCAP(frr.result) as result
+        FROM
+            full_pairings frr
+            INNER JOIN events e ON e.id = frr.event_id
+            INNER JOIN stores s ON s.discord_id = e.discord_id
+            INNER JOIN Games g ON g.id = e.game_id
+            INNER JOIN formats f ON f.id = e.format_id
+            LEFT JOIN unique_archetypes ua1 ON ua1.event_id = e.id
+            AND upper(ua1.player_name) = upper(frr.player_name)
+            LEFT JOIN unique_archetypes ua2 ON ua2.event_id = e.id
+            AND upper(ua2.player_name) = upper(frr.opponent_name)
+        WHERE
+            s.discord_id = {store.discord_id}  
+            {f"AND e.game_id = {game.id}" if game else ""}
+            {f"AND e.format_id = {format.id}" if format else ""}
+            AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+        ORDER BY
+            g.game_name,
+            f.format_name,
+            e.event_date DESC,
+            round_number,
+            frr.player_name
+        """
 
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
+        await cur.execute(command)  # type: ignore[arg-type]
+        rows = await cur.fetchall()
+        return rows
+
 
 class PlayerPairingData(NamedTuple):
-  game_name: str
-  format_name: str
-  event_date: str
-  event_name: str
-  round_number: int
-  your_archetype: str
-  opponents_archetype: str
-  result: str
+    game_name: str
+    format_name: str
+    event_date: str
+    event_name: str
+    round_number: int
+    your_archetype: str
+    opponents_archetype: str
+    result: str
 
-def GetPlayerPairingData(
-  store:Store,
-  game:Game | None,
-  format:Format | None,
-  start_date:date,
-  end_date:date,
-  user_id:int
+
+async def GetPlayerPairingData(
+    store: Store,
+    game: Game | None,
+    format: Format | None,
+    start_date: date,
+    end_date: date,
+    user_id: int,
 ) -> list[PlayerPairingData]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(PlayerPairingData)) as cur:
-    command = f'''
-    SELECT
-      INITCAP(g.game_name) AS game_name,
-      INITCAP(f.format_name) AS format_name,
-      TO_CHAR(e.event_date,'MM/DD/YYYY') as event_date,
-      e.event_name,
-      frr.round_number,
-      INITCAP(COALESCE(ua1.archetype_played, 'UNKNOWN')) as your_archetype,
-      INITCAP(COALESCE(ua2.archetype_played, 'UNKNOWN')) as opponents_archetype,
-      INITCAP(frr.result) as result
-    FROM
-      full_pairings frr
-      INNER JOIN events e ON e.id = frr.event_id
-      LEFT JOIN unique_archetypes ua1 ON e.id = ua1.event_id AND UPPER(frr.player_name) = UPPER(ua1.player_name)
-      LEFT JOIN unique_archetypes ua2 ON e.id = ua2.event_id AND UPPER(frr.opponent_name) = UPPER(ua2.player_name)
-      INNER JOIN stores s ON s.discord_id = e.discord_id
-      INNER JOIN games g ON g.id = e.game_id
-      INNER JOIN formats f ON f.id = e.format_id
-      INNER JOIN player_names pn ON pn.discord_id = e.discord_id
-      AND UPPER(pn.player_name) = UPPER(frr.player_name)
-    WHERE
-      s.discord_id = {store.discord_id}
-      AND pn.submitter_id = {user_id}
-      {f'AND e.game_id = {game.id}' if game else ''}
-      {f'AND e.format_id = {format.id}' if format else ''}
-      AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-    ORDER BY
-      g.game_name,
-      f.format_name,
-      e.event_date DESC,
-      round_number
-    '''
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(PlayerPairingData)) as cur,
+    ):
+        command = f"""
+        SELECT
+            INITCAP(g.game_name) AS game_name,
+            INITCAP(f.format_name) AS format_name,
+            TO_CHAR(e.event_date,'MM/DD/YYYY') as event_date,
+            e.event_name,
+            frr.round_number,
+            INITCAP(COALESCE(ua1.archetype_played, 'UNKNOWN')) as your_archetype,
+            INITCAP(COALESCE(ua2.archetype_played, 'UNKNOWN')) as opponents_archetype,
+            INITCAP(frr.result) as result
+        FROM
+            full_pairings frr
+            INNER JOIN events e ON e.id = frr.event_id
+            LEFT JOIN unique_archetypes ua1 ON e.id = ua1.event_id AND UPPER(frr.player_name) = UPPER(ua1.player_name)
+            LEFT JOIN unique_archetypes ua2 ON e.id = ua2.event_id AND UPPER(frr.opponent_name) = UPPER(ua2.player_name)
+            INNER JOIN stores s ON s.discord_id = e.discord_id
+            INNER JOIN games g ON g.id = e.game_id
+            INNER JOIN formats f ON f.id = e.format_id
+            INNER JOIN player_names pn ON pn.discord_id = e.discord_id
+            AND UPPER(pn.player_name) = UPPER(frr.player_name)
+        WHERE
+            s.discord_id = {store.discord_id}
+            AND pn.submitter_id = {user_id}
+            {f"AND e.game_id = {game.id}" if game else ""}
+            {f"AND e.format_id = {format.id}" if format else ""}
+            AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+        ORDER BY
+            g.game_name,
+            f.format_name,
+            e.event_date DESC,
+            round_number
+        """
 
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
+        await cur.execute(command)  # type: ignore[arg-type]
+        rows = await cur.fetchall()
+        return rows
+
 
 class PlayerStandingData(NamedTuple):
-  game_name: str
-  format_name: str
-  event_date: str
-  event_name: str
-  archetype_played: str
-  wins: int
-  losses: int
-  draws: int
+    game_name: str
+    format_name: str
+    event_date: str
+    event_name: str
+    archetype_played: str
+    wins: int
+    losses: int
+    draws: int
 
-def GetPlayerStandingData(
-  store:Store,
-  game:Game | None,
-  format:Format | None,
-  start_date:date,
-  end_date:date,
-  user_id:int
+
+async def GetPlayerStandingData(
+    store: Store,
+    game: Game | None,
+    format: Format | None,
+    start_date: date,
+    end_date: date,
+    user_id: int,
 ) -> list[PlayerStandingData]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(PlayerStandingData)) as cur:
-    command =  f'''
-    SELECT
-      INITCAP(g.game_name) AS game_name,
-      INITCAP(f.format_name) AS format_name,
-      TO_CHAR(e.event_date, 'MM/DD/YYYY') as event_date,
-      e.event_name,
-      INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
-      fp.wins,
-      fp.losses,
-      fp.draws
-    FROM
-      full_standings fp
-      LEFT JOIN unique_archetypes ua ON fp.event_id = ua.event_id
-      AND UPPER(fp.player_name) = UPPER(ua.player_name)
-      INNER JOIN events e ON e.id = fp.event_id
-      INNER JOIN stores s ON s.discord_id = e.discord_id
-      INNER JOIN games g ON g.id = e.game_id
-      INNER JOIN formats f ON f.id = e.format_id
-      INNER JOIN player_names pn ON pn.discord_id = e.discord_id
-      AND UPPER(pn.player_name) = UPPER(fp.player_name)
-    WHERE
-      e.discord_id = {store.discord_id}
-      {f'AND e.game_id = {game.id}' if game else ''}
-      {f'AND e.format_id = {format.id}' if format else ''}
-      AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-      AND pn.submitter_id = {user_id}
-    ORDER BY
-      event_date DESC,
-      game_name,
-      format_name,
-      wins desc,
-      draws desc
-    '''
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(PlayerStandingData)) as cur,
+    ):
+        command = f"""
+        SELECT
+            INITCAP(g.game_name) AS game_name,
+            INITCAP(f.format_name) AS format_name,
+            TO_CHAR(e.event_date, 'MM/DD/YYYY') as event_date,
+            e.event_name,
+            INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
+            fp.wins,
+            fp.losses,
+            fp.draws
+        FROM
+            full_standings fp
+            LEFT JOIN unique_archetypes ua ON fp.event_id = ua.event_id
+            AND UPPER(fp.player_name) = UPPER(ua.player_name)
+            INNER JOIN events e ON e.id = fp.event_id
+            INNER JOIN stores s ON s.discord_id = e.discord_id
+            INNER JOIN games g ON g.id = e.game_id
+            INNER JOIN formats f ON f.id = e.format_id
+            INNER JOIN player_names pn ON pn.discord_id = e.discord_id
+            AND UPPER(pn.player_name) = UPPER(fp.player_name)
+        WHERE
+            e.discord_id = {store.discord_id}
+            {f"AND e.game_id = {game.id}" if game else ""}
+            {f"AND e.format_id = {format.id}" if format else ""}
+            AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+            AND pn.submitter_id = {user_id}
+        ORDER BY
+            event_date DESC,
+            game_name,
+            format_name,
+            wins desc,
+            draws desc
+        """
 
-    cur.execute(command)
-    rows = cur.fetchall()
-    return rows
-    
+        await cur.execute(command)  # type: ignore[arg-type]
+        rows = await cur.fetchall()
+        return rows
