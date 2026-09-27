@@ -29,7 +29,7 @@ async def GetEventReportedPercentage(event_id: int) -> float:
         row = await cur.fetchone()
         if not row:
             raise KnownError(f"Unable to get event {event_id}'s reported percentage")
-        return row[0]
+        return row
 
 
 async def UpdateEvent(event_id: int) -> int:
