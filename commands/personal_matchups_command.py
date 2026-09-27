@@ -27,10 +27,9 @@ class PersonalStatisticsGroup(commands.GroupCog, name="personal_stats"):
         self, interaction: Interaction, start_date: str = "", end_date: str = ""
     ):
         await interaction.response.defer(ephemeral=True, thinking=True)
-        start_date = "1/1/2026"
         outputs = await PersonalMatchups(interaction, start_date, end_date)
         if len(outputs) == 0:
-            raise KnownError('No pairings data found for this user')
+            raise KnownError("No pairings data found for this user")
         view = PaginationView(outputs)
         initial_embed = outputs[0]
         initial_embed.set_footer(text=f"Page 1 of {len(outputs)}")
