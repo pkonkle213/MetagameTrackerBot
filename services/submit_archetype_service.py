@@ -20,7 +20,7 @@ from tuple_conversions import (
     Store,
     Game,
     OutputToBuild,
-    Hub,
+    Hub, PlayerArchetype,
 )
 from discord.ext import commands
 from services.message_hubs_services import MessageHubs
@@ -33,7 +33,7 @@ async def Moxfield(link: str) -> tuple[str, str, bool]:
     success = False
     try:
         moxfield_archetype = await GetMoxfieldArchetype(
-            moxfield_link, event, format, player_name
+            link, event, format, player_name
         )
 
         AddArchetype(
@@ -79,11 +79,11 @@ async def SubmitArchetype(
         )
 
     # Make the call to check the archetype for banned words here
-    if ContainsBadWord(event.discord_id, archetype):
+    if await ContainsBadWord(event.discord_id, archetype):
         raise KnownError("Archetype contains a banned word")
 
     # Check if user is allowed to submit archetypes (too many banned words)
-    if not CanSubmitArchetypes(event.discord_id, interaction.user.id):
+    if not await CanSubmitArchetypes(event.discord_id, interaction.user.id):
         raise KnownError(
             "You have submitted too many archetypes with banned words. "
             "Please contact your store owner to have them submit the archetype."
@@ -99,8 +99,8 @@ async def SubmitArchetype(
     # If not banned, add to the database
     if archetype != "":
         await BulkAddArchetypes(
-            event.id,
-            [(player_name, archetype)],
+            event,
+            [PlayerArchetype(player_name, archetype)],
             interaction.user.id,
             interaction.user.name,
             guild_id,
@@ -115,7 +115,7 @@ async def SubmitArchetype(
     )
 
     # If added, check if the event is fully reported and complete
-    public_output, full_event = CheckEventPercentage(event)
+    public_output, full_event = await CheckEventPercentage(event)
 
     # Send all output messages
     await interaction.followup.send(private_output, ephemeral=True)
@@ -158,8 +158,8 @@ def BuildMessage(
     return "\n".join(message_parts)
 
 
-def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
-    percent_reported = GetEventReportedPercentage(event.id)
+async def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
+    percent_reported = await GetEventReportedPercentage(event.id)
     if percent_reported >= (event.last_update + 1) / 4:
         check = UpdateEvent(event.id)
         if check is None:
@@ -170,7 +170,7 @@ def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
             final = None
         elif event.is_complete:
             followup = f"Congratulations! {str_date}'s {event.event_name} is now fully reported! Thank you to all who reported their archetypes!"
-            table = OneEventDetails(event)
+            table = await OneEventDetails(event)
             final = BuildTableOutput(table.title, table.headers, table.data)
         return followup, final
     return None, None
