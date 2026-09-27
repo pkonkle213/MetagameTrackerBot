@@ -181,7 +181,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         user_id = interaction.user.id
         is_submitter = isSubmitter(interaction.guild, interaction.user, "MTSubmitter")
 
-        player = GetArchetypeModalDetails(user_id, objects.game, objects.format)
+        player = await GetArchetypeModalDetails(user_id, objects.game, objects.format)
 
         events = await GetEvents(
             objects.store,
