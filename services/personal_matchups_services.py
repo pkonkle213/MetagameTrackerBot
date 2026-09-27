@@ -1,3 +1,4 @@
+from discord import Embed
 from discord import Interaction
 from data.personal_matchup_data import GetPersonalMatchups
 from data.interaction_data import GetObjectsFromInteraction
@@ -13,7 +14,7 @@ from tuple_conversions import (
 
 async def PersonalMatchups(
     interaction: Interaction, start_date: str, end_date: str
-):
+) -> list[Embed]:
     objects = await GetObjectsFromInteraction(interaction)
     if not objects.store or not objects.game or not objects.format:
         raise KnownError("No Store, Game, or Format Found")
@@ -31,16 +32,15 @@ async def PersonalMatchups(
 
     archetypes = BuildPersonalMatchups(data)
     outputs = BuildMatchupsOutput(archetypes)
+    return outputs
 
 
 def BuildPersonalMatchups(
     matchups: list[PersonalMatchupRows],
 ) -> list[PersonalArchetype]:
-    print("---Matchups---\n", matchups)
     active_archetype = 0
     new_matchups: list[PersonalArchetype] = []
     for row in matchups:
-        print("---Current Row---\n", row)
         opponent = OpponentArchetype(
             row.opponent_archetype, row.total_games, row.win_percent
         )
@@ -55,8 +55,17 @@ def BuildPersonalMatchups(
         else:
             new_matchups[active_archetype - 1].matchups.append(opponent)
 
-    print("---New Matchups---\n", new_matchups)
     return new_matchups
 
-def BuildMatchupsOutput(archetypes: list[PersonalArchetype]) -> list[str]:
-    ...
+
+def BuildMatchupsOutput(archetypes: list[PersonalArchetype]) -> list[Embed]:
+    archetype_output: list[Embed] = []
+    for archetype in archetypes:
+        title = f"{archetype.archetype}"
+        description = ""
+        for matchup in archetype.matchups:
+            description += f"{matchup.archetype_name} - {matchup.win_percent} ({matchup.total_games} games)"
+        output = Embed(title=title, description=description)
+        archetype_output.append(output)
+
+    return archetype_output
