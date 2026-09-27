@@ -61,7 +61,7 @@ def BuildPersonalMatchups(
 def BuildMatchupsOutput(archetypes: list[PersonalArchetype]) -> list[Embed]:
     archetype_output: list[Embed] = []
     for archetype in archetypes:
-        title = f"{archetype.archetype}"
+        title = f"{archetype.archetype} Win Percentages"
         description:list[str] = []
         for matchup in archetype.matchups:
             description.append(f"{matchup.archetype_name} - {matchup.win_percent}% ({matchup.total_games} games)")

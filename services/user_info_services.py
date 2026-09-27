@@ -5,12 +5,12 @@ from data.get_user_info_data import GetLastArchetype, GetWinPercentage, GetMostP
 from data.interaction_data import GetObjectsFromInteraction
 from tuple_conversions import Format, Game, Store, UserData, LastArchetype, TopDeck
 
-def GetUserData(
+async def GetUserData(
   interaction: Interaction,
   member: Member
 ) -> UserData:
   """Gets the player name, win percent, last played, and top decks for a user"""
-  objects = GetObjectsFromInteraction(interaction)
+  objects = await GetObjectsFromInteraction(interaction)
   if (not objects.store and not objects.hub) or not objects.game or not objects.format:
     raise Exception('Unable to get store, game, or format')
 

@@ -129,7 +129,7 @@ async def GetPersonalMatchups(
           mr.total_games,
           ROUND(
             100.0 * mr.wins / (mr.wins + mr.losses + mr.draws),
-            2
+            0
           ) AS win_percent
         FROM
           matchup_records mr

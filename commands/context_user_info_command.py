@@ -23,7 +23,7 @@ class UserInfoCommand(commands.Cog):
         """Callback for the 'Get User Info' context menu command."""
         await interaction.response.defer(ephemeral=True, thinking=False)
         try:
-            (player_name, win_percent, last_played, top_decks) = GetUserData(
+            (player_name, win_percent, last_played, top_decks) = await GetUserData(
                 interaction, member
             )
 
