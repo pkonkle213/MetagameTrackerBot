@@ -62,10 +62,11 @@ def BuildMatchupsOutput(archetypes: list[PersonalArchetype]) -> list[Embed]:
     archetype_output: list[Embed] = []
     for archetype in archetypes:
         title = f"{archetype.archetype}"
-        description = ""
+        description:list[str] = []
         for matchup in archetype.matchups:
-            description += f"{matchup.archetype_name} - {matchup.win_percent} ({matchup.total_games} games)"
-        output = Embed(title=title, description=description)
+            description.append(f"{matchup.archetype_name} - {matchup.win_percent}% ({matchup.total_games} games)")
+        body = "\n".join(description)
+        output = Embed(title=title, description=body)
         archetype_output.append(output)
 
     return archetype_output
