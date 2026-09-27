@@ -5,82 +5,58 @@ from data.get_user_info_data import GetLastArchetype, GetWinPercentage, GetMostP
 from data.interaction_data import GetObjectsFromInteraction
 from tuple_conversions import Format, Game, Store, UserData, LastArchetype, TopDeck
 
-async def GetUserData(
-  interaction: Interaction,
-  member: Member
-) -> UserData:
-  """Gets the player name, win percent, last played, and top decks for a user"""
-  objects = await GetObjectsFromInteraction(interaction)
-  if (not objects.store and not objects.hub) or not objects.game or not objects.format:
-    raise Exception('Unable to get store, game, or format')
 
-  player_name = GetPlayerName(member.id)
-  
-  win_percent = GetWinPercent(
-    member.id,
-    objects.store,
-    objects.game,
-    objects.format
-  )
-  
-  last_played = GetLastPlayed(
-    member.id,
-    objects.store,
-    objects.game,
-    objects.format
-  )
-  
-  top_decks = GetTopDecks(
-    member.id,
-    objects.store,
-    objects.game,
-    objects.format
-  )
+async def GetUserData(interaction: Interaction, member: Member) -> UserData:
+    """Gets the player name, win percent, last played, and top decks for a user"""
+    objects = await GetObjectsFromInteraction(interaction)
+    if (
+        (not objects.store and not objects.hub)
+        or not objects.game
+        or not objects.format
+    ):
+        raise Exception("Unable to get store, game, or format")
 
-  data = UserData(
-    player_name,
-    win_percent,
-    last_played,
-    top_decks
-  )
-  return data
+    player_name = await GetPlayerName(member.id)
 
-def GetPlayerName(member_id: int) -> str:
-  """Gets the player name for the user in this discord"""
-  player_name = GetUserName(member_id)
-  if player_name is None:
-    raise KnownError('This person has not claimed any data')
-  return player_name.title()
+    win_percent = await GetWinPercent(
+        member.id, objects.store, objects.game, objects.format
+    )
 
-def GetWinPercent(member_id: int,
-                  store: Store,
-                  game: Game,
-                  format: Format) -> float:
-  win_percent = GetWinPercentage(member_id,
-                                 store,
-                                 game,
-                                 format)
+    last_played = await GetLastPlayed(member.id, objects.store, objects.game, objects.format)
 
-  return win_percent
+    top_decks = await GetTopDecks(member.id, objects.store, objects.game, objects.format)
 
-def GetLastPlayed(member_id: int,
-                store: Store,
-                game: Game,
-                format: Format) -> LastArchetype:
-  last_played = GetLastArchetype(member_id,
-                                 store,
-                                 game,
-                                 format)
-  return last_played
+    data = UserData(player_name, win_percent, last_played, top_decks)
+    return data
 
-def GetTopDecks(member_id: int,
-                store: Store,
-                game: Game,
-                format: Format) -> list[TopDeck]:
-  most_played = GetMostPlayed(member_id,
-                              store,
-                              game,
-                              format)
-  if most_played is None:
-    raise KnownError('This person has not played any games in this format')
-  return most_played
+
+async def GetPlayerName(member_id: int) -> str:
+    """Gets the player name for the user in this discord"""
+    player_name = await GetUserName(member_id)
+    if player_name is None:
+        raise KnownError("This person has not claimed any data")
+    return player_name.title()
+
+
+async def GetWinPercent(
+    member_id: int, store: Store, game: Game, format: Format
+) -> float:
+    win_percent = await GetWinPercentage(member_id, store, game, format)
+
+    return win_percent
+
+
+async def GetLastPlayed(
+    member_id: int, store: Store, game: Game, format: Format
+) -> LastArchetype:
+    last_played = await GetLastArchetype(member_id, store, game, format)
+    return last_played
+
+
+async def GetTopDecks(
+    member_id: int, store: Store, game: Game, format: Format
+) -> list[TopDeck]:
+    most_played = await GetMostPlayed(member_id, store, game, format)
+    if most_played is None:
+        raise KnownError("This person has not played any games in this format")
+    return most_played
