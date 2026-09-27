@@ -1,6 +1,7 @@
+from custom_errors import KnownError
 from discord import Interaction, app_commands
 from discord.ext import commands
-
+from views.pagination_view import PaginationView
 from checks import IsPaidUser, IsStore
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
@@ -26,14 +27,13 @@ class PersonalStatisticsGroup(commands.GroupCog, name="personal_stats"):
         self, interaction: Interaction, start_date: str = "", end_date: str = ""
     ):
         await interaction.response.defer(ephemeral=True, thinking=True)
-        table = await PersonalMatchups(interaction, start_date, end_date)
-        if len(table.data) == 0:
-            await interaction.followup.send(
-                "No matchup data found for this store and/or format", ephemeral=True
-            )
-        else:
-            output = BuildTableOutput(table.title, table.headers, table.data)
-            await interaction.followup.send(output, ephemeral=True)
+        outputs = await PersonalMatchups(interaction, start_date, end_date)
+        if len(outputs) == 0:
+            raise KnownError("No pairings data found for this user")
+        view = PaginationView(outputs)
+        initial_embed = outputs[0]
+        initial_embed.set_footer(text=f"Page 1 of {len(outputs)}")
+        await interaction.followup.send(embed=initial_embed, view=view, ephemeral=True)
 
     @app_commands.command(
         name="wlrecord", description="Look up your win/loss record(s)"

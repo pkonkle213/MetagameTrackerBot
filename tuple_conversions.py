@@ -278,3 +278,21 @@ class EliminationStandings(NamedTuple):
     wins: int
     losses: int
     draws: int
+
+
+class PersonalMatchupRows(NamedTuple):
+    player_archetype: str
+    player_archetype_rank: int
+    opponent_archetype: str
+    metagame_rank: int
+    total_games: int
+    win_percent: float
+
+class OpponentArchetype(NamedTuple):
+    archetype_name: str
+    total_games:int
+    win_percent:float
+
+class PersonalArchetype(NamedTuple):
+    archetype: str
+    matchups: list[OpponentArchetype]
