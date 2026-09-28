@@ -106,7 +106,8 @@ class SubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype'):
       self.hub,
       self.game,
       self.format,
-      self.moxfield_link.component.value if self.game.id == GameEnum.Magic.value else None,
+      # Fix moxfield input
+      None,
       self.is_submitter
     )
 
