@@ -25,7 +25,7 @@ class OneEventCommands(commands.GroupCog, name="one_event"):
         if not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
 
-        modal = EventSelector(objects.store, objects.game, objects.format)
+        modal = await EventSelector.create(objects.store, objects.game, objects.format)
         await interaction.response.send_modal(modal)
         await modal.wait()
 
@@ -50,7 +50,7 @@ class OneEventCommands(commands.GroupCog, name="one_event"):
         if not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
 
-        modal = EventSelector(objects.store, objects.game, objects.format)
+        modal = await EventSelector.create(objects.store, objects.game, objects.format)
         await interaction.response.send_modal(modal)
         await modal.wait()
 
@@ -75,7 +75,7 @@ class OneEventCommands(commands.GroupCog, name="one_event"):
         if not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
 
-        modal = EventSelector(objects.store, objects.game, objects.format)
+        modal = await EventSelector.create(objects.store, objects.game, objects.format)
         await interaction.response.send_modal(modal)
         await modal.wait()
 

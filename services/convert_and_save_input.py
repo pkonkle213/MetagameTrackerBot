@@ -37,11 +37,11 @@ def BuildFilePath(
     return save_path
 
 
-def ConvertAndUploadMeleeTournament(
+async def ConvertAndUploadMeleeTournament(
     event, melee_tournament_id: str, store: Store, file_path: str
 ) -> DataConverted:
     """Takes in a Melee.gg tournament id, retrieves the data, and converts the data to a list of Pairing objects"""
-    json_data = GetMeleeTournamentData(melee_tournament_id, store)
+    json_data = await GetMeleeTournamentData(melee_tournament_id, store)
 
     try:
         upload_json(json_data, file_path)

@@ -5,12 +5,12 @@ from services.formats_services import AddStoreFormatMap
 import discord
 
 class MapFormatModal(discord.ui.Modal, title='Map Format'):
-  def __init__(self, store:Store, game:Game):
+  def __init__(self, store:Store, game:Game, formats:list[Format] | None = None):
     super().__init__()
     self.store = store
     self.game = game
 
-    self.formats = GetFormatsByGameId(game)
+    self.formats = formats or []
     format_options = [discord.SelectOption(label=format.format_name, value=str(format.id)) for format in self.formats]
 
     self.select_format = discord.ui.Label(
@@ -22,6 +22,11 @@ class MapFormatModal(discord.ui.Modal, title='Map Format'):
       )
     )
     self.add_item(self.select_format)
+
+  @classmethod
+  async def create(cls, store: Store, game: Game):
+    formats = await GetFormatsByGameId(game)
+    return cls(store, game, formats)
 
   async def on_submit(self, interaction: discord.Interaction) -> None:
     selected_format = GetFormat(self.select_format.component.values[0], self.formats)

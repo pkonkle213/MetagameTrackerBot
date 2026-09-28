@@ -28,7 +28,7 @@ class EliminationRoundsCommands(commands.GroupCog, name="elimination_rounds"):
         if not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
 
-        modal = EventSelector(
+        modal = await EventSelector.create(
             objects.store,
             objects.game,
             objects.format,

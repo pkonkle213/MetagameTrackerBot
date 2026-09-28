@@ -15,7 +15,8 @@ class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
     hub:Hub,
     game:Game,
     format:Format,
-    league:League | None = None
+    league:League | None = None,
+    allowed_stores:list[Store] | None = None
   ):
     super().__init__()
     self.bot = bot
@@ -24,7 +25,7 @@ class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
     self.game = game
     self.format = format
     
-    self.allowed_stores = GetAllowedStores(hub, game, format)
+    self.allowed_stores = allowed_stores or []
     select_stores = BuildStoresSelect(self.allowed_stores, self.league.store_ids if self.league else None)
 
     self.league_name = discord.ui.Label(
@@ -84,6 +85,11 @@ class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
     )
     self.add_item(self.associated_stores)
 
+  @classmethod
+  async def create(cls, bot, hub, game, format, league=None):
+    allowed_stores = await GetAllowedStores(hub, game, format)
+    return cls(bot, hub, game, format, league, allowed_stores)
+
   async def on_submit(self, interaction: discord.Interaction):
     league_name = self.league_name.component.value
     start_date, end_date = self.date_range.component.value.split("-")[0:2]
@@ -91,7 +97,7 @@ class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
     description = self.description.component.value
 
     if self.league:
-      league = UpdateLeagueInput(
+      league = await UpdateLeagueInput(
         self.league.id,
         league_name,
         start_date,
@@ -101,7 +107,7 @@ class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
         interaction.user.id
       )
     else:
-      league = CreateLeagueInput(
+      league = await CreateLeagueInput(
         self.hub.discord_id,
         self.game,
         self.format,

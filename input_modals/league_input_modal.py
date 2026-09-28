@@ -85,7 +85,7 @@ class LeagueInputModal(discord.ui.Modal, title="League Input"):
     description = self.description.component.value
     
     if self.league:
-      league = UpdateLeagueInput(
+      league = await UpdateLeagueInput(
         self.league.id,
         league_name,
         start_date,
@@ -95,7 +95,7 @@ class LeagueInputModal(discord.ui.Modal, title="League Input"):
         interaction.user.id
       )
     else:
-      league = CreateLeagueInput(
+      league = await CreateLeagueInput(
         self.store.discord_id,
         self.game,
         self.format,

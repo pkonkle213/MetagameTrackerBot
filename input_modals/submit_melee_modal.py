@@ -27,4 +27,6 @@ class SubmitMeleeDataModal(discord.ui.Modal, title="Submit Data"):
     async def on_submit(self, interaction: discord.Interaction):
         self.interaction = interaction
         await interaction.response.defer(ephemeral=True)
-        self.converted_data = ConvertAndUploadMeleeTournament(self.event, self.melee_data.value, self.store, self.file_path)
+        self.converted_data = await ConvertAndUploadMeleeTournament(
+            self.event, self.melee_data.value, self.store, self.file_path
+        )

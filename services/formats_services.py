@@ -41,8 +41,8 @@ async def SetChannelMessagePermissions(interaction: Interaction):
     raise KnownError('Incorrect type of channel')
 
 
-def GetFormatOptions(interaction: Interaction):
-  objects = GetObjectsFromInteraction(interaction)
+async def GetFormatOptions(interaction: Interaction):
+  objects = await GetObjectsFromInteraction(interaction)
   if not objects.game:
     return None
-  return GetFormatsByGameId(objects.game)
+  return await GetFormatsByGameId(objects.game)

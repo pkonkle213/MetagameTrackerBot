@@ -13,13 +13,14 @@ class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
     bot:commands.Bot,
     store: Store,
     game: Game | None,
-    format: Format | None
+    format: Format | None,
+    possible_hubs: list[Hub] | None = None
   ) -> None:
     super().__init__()
     self.bot = bot
     
 
-    possible_hubs = GetPossibleHubs(store, game, format) if store.region_id else []
+    possible_hubs = possible_hubs or []
     self.select_hubs = [discord.SelectOption(label=hub.hub_name, value=str(hub.discord_id)) for hub in possible_hubs]
 
     self.store_name = discord.ui.Label(
@@ -72,6 +73,11 @@ class StoreProfileModal(discord.ui.Modal, title='Update Store Profile'):
         )
       )
       self.add_item(self.approved_hubs)
+
+  @classmethod
+  async def create(cls, bot, store, game, format):
+    possible_hubs = await GetPossibleHubs(store, game, format) if store.region_id else []
+    return cls(bot, store, game, format, possible_hubs)
 
   async def on_submit(self, interaction: discord.Interaction) -> None:
     self.submitted_hubs:list[int] = []

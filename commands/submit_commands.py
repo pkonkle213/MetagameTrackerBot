@@ -83,7 +83,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             raise KnownError("No store, game, or format found.")
 
         # User needs to select what event to submit archetypes for
-        modal = EventSelector(objects.store, objects.game, objects.format)
+        modal = await EventSelector.create(objects.store, objects.game, objects.format)
         await interaction.response.send_modal(modal)
         await modal.wait()
 

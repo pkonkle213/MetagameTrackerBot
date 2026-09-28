@@ -165,6 +165,6 @@ async def CreateLeague(bot: commands.Bot, interaction: Interaction):
         #TODO: Fix
         modal = LeagueInputModal(bot, objects.store, objects.game, objects.format)
     if objects.hub and objects.format:
-        modal = HubLeagueInputModal(bot, objects.hub, objects.game, objects.format)
+        modal = await HubLeagueInputModal.create(bot, objects.hub, objects.game, objects.format)
     await interaction.response.send_modal(modal)
     await modal.wait()

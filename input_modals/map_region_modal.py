@@ -24,7 +24,7 @@ class MapRegionModal(discord.ui.Modal, title='Map Region'):
     async def on_submit(self, interaction: discord.Interaction) -> None:
         selected_region = GetRegion(self.select_region.component.values[0], self.regions)
         await interaction.response.defer(thinking=False)
-        result = AddHubRegionMap(self.hub, interaction, selected_region)
+        result = await AddHubRegionMap(self.hub, interaction, selected_region)
         await interaction.followup.send(result, ephemeral=True)
 
 def GetRegion(selection:str, regions:list[Region]) -> Region:

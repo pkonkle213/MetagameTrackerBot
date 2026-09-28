@@ -24,7 +24,7 @@ def ValidateLeagueInput(
     return date_start, date_end, top_cut_num
 
 
-def CreateLeagueInput(
+async def CreateLeagueInput(
     discord_id: int,
     game: Game,
     format: Format,
@@ -38,7 +38,7 @@ def CreateLeagueInput(
     date_start, date_end, top_cut_num = ValidateLeagueInput(
         start_date, end_date, top_cut
     )
-    league_id = InsertLeague(
+    league_id = await InsertLeague(
         league_name,
         description,
         date_start,
@@ -49,12 +49,12 @@ def CreateLeagueInput(
         format.id,
         user_id,
     )
-    league = GetLeague(league_id)
+    league = await GetLeague(league_id)
 
     return league
 
 
-def UpdateLeagueInput(
+async def UpdateLeagueInput(
     league_id: int,
     league_name: str,
     start_date: str,
@@ -67,8 +67,8 @@ def UpdateLeagueInput(
     date_start, date_end, top_cut_num = ValidateLeagueInput(
         start_date, end_date, top_cut
     )
-    updated_league_id = UpdateLeague(
+    updated_league_id = await UpdateLeague(
         league_id, league_name, description, date_start, date_end, top_cut_num, user_id
     )
-    league = GetLeague(updated_league_id)
+    league = await GetLeague(updated_league_id)
     return league

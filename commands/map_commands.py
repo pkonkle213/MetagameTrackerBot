@@ -57,7 +57,7 @@ class MappingCommands(commands.GroupCog, name="map"):
         objects = await GetObjectsFromInteraction(interaction)
         if not objects.store:
             raise KnownError("No store found. Please register your store.")
-        modal = MapGameModal(objects.store)
+        modal = await MapGameModal.create(objects.store)
         await interaction.response.send_modal(modal)
         await modal.wait()
 
@@ -71,7 +71,7 @@ class MappingCommands(commands.GroupCog, name="map"):
             raise KnownError(
                 "No store or game found. Please map a game to this category first."
             )
-        modal = MapFormatModal(objects.store, objects.game)
+        modal = await MapFormatModal.create(objects.store, objects.game)
         await interaction.response.send_modal(modal)
         await modal.wait()
 

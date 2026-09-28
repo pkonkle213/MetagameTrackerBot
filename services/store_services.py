@@ -21,7 +21,7 @@ async def UpdateDetails(bot:commands.Bot, interaction: discord.Interaction) -> d
     raise KnownError('No registered discord found')
 
   if objects.store:
-    modal = StoreProfileModal(bot, objects.store, objects.game, objects.format)
+    modal = await StoreProfileModal.create(bot, objects.store, objects.game, objects.format)
     await interaction.response.send_modal(modal)
     await modal.wait()  
 
@@ -82,7 +82,7 @@ async def NewStoreRegistration(
       output += '- Store added to database\n'
 
     print('Mapping categories and channels')
-    mapping_message, mapping_success = MapCategoriesAndChannels(guild)
+    mapping_message, mapping_success = await MapCategoriesAndChannels(guild)
     if mapping_success:
       output += '- Categories and channels automapped:\n'
       output += mapping_message
@@ -129,29 +129,29 @@ def MatchFormat(channel_name: str, formats: list[Format]) -> Format | None:
     if format.format_name.lower() in channel_name.lower():
       return format
 
-def MapCategoriesAndChannels(guild: discord.Guild) -> tuple[str, bool]:
+async def MapCategoriesAndChannels(guild: discord.Guild) -> tuple[str, bool]:
   """Sequentially maps the categories and channels in the guild"""
   try:
     output = ''
     mapping = False
-    games = GetGameOptions()
+    games = await GetGameOptions()
     if games is None:
       raise Exception('No games found to automap')
   
     for category in guild.categories:
       game = MatchGame(category.name, games)
       if game:
-        result = AddGameMap(guild.id, game.id, category.id)
+        result = await AddGameMap(guild.id, game.id, category.id)
         mapping = True
         if result:
           output += f'Game: {game.game_name.title()}, Category: {category.name} ({category.id})\n'
       
-        formats = GetFormatsByGameId(game)
+        formats = await GetFormatsByGameId(game)
         if formats:
           for channel in category.channels:
             format = MatchFormat(channel.name, formats)
             if format:
-              result = AddFormatMap(guild.id, format.id, channel.id)
+              result = await AddFormatMap(guild.id, format.id, channel.id)
               if result:
                 output += f'Format: {format.format_name.title()}, Channel: {channel.name} ({channel.id})\n'
   

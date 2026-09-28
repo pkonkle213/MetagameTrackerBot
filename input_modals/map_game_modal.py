@@ -7,11 +7,11 @@ import discord
 class MapGameModal(discord.ui.Modal, title='Map Game'):
   is_submitted = False
 
-  def __init__(self, store:Store):
+  def __init__(self, store:Store, games:list[Game] | None = None):
     super().__init__()
     self.store = store
 
-    self.games = GetAllGames()
+    self.games = games or []
 
     game_options = [discord.SelectOption(label=game.game_name, value=str(game.id)) for game in self.games]
 
@@ -25,10 +25,15 @@ class MapGameModal(discord.ui.Modal, title='Map Game'):
     )
     self.add_item(self.select_game)
 
+  @classmethod
+  async def create(cls, store: Store):
+    games = await GetAllGames()
+    return cls(store, games)
+
   async def on_submit(self, interaction: discord.Interaction) -> None:
     selected_game = GetGame(self.select_game.component.values[0], self.games)
     await interaction.response.defer(thinking=False)
-    result = AddStoreGameMap(interaction, selected_game)
+    result = await AddStoreGameMap(interaction, selected_game)
     await interaction.followup.send(result, ephemeral=True)
 
   async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:

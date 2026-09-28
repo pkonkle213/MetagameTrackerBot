@@ -54,7 +54,7 @@ class PersonalStatisticsGroup(commands.GroupCog, name="personal_stats"):
             End of Date Range (MM/DD/YYYY)
         """
         await interaction.response.defer(ephemeral=True, thinking=True)
-        data, title, header = PlayRecord(interaction, start_date, end_date)
+        data, title, header = await PlayRecord(interaction, start_date, end_date)
         if len(data) == 1:
             await interaction.followup.send(
                 "No matchup data found for this store and/or format", ephemeral=True

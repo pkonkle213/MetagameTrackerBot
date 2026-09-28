@@ -3,11 +3,11 @@ from custom_errors import KnownError
 from tuple_conversions import Store
 from data.melee_api_data import GetStoreMeleeInfo
 
-def GetMeleeTournamentData(
+async def GetMeleeTournamentData(
     tournament_id: str,
     store: Store
 ) -> list:
-  storeInfo = GetStoreMeleeInfo(store)
+  storeInfo = await GetStoreMeleeInfo(store)
   if not storeInfo or storeInfo.melee_client_id is None or storeInfo.melee_client_secret is None:
     raise KnownError("Store not registered for Melee.gg API. Update store settings and try again.")
   page_size = 250

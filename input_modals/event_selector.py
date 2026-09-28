@@ -5,16 +5,28 @@ from data.data_input_menus import GetPreviousEvents
 from tuple_conversions import Event, Format, Game, Store
 
 class EventSelector(discord.ui.Modal, title='Select Event'):
-  def __init__(self, store:Store, game:Game, format:Format, event_type: int = 0):
+  def __init__(self):
     super().__init__()
-    self.previous_events = GetPreviousEvents(store, game, format, event_type=event_type, archetypes=True)
 
-    if len(self.previous_events) == 0:
+  @classmethod
+  async def create(
+    cls,
+    store:Store,
+    game:Game,
+    format:Format,
+    event_type: int = 0,
+  ):
+    modal = cls()
+    modal.previous_events = await GetPreviousEvents(
+      store, game, format, event_type=event_type, archetypes=True
+    )
+
+    if len(modal.previous_events) == 0:
       raise KnownError('No events submitted in the last 2 weeks.')
     
     past_events = []
-    for i in range(len(self.previous_events)):
-      option = self.previous_events[i]
+    for i in range(len(modal.previous_events)):
+      option = modal.previous_events[i]
       label = f"{option.event_date.strftime('%m/%d')} - {option.event_name}"
       value = str(option.id)
       if i == 0:
@@ -22,7 +34,7 @@ class EventSelector(discord.ui.Modal, title='Select Event'):
       else:
         past_events.append(discord.SelectOption(label=label, value=value))
 
-    self.selected_event = discord.ui.Label(
+    modal.selected_event = discord.ui.Label(
       text="Select an Event",
       component=discord.ui.Select(
         placeholder="Select an event",
@@ -32,7 +44,8 @@ class EventSelector(discord.ui.Modal, title='Select Event'):
         min_values=1
       )
     )
-    self.add_item(self.selected_event)
+    modal.add_item(modal.selected_event)
+    return modal
 
   async def on_submit(self, interaction: discord.Interaction):
     self.event = GetEvent(self.selected_event.component.values[0], self.previous_events)
