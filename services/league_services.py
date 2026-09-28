@@ -29,7 +29,7 @@ async def SelectLeague(
     bot: commands.Bot, interaction: Interaction, isEdit: bool = False
 ) -> League:
     """Selects a league from the database"""
-    objects = GetObjectsFromInteraction(interaction)
+    objects = await GetObjectsFromInteraction(interaction)
 
     if (
         (not objects.hub and not objects.store)
@@ -63,7 +63,9 @@ async def SelectLeague(
     return modal.league
 
 
-async def FindPlayerStanding(league: League, user_id: int, discord_id: int) -> PlayerStanding:
+async def FindPlayerStanding(
+    league: League, user_id: int, discord_id: int
+) -> PlayerStanding:
     """Displays the player's standing in a league"""
     if league.store_ids[0]:
         return await GetHubPlayerStanding(league, user_id)
@@ -150,7 +152,7 @@ async def EditLeague(bot: commands.Bot, interaction: Interaction):
 
 async def CreateLeague(bot: commands.Bot, interaction: Interaction):
     """Create a league"""
-    objects = GetObjectsFromInteraction(interaction)
+    objects = await GetObjectsFromInteraction(interaction)
 
     if (
         (not objects.store and not objects.hub)
@@ -160,6 +162,7 @@ async def CreateLeague(bot: commands.Bot, interaction: Interaction):
         raise KnownError("Insufficient mapping to complete this command")
 
     if objects.store:
+        #TODO: Fix
         modal = LeagueInputModal(bot, objects.store, objects.game, objects.format)
     if objects.hub and objects.format:
         modal = HubLeagueInputModal(bot, objects.hub, objects.game, objects.format)

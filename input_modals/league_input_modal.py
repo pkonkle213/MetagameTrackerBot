@@ -7,8 +7,8 @@ from services.league_input_modal_services import CreateLeagueInput, UpdateLeague
 class LeagueInputModal(discord.ui.Modal, title="League Input"):
   def __init__(self,
                bot:commands.Bot,
-               store:Store | None,
-               hub:Hub | None,
+               store:Store,
+               #hub:Hub | None,
                game:Game,
                format:Format,
                league:League | None = None):
@@ -16,7 +16,7 @@ class LeagueInputModal(discord.ui.Modal, title="League Input"):
     self.bot = bot
     self.league = league
     self.store = store
-    self.hub = hub
+    #self.hub = hub
     self.game = game
     self.format = format
 
