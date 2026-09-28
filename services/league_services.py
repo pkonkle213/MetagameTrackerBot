@@ -46,7 +46,7 @@ async def SelectLeague(
 
     if objects.store:
         discord_id = objects.store.discord_id
-    leagues = GetLeagues(discord_id, objects.game.id, objects.format.id)
+    leagues = await GetLeagues(discord_id, objects.game.id, objects.format.id)
     modal = LeagueSelector(
         bot,
         objects.store,
@@ -75,8 +75,8 @@ async def FindPlayerStanding(
 
 async def LeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
-    top_players = GetFullLeagueLeaderboard(league)
-    return await top_players[: league.top_cut]
+    top_players = await GetFullLeagueLeaderboard(league)
+    return top_players[: league.top_cut]
 
 
 async def FullLeagueLeaderboard(league: League) -> list[TopPlayers]:

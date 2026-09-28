@@ -114,7 +114,7 @@ class HubLeagueInputModal(discord.ui.Modal, title="League Input"):
       )
 
     store_ids = [int(store_id) for store_id in self.associated_stores.component.values]
-    UpdateAssociatedStores(league.id, store_ids)
+    await UpdateAssociatedStores(league.id, store_ids)
 
     title = "New league created!" if not self.league else "League updated!"
     output = f'''{title}

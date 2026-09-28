@@ -13,12 +13,12 @@ async def GetEliminationRoundData(event: Event) -> str:
 
     # If the selected tournament is submitted via standings, obtain the top 8 that way
     if event.reported_as == ReportedAsEnum.Standings.value:
-        data = GetEliminationStandings(event)
+        data = await GetEliminationStandings(event)
         output = await BuildEliminationStandingOutput(data)
 
     # If the selected tournament is submitted via pairings, obtain the top 8 that way
     elif event.reported_as == ReportedAsEnum.Pairings.value:
-        data = GetEliminationPairings(event)
+        data = await GetEliminationPairings(event)
         output = BuildEliminationPairingOutput(data)
 
     output = f"```{title}\n{output}```"

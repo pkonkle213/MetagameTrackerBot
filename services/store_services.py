@@ -16,7 +16,7 @@ from tuple_conversions import Format, Game
 
 async def UpdateDetails(bot:commands.Bot, interaction: discord.Interaction) -> discord.Interaction:
   """Updates the store details in the database"""
-  objects = GetObjectsFromInteraction(interaction)
+  objects = await GetObjectsFromInteraction(interaction)
   if not objects.store and not objects.hub:
     raise KnownError('No registered discord found')
 

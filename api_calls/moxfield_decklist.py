@@ -37,7 +37,7 @@ async def GetMoxfieldArchetype(
   
   # Save the decklist in the db
   # 1) Make a new deck
-  deck_id = AddDeck(player_name, event.id)
+  deck_id = await AddDeck(player_name, event.id)
   
   # Loop through cards and make decklist of card qty, name, and check if legal
   for board_name in ["mainboard", "sideboard"]:
@@ -57,6 +57,6 @@ async def GetMoxfieldArchetype(
   rows = await AddCards(deck_id, cards)
 
   # 3) Determine Archetype
-  archetype_guess = SelectArchetype(cards, format)
+  archetype_guess = await SelectArchetype(cards, format)
     
   return archetype_guess

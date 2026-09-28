@@ -161,7 +161,7 @@ def BuildMessage(
 async def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
     percent_reported = await GetEventReportedPercentage(event.id)
     if percent_reported >= (event.last_update + 1) / 4:
-        check = UpdateEvent(event.id)
+        check = await UpdateEvent(event.id)
         if check is None:
             raise Exception(f"Unable to update event: {event.id}")
         str_date = event.event_date.strftime("%B %-d")

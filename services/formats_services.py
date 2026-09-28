@@ -13,7 +13,7 @@ async def AddStoreFormatMap(interaction: Interaction,
   if not discord_id or not channel_id:
     raise KnownError('No guild or channel found')
 
-  rows = AddFormatMap(discord_id, chosen_format.id, channel_id)
+  rows = await AddFormatMap(discord_id, chosen_format.id, channel_id)
   if rows is None:
     return 'Unable to add game map to database'
   try:
