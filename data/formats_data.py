@@ -44,7 +44,7 @@ async def GetFormatsByGameId(game: Game) -> list[Format]:
         FROM
             formats
         WHERE
-            game_id = 
+            game_id = %s
         ORDER BY
             format_name
         """

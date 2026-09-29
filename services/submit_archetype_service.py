@@ -20,14 +20,17 @@ from tuple_conversions import (
     Store,
     Game,
     OutputToBuild,
-    Hub, PlayerArchetype,
+    Hub,
+    PlayerArchetype,
 )
 from discord.ext import commands
 from services.message_hubs_services import MessageHubs
 from data.archetype_data import PlayerInEvent
 
 
-async def Moxfield(link: str) -> tuple[str, str, bool]:
+async def Moxfield(
+    link: str, event: Event, format: Format, player_name: str
+) -> tuple[str, str, bool]:
     moxfield_archetype = ""
     moxfield_error = ""
     success = False
@@ -36,11 +39,11 @@ async def Moxfield(link: str) -> tuple[str, str, bool]:
             link, event, format, player_name
         )
 
-        AddArchetype(
-            event.id,
-            player_name,
-            moxfield_archetype,
-            None,
+        # TODO: Fix this
+        await BulkAddArchetypes(
+            event,
+            [PlayerArchetype(player_name, moxfield_archetype)],
+            0,
             "Moxfield Import",
             guild_id,
             guild_name,
@@ -158,12 +161,14 @@ def BuildMessage(
     return "\n".join(message_parts)
 
 
+    # BUG: When the last update is submitted, stores are getting a "100% reported" output instead of "fully reported"
 async def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
     percent_reported = await GetEventReportedPercentage(event.id)
     if percent_reported >= (event.last_update + 1) / 4:
+        # BUG: I think the bug is in here, as events aren't getting their last_update value updated in the db
         check = await UpdateEvent(event.id)
         if check is None:
-            raise Exception(f"Unable to update event: {event.id}")
+            raise KnownError(f"Unable to update event: {event.id}")
         str_date = event.event_date.strftime("%B %-d")
         if event.last_update + 1 < 4:
             followup = f"Congratulations! {str_date}'s {event.event_name} is now {percent_reported:.0%} reported!"
