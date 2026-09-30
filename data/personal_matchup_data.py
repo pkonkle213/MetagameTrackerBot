@@ -115,7 +115,7 @@ async def GetPersonalMatchups(
                             ELSE 0
                         END
                     ) AS draws,
-                    COUNT(*) AS total_games
+                    COUNT(*) AS total_matches
                 FROM
                     player_pairings pp
                 GROUP BY
@@ -127,7 +127,7 @@ async def GetPersonalMatchups(
             par.player_archetype_rank,
             mr.opponent_archetype,
             fm.metagame_rank,
-            mr.total_games,
+            mr.total_matches,
             ROUND(
                 100.0 * mr.wins / (mr.wins + mr.losses + mr.draws),
                 0

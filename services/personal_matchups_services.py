@@ -42,7 +42,7 @@ def BuildPersonalMatchups(
     new_matchups: list[PersonalArchetype] = []
     for row in matchups:
         opponent = OpponentArchetype(
-            row.opponent_archetype, row.total_games, row.win_percent
+            row.opponent_archetype, row.total_matches, row.win_percent
         )
         if row.player_archetype_rank != active_archetype:
             active_archetype = max(active_archetype, row.player_archetype_rank)
@@ -65,7 +65,7 @@ def BuildMatchupsOutput(archetypes: list[PersonalArchetype]) -> list[Embed]:
         description: list[str] = []
         for matchup in archetype.matchups:
             description.append(
-                f"{matchup.archetype_name} - {matchup.win_percent}% ({matchup.total_games} game{'s' if matchup.total_games > 1 else ''})"
+                f"{matchup.archetype_name} - {matchup.win_percent}% ({matchup.total_matches} match{'es' if matchup.total_matches > 1 else ''})"
             )
         body = "\n".join(description)
         output = Embed(title=title, description=body)
