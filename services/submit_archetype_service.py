@@ -161,11 +161,9 @@ def BuildMessage(
     return "\n".join(message_parts)
 
 
-    # BUG: When the last update is submitted, stores are getting a "100% reported" output instead of "fully reported"
 async def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
     percent_reported = await GetEventReportedPercentage(event.id)
     if percent_reported >= (event.last_update + 1) / 4:
-        # BUG: I think the bug is in here, as events aren't getting their last_update value updated in the db
         check = await UpdateEvent(event.id)
         if check is None:
             raise KnownError(f"Unable to update event: {event.id}")

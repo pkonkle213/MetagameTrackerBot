@@ -12,12 +12,12 @@ from incoming_message_conversions.magic_companion import (
 from tuple_conversions import DataConverted
 
 
-def ConvertCSVToData(dataframe: pd.DataFrame) -> DataConverted:
+def ConvertCSVToData(dataframe: pd.DataFrame, round_number:int = 0) -> DataConverted:
     errors = None
     standings_data = None
     pairings_data = None
 
-    pairings_data, errors = ConvertToPairings(dataframe)
+    pairings_data, errors = ConvertToPairings(dataframe, round_number)
 
     if pairings_data is None:
         standings_data, errors = ConvertToStandings(dataframe)
