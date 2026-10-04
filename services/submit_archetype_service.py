@@ -1,31 +1,25 @@
-from services.one_event_details import OneEventDetails
-from checks import isSubmitter
-import settings
-from custom_errors import KnownError
-from data.store_data import GetArchetypeFeed
-from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
-from data.store_data import GetFormatMapByEvent
-from data.archetype_data import BulkAddArchetypes
-from data.event_data import GetEventDetails
-from services.input_services import ConvertInput
+from discord.ext import commands
+
+import settings
 from api_calls.moxfield_decklist import GetMoxfieldArchetype
+from custom_errors import KnownError
+from data.archetype_data import BulkAddArchetypes, PlayerInEvent
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
-from output_builder import BuildTableOutput
+from data.store_data import GetArchetypeFeed, GetFormatMapByEvent
 from discord_messages import MessageChannel
-from data.interaction_data import GetObjectsFromInteraction
+from output_builder import BuildTableOutput
+from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
+from services.message_hubs_services import MessageHubs
+from services.one_event_details import OneEventDetails
 from tuple_conversions import (
     Event,
     Format,
-    Store,
     Game,
-    OutputToBuild,
     Hub,
     PlayerArchetype,
+    Store,
 )
-from discord.ext import commands
-from services.message_hubs_services import MessageHubs
-from data.archetype_data import PlayerInEvent
 
 
 async def Moxfield(
@@ -112,7 +106,7 @@ async def SubmitArchetype(
         )
 
     feed_output = BuildMessage(interaction, event, archetype, player_name)
-    private_output = (
+    private_output: str = (
         f"Thank you for submitting the archetype for {event.event_name}!"
         + moxfield_error
     )
@@ -135,7 +129,7 @@ async def SubmitArchetype(
         await MessageHubs(bot, store, event, output)
 
 
-async def MessageStoreFeed(bot, message: str, event: Event) -> None:
+async def MessageStoreFeed(bot: commands.Bot, message: str, event: Event) -> None:
     """Message the store feed channel specific to the game"""
     try:
         channel_id = GetArchetypeFeed(event.discord_id, event.game_id)
@@ -161,14 +155,12 @@ def BuildMessage(
     return "\n".join(message_parts)
 
 
-    # BUG: When the last update is submitted, stores are getting a "100% reported" output instead of "fully reported"
 async def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
+    followup: str | None = None
+    final: str | None = None
     percent_reported = await GetEventReportedPercentage(event.id)
     if percent_reported >= (event.last_update + 1) / 4:
-        # BUG: I think the bug is in here, as events aren't getting their last_update value updated in the db
-        check = await UpdateEvent(event.id)
-        if check is None:
-            raise KnownError(f"Unable to update event: {event.id}")
+        await UpdateEvent(event.id)
         str_date = event.event_date.strftime("%B %-d")
         if event.last_update + 1 < 4:
             followup = f"Congratulations! {str_date}'s {event.event_name} is now {percent_reported:.0%} reported!"
@@ -177,5 +169,4 @@ async def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
             followup = f"Congratulations! {str_date}'s {event.event_name} is now fully reported! Thank you to all who reported their archetypes!"
             table = await OneEventDetails(event)
             final = BuildTableOutput(table.title, table.headers, table.data)
-        return followup, final
-    return None, None
+    return followup, final

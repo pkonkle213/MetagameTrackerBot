@@ -65,7 +65,7 @@ async def GetArchetypeModalDetails(
             ARRAY_AGG(a.archetype_played) as archetypes
         FROM
             name n
-            INNER JOIN archetypes a ON a.player_name = n.player_name
+            LEFT JOIN archetypes a ON a.player_name = n.player_name
         GROUP BY
             n.player_name
         """

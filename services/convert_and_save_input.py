@@ -75,7 +75,7 @@ async def ConvertAndUploadCSV(
     else:
         round_number = int(filename_split[4])
 
-    submitted_data = ConvertCSVToData(df)
+    submitted_data = ConvertCSVToData(df, round_number)
 
     custom_event_id = int(filename_split[2])
 
