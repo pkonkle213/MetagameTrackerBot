@@ -257,6 +257,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                 case _:
                     raise KnownError("Unknown input type")
 
+        #TODO: How does this work with a CSV import of 10 files?
         modal = None
         cont = True
         while cont:
