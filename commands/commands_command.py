@@ -13,11 +13,8 @@ def _command_lines(
         path = f"{parent_path} {command.name}".strip()
         if isinstance(command, app_commands.Group):
             lines.extend(_command_lines(command.commands, path))
-        elif isinstance(command, app_commands.ContextMenu):
-            context_type = command.type.name.title()
-            lines.append(f"`{context_type} context menu: {command.name}`")
         else:
-            description = getattr(command, "description", None) or "No description"
+            description = command.description or "No description"
             lines.append(f"`/{path}` — {description}")
     return lines
 
