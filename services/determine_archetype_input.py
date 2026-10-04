@@ -19,28 +19,32 @@ async def GetArchetypeModal(
     format: Format,
     player_name: str,
     player_archetypes: list[str],
-    is_submitter: bool
+    is_submitter: bool,
 ) -> None:
     """Determines which modal to use based on the game and format"""
     if game.id == GameEnum.Magic.value and format.is_limited:
         modal = MagicLimitedSubmitArchetypeModal(
             bot,
+            store,
+            hub,
             game,
             format,
             userId,
             events,
             player_name,
-            player_archetypes
+            is_submitter,
         )
     elif game.id == GameEnum.Lorcana.value:
         modal = LorcanaSubmitArchetypeModal(
             bot,
+            store,
+            hub,
             game,
             format,
-            userId,
             events,
             player_name,
-            player_archetypes
+            player_archetypes,
+            is_submitter,
         )
     else:
         modal = SubmitArchetypeModal(
@@ -49,7 +53,6 @@ async def GetArchetypeModal(
             hub,
             game,
             format,
-            userId,
             events,
             player_name,
             player_archetypes,

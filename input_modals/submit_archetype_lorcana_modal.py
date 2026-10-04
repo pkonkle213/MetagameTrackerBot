@@ -36,6 +36,7 @@ class LorcanaSubmitArchetypeModal(ui.Modal, title="Submit Archetype"):
         self.game = game
         self.format = format
         self.is_submitter = is_submitter
+        self.previous_events = events
 
         self.past_events: list[SelectOption] = []
         for i in range(len(events)):
@@ -79,7 +80,7 @@ class LorcanaSubmitArchetypeModal(ui.Modal, title="Submit Archetype"):
         self.archetype_name = ui.Label(
             text="Archetype Name",
             component=ui.TextInput(
-                placeholder="Enter The Archetype Name", required=False, min_length=3
+                required=True, placeholder="Enter The Archetype Name", min_length=3
             ),
         )
         self.add_item(self.archetype_name)
@@ -88,7 +89,7 @@ class LorcanaSubmitArchetypeModal(ui.Modal, title="Submit Archetype"):
         archetype = BuildArchetype(
             self.inks.component.values, self.archetype_name.component.value
         )
-        event = GetEvent(self.past_events, self.event_select.component.values[0])
+        event = GetEvent(self.previous_events, self.event_select.component.values[0])
         player_name = ConvertInput(self.player_name_input.component.value)
         await interaction.response.defer(thinking=False)
         await SubmitArchetype(
