@@ -32,10 +32,10 @@ async def GetEventReportedPercentage(event_id: int) -> float:
         return row
 
 
-async def UpdateEvent(event_id: int) -> int:
+async def UpdateEvent(event_id: int):
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
-        conn.cursor() as cur,
+        conn.cursor(row_factory=scalar_row) as cur,
     ):
         command = """
         UPDATE events
@@ -49,4 +49,3 @@ async def UpdateEvent(event_id: int) -> int:
         row = await cur.fetchone()
         if not row:
             raise KnownError(f"Unable to update event {event_id}")
-        return row[0]
