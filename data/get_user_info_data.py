@@ -56,7 +56,7 @@ async def GetLastArchetype(
         command = """
         SELECT
             TO_CHAR(e.event_date,'MM/DD') as event_date,
-            INITCAP(archetype_played) as archetype_played
+            archetype_played
         FROM
             full_standings fs
             INNER JOIN events e ON fs.event_id = e.id
@@ -90,7 +90,7 @@ async def GetMostPlayed(
         WITH
             results AS (
             SELECT
-                INITCAP(archetype_played) AS archetype_played,
+                archetype_played,
                 wins,
                 losses,
                 draws

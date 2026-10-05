@@ -74,7 +74,7 @@ async def SelectArchetype(cards: list[Card], format: Format) -> str:
                         ORDER BY
                             archetype_played
                     ) AS archetype_id,
-                    initcap(archetype_played) AS archetype_name
+                    archetype_played AS archetype_name
                 FROM
                     unique_archetypes ua
                     INNER JOIN events e ON e.id = ua.event_id

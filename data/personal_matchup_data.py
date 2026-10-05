@@ -46,8 +46,8 @@ async def GetPersonalMatchups(
             ),
             player_pairings AS (
                 SELECT
-                    INITCAP(COALESCE(uap.archetype_played, 'Unknown')) AS player_archetype,
-                    INITCAP(COALESCE(uao.archetype_played, 'Unknown')) AS opponent_archetype,
+                    COALESCE(uap.archetype_played, 'Unknown') AS player_archetype,
+                    COALESCE(uao.archetype_played, 'Unknown') AS opponent_archetype,
                     result
                 FROM
                     full_pairings fp
@@ -78,7 +78,7 @@ async def GetPersonalMatchups(
             ),
             full_metagame AS (
                 SELECT
-                    INITCAP(COALESCE(ua.archetype_played, 'Unknown')) AS archetype_played,
+                    COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,
                     ROW_NUMBER() OVER (
                         ORDER BY
                             COUNT(*) DESC
@@ -89,7 +89,7 @@ async def GetPersonalMatchups(
                     LEFT JOIN unique_archetypes ua ON ua.event_id = fs.event_id
                     AND upper(ua.player_name) = upper(fs.player_name)
                 GROUP BY
-                    INITCAP(COALESCE(ua.archetype_played, 'Unknown'))
+                    COALESCE(ua.archetype_played, 'Unknown')
                 ORDER BY
                     COUNT(*) DESC
             ),

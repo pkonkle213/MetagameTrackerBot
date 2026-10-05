@@ -72,7 +72,7 @@ def GetStats(
             SELECT
               '2' AS rank,
               format_name,
-              COALESCE(INITCAP(archetype_played), 'UNKNOWN') AS archetype_played,
+              COALESCE(archetype_played, 'Unknown') AS archetype_played,
               SUM(wins) AS wins,
               SUM(losses) AS losses,
               SUM(draws) AS draws,
@@ -80,7 +80,7 @@ def GetStats(
             FROM
               X
             GROUP BY
-              INITCAP(archetype_played),
+              archetype_played,
               X.format_name
           )
         """

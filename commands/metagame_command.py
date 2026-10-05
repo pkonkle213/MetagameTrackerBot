@@ -51,13 +51,8 @@ class MetagameCommand(commands.Cog):
         if not interaction.channel_id:
             raise KnownError("Try a channel that has an id")
 
-        # TODO: Wait, should this be in the service??
-        if objects.game.id == GameEnum.Magic.value and objects.format.is_limited:
-            archetype = "COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,"
-        else:
-            archetype = (
-                "COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,"
-            )
+        # TODO: What if it's a limited format?
+        archetype = "COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,"
 
         title: str = ""
         data: list[MetagameResult] = []
