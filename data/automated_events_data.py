@@ -3,7 +3,7 @@ from typing import NamedTuple
 from psycopg import AsyncConnection
 from psycopg.rows import class_row
 
-from settings import DATABASE_URL
+from settings import DATABASE_URL, DATAGUILDID
 
 
 class StaleEvents(NamedTuple):
@@ -51,3 +51,5 @@ async def ThreeDayOldEvents() -> list[StaleEvents]:
         await cur.execute(command)
         rows = await cur.fetchall()
         return rows
+
+async def GetGameForDataHub()

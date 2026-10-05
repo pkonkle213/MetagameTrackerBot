@@ -2,16 +2,16 @@ from datetime import date
 from tuple_conversions import MetagameResult, Store, Format, Game, Hub, Region
 from data.metagame_data import GetTheMetagame
 
+
 async def GetWholeMetagame(
-    game:Game,
-    format:Format,
-    start_date:date,
-    end_date:date,
-    archetype:str
+    game_id: int,
+    format_id: int,
+    start_date: date,
+    end_date: date
 ) -> list[MetagameResult]:
-    criteria = f'''
+    criteria = f"""
     SELECT
-        {archetype}
+        COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,
         wins,
         losses,
         draws
@@ -23,22 +23,23 @@ async def GetWholeMetagame(
         INNER JOIN stores_view s ON e.discord_id = s.discord_id
     WHERE
         e.event_date BETWEEN '{start_date}' AND '{end_date}'
-        AND e.game_id = {game.id}
-        AND e.format_id = {format.id}
+        AND e.game_id = {game_id}
+        AND e.format_id = {format_id}
         AND s.used_for_data = TRUE
-    '''
+    """
 
     return await GetTheMetagame(criteria)
 
+
 async def RegionLockedMetagame(
-    hub:Hub,
-    game:Game,
-    format:Format,
-    start_date:date,
-    end_date:date,
-    archetype:str
+    hub: Hub,
+    game: Game,
+    format: Format,
+    start_date: date,
+    end_date: date,
+    archetype: str,
 ) -> list[MetagameResult]:
-    criteria = f'''
+    criteria = f"""
     SELECT
         {archetype}
         wins,
@@ -56,20 +57,21 @@ async def RegionLockedMetagame(
         e.event_date BETWEEN '{start_date}' AND '{end_date}'
         AND hv.discord_id = {hub.discord_id}
         AND fcm.format_id = {format.id}
-    '''
-    
+    """
+
     return await GetTheMetagame(criteria)
 
+
 async def FormatLockedMetagame(
-    hub:Hub,
-    game:Game,
-    format:Format,
-    region:Region | None,
-    start_date:date,
-    end_date:date,
-    archetype:str
+    hub: Hub,
+    game: Game,
+    format: Format,
+    region: Region | None,
+    start_date: date,
+    end_date: date,
+    archetype: str,
 ) -> list[MetagameResult]:
-    criteria = f'''
+    criteria = f"""
     SELECT
         {archetype}
         wins,
@@ -87,19 +89,20 @@ async def FormatLockedMetagame(
         e.event_date BETWEEN '{start_date}' AND '{end_date}'
         AND hv.discord_id = {hub.discord_id}
         {f"AND rcm.region_id = {region.id}" if region else ""}
-    '''
-    
+    """
+
     return await GetTheMetagame(criteria)
 
+
 async def StoreMetagame(
-    store:Store,
-    game:Game,
-    format:Format,
-    date_start:date,
-    date_end:date,
-    archetype:str
+    store: Store,
+    game: Game,
+    format: Format,
+    date_start: date,
+    date_end: date,
+    archetype: str,
 ) -> list[MetagameResult]:
-    criteria = f'''  
+    criteria = f"""  
     SELECT
         {archetype}
         wins,
@@ -116,6 +119,6 @@ async def StoreMetagame(
         AND s.discord_id = {store.discord_id}
         AND e.format_id = {format.id}
         AND e.game_id = {game.id}
-    '''
-    
+    """
+
     return await GetTheMetagame(criteria)

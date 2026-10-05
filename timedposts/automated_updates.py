@@ -2,24 +2,16 @@ from discord import CategoryChannel, ForumChannel
 from discord.abc import PrivateChannel
 from discord.ext import commands
 from custom_errors import KnownError
-import settings
 from output_builder import BuildTableOutput
 from data.automated_updates_data import GetDataChannels
 from services.date_functions import BuildDateRange
 from services.metagame_services import GetWholeMetagame
+from data.hubs_data import GetHub
 
 
-# TODO: FIX THIS
 async def UpdateDataGuild(bot: commands.Bot):
-    raise KnownError("Needs reimplemented")
-
-    target_channels = await GetDataChannels(settings.DATAGUILDID)
-    store = GetHub(settings.DATAGUILDID)
+    target_channels = await GetDataChannels()
     for data_channel in target_channels:
-        game = GetGameForStore(data_channel.category_id, settings.DATAGUILDID)
-        format = GetFormatForStore(game, data_channel.channel_id, settings.DATAGUILDID)
-        if not store or not game or not format:
-            continue
         channel = bot.get_channel(data_channel.channel_id)
         if (
             not channel
@@ -28,12 +20,15 @@ async def UpdateDataGuild(bot: commands.Bot):
             or isinstance(channel, PrivateChannel)
         ):
             raise KnownError("Cannot send a message to this channel")
-        date_start, date_end = BuildDateRange("", "", format)
-        title_name = format.format_name.title() if format else game.game_name.title()
-        archetypes = "COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,"
-        data = await GetWholeMetagame(game, format, date_start, date_end, archetypes)
+        date_start, date_end = BuildDateRange("", "")
+        data = await GetWholeMetagame(
+            data_channel.game_id,
+            data_channel.format_id,
+            date_start,
+            date_end
+        )
         if len(data) > 0:
-            title = f"{title_name} metagame from {date_start} to {date_end}"
+            title = f"Metagame from {date_start} to {date_end}"
             headers = ["Deck Archetype", "Meta %", "Win %"]
             output = BuildTableOutput(title, headers, data)
             await channel.send(output)
