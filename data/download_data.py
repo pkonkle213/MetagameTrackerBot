@@ -38,7 +38,7 @@ async def GetStoreStandingData(
             TO_CHAR(e.event_date,'MM/DD/YYYY') AS event_date,
             e.event_name,
             INITCAP(fp.Player_Name) AS player_name,
-            INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
+            COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,
             fp.wins,
             fp.losses,
             fp.draws
@@ -100,9 +100,9 @@ async def GetStorePairingData(
             e.event_name,
             frr.round_number,
             INITCAP(frr.player_name) as player_name,
-            INITCAP(COALESCE(ua1.archetype_played, 'UNKNOWN')) AS player_archetype,
+            COALESCE(ua1.archetype_played, 'Unknown') AS player_archetype,
             INITCAP(frr.opponent_name),
-            INITCAP(COALESCE(ua2.archetype_played, 'UNKNOWN')) AS opponent_archetype,
+            COALESCE(ua2.archetype_played, 'Unknown') AS opponent_archetype,
             INITCAP(frr.result) as result
         FROM
             full_pairings frr
@@ -162,8 +162,8 @@ async def GetPlayerPairingData(
             TO_CHAR(e.event_date,'MM/DD/YYYY') as event_date,
             e.event_name,
             frr.round_number,
-            INITCAP(COALESCE(ua1.archetype_played, 'UNKNOWN')) as your_archetype,
-            INITCAP(COALESCE(ua2.archetype_played, 'UNKNOWN')) as opponents_archetype,
+            COALESCE(ua1.archetype_played, 'Unknown') as your_archetype,
+            COALESCE(ua2.archetype_played, 'Unknown') as opponents_archetype,
             INITCAP(frr.result) as result
         FROM
             full_pairings frr
@@ -222,7 +222,7 @@ async def GetPlayerStandingData(
             INITCAP(f.format_name) AS format_name,
             TO_CHAR(e.event_date, 'MM/DD/YYYY') as event_date,
             e.event_name,
-            INITCAP(COALESCE(ua.archetype_played, 'UNKNOWN')) AS archetype_played,
+            COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,
             fp.wins,
             fp.losses,
             fp.draws

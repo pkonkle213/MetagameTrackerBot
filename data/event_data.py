@@ -115,7 +115,7 @@ async def GetPlayersInEvent(event_id: int) -> list[PlayerArchetype]:
         command = """
         SELECT
             INITCAP(fs.player_name) as player_name,
-            INITCAP(ua.archetype_played) as archetype_played
+            ua.archetype_played
         FROM
             full_standings fs
             LEFT JOIN unique_archetypes ua ON ua.event_id = fs.event_id
@@ -146,7 +146,7 @@ async def GetEventDetails(event_id: int) -> list[EventResult]:
     ):
         command = """
         SELECT
-            COALESCE(REGEXP_REPLACE(INITCAP(archetype_played), '''S', '''s', 'g'), 'Unknown') AS archetype_played,
+            COALESCE(archetype_played, 'Unknown') AS archetype_played,
             wins,
             losses,
             draws

@@ -13,7 +13,7 @@ async def GetDecks(event: Event) -> list[Deck]:
         command = """
         SELECT
             d.deck_id as id,
-            INITCAP(COALESCE(ua.archetype_played, 'Unknown')) AS archetype_played,
+            COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,
             fs.wins,
             fs.losses,
             fs.draws
@@ -52,11 +52,11 @@ async def GetDecklists(event: Event) -> list[Card]:
         WHERE
             deck_id IN (
             SELECT
-            id
+                id
             FROM
-            decks
+                decks
             WHERE
-            event_id = %s
+                event_id = %s
             )
         ORDER BY
             deck_id,

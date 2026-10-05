@@ -43,7 +43,7 @@ async def GetArchetypeModalDetails(
             archetypes AS (
                 SELECT
                     INITCAP(pn.player_name) AS player_name,
-                    INITCAP(ua.archetype_played) AS archetype_played
+                    ua.archetype_played
                 FROM
                     unique_archetypes ua
                     INNER JOIN events e ON e.id = ua.event_id
@@ -54,7 +54,7 @@ async def GetArchetypeModalDetails(
                     AND c.format_id = e.format_id
                 GROUP BY
                     INITCAP(pn.player_name),
-                    INITCAP(ua.archetype_played)
+                    ua.archetype_played
                 ORDER BY
                     COUNT(*) DESC
                 LIMIT

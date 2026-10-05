@@ -45,10 +45,10 @@ async def GetPairingsHistory(
             {"INITCAP(g.game_name) AS game_name," if not game else ""}
             {"INITCAP(f.format_name) AS format_name," if not format else ""}
             fp.round_number,
-            INITCAP(COALESCE(uap.archetype_played, 'Unknown')) as players_archetype,
+            COALESCE(uap.archetype_played, 'Unknown') as players_archetype,
             CASE
             WHEN UPPER(fp.opponent_name) = 'BYE' THEN 'Bye'
-            ELSE INITCAP(COALESCE(uao.archetype_played, 'Unknown'))
+            ELSE COALESCE(uao.archetype_played, 'Unknown')
             END AS opponents_archetype,
             INITCAP(fp.result) as result
         FROM
@@ -97,7 +97,7 @@ async def GetStandingsHistory(
             {"COALESCE(store_name, discord_name) AS store_name," if not store else ""}
             {"INITCAP(g.game_name) AS game_name," if not game else ""}
             {"INITCAP(f.format_name) AS format_name," if not format else ""}
-            COALESCE(INITCAP(archetype_played), 'Unknown') as archetype_played,
+            COALESCE(archetype_played, 'Unknown') as archetype_played,
             wins,
             losses,
             draws

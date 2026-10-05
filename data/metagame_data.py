@@ -9,7 +9,7 @@ from tuple_conversions import Event, League, MetagameResult
 async def GetHubLeagueMetagame(league: League) -> list[MetagameResult]:
     metagame = f"""
     SELECT
-        INITCAP(COALESCE(ua.archetype_played, 'Unknown')) AS archetype_played,
+        COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,
         sum(fs.wins) / (sum(fs.wins) + sum(fs.losses) + sum(fs.draws)) AS win_percent,
         COUNT(*) / SUM(count(*)) OVER () AS metagame_percent
     FROM
@@ -29,7 +29,7 @@ async def GetHubLeagueMetagame(league: League) -> list[MetagameResult]:
 async def GetStoreLeagueMetagame(league: League) -> list[MetagameResult]:
     metagame = f"""
     SELECT
-        COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,
+        COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,
         sum(fp.wins) / (sum(fp.wins) + sum(fp.losses) + sum(fp.draws)) AS win_percent,
         COUNT(*) / SUM(count(*)) OVER () AS metagame_Percent
     FROM
@@ -40,7 +40,7 @@ async def GetStoreLeagueMetagame(league: League) -> list[MetagameResult]:
     WHERE
         e.league_id = {league.id}
     GROUP BY
-        INITCAP(ua.archetype_played)
+        ua.archetype_played
     """
     data = await GetLeagueMetagame(metagame)
     return data
@@ -82,7 +82,7 @@ async def OneEventMetagame(event: Event) -> list[MetagameResult]:
         command = """
         WITH metagame AS (
             SELECT
-                COALESCE(INITCAP(ua.archetype_played), 'Unknown') AS archetype_played,
+                COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,
                 COUNT(*) * 1.0 / SUM(count(*)) OVER () AS metagame_Percent,
                 1.0 * sum(fp.wins) / (sum(fp.wins) + sum(fp.losses) + sum(fp.draws)) AS win_percent
             FROM
@@ -93,7 +93,7 @@ async def OneEventMetagame(event: Event) -> list[MetagameResult]:
             WHERE
                 e.id = %s
             GROUP BY
-                INITCAP(ua.archetype_played)
+                ua.archetype_played
             )
         SELECT
             archetype_played,

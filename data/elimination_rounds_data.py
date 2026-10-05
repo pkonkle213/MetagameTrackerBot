@@ -25,7 +25,7 @@ async def GetEliminationStandings(event: Event) -> list[EliminationStandings]:
                 event_id = %s
             )
         SELECT
-            INITCAP(COALESCE(ua1.archetype_played, 'Unknown')) AS archetype_played,
+            COALESCE(ua1.archetype_played, 'Unknown') AS archetype_played,
             wins,
             losses,
             draws
@@ -67,9 +67,9 @@ async def GetEliminationPairings(event: Event) -> list[EliminationPairings]:
         command = f"""
         SELECT
             round_number,
-            INITCAP(COALESCE(ua1.archetype_played, 'Unknown')) AS player1_archetype,
+            COALESCE(ua1.archetype_played, 'Unknown') AS player1_archetype,
             player1_game_wins,
-            INITCAP(COALESCE(ua2.archetype_played, 'Unknown')) AS player2_archetype,
+            COALESCE(ua2.archetype_played, 'Unknown') AS player2_archetype,
             player2_game_wins
         FROM
             pairings p
