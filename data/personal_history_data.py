@@ -45,7 +45,7 @@ async def GetPairingsHistory(
             {"INITCAP(g.game_name) AS game_name," if not game else ""}
             {"INITCAP(f.format_name) AS format_name," if not format else ""}
             fp.round_number,
-            COALESCE(uap.archetype_played, 'Unknown') as players_archetype,
+            COALESCE(uap.archetype_played, INITCAP(fp.opponent_name)) as players_archetype,
             CASE
             WHEN UPPER(fp.opponent_name) = 'BYE' THEN 'Bye'
             ELSE COALESCE(uao.archetype_played, 'Unknown')
