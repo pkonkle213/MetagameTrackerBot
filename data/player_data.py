@@ -18,71 +18,72 @@ def GetStats(
     conn = psycopg.connect(DATABASE_URL)
     with conn, conn.cursor() as cur:
         command = f"""
-        SELECT
-          {"format_name," if not format else ""}
-          archetype_played,
-          wins,
-          losses,
-          draws,
-          ROUND(win_percentage * 100, 2) AS win_percentage
-        FROM
-          (
-            WITH
-              X AS (
+        WITH
+            results AS (
                 SELECT
-                  fs.event_id,
-                  f.format_name AS format_name,
-                  UPPER(fs.player_name) AS player_name,
-                  archetype_played,
-                  wins,
-                  losses,
-                  draws
+                    {'f.format_name AS format_name,' if not format else ''}
+                    archetype_played,
+                    wins,
+                    losses,
+                    draws
                 FROM
-                  full_standings fs
-                  LEFT JOIN unique_archetypes ua ON UPPER(ua.player_name) = UPPER(fs.player_name)
-                  AND ua.event_id = fs.event_id
-                  LEFT JOIN events e ON e.id = fs.event_id
-                  LEFT JOIN formats f ON e.format_id = f.id
+                    full_standings fs
+                    LEFT JOIN unique_archetypes ua ON UPPER(ua.player_name) = UPPER(fs.player_name)
+                    AND ua.event_id = fs.event_id
+                    LEFT JOIN events e ON e.id = fs.event_id
+                    LEFT JOIN formats f ON e.format_id = f.id
+                    INNER JOIN player_names pn ON pn.discord_id = e.discord_id
+                    AND upper(pn.player_name) = upper(fs.player_name)
                 WHERE
-                  UPPER(fs.player_name) IN (
+                    pn.submitter_id = {user_id}
+                    {f'AND e.format_id = {format.id}' if format else ''}
+                    AND e.game_id = {game.id}
+                    AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+                    AND e.discord_id = {discord_id}
+            ),
+            ranked AS (
+                (
                     SELECT
-                      UPPER(player_name) as player_name
+                        '1' AS rank,
+                        format_name,
+                        'Overall' AS archetype_played,
+                        sum(wins) AS wins,
+                        sum(losses) AS losses,
+                        sum(draws) AS draws
                     FROM
-                      player_names
-                    WHERE
-                      discord_id = {discord_id}
-                      AND submitter_id = {user_id}
-                  )
-                  {f"AND e.format_id = {format.id}" if format else ""}
-                  AND e.game_id = {game.id}
-                  AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-                  AND e.discord_id = {discord_id}
-              )
-            SELECT
-              '1' AS rank,
-              ' ' AS format_name,
-              'Overall' AS archetype_played,
-              SUM(wins) AS wins,
-              SUM(losses) AS losses,
-              SUM(draws) AS draws,
-              1.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)) AS win_percentage
-            FROM
-              X
-            UNION
-            SELECT
-              '2' AS rank,
-              format_name,
-              COALESCE(archetype_played, 'Unknown') AS archetype_played,
-              SUM(wins) AS wins,
-              SUM(losses) AS losses,
-              SUM(draws) AS draws,
-              1.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)) AS win_percentage
-            FROM
-              X
-            GROUP BY
-              archetype_played,
-              X.format_name
-          )
+                        results
+                    GROUP BY
+                        format_name
+                )
+                UNION ALL
+                (
+                    SELECT
+                        '2' AS rank,
+                        format_name,
+                        COALESCE(archetype_played, 'Unkonwn') AS archetype_played,
+                        sum(wins) AS wins,
+                        sum(losses) AS losses,
+                        sum(draws) AS draws
+                    FROM
+                        results
+                    GROUP BY
+                        format_name,
+                        archetype_played
+                    ORDER BY
+                        sum(wins) + sum(losses) + sum(draws) DESC
+                )
+                ORDER BY
+                    rank
+            )
+        SELECT
+            format_name,
+            archetype_played,
+            wins,
+            losses,
+            draws,
+            ROUND(100.0 * wins / (wins + losses + draws), 2) AS win_percent
+        FROM
+            ranked
         """
 
         cur.execute(command)
@@ -101,64 +102,64 @@ def GetTopPlayerData(
     with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
         command = f"""
         WITH
-          X AS (
-            SELECT
-              fs.event_id,
-              INITCAP(player_name) AS player_name,
-              wins,
-              losses,
-              draws
-            FROM
-              full_standings fs
-              INNER JOIN events e ON fs.event_id = e.id
-              INNER JOIN stores_view s ON e.discord_id = s.discord_id
-            WHERE
-              e.event_date BETWEEN '{start_date}' AND '{end_date}'
-              {f"AND e.format_id = {format.id}" if format else ""}
-              {f"AND e.game_id = {game.id}" if game else ""}
-              AND s.discord_id = {store.discord_id}
-          ),
-          RANKED AS (
-            SELECT
-              ROW_NUMBER() OVER () AS rank,
-              player_name,
-              (3 * SUM(wins) + SUM(draws)) AS points,
-              ROUND(
-                100.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)),
-                2
-              ) AS win_percent
-            FROM
-              X
-            GROUP BY
-              player_name
-            ORDER BY
-              points DESC,
-              win_percent DESC,
-              player_name
-          )
-          SELECT
-            ROW_NUMBER() OVER () AS rank,
-            player_name,
-            points,
-            win_percent
-          FROM
-            RANKED
-          LIMIT
-            CEIL(
-              .5 * (
+            X AS (
                 SELECT
-                  AVG(participants) AS average_participants
+                    fs.event_id,
+                    INITCAP(player_name) AS player_name,
+                    wins,
+                    losses,
+                    draws
                 FROM
-                  (
-                    SELECT
-                      count(*) AS participants
-                    FROM
-                      X
-                    GROUP BY
-                      event_id
-                  )
-              )
+                    full_standings fs
+                    INNER JOIN events e ON fs.event_id = e.id
+                    INNER JOIN stores_view s ON e.discord_id = s.discord_id
+                WHERE
+                    e.event_date BETWEEN '{start_date}' AND '{end_date}'
+                    {f"AND e.format_id = {format.id}" if format else ""}
+                    {f"AND e.game_id = {game.id}" if game else ""}
+                    AND s.discord_id = {store.discord_id}
+            ),
+            RANKED AS (
+                SELECT
+                    ROW_NUMBER() OVER () AS rank,
+                    player_name,
+                    (3 * SUM(wins) + SUM(draws)) AS points,
+                    ROUND(
+                        100.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)),
+                        2
+                    ) AS win_percent
+                FROM
+                    X
+                GROUP BY
+                    player_name
+                ORDER BY
+                    points DESC,
+                    win_percent DESC,
+                    player_name
             )
+            SELECT
+                ROW_NUMBER() OVER () AS rank,
+                player_name,
+                points,
+                win_percent
+            FROM
+                RANKED
+            LIMIT
+                CEIL(
+                    .5 * (
+                        SELECT
+                            AVG(participants) AS average_participants
+                        FROM
+                            (
+                                SELECT
+                                    count(*) AS participants
+                                FROM
+                                    X
+                                GROUP BY
+                                    event_id
+                            )
+                    )
+                )
         """
 
         cur.execute(command)
