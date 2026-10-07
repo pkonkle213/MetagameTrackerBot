@@ -2,15 +2,17 @@ from custom_errors import KnownError
 from discord import Interaction, Guild, Member
 from psycopg.rows import class_row, scalar_row
 from settings import DATABASE_URL
-import psycopg
+from psycopg import AsyncConnection
 from tuple_conversions import Store, Event, ChannelFormatMapping, Hub, Game, Format
 
 
-def UpdateHub(
+async def UpdateHub(
     interaction: Interaction, discord_id: int, hub_name: str, hub_invite: str
 ) -> int:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=scalar_row) as cur:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=scalar_row) as cur,
+    ):
         discord_command = f"""
         UPDATE discords
         SET discord_name = %s
@@ -20,10 +22,10 @@ def UpdateHub(
             """
         guild: Guild = interaction.guild
         owner: Member = guild.owner
-        cur.execute(
+        await cur.execute(
             discord_command, [guild.name, guild.owner_id, owner.name, discord_id]
         )
-        conn.commit()
+        await conn.commit()
 
         hub_command = f"""
         UPDATE hubs
@@ -32,19 +34,21 @@ def UpdateHub(
         WHERE discord_id = %s
         RETURNING discord_id
         """
-        cur.execute(hub_command, [hub_name, hub_invite, discord_id])
-        conn.commit()
-        row = cur.fetchone()
+        await cur.execute(hub_command, [hub_name, hub_invite, discord_id])
+        await conn.commit()
+        row = await cur.fetchone()
         if not row:
             raise Exception(f"Unable to update hub: {discord_id}")
         return row
 
 
-def UpdateApprovedHubs(
+async def UpdateApprovedHubs(
     store: Store, game: Game | None, format: Format | None, hubs: list[int]
 ) -> bool:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=scalar_row) as cur:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=scalar_row) as cur,
+    ):
         delete_command = f"""
         DELETE FROM stores_approved_hubs
             WHERE store_discord_id = {store.discord_id}
@@ -64,18 +68,18 @@ def UpdateApprovedHubs(
         """
 
         try:
-            cur.execute(delete_command)  # type: ignore[arg-type]
-            conn.commit()
+            await cur.execute(delete_command)  # type: ignore[arg-type]
+            await conn.commit()
 
-            cur.execute(insert_command, [hubs])  # type: ignore[arg-type]
-            conn.commit()
+            await cur.execute(insert_command, [hubs])  # type: ignore[arg-type]
+            await conn.commit()
             return True
         except Exception as e:
             print("Error:", e)
             return False
 
 
-def UpdateStore(
+async def UpdateStore(
     interaction: Interaction,
     store: Store,
     store_name: str,
@@ -83,8 +87,10 @@ def UpdateStore(
     melee_id: str | None,
     melee_secret: str | None,
 ) -> int:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=scalar_row) as cur:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=scalar_row) as cur,
+    ):
         discord_command = f"""
         UPDATE discords
         SET discord_name = %s
@@ -94,16 +100,10 @@ def UpdateStore(
             """
         guild: Guild = interaction.guild
         owner: Member = guild.owner
-        cur.execute(
-            discord_command,
-            [
-                guild.name,
-                guild.owner_id,
-                owner.name,
-                store.discord_id
-            ]
+        await cur.execute(
+            discord_command, [guild.name, guild.owner_id, owner.name, store.discord_id]
         )
-        conn.commit()
+        await conn.commit()
 
         store_command = f"""
         UPDATE stores
@@ -122,31 +122,35 @@ def UpdateStore(
             criteria.append(melee_secret)
         criteria.append(store.discord_id)
 
-        cur.execute(store_command, criteria)
-        conn.commit()
-        row = cur.fetchone()
+        await cur.execute(store_command, criteria)
+        await conn.commit()
+        row = await cur.fetchone()
         if not row:
             raise KnownError(f"Unable to update store: {store.discord_id}")
         return row
 
 
-def DeleteStore(discord_id: int) -> bool:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor() as cur:
+async def DeleteStore(discord_id: int) -> bool:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor() as cur,
+    ):
         command = f"""
         DELETE FROM Stores
         WHERE discord_id = {discord_id}
         RETURNING TRUE
         """
-        cur.execute(command)
-        conn.commit()
-        success = cur.fetchone()
-        return True if success else False
+        await cur.execute(command)
+        await conn.commit()
+        success = await cur.fetchone()
+        return bool(success)
 
 
-def GetFormatMapByEvent(event: Event) -> ChannelFormatMapping:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(ChannelFormatMapping)) as cur:
+async def GetFormatMapByEvent(event: Event) -> ChannelFormatMapping:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(ChannelFormatMapping)) as cur,
+    ):
         command = f"""
         SELECT
             discord_id,
@@ -158,18 +162,21 @@ def GetFormatMapByEvent(event: Event) -> ChannelFormatMapping:
             fcm.discord_id = {event.discord_id}
             AND fcm.format_id= {event.format_id}
         """
-        cur.execute(command)
-        row = cur.fetchone()
+
+        await cur.execute(command)
+        row = await cur.fetchone()
         if not row:
             raise KnownError(f"Unable to find format map for event: {event.id}")
         return row
 
 
-def AddDiscord(
+async def AddDiscord(
     discord_id: int, discord_name: str, owner_id: int, owner_name: str
 ) -> int | None:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=scalar_row) as cur:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=scalar_row) as cur,
+    ):
         command = """
         INSERT INTO discords (discord_id, discord_name, owner_id, owner_name)
         VALUES (%s, %s, %s, %s)
@@ -179,46 +186,50 @@ def AddDiscord(
         """
 
         criteria = [discord_id, discord_name, owner_id, owner_name]
-        cur.execute(command, criteria + criteria[1:])
-        conn.commit()
-        row = cur.fetchone()
+        await cur.execute(command, criteria + criteria[1:])
+        await conn.commit()
+        row = await cur.fetchone()
         if not row:
             raise KnownError(f"Unable to add discord: {discord_id}")
         return row
 
 
-def AddStore(discord_id: int) -> int:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=scalar_row) as cur:
+async def AddStore(discord_id: int) -> int:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=scalar_row) as cur,
+    ):
         command = f"""
         INSERT INTO stores (discord_id, used_for_data)
         VALUES (%s, TRUE)
         RETURNING discord_id
         """
 
-        cur.execute(command, [discord_id])
-        conn.commit()
-        row = cur.fetchone()
+        await cur.execute(command, [discord_id])
+        await conn.commit()
+        row = await cur.fetchone()
         if not row:
             raise KnownError(f"Unable to add store: {discord_id}")
         return row
 
 
-def GetArchetypeFeed(discord_id: int, game_id: int) -> int:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=scalar_row) as cur:
-        command = f"""
+async def GetArchetypeFeed(discord_id: int, game_id: int) -> int:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=scalar_row) as cur,
+    ):
+        command = """
         SELECT
             channel_id
         FROM
             archetype_feeds
         WHERE
-            discord_id = {discord_id}
-            AND game_id = {game_id}
+            discord_id = %s
+            AND game_id = %s
         """
 
-        cur.execute(command)
-        row = cur.fetchone()
+        await cur.execute(command, [discord_id, game_id])
+        row = await cur.fetchone()
         if not row:
             raise KnownError(
                 f"Unable to find archetype submission feed for store: {discord_id}"
