@@ -70,5 +70,6 @@ async def GetGameForDataHub() -> list[Game]:
         ORDER BY
             g.game_name
         """
+
         await cur.execute(command, [DATAGUILDID])
         return await cur.fetchall()
