@@ -28,7 +28,7 @@ async def UpdateDetails(bot:commands.Bot, interaction: discord.Interaction) -> d
     if not modal.is_submitted:
       raise KnownError('Modal not submitted correctly')
     
-    result = UpdateStore(
+    result = await UpdateStore(
       interaction,
       objects.store,
       modal.submitted_store_name,
@@ -36,7 +36,7 @@ async def UpdateDetails(bot:commands.Bot, interaction: discord.Interaction) -> d
       modal.submitted_melee_id,
       modal.submitted_melee_secret
     )
-    hubs = UpdateApprovedHubs(
+    hubs = await UpdateApprovedHubs(
       objects.store,
       objects.game,
       objects.format,
@@ -50,7 +50,7 @@ async def UpdateDetails(bot:commands.Bot, interaction: discord.Interaction) -> d
     if not modal.is_submitted:
       raise KnownError('Modal not submitted correctly')
 
-    result = UpdateHub(
+    result = await UpdateHub(
       interaction,
       objects.hub.discord_id,
       modal.submitted_hub_name,
@@ -72,12 +72,12 @@ async def NewStoreRegistration(
   #TODO: Define discord_name, owner_name, and owner_id and others here as they're used in multiple places
   try:
     print('Adding discord to database')
-    add_discord = AddDiscordToDatabase(guild)
+    add_discord = await AddDiscordToDatabase(guild)
     if add_discord:
       output += '- Discord added to database\n'
 
     print('Adding store to database')
-    add_store = AddStoreToDatabase(guild)
+    add_store = await AddStoreToDatabase(guild)
     if add_store:
       output += '- Store added to database\n'
 
@@ -103,17 +103,17 @@ async def NewStoreRegistration(
     await MessageUser(bot, f"Issue with new store registration: {e}", settings.PHILID)
     return f'Unable to add this discord to my database. Please contact the bot owner.'
 
-def AddDiscordToDatabase(guild: discord.Guild) -> str:
+async def AddDiscordToDatabase(guild: discord.Guild) -> str:
   """Adds the discord to the database"""
   guild_name = ConvertInput(guild.name)
   owner_name = ConvertInput(guild.owner.name) if guild.owner else 'Unknown'
   owner_id = guild.owner_id if guild.owner_id else 0
-  discord = AddDiscord(guild.id, guild.name, owner_id, owner_name)
+  await AddDiscord(guild.id, guild.name, owner_id, owner_name)
   return 'Done'
 
-def AddStoreToDatabase(guild: discord.Guild) -> int:
+async def AddStoreToDatabase(guild: discord.Guild) -> int:
   """Adds the store to the database"""
-  store = AddStore(guild.id)
+  store = await AddStore(guild.id)
   return store
 
 def MatchGame(category_name: str, games: list[Game]) -> Game | None:

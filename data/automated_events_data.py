@@ -4,6 +4,7 @@ from psycopg import AsyncConnection
 from psycopg.rows import class_row
 
 from settings import DATABASE_URL, DATAGUILDID
+from tuple_conversions import Game
 
 
 class StaleEvents(NamedTuple):
@@ -52,4 +53,22 @@ async def ThreeDayOldEvents() -> list[StaleEvents]:
         rows = await cur.fetchall()
         return rows
 
-async def GetGameForDataHub()
+async def GetGameForDataHub() -> list[Game]:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(Game)) as cur,
+    ):
+        command = """
+        SELECT DISTINCT
+            g.id,
+            g.game_name
+        FROM
+            games g
+            INNER JOIN game_category_maps gcm ON gcm.game_id = g.id
+        WHERE
+            gcm.discord_id = %s
+        ORDER BY
+            g.game_name
+        """
+        await cur.execute(command, [DATAGUILDID])
+        return await cur.fetchall()

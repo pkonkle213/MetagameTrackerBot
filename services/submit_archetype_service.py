@@ -117,7 +117,7 @@ async def SubmitArchetype(
     # Send all output messages
     await interaction.followup.send(private_output, ephemeral=True)
     await MessageStoreFeed(bot, feed_output, event)
-    format_map = GetFormatMapByEvent(event)
+    format_map = await GetFormatMapByEvent(event)
     mapped_channel = format_map.channel_id
 
     if public_output:
@@ -132,7 +132,7 @@ async def SubmitArchetype(
 async def MessageStoreFeed(bot: commands.Bot, message: str, event: Event) -> None:
     """Message the store feed channel specific to the game"""
     try:
-        channel_id = GetArchetypeFeed(event.discord_id, event.game_id)
+        channel_id = await GetArchetypeFeed(event.discord_id, event.game_id)
         await MessageChannel(bot, message, event.discord_id, channel_id)
     except Exception as e:
         await MessageChannel(bot, message, settings.BOTGUILDID, settings.CLAIMCHANNEL)

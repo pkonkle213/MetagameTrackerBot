@@ -1,10 +1,10 @@
 from datetime import date
 from settings import DATABASE_URL
-import psycopg
+from psycopg import AsyncConnection
 from tuple_conversions import Format, Game, Store, Event
 from psycopg.rows import class_row
 
-await def GetSubmittedArchetypes(
+async def GetSubmittedArchetypes(
     game:Game,
     format:Format | None,
     store:Store,
