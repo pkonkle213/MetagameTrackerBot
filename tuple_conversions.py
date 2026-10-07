@@ -6,6 +6,7 @@ from typing import Any, NamedTuple
 class MTBRoles(Enum):
     """An enum of roles expected by the bot"""
 
+    MTStore = auto()
     MTSubmitter = auto()
 
 
@@ -266,12 +267,14 @@ class PlayerArchetype(NamedTuple):
     player_name: str
     archetype_played: str
 
+
 class EliminationPairings(NamedTuple):
     round_number: int
     player1_archetype: str
     player1_game_wins: int
     player2_archetype: str
     player2_game_wins: int
+
 
 class EliminationStandings(NamedTuple):
     archetype_played: str
@@ -288,10 +291,12 @@ class PersonalMatchupRows(NamedTuple):
     total_matches: int
     win_percent: float
 
+
 class OpponentArchetype(NamedTuple):
     archetype_name: str
-    total_matches:int
-    win_percent:float
+    total_matches: int
+    win_percent: float
+
 
 class PersonalArchetype(NamedTuple):
     archetype: str
