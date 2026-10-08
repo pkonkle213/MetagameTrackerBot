@@ -75,7 +75,7 @@ async def NewStoreRegistration(bot: commands.Bot, guild: Guild) -> list[str]:
     # TODO: Define discord_name, owner_name, and owner_id and others here as they're used in multiple places
     try:
         print("Adding discord to database")
-        add_discord = AddDiscordToDatabase(guild)
+        add_discord = await AddDiscordToDatabase(guild)
         if add_discord:
             output.append("- Discord added to database")
 
