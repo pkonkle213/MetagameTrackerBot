@@ -1,5 +1,4 @@
 from datetime import datetime as dt, time, timezone as datetime_timezone
-import settings
 from threading import Thread
 from contextlib import suppress
 from pathlib import Path
@@ -33,7 +32,7 @@ StartHealthCheckServer()
 from pytz import timezone
 from discord import Guild, Interaction, app_commands, Intents, NotFound, Forbidden
 from discord.ext import commands, tasks
-from settings import PHILID, DISCORDTOKEN
+from settings import PHILID, DISCORDTOKEN, BOTLOGCHANNEL
 import timedposts.automated_paid_users as apu
 from timedposts.automated_check_events import EventCheck
 from timedposts.automated_updates import UpdateDataGuild
@@ -116,10 +115,10 @@ async def on_app_command_completion(
         f"Channel: {interaction.channel.id if interaction.channel else 'DM'}```"
     )
 
-    channel = bot.get_channel(settings.BOTLOGCHANNEL)
+    channel = bot.get_channel(BOTLOGCHANNEL)
     if channel is None:
         try:
-            channel = await bot.fetch_channel(settings.BOTLOGCHANNEL)
+            channel = await bot.fetch_channel(BOTLOGCHANNEL)
         except (NotFound, Forbidden):
             print(f"Log channel not found or bot lacks permissions.\n{log_message}")
             return
