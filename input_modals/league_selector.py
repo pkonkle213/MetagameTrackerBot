@@ -59,13 +59,13 @@ class LeagueSelector(ui.Modal, title="Select League"):
             raise KnownError("No leagues found for this store, game, and format")
 
         current_leagues = [
-            discord.SelectOption(label=league.name, value=str(league.id))
+            SelectOption(label=league.name, value=str(league.id))
             for league in self.leagues
         ]
 
-        self.selected_league = discord.ui.Label(
+        self.selected_league = ui.Label(
             text="Select a League",
-            component=discord.ui.Select(
+            component=ui.Select(
                 placeholder="Select a league",
                 required=True,
                 options=current_leagues,
@@ -75,7 +75,7 @@ class LeagueSelector(ui.Modal, title="Select League"):
         )
         self.add_item(self.selected_league)
 
-    async def on_submit(self, interaction: discord.Interaction):
+    async def on_submit(self, interaction: Interaction):
         self.league = GetLeague(self.selected_league.component.values[0], self.leagues)
         self.is_submitted = True
         if not self.isEdit:

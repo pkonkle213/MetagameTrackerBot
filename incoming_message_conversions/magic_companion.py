@@ -1,3 +1,4 @@
+import math
 from custom_errors import KnownError
 from tuple_conversions import NewPairings, NewStandings, Pairing, Standing
 
@@ -88,7 +89,7 @@ def CompanionPairings(message: str) -> NewPairings:
             data.append(result)
         except ValueError:
             errors.append(
-                f"Unable to parse the player {rows[i + 3]}'s record in row {i + 4}"
+                f"Unable to parse the player {rows[i + 3]}'s record at table {math.floor((i + 1) / 5)}"
             )
         except KnownError as exception:
             errors.append(exception.message)
