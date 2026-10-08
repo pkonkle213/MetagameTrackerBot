@@ -15,11 +15,11 @@ class ForceDataGuildUpdate(commands.GroupCog, name="force_update"):
     async def UpdatePaidObjects(self, interaction: Interaction):
         await interaction.response.defer(thinking=True)
         try:
-            apu.UpdateStores()
-            apu.UpdateHubs()
-            apu.UpdatePaidUsers()
-            apu.UpdatePaidStores()
-            apu.UpdatePaidHubs()
+            await apu.UpdateStores()
+            await apu.UpdateHubs()
+            await apu.UpdatePaidUsers()
+            await apu.UpdatePaidStores()
+            await apu.UpdatePaidHubs()
 
             await interaction.followup.send("All paid objects successfully updated!")
         except Exception as exception:

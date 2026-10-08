@@ -15,7 +15,7 @@ async def GetAllUnknown(
         raise KnownError("No Store Found")
     if not interaction.guild or isinstance(interaction.user, User):
         raise KnownError("Information was missing, cannot complete command.")
-    weeks = 4 if isSubmitter(interaction.guild, interaction.user, "MTSubmitter") else 2
+    weeks = 4 if isSubmitter(interaction.guild, interaction.user) else 2
     date_start, date_end = BuildDateRange(
         start_date,
         end_date,

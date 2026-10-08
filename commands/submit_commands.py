@@ -55,7 +55,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
         if not objects.store:
             issues.append("- Store not registered")
-        if not isSubmitter(interaction.guild, interaction.user, "MTSubmitter"):
+        if not isSubmitter(interaction.guild, interaction.user):
             issues.append("- You don't have the MTSubmitter role.")
         if not objects.game:
             issues.append("- Category not mapped to a game")
@@ -179,7 +179,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             raise KnownError("A format must be mapped to this channel")
 
         user_id = interaction.user.id
-        is_submitter = isSubmitter(interaction.guild, interaction.user, "MTSubmitter")
+        is_submitter = isSubmitter(interaction.guild, interaction.user)
 
         player = await GetArchetypeModalDetails(user_id, objects.game, objects.format)
 
