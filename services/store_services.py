@@ -186,16 +186,17 @@ async def CreateRole(guild: Guild, role_name: str) -> str:
     success = ""
     if mtsubmitter_role is None:
         try:
-            perms = Permissions(manage_messages=True)
+            bot_member = guild.me
+            print(f"Bot Global Permissions: {bot_member.guild_permissions.manage_roles}")
             mtsubmitter_role = await guild.create_role(
                 name=role_name,
-                permissions=perms,
                 reason="Automatic role creation on join",
             )
             output = f"- {role_name} role created.\n"
             success = True
         except Exception as e:
-            return f"- Unable to create {role_name} role. Please create and assign manually.\n"
+            print("Ran into exception: ", e)
+            return f"- Unable to create {role_name} role. Please create and assign manually."
 
     try:
         await owner.add_roles(mtsubmitter_role)

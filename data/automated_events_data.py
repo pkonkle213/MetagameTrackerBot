@@ -51,5 +51,3 @@ async def ThreeDayOldEvents() -> list[StaleEvents]:
         await cur.execute(command)
         rows = await cur.fetchall()
         return rows
-
-async def GetGameForDataHub()
