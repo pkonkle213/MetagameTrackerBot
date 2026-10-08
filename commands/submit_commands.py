@@ -23,7 +23,7 @@ from data.player_name_data import GetArchetypeModalDetails, GetUserName
 from data.interaction_data import GetObjectsFromInteraction
 from services.command_error_service import Error
 from services.determine_archetype_input import GetArchetypeModal
-from tuple_conversions import DataInputEnum, ViewButtonEnum, MTBRoles
+from tuple_conversions import DataInputEnum, ViewButtonEnum, MTBRoles, ReportedAsEnum
 from services.convert_and_save_input import BuildFilePath
 from input_modals.submit_data_modal import SubmitManualDataModal
 from services.add_results_services import AddStandingResults, AddPairingResults
@@ -265,13 +265,21 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                 modal = build_data_modal()
                 await active_interaction.response.send_modal(modal)
             await modal.wait()
+            
+            data = modal.converted_data
 
             output = BuildReviewOutput(modal.converted_data)
 
             next_modal = build_data_modal()
-            view = ConfirmData(next_modal=next_modal)
+            view = ConfirmData(next_modal=next_modal, is_standings=bool(data.standings_data))
+            if data.standings_data:
+                output += '\n:rotating_light::rotating_light:This is standings data and will limit the data used for other commands:rotating_light::rotating_light:'
+                
+            if data.pairings_data and event.reported_as == ReportedAsEnum.Standings.value:
+                output += '\n:rotating_light::rotating_light:This will overwrite the standings data that exists for this event:rotating_light::rotating_light:'
+                
             await modal.interaction.followup.send(
-                f"{output}\n\nPlease select continue if the data is accurate",
+                f"{output}\nPlease select continue if the data is accurate",
                 ephemeral=True,
                 view=view,
             )
@@ -289,7 +297,6 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                 )
                 break
 
-            data = modal.converted_data
 
             if data.standings_data:
                 await AddStandingResults(
