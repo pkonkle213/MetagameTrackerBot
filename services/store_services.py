@@ -34,20 +34,22 @@ async def UpdateDetails(bot: commands.Bot, interaction: Interaction) -> Interact
         await interaction.response.send_modal(modal)
         await modal.wait()
 
-        if not modal.is_submitted:
-            raise KnownError("Modal not submitted correctly")
-
-        result = UpdateStore(
-            interaction,
-            objects.store,
-            modal.submitted_store_name,
-            modal.submitted_store_address,
-            modal.submitted_melee_id,
-            modal.submitted_melee_secret,
-        )
-        hubs = UpdateApprovedHubs(
-            objects.store, objects.game, objects.format, modal.submitted_hubs
-        )
+    if not modal.is_submitted:
+      raise KnownError('Modal not submitted correctly')
+    
+    result = await UpdateStore(
+      interaction,
+      objects.store,
+      modal.submitted_store_name,
+      modal.submitted_store_address,
+      modal.submitted_melee_id,
+      modal.submitted_melee_secret
+    )
+    hubs = await UpdateApprovedHubs(
+      objects.store,
+      objects.game,
+      objects.format,
+      modal.submitted_hubs)
 
     if objects.hub:
         modal = HubProfileModal(bot, objects.hub)
@@ -57,18 +59,18 @@ async def UpdateDetails(bot: commands.Bot, interaction: Interaction) -> Interact
         if not modal.is_submitted:
             raise KnownError("Modal not submitted correctly")
 
-        result = UpdateHub(
-            interaction,
-            objects.hub.discord_id,
-            modal.submitted_hub_name,
-            modal.submitted_hub_invite,
-        )
-
-    if result:
-        return modal.new_interaction
-    else:
-        raise KnownError("Profile unable to update")
-
+    result = await UpdateHub(
+      interaction,
+      objects.hub.discord_id,
+      modal.submitted_hub_name,
+      modal.submitted_hub_invite
+    )
+  
+  if result:
+    return modal.new_interaction
+  else:
+    raise KnownError('Profile unable to update')
+  
 
 async def NewStoreRegistration(bot: commands.Bot, guild: Guild) -> list[str]:
     """Goes through steps to register a new store and automap categories and channels"""
@@ -80,10 +82,10 @@ async def NewStoreRegistration(bot: commands.Bot, guild: Guild) -> list[str]:
         if add_discord:
             output.append("- Discord added to database")
 
-        print("Adding store to database")
-        add_store = AddStoreToDatabase(guild)
-        if add_store:
-            output.append("- Store added to database")
+    print('Adding store to database')
+    add_store = await AddStoreToDatabase(guild)
+    if add_store:
+      output += '- Store added to database\n'
 
         print("Mapping categories and channels")
         mapping_message, mapping_success = await MapCategoriesAndChannels(guild)
@@ -112,19 +114,18 @@ async def NewStoreRegistration(bot: commands.Bot, guild: Guild) -> list[str]:
         ]
 
 
-def AddDiscordToDatabase(guild: Guild) -> str:
-    """Adds the discord to the database"""
-    guild_name = ConvertInput(guild.name)
-    owner_name = ConvertInput(guild.owner.name) if guild.owner else "Unknown"
-    owner_id = guild.owner_id if guild.owner_id else 0
-    discord = AddDiscord(guild.id, guild.name, owner_id, owner_name)
-    return "Done"
+async def AddDiscordToDatabase(guild: discord.Guild) -> str:
+  """Adds the discord to the database"""
+  guild_name = ConvertInput(guild.name)
+  owner_name = ConvertInput(guild.owner.name) if guild.owner else 'Unknown'
+  owner_id = guild.owner_id if guild.owner_id else 0
+  await AddDiscord(guild.id, guild.name, owner_id, owner_name)
+  return 'Done'
 
-
-def AddStoreToDatabase(guild: Guild) -> int:
-    """Adds the store to the database"""
-    store = AddStore(guild.id)
-    return store
+async def AddStoreToDatabase(guild: discord.Guild) -> int:
+  """Adds the store to the database"""
+  store = await AddStore(guild.id)
+  return store
 
 
 def MatchGame(category_name: str, games: list[Game]) -> Game | None:

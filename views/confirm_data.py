@@ -27,10 +27,16 @@ class ConfirmData(ui.View):
     async def mark_complete(self, interaction: Interaction, button: ui.Button):
         self.action = ViewButtonEnum.DoneComplete.value
         self.interaction = interaction
+        await interaction.response.send_message(
+            "Thank you for submitting data!", ephemeral=True
+        )
         self.stop()
 
     @ui.button(label="Done, Event Incomplete", style=ButtonStyle.secondary)
     async def mark_incomplete(self, interaction: Interaction, button: ui.Button):
         self.action = ViewButtonEnum.DoneIncomplete.value
         self.interaction = interaction
+        await interaction.response.send_message(
+            "Thank you for submitting data!", ephemeral=True
+        )
         self.stop()

@@ -17,7 +17,7 @@ async def GetAttendance(interaction:Interaction, start_date:str, end_date:str) -
     headers.insert(1, 'Format')
     
   if objects.store:
-    data = GetStoreAttendance(
+    data = await GetStoreAttendance(
       objects.store,
       objects.game,
       objects.format,
@@ -27,7 +27,7 @@ async def GetAttendance(interaction:Interaction, start_date:str, end_date:str) -
     subject = objects.format.format_name.title() if objects.format else objects.game.game_name.title()
     title = f'{subject} attendance from {date_start.strftime('%m/%d/%Y')} to {date_end.strftime('%m/%d/%Y')}'
   elif objects.hub:
-    data = GetHubAttendance(
+    data = await GetHubAttendance(
       objects.hub,
       objects.region,
       objects.game,

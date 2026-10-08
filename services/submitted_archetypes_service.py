@@ -14,7 +14,7 @@ async def SubmittedArchetypesReport(
     if not objects.store or not objects.game:
         raise Exception("No store, game, or format found")
     player_name = ConvertInput(player_name)
-    data = GetSubmittedArchetypes(
+    data = await GetSubmittedArchetypes(
         objects.game, objects.format, objects.store, player_name, date_used
     )
     headers = [

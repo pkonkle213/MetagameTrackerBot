@@ -326,9 +326,6 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                     )
                     await MessageHubs(self.bot, objects.store, event, hub_message)
 
-                await active_interaction.response.send_message(
-                    "Thank you for submitting data!", ephemeral=True
-                )
             else:
                 modal = next_modal
 

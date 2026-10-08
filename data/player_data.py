@@ -2,12 +2,12 @@ from psycopg.rows import class_row
 from typing import NamedTuple
 from datetime import date
 from settings import DATABASE_URL, DATAGUILDID
-import psycopg
+from psycopg import AsyncConnection
 from settings import BOTGUILDID
 from tuple_conversions import Format, Game, Store, League, TopPlayers
 
 
-def GetStats(
+async def GetStats(
     discord_id: int,
     game: Game,
     format: Format | None,
@@ -15,8 +15,10 @@ def GetStats(
     start_date: date,
     end_date: date,
 ):
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor() as cur:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor() as cur,
+    ):
         command = f"""
         WITH
             results AS (
@@ -86,20 +88,22 @@ def GetStats(
             ranked
         """
 
-        cur.execute(command)
-        rows = cur.fetchall()
+        await cur.execute(command)
+        rows = await cur.fetchall()
         return rows
 
 
-def GetTopPlayerData(
+async def GetTopPlayerData(
     store: Store,
     game: Game | None,
     format: Format | None,
     start_date: date,
     end_date: date,
 ) -> list[TopPlayers]:
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(TopPlayers)) as cur:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(TopPlayers)) as cur,
+    ):
         command = f"""
         WITH
             X AS (
@@ -162,6 +166,6 @@ def GetTopPlayerData(
                 )
         """
 
-        cur.execute(command)
-        rows = cur.fetchall()
+        await cur.execute(command)
+        rows = await cur.fetchall()
         return rows
