@@ -1,3 +1,4 @@
+from numpy.char import join
 from services.input_services import ConvertInput
 from discord_messages import MessageUser
 from discord import Interaction, Guild, utils, Permissions
@@ -69,36 +70,34 @@ async def UpdateDetails(bot: commands.Bot, interaction: Interaction) -> Interact
         raise KnownError("Profile unable to update")
 
 
-async def NewStoreRegistration(bot: commands.Bot, guild: Guild) -> str:
+async def NewStoreRegistration(bot: commands.Bot, guild: Guild) -> list[str]:
     """Goes through steps to register a new store and automap categories and channels"""
-    output = ""
+    output: list[str] = []
     # TODO: Define discord_name, owner_name, and owner_id and others here as they're used in multiple places
     try:
         print("Adding discord to database")
         add_discord = AddDiscordToDatabase(guild)
         if add_discord:
-            output += "- Discord added to database\n"
+            output.append("- Discord added to database")
 
         print("Adding store to database")
         add_store = AddStoreToDatabase(guild)
         if add_store:
-            output += "- Store added to database\n"
+            output.append("- Store added to database")
 
         print("Mapping categories and channels")
         mapping_message, mapping_success = await MapCategoriesAndChannels(guild)
         if mapping_success:
-            output += "- Categories and channels automapped:\n"
+            output.append("- Categories and channels automapped:")
             output += mapping_message
         else:
-            output += "- No categories or channels automapped\n"
+            output.append("- No categories or channels automapped")
 
         print("Creating and assigning MTStore role")
-        role_message = await CreateRole(guild, MTBRoles.MTStore.name)
-        output += f"{role_message}\n"
+        output += await CreateRole(guild, MTBRoles.MTStore.name)
 
         print("Creating and assigning MTSubmitter role")
-        role_message = await CreateRole(guild, MTBRoles.MTSubmitter.name)
-        output += f"{role_message}\n"
+        output += await CreateRole(guild, MTBRoles.MTSubmitter.name)
 
         print("Assigning Store Owner role in bot guild")
         owner = guild.owner
@@ -108,9 +107,9 @@ async def NewStoreRegistration(bot: commands.Bot, guild: Guild) -> str:
         return output
     except Exception as e:
         await MessageUser(bot, f"Issue with new store registration: {e}", PHILID)
-        return (
+        return [
             f"Unable to add this discord to my database. Please contact the bot owner."
-        )
+        ]
 
 
 def AddDiscordToDatabase(guild: Guild) -> str:
@@ -143,10 +142,10 @@ def MatchFormat(channel_name: str, formats: list[Format]) -> Format | None:
             return format
 
 
-async def MapCategoriesAndChannels(guild: Guild) -> tuple[str, bool]:
+async def MapCategoriesAndChannels(guild: Guild) -> tuple[list[str], bool]:
     """Sequentially maps the categories and channels in the guild"""
     try:
-        output = ""
+        output: list[str] = []
         mapping = False
         games = await GetGameOptions()
         if games is None:
@@ -158,7 +157,9 @@ async def MapCategoriesAndChannels(guild: Guild) -> tuple[str, bool]:
                 result = await AddGameMap(guild.id, game.id, category.id)
                 mapping = True
                 if result:
-                    output += f"Game: {game.game_name.title()}, Category: {category.name} ({category.id})\n"
+                    output.append(
+                        f"Game: {game.game_name.title()}, Category: {category.name} ({category.id})"
+                    )
 
                 formats = await GetFormatsByGameId(game)
                 if formats:
@@ -167,7 +168,9 @@ async def MapCategoriesAndChannels(guild: Guild) -> tuple[str, bool]:
                         if format:
                             result = await AddFormatMap(guild.id, format.id, channel.id)
                             if result:
-                                output += f"Format: {format.format_name.title()}, Channel: {channel.name} ({channel.id})\n"
+                                output.append(
+                                    f"Format: {format.format_name.title()}, Channel: {channel.name} ({channel.id})"
+                                )
 
         return output, mapping
     except Exception as e:
@@ -175,36 +178,42 @@ async def MapCategoriesAndChannels(guild: Guild) -> tuple[str, bool]:
         return "", False
 
 
-async def CreateRole(guild: Guild, role_name: str) -> str:
+async def CreateRole(guild: Guild, role_name: str) -> list[str]:
     """Creates the role and assigns it to the owner"""
     owner = guild.owner
     if owner is None:
         raise KnownError("No owner found")
     mtsubmitter_role = utils.get(guild.roles, name=role_name)
 
-    output = ""
+    output: list[str] = []
     success = ""
     if mtsubmitter_role is None:
         try:
             bot_member = guild.me
-            print(f"Bot Global Permissions: {bot_member.guild_permissions.manage_roles}")
+            print(
+                f"Bot Global Permissions: {bot_member.guild_permissions.manage_roles}"
+            )
             mtsubmitter_role = await guild.create_role(
                 name=role_name,
                 reason="Automatic role creation on join",
             )
-            output = f"- {role_name} role created.\n"
+            output.append(f"- {role_name} role created.")
             success = True
         except Exception as e:
             print("Ran into exception: ", e)
-            return f"- Unable to create {role_name} role. Please create and assign manually."
+            output.append(
+                f"- Unable to create {role_name} role. Please create and assign manually."
+            )
 
     try:
         await owner.add_roles(mtsubmitter_role)
-        output += "- MTSubmitter role assigned to owner.\n"
+        output.append("- MTSubmitter role assigned to owner.")
         success = True
         return output
     except Exception as e:
-        output += "- MTSubmitter role unable to be assigned to owner. Please assign manually.\n"
+        output.append(
+            "- MTSubmitter role unable to be assigned to owner. Please assign manually."
+        )
         return output
 
 

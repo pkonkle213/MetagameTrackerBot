@@ -65,18 +65,19 @@ async def on_ready():
 @bot.event
 async def on_guild_join(guild: Guild):
     """This event triggers when the bot joins a new guild (server)."""
-    output = (
-        "Thank you for adding me to your server! Here's my notes from installation:\n"
-    )
+    output = [
+        "Thank you for adding me to your server! Here's my notes from installation:"
+    ]
     output += await NewStoreRegistration(bot, guild)
     if guild.owner:
-        await guild.owner.send(output)
+        await guild.owner.send("\n".join(output))
     success = apu.UpdateStores()
     if success:
-        output += "- Stores check has been updated"
+        output.append("- Stores check has been updated")
     else:
-        output += "- Stores check has failed"
-    await MessageUser(bot, f"New guild joined: {guild.name}\n{output}", PHILID)
+        output.append("- Stores check has failed")
+    output.insert(0, f"New guild joined: {guild.name}")
+    await MessageUser(bot, "\n".join(output), PHILID)
 
 
 @bot.event
