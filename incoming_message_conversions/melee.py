@@ -3,6 +3,7 @@ from datetime import date, datetime
 from tuple_conversions import Pairing
 
 
+# TODO: This needs to return an object
 def MeleeJsonPairings(
     json_data: list[Any],
 ) -> tuple[list[Pairing], list[str], int, date, dict[str, str]]:

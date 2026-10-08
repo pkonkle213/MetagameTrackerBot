@@ -1,5 +1,4 @@
-import discord
-from discord import Interaction, ui
+from discord import Interaction, ui, SelectOption
 from discord.ext import commands
 
 from custom_errors import KnownError
@@ -9,7 +8,7 @@ from services.submit_archetype_service import SubmitArchetype
 from tuple_conversions import Event, Format, Game, GameEnum, Hub, Store
 
 
-class SubmitArchetypeModal(discord.ui.Modal, title="Submit Archetype"):
+class SubmitArchetypeModal(ui.Modal, title="Submit Archetype"):
     def __init__(
         self,
         bot: commands.Bot,
@@ -31,22 +30,20 @@ class SubmitArchetypeModal(discord.ui.Modal, title="Submit Archetype"):
         self.is_submitter = is_submitter
 
         self.previous_events = events
-        past_events: list[discord.SelectOption] = []
+        past_events: list[SelectOption] = []
         for i in range(len(events)):
             option = events[i]
             label = f"{option.event_date.strftime('%m/%d')} - {option.event_name}"
             value = str(option.id)
-            past_events.append(
-                discord.SelectOption(label=label, value=value, default=(i == 0))
-            )
+            past_events.append(SelectOption(label=label, value=value, default=(i == 0)))
 
         archetype_options = (
             [
-                discord.SelectOption(label=archetype, value=archetype)
+                SelectOption(label=archetype, value=archetype)
                 for archetype in prev_archetypes
             ]
             if len(prev_archetypes) > 0
-            else [discord.SelectOption(label="Please enter an archetype", value="0")]
+            else [SelectOption(label="Please enter an archetype", value="0")]
         )
 
         self.event_select = ui.Label(
