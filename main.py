@@ -1,4 +1,4 @@
-from datetime import datetime as dt, time, timezone
+from datetime import datetime as dt, time, timezone as datetime_timezone
 import settings
 from threading import Thread
 from contextlib import suppress
@@ -162,7 +162,7 @@ async def before_sync_paid_users():
 @tasks.loop(time=time(hour=10, minute=00, tzinfo=TIME_ZONE))
 async def data_guild_update():
     """Every Friday at 10:00 AM EST, the data guild is updated with new data"""
-    time_now = dt.now(timezone.utc)
+    time_now = dt.now(datetime_timezone.utc)
     if time_now.weekday() == 4:  # Check if it's Friday, 0 = Monday
         try:
             await UpdateDataGuild(bot)

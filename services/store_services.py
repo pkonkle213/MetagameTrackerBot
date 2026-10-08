@@ -35,7 +35,7 @@ async def UpdateDetails(bot: commands.Bot, interaction: Interaction) -> Interact
         await modal.wait()
 
     if not modal.is_submitted:
-      raise KnownError('Modal not submitted correctly')
+        raise KnownError('Modal not submitted correctly')
     
     result = await UpdateStore(
       interaction,
@@ -66,10 +66,7 @@ async def UpdateDetails(bot: commands.Bot, interaction: Interaction) -> Interact
       modal.submitted_hub_invite
     )
   
-  if result:
     return modal.new_interaction
-  else:
-    raise KnownError('Profile unable to update')
   
 
 async def NewStoreRegistration(bot: commands.Bot, guild: Guild) -> list[str]:
@@ -82,10 +79,10 @@ async def NewStoreRegistration(bot: commands.Bot, guild: Guild) -> list[str]:
         if add_discord:
             output.append("- Discord added to database")
 
-    print('Adding store to database')
-    add_store = await AddStoreToDatabase(guild)
-    if add_store:
-      output += '- Store added to database\n'
+        print('Adding store to database')
+        add_store = await AddStoreToDatabase(guild)
+        if add_store:
+            output.append('- Store added to database')
 
         print("Mapping categories and channels")
         mapping_message, mapping_success = await MapCategoriesAndChannels(guild)
@@ -114,7 +111,7 @@ async def NewStoreRegistration(bot: commands.Bot, guild: Guild) -> list[str]:
         ]
 
 
-async def AddDiscordToDatabase(guild: discord.Guild) -> str:
+async def AddDiscordToDatabase(guild: Guild) -> str:
   """Adds the discord to the database"""
   guild_name = ConvertInput(guild.name)
   owner_name = ConvertInput(guild.owner.name) if guild.owner else 'Unknown'
@@ -122,7 +119,7 @@ async def AddDiscordToDatabase(guild: discord.Guild) -> str:
   await AddDiscord(guild.id, guild.name, owner_id, owner_name)
   return 'Done'
 
-async def AddStoreToDatabase(guild: discord.Guild) -> int:
+async def AddStoreToDatabase(guild: Guild) -> int:
   """Adds the store to the database"""
   store = await AddStore(guild.id)
   return store
@@ -176,7 +173,7 @@ async def MapCategoriesAndChannels(guild: Guild) -> tuple[list[str], bool]:
         return output, mapping
     except Exception as e:
         print("Error received:", e)
-        return "", False
+        return [""], False
 
 
 async def CreateRole(guild: Guild, role_name: str) -> list[str]:
