@@ -11,7 +11,7 @@ from services.submit_archetype_service import OneEventDetails
 from discord import Interaction, User, app_commands
 from discord.ext import commands
 from services.event_services import EventForData
-from checks import IsStore, isSubmitter
+from checks import IsStore, isSubmitter, HasRequiredRoles
 from custom_errors import KnownError
 from data.event_data import (
     CreateEvent,
@@ -23,7 +23,7 @@ from data.player_name_data import GetArchetypeModalDetails, GetUserName
 from data.interaction_data import GetObjectsFromInteraction
 from services.command_error_service import Error
 from services.determine_archetype_input import GetArchetypeModal
-from tuple_conversions import DataInputEnum, ViewButtonEnum
+from tuple_conversions import DataInputEnum, ViewButtonEnum, MTBRoles
 from services.convert_and_save_input import BuildFilePath
 from input_modals.submit_data_modal import SubmitManualDataModal
 from services.add_results_services import AddStandingResults, AddPairingResults
@@ -72,8 +72,8 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     @app_commands.command(
         name="mass_archetype", description="Submit multiple archetypes for an event"
     )
-    @app_commands.checks.has_role("MTSubmitter")
     @app_commands.guild_only()
+    @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @IsStore()
     async def MassArchetypeInput(self, interaction: Interaction):
         objects = await GetObjectsFromInteraction(interaction)
@@ -210,7 +210,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
         )
 
     @app_commands.command(name="data", description="Submitting an event's data")
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @app_commands.guild_only()
     @IsStore()
     async def SubmitDataCommand(self, interaction: Interaction) -> None:
@@ -257,7 +257,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                 case _:
                     raise KnownError("Unknown input type")
 
-        #TODO: How does this work with a CSV import of 10 files?
+        # TODO: How does this work with a CSV import of 10 files?
         modal = None
         cont = True
         while cont:

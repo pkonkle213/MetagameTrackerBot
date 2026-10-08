@@ -1,7 +1,8 @@
+from tuple_conversions import MTBRoles
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsHub, IsStore
+from checks import IsHub, IsStore, HasRequiredRoles
 from custom_errors import KnownError
 from data.hubs_data import GetRegions, GetHub
 from input_modals.map_format_modal import MapFormatModal
@@ -22,8 +23,8 @@ class MappingCommands(commands.GroupCog, name="map"):
         name="archetype_feed",
         description="Map this channel as feed for submitted archetypes in this game",
     )
-    @app_commands.checks.has_role("MTSubmitter")
     @app_commands.guild_only()
+    @HasRequiredRoles([MTBRoles.MTStore.name])
     @IsStore()
     async def AddClaimFeedMap(self, interaction: Interaction):
         await interaction.response.defer(ephemeral=True, thinking=False)
@@ -31,7 +32,7 @@ class MappingCommands(commands.GroupCog, name="map"):
         await interaction.followup.send(output, ephemeral=True)
 
     @app_commands.command(name="region", description="Map your channel to a region")
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTStore.name])
     @app_commands.guild_only()
     @IsHub()
     async def AddRegionMap(self, interaction: Interaction):
@@ -50,7 +51,7 @@ class MappingCommands(commands.GroupCog, name="map"):
         await modal.wait()
 
     @app_commands.command(name="game", description="Map your category to a game")
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTStore.name])
     @app_commands.guild_only()
     @IsStore()
     async def AddGameMap(self, interaction: Interaction):
@@ -62,7 +63,7 @@ class MappingCommands(commands.GroupCog, name="map"):
         await modal.wait()
 
     @app_commands.command(name="format", description="Map your channel to a format")
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTStore.name])
     @app_commands.guild_only()
     @IsStore()
     async def AddFormatMap(self, interaction: Interaction):

@@ -1,7 +1,8 @@
+from tuple_conversions import MTBRoles
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsStore, IsPaidStore, isSubmitter
+from checks import IsStore, IsPaidStore, isSubmitter, HasRequiredRoles
 from services.command_error_service import Error
 from services.store_services import UpdateDetails
 from input_modals.update_archetype_modal import UpdateArchetypeModal
@@ -15,7 +16,7 @@ class UpdateCommands(commands.GroupCog, name="update"):
 
     @app_commands.command(name="archetypes", description="Mass updates archetypes")
     @app_commands.guild_only()
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @IsStore()
     async def UpdateArchetypes(self, interaction: Interaction):
         objects = await GetObjectsFromInteraction(interaction)
@@ -29,7 +30,7 @@ class UpdateCommands(commands.GroupCog, name="update"):
 
     @app_commands.command(name="player_names", description="Mass updates player names")
     @app_commands.guild_only()
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @IsPaidStore()
     async def UpdatePlayerNames(self, interaction: Interaction):
         objects = await GetObjectsFromInteraction(interaction)
@@ -45,7 +46,7 @@ class UpdateCommands(commands.GroupCog, name="update"):
     @app_commands.command(name="profile", description="Updates the hub/store profile")
     @app_commands.guild_only()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTStore.name])
     async def UpdateProfile(self, interaction: Interaction):
         """Updates all info in the profile of the hub or store"""
         result = await UpdateDetails(self.bot, interaction)

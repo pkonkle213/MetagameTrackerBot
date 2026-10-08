@@ -2,7 +2,7 @@ from tuple_conversions import MTBRoles
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsPaidStore
+from checks import IsPaidStore, HasRequiredRoles
 from custom_errors import KnownError
 from output_builder import BuildTableOutput
 from services.ban_word_services import AddBadWord, Offenders
@@ -18,7 +18,7 @@ class BannedWordCommands(commands.GroupCog, name="banned_words"):
     @app_commands.command(name="add", description="Add a banned word")
     @app_commands.guild_only()
     @IsPaidStore()
-    @app_commands.checks.has_role(MTBRoles.MTSubmitter.name)
+    @HasRequiredRoles([MTBRoles.MTStore.name])
     async def BadWord(self, interaction: Interaction, word: str) -> None:
         """
         Parameters
@@ -41,7 +41,7 @@ class BannedWordCommands(commands.GroupCog, name="banned_words"):
     @app_commands.command(
         name="offenders", description="See who has been flagged for bad words/phrases"
     )
-    @app_commands.checks.has_role(MTBRoles.MTSubmitter.name)
+    @HasRequiredRoles([MTBRoles.MTStore.name])
     @app_commands.guild_only()
     @IsPaidStore()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))

@@ -1,7 +1,8 @@
+from tuple_conversions import MTBRoles
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsStore
+from checks import IsStore, HasRequiredRoles
 from custom_errors import KnownError
 from data.interaction_data import GetObjectsFromInteraction
 from output_builder import BuildTableOutput
@@ -17,7 +18,7 @@ class UniqueSubmitters(commands.Cog):
         name="events_statistics",
         description="See unique submitters and percent reported for all events",
     )
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @app_commands.guild_only()
     @IsStore()
     async def MyEventsReported(self, interaction: Interaction):

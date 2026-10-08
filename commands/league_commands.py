@@ -1,4 +1,4 @@
-from tuple_conversions import League
+from tuple_conversions import League, MTBRoles
 from services.command_error_service import KnownError, Error
 
 from discord.ext import commands
@@ -17,7 +17,7 @@ from services.league_services import (
     HubFullLeagueLeaderboard,
 )
 from output_builder import BuildTableOutput
-from checks import IsStore
+from checks import IsStore, HasRequiredRoles
 
 
 class LeagueCommands(commands.GroupCog, name="league"):
@@ -28,13 +28,13 @@ class LeagueCommands(commands.GroupCog, name="league"):
 
     @app_commands.command(name="create", description="Create a new league")
     @app_commands.guild_only()
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTStore.name])
     async def CreateTheLeague(self, interaction: Interaction):
         await CreateLeague(self.bot, interaction)
 
     @app_commands.command(name="edit", description="Edit a league")
     @app_commands.guild_only()
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTStore.name])
     async def EditTheLeague(self, interaction: Interaction):
         await EditLeague(self.bot, interaction)
 
@@ -69,7 +69,7 @@ class LeagueCommands(commands.GroupCog, name="league"):
         name="full_leaderboard", description="Display all players' ranks in a league"
     )
     @app_commands.guild_only()
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def FullLeaderboard(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
