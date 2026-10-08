@@ -1,2 +1,0 @@
-Can't push or pull from git provider
-This app has a remote repository configured but you are not connected to any git providers

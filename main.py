@@ -1,5 +1,4 @@
-from datetime import datetime as dt, time, timezone
-import settings
+from datetime import datetime as dt, time, timezone as datetime_timezone
 from threading import Thread
 from contextlib import suppress
 from pathlib import Path
@@ -33,7 +32,7 @@ StartHealthCheckServer()
 from pytz import timezone
 from discord import Guild, Interaction, app_commands, Intents, NotFound, Forbidden
 from discord.ext import commands, tasks
-from settings import PHILID, DISCORDTOKEN
+from settings import PHILID, DISCORDTOKEN, BOTLOGCHANNEL
 import timedposts.automated_paid_users as apu
 from timedposts.automated_check_events import EventCheck
 from timedposts.automated_updates import UpdateDataGuild
@@ -65,18 +64,19 @@ async def on_ready():
 @bot.event
 async def on_guild_join(guild: Guild):
     """This event triggers when the bot joins a new guild (server)."""
-    output = (
-        "Thank you for adding me to your server! Here's my notes from installation:\n"
-    )
+    output = [
+        "Thank you for adding me to your server! Here's my notes from installation:"
+    ]
     output += await NewStoreRegistration(bot, guild)
     if guild.owner:
-        await guild.owner.send(output)
+        await guild.owner.send("\n".join(output))
     success = apu.UpdateStores()
     if success:
-        output += "- Stores check has been updated"
+        output.append("- Stores check has been updated")
     else:
-        output += "- Stores check has failed"
-    await MessageUser(bot, f"New guild joined: {guild.name}\n{output}", PHILID)
+        output.append("- Stores check has failed")
+    output.insert(0, f"New guild joined: {guild.name}")
+    await MessageUser(bot, "\n".join(output), PHILID)
 
 
 @bot.event
@@ -115,10 +115,10 @@ async def on_app_command_completion(
         f"Channel: {interaction.channel.id if interaction.channel else 'DM'}```"
     )
 
-    channel = bot.get_channel(settings.BOTLOGCHANNEL)
+    channel = bot.get_channel(BOTLOGCHANNEL)
     if channel is None:
         try:
-            channel = await bot.fetch_channel(settings.BOTLOGCHANNEL)
+            channel = await bot.fetch_channel(BOTLOGCHANNEL)
         except (NotFound, Forbidden):
             print(f"Log channel not found or bot lacks permissions.\n{log_message}")
             return
@@ -161,7 +161,7 @@ async def before_sync_paid_users():
 @tasks.loop(time=time(hour=10, minute=00, tzinfo=TIME_ZONE))
 async def data_guild_update():
     """Every Friday at 10:00 AM EST, the data guild is updated with new data"""
-    time_now = dt.now(timezone.utc)
+    time_now = dt.now(datetime_timezone.utc)
     if time_now.weekday() == 4:  # Check if it's Friday, 0 = Monday
         try:
             await UpdateDataGuild(bot)

@@ -144,6 +144,4 @@ async def GetPersonalMatchups(
         criteria = [user_id, discord_id, game.id, format.id, start_date, end_date]
         await cur.execute(command, criteria)
         rows = await cur.fetchall()
-        print("----Rows----\n", rows)
-        print("----Criteria----\n", criteria)
         return rows

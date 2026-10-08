@@ -1,7 +1,8 @@
+from tuple_conversions import MTBRoles
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsPaidStore
+from checks import IsPaidStore, HasRequiredRoles
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from services.submitted_archetypes_service import SubmittedArchetypesReport
@@ -16,7 +17,7 @@ class ArchetypeSubmittedCommand(commands.Cog):
         description="Generate a report of the archetypes submitted and by whom",
     )
     @app_commands.guild_only()
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @IsPaidStore()
     async def ViewSubmittedArchetypes(
         self, interaction: Interaction, player_name: str = "", event_date: str = ""

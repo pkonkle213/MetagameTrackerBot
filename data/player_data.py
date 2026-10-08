@@ -20,71 +20,72 @@ async def GetStats(
         conn.cursor() as cur,
     ):
         command = f"""
+        WITH
+            results AS (
+                SELECT
+                    {'f.format_name AS format_name,' if not format else ''}
+                    archetype_played,
+                    wins,
+                    losses,
+                    draws
+                FROM
+                    full_standings fs
+                    LEFT JOIN unique_archetypes ua ON UPPER(ua.player_name) = UPPER(fs.player_name)
+                    AND ua.event_id = fs.event_id
+                    LEFT JOIN events e ON e.id = fs.event_id
+                    LEFT JOIN formats f ON e.format_id = f.id
+                    INNER JOIN player_names pn ON pn.discord_id = e.discord_id
+                    AND upper(pn.player_name) = upper(fs.player_name)
+                WHERE
+                    pn.submitter_id = {user_id}
+                    {f'AND e.format_id = {format.id}' if format else ''}
+                    AND e.game_id = {game.id}
+                    AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
+                    AND e.discord_id = {discord_id}
+            ),
+            ranked AS (
+                (
+                    SELECT
+                        '1' AS rank,
+                        format_name,
+                        'Overall' AS archetype_played,
+                        sum(wins) AS wins,
+                        sum(losses) AS losses,
+                        sum(draws) AS draws
+                    FROM
+                        results
+                    GROUP BY
+                        format_name
+                )
+                UNION ALL
+                (
+                    SELECT
+                        '2' AS rank,
+                        format_name,
+                        COALESCE(archetype_played, 'Unkonwn') AS archetype_played,
+                        sum(wins) AS wins,
+                        sum(losses) AS losses,
+                        sum(draws) AS draws
+                    FROM
+                        results
+                    GROUP BY
+                        format_name,
+                        archetype_played
+                    ORDER BY
+                        sum(wins) + sum(losses) + sum(draws) DESC
+                )
+                ORDER BY
+                    rank
+            )
         SELECT
-            {"format_name," if not format else ""}
+            format_name,
             archetype_played,
             wins,
             losses,
             draws,
-            ROUND(win_percentage * 100, 2) AS win_percentage
+            ROUND(100.0 * wins / (wins + losses + draws), 2) AS win_percent
         FROM
-            (
-                WITH
-                    X AS (
-                        SELECT
-                            fs.event_id,
-                            f.format_name AS format_name,
-                            UPPER(fs.player_name) AS player_name,
-                            archetype_played,
-                            wins,
-                            losses,
-                            draws
-                        FROM
-                            full_standings fs
-                            LEFT JOIN unique_archetypes ua ON UPPER(ua.player_name) = UPPER(fs.player_name)
-                            AND ua.event_id = fs.event_id
-                            LEFT JOIN events e ON e.id = fs.event_id
-                            LEFT JOIN formats f ON e.format_id = f.id
-                        WHERE
-                            UPPER(fs.player_name) IN (
-                                SELECT
-                                    UPPER(player_name) as player_name
-                                FROM
-                                    player_names
-                                WHERE
-                                    discord_id = {discord_id}
-                                    AND submitter_id = {user_id}
-                            )
-                            {f"AND e.format_id = {format.id}" if format else ""}
-                            AND e.game_id = {game.id}
-                            AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-                            AND e.discord_id = {discord_id}
-                    )
-                SELECT
-                    '1' AS rank,
-                    ' ' AS format_name,
-                    'Overall' AS archetype_played,
-                    SUM(wins) AS wins,
-                    SUM(losses) AS losses,
-                    SUM(draws) AS draws,
-                    1.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)) AS win_percentage
-                FROM
-                    X
-                UNION
-                SELECT
-                    '2' AS rank,
-                    format_name,
-                    COALESCE(archetype_played, 'Unknown') AS archetype_played,
-                    SUM(wins) AS wins,
-                    SUM(losses) AS losses,
-                    SUM(draws) AS draws,
-                    1.0 * SUM(wins) / (SUM(wins) + SUM(losses) + SUM(draws)) AS win_percentage
-                FROM
-                    X
-                GROUP BY
-                    archetype_played,
-                    X.format_name
-            )
+            ranked
         """
 
         await cur.execute(command)
