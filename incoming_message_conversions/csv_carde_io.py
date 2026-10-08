@@ -3,10 +3,7 @@ import pandas as pd
 from tuple_conversions import NewPairings, NewStandings, Pairing, Standing
 
 
-def ConvertToPairings(
-    dataframe: pd.DataFrame,
-    round_number: int
-) -> NewPairings:
+def ConvertToPairings(dataframe: pd.DataFrame, round_number: int) -> NewPairings:
     """Takes a provided dataframe and attempts to make it into a Pairing object"""
     data = []
     errors = []
@@ -28,7 +25,7 @@ def ConvertToPairings(
                 player1_name=p1name,
                 player1_game_wins=p1gw,
                 player2_game_wins=p2gw,
-                player2_name=p2name
+                player2_name=p2name,
             )
             data.append(result)
 
@@ -36,7 +33,7 @@ def ConvertToPairings(
 
     except Exception as exception:
         print("Carde.io Pairing DataFrame:\n", dataframe)
-        print("Carde.io Official Pairing Exception:", exception)
+        print("Carde.io Pairing Exception:", exception)
         return NewPairings(None, [])
 
 
@@ -58,6 +55,6 @@ def ConvertToStandings(
 
         return NewStandings(data if len(data) > 0 else None, errors)
     except Exception as exception:
-        print("Lorcana Official Standing Rows:\n", dataframe)
-        print("Lorcana Official Standing Exception:", exception)
+        print("Carde.io Standing Rows:\n", dataframe)
+        print("Carde.io Standing Exception:", exception)
         return NewStandings(None, [])

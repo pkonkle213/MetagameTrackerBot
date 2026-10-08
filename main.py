@@ -54,6 +54,7 @@ TIME_ZONE = timezone("US/Eastern")
 @bot.event
 async def on_ready():
     print(f"Logged on as {format(bot.user)}!")
+    await apu.InitializePaidData()
     data_guild_update.start()
     find_the_unknown.start()
     sync_paid_users.start()
@@ -70,7 +71,7 @@ async def on_guild_join(guild: Guild):
     output += await NewStoreRegistration(bot, guild)
     if guild.owner:
         await guild.owner.send("\n".join(output))
-    success = apu.UpdateStores()
+    success = await apu.UpdateStores()
     if success:
         output.append("- Stores check has been updated")
     else:
@@ -146,11 +147,11 @@ async def before_find_the_unknown():
 async def sync_paid_users():
     """Every 60 minutes, the bot will sync the paid entities for command permission"""
     with suppress(Exception):
-        apu.UpdateStores()
-        apu.UpdateHubs()
-        apu.UpdatePaidUsers()
-        apu.UpdatePaidStores()
-        apu.UpdatePaidHubs()
+        await apu.UpdateStores()
+        await apu.UpdateHubs()
+        await apu.UpdatePaidUsers()
+        await apu.UpdatePaidStores()
+        await apu.UpdatePaidHubs()
 
 
 @sync_paid_users.before_loop

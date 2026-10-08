@@ -1,29 +1,45 @@
 from data.sync_check_data import GetFive6Users, GetStores, GetHubs
 from settings import PHILID
 
-PAID_USERS: list[int] = GetFive6Users()
-PAID_STORES: list[int] = GetStores(True)
-PAID_HUBS: list[int] = GetHubs(True)
-STORES: list[int] = GetStores()
-HUBS: list[int] = GetHubs()
+PAID_USERS: list[int] = []
+PAID_STORES: list[int] = []
+PAID_HUBS: list[int] = []
+STORES: list[int] = []
+HUBS: list[int] = []
 
-def UpdateStores() -> bool:
-  global STORES
-  STORES = GetStores()
-  return True
 
-def UpdateHubs() -> None:
-  global HUBS
-  HUBS = GetHubs()
+async def InitializePaidData() -> None:
+    """Load paid-user, store, and hub caches during asynchronous bot startup."""
+    global PAID_USERS, PAID_STORES, PAID_HUBS, STORES, HUBS
 
-def UpdatePaidUsers() -> None:
-  global PAID_USERS
-  PAID_USERS = [PHILID] + GetFive6Users()  # + GetPaidUsers()
+    PAID_USERS = [PHILID] + await GetFive6Users()
+    PAID_STORES = await GetStores(paid=True)
+    PAID_HUBS = await GetHubs(paid=True)
+    STORES = await GetStores()
+    HUBS = await GetHubs()
 
-def UpdatePaidStores() -> None:
-  global PAID_STORES
-  PAID_STORES = GetStores(True)
 
-def UpdatePaidHubs() -> None:
-  global PAID_HUBS
-  PAID_HUBS = GetHubs(True)
+async def UpdateStores() -> bool:
+    global STORES
+    STORES = await GetStores()
+    return True
+
+
+async def UpdateHubs() -> None:
+    global HUBS
+    HUBS = await GetHubs()
+
+
+async def UpdatePaidUsers() -> None:
+    global PAID_USERS
+    PAID_USERS = [PHILID] + await GetFive6Users()  # + GetUsers(paid=True)
+
+
+async def UpdatePaidStores() -> None:
+    global PAID_STORES
+    PAID_STORES = await GetStores(paid=True)
+
+
+async def UpdatePaidHubs() -> None:
+    global PAID_HUBS
+    PAID_HUBS = await GetHubs(paid=True)
