@@ -6,6 +6,32 @@ from psycopg import AsyncConnection
 from tuple_conversions import Store, Event, ChannelFormatMapping, Hub, Game, Format
 
 
+async def GetStoresWithOwners() -> list[Store]:
+    """Gets every store and its owner from the stores view."""
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(Store)) as cur,
+    ):
+        command = """
+        SELECT
+            discord_id,
+            discord_name,
+            store_name,
+            owner_id,
+            owner_name,
+            store_address,
+            used_for_data,
+            region_id,
+            is_paid
+        FROM
+            stores_view
+        ORDER BY
+            store_name
+        """
+        await cur.execute(command)
+        return await cur.fetchall()
+
+
 async def UpdateHub(
     interaction: Interaction, discord_id: int, hub_name: str, hub_invite: str
 ) -> int:
