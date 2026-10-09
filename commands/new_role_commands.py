@@ -16,6 +16,7 @@ class NewRoleCommands(commands.Cog):
         name="sync_store_roles",
         description="Ensure MTStore and MTSubmitter roles are assigned to every store owner.",
     )
+    @app_commands.guilds(BOTGUILDID)
     @app_commands.guild_only()
     @app_commands.check(isPhil)
     async def SyncStoreRoles(self, interaction: Interaction) -> None:
