@@ -1,3 +1,4 @@
+from tuple_conversions import InteractionObjects
 from datetime import datetime as dt, time, timezone as datetime_timezone
 from threading import Thread
 from contextlib import suppress
@@ -40,6 +41,7 @@ from services.store_services import NewStoreRegistration
 from services.sync_service import SyncCommands
 from discord_messages import MessageUser
 from data.interaction_data import GetObjectsFromInteraction
+from tuple_conversions import InteractionObjects
 
 
 async def get_interaction_objects(interaction: Interaction) -> InteractionObjects:
@@ -49,10 +51,10 @@ async def get_interaction_objects(interaction: Interaction) -> InteractionObject
 class DatabaseCommandTree(app_commands.CommandTree):
     async def interaction_check(self, interaction: Interaction) -> bool:
         # Ping your DB every time a slash command is invoked
-        db_data = await get_interaction_objects(interaction.user.id)
+        db_data = await get_interaction_objects(interaction)
 
         # Attach the resulting object directly to the interaction object
-        interaction.db_object = db_data
+        interaction.extras["db_object"] = db_data
 
         # Return True to allow command execution to proceed
         return True

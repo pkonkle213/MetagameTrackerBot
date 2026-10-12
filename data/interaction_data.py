@@ -7,15 +7,7 @@ from psycopg.rows import kwargs_row
 
 from custom_errors import KnownError
 from settings import DATABASE_URL
-from tuple_conversions import Format, Game, Hub, Region, Store
-
-
-class InteractionRow(NamedTuple):
-    store: Store | None
-    hub: Hub | None
-    game: Game | None
-    format: Format | None
-    region: Region | None
+from tuple_conversions import Format, Game, Hub, Region, Store, InteractionObjects
 
 
 def interaction_row(
@@ -47,7 +39,7 @@ def interaction_row(
     is_limited: bool,
     region_id: int,
     region_name: str,
-) -> InteractionRow:
+) -> InteractionObjects:
     store = (
         Store(
             store_discord_id,
@@ -86,10 +78,12 @@ def interaction_row(
         else None
     )
     region = Region(region_id, region_name) if region_id else None
-    return InteractionRow(store, hub, game, format, region)
+    return InteractionObjects(
+        store=store, hub=hub, game=game, format=format, region=region
+    )
 
 
-async def GetObjectsFromInteraction(interaction: Interaction) -> InteractionRow:
+async def GetObjectsFromInteraction(interaction: Interaction) -> InteractionObjects:
     discord_id = interaction.guild_id
     channel_id = interaction.channel_id
     if not interaction.channel or isinstance(
