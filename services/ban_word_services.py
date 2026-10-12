@@ -1,38 +1,61 @@
+from tuple_conversions import OutputToBuild
+from custom_errors import KnownError
+from typing import Any
+from pyparsing import Word
 from data.interaction_data import GetObjectsFromInteraction
-from data.ban_word_data import AddWord, GetWord, MatchDisabledArchetypes, DisableMatchingWords, AddBadWordBridge, CheckStoreBannedWords, GetOffenders
+from data.ban_word_data import (
+    AddWord,
+    GetWord,
+    MatchDisabledArchetypes,
+    DisableMatchingWords,
+    AddBadWordBridge,
+    CheckStoreBannedWords,
+    GetOffenders,
+)
 from discord import Interaction
 
-def AddBadWord(interaction:Interaction, bad_word:str):
-  word = GetWord(bad_word)
-  if word is None:
-    word = AddWord(bad_word)
-    if word is None:
-      raise Exception('Unable to add word')  
 
-  bridge_check = AddBadWordBridge(interaction.guild_id, word.ID)
-  if bridge_check is None:
-    raise Exception('Unable to add bad word bridge')
-    
-  archetypes = DisableMatchingWords(interaction.guild_id, bad_word.upper())
-  if archetypes is None:
-    raise Exception('No archetypes found to disable')
-  return (word, archetypes)
-  
-def ContainsBadWord(discord_id:int, archetype:str):
-  words = CheckStoreBannedWords(discord_id, archetype)
-  return True if words else False
+async def AddBadWord(interaction: Interaction, bad_word: str) -> None:
+    word = await GetWord(bad_word)
+    if not word:
+        word = await AddWord(bad_word)
 
-def CanSubmitArchetypes(discord_id:int, user_id:int):
-  offenses = MatchDisabledArchetypes(discord_id, user_id)
-  return len(offenses) < 3
+    discord_id = interaction.guild_id
+    if not discord_id:
+        raise KnownError("Only able to ban words from stores")
 
-def Offenders(interaction:Interaction):
-  objects = GetObjectsFromInteraction(interaction)
-  offenders = GetOffenders(objects.game, objects.format, objects.store)
-  headers = ['Date Submitted', 'Submitter', 'Submitter ID', 'Event Date', 'Player Name', 'Archetype Played']
-  if not objects.format:
-    headers.insert(5, 'Format')
-  if not objects.game:
-    headers.insert(5, 'Game')
-  title = 'Those who have been flagged for bad words/phrases'
-  return offenders, title, headers
+    bridge_check = await AddBadWordBridge(discord_id, word.id)
+    if bridge_check is None:
+        raise KnownError("Unable to ban the word for this store")
+
+    await DisableMatchingWords(discord_id, bad_word.upper())
+
+
+async def ContainsBadWord(discord_id: int, archetype: str) -> bool:
+    return await CheckStoreBannedWords(discord_id, archetype)
+
+
+async def CanSubmitArchetypes(discord_id: int, user_id: int) -> bool:
+    offenses = await MatchDisabledArchetypes(discord_id, user_id)
+    return offenses < 3
+
+
+async def Offenders(interaction: Interaction) -> OutputToBuild:
+    objects = await GetObjectsFromInteraction(interaction)
+    if not objects.store:
+        raise KnownError("This command is only available to stores")
+    offenders = await GetOffenders(objects.game, objects.format, objects.store)
+    headers = [
+        "Date Submitted",
+        "Submitter",
+        "Submitter ID",
+        "Event Date",
+        "Player Name",
+        "Archetype Played",
+    ]
+    if not objects.format:
+        headers.insert(5, "Format")
+    if not objects.game:
+        headers.insert(5, "Game")
+    title = "Those who have been flagged for bad words/phrases"
+    return OutputToBuild(title, headers, offenders)

@@ -5,6 +5,7 @@ from discord.ext import commands
 from input_modals.submit_event_modal import SubmitEventModal
 from tuple_conversions import Format, Game, Store, Event, ViewButtonEnum
 from views.confirm_event import ConfirmEvent
+from data.data_input_menus import GetEventTypes, GetPreviousEvents
 
 # Name update: SelectOrCreateEvent
 async def EventForData(
@@ -14,7 +15,9 @@ async def EventForData(
     game: Game,
     format: Format,
 ) -> tuple[Event | None, int | None, Interaction | None, bool]:
-    modal = SubmitEventModal(store, game, format)
+    event_types = await GetEventTypes (store.discord_id, game, format)
+    previous_events = await GetPreviousEvents(store, game, format)
+    modal = SubmitEventModal(store, game, format, event_types, previous_events)
     await interaction.response.send_modal(modal)
     await modal.wait()
     

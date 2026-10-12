@@ -2,7 +2,7 @@ from tuple_conversions import Store, Game, Format
 from data.update_archetypes_data import AddUpdatedArchetypes
 from discord import Interaction
 
-def UpdateArchetypes(
+async def UpdateArchetypes(
   store:Store,
   game:Game,
   format:Format,
@@ -16,5 +16,5 @@ def UpdateArchetypes(
   submitter_discord_id = interaction.guild.id
   submitter_discord_name = interaction.guild.name 
   
-  count = AddUpdatedArchetypes(store, game, format, old_archetype, new_archetype, is_submitter, submitter_name, submitter_id, submitter_discord_id, submitter_discord_name) 
+  count = await AddUpdatedArchetypes(store, game, format, old_archetype, new_archetype, is_submitter, submitter_name, submitter_id, submitter_discord_id, submitter_discord_name) 
   return count

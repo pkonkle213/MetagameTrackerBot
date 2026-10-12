@@ -29,7 +29,7 @@ async def SelectLeague(
     bot: commands.Bot, interaction: Interaction, isEdit: bool = False
 ) -> League:
     """Selects a league from the database"""
-    objects = GetObjectsFromInteraction(interaction)
+    objects = await GetObjectsFromInteraction(interaction)
 
     if (
         (not objects.hub and not objects.store)
@@ -46,7 +46,7 @@ async def SelectLeague(
 
     if objects.store:
         discord_id = objects.store.discord_id
-    leagues = GetLeagues(discord_id, objects.game.id, objects.format.id)
+    leagues = await GetLeagues(discord_id, objects.game.id, objects.format.id)
     modal = LeagueSelector(
         bot,
         objects.store,
@@ -63,39 +63,41 @@ async def SelectLeague(
     return modal.league
 
 
-def FindPlayerStanding(league: League, user_id: int, discord_id: int) -> PlayerStanding:
+async def FindPlayerStanding(
+    league: League, user_id: int, discord_id: int
+) -> PlayerStanding:
     """Displays the player's standing in a league"""
     if league.store_ids[0]:
-        return GetHubPlayerStanding(league, user_id)
+        return await GetHubPlayerStanding(league, user_id)
     else:
-        return GetStorePlayerStanding(league, user_id)
+        return await GetStorePlayerStanding(league, user_id)
 
 
-def LeagueLeaderboard(league: League) -> list[TopPlayers]:
+async def LeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
-    top_players = GetFullLeagueLeaderboard(league)
-    return top_players[:league.top_cut]
+    top_players = await GetFullLeagueLeaderboard(league)
+    return top_players[: league.top_cut]
 
 
-def FullLeagueLeaderboard(league: League) -> list[TopPlayers]:
+async def FullLeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
-    return GetFullLeagueLeaderboard(league)
+    return await GetFullLeagueLeaderboard(league)
 
 
-def HubLeagueLeaderboard(league: League) -> list[TopPlayers]:
+async def HubLeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
-    top_players = GetHubFullLeagueLeaderboard(league)
-    return top_players[:league.top_cut]
+    top_players = await GetHubFullLeagueLeaderboard(league)
+    return top_players[: league.top_cut]
 
 
-def HubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
+async def HubFullLeagueLeaderboard(league: League) -> list[TopPlayers]:
     """Displays the leaderboard of a league"""
-    return GetHubFullLeagueLeaderboard(league)
+    return await GetHubFullLeagueLeaderboard(league)
 
 
-def LeagueTimeLapse(league: League) -> File:
+async def LeagueTimeLapse(league: League) -> File:
     """Gets data for a racing leaderboard of a league"""
-    rows = GetLeaderboardTimeLapse(league)
+    rows = await GetLeaderboardTimeLapse(league)
 
     if len(rows) == 0:
         raise KnownError("No data found for this league")
@@ -122,13 +124,13 @@ def LeagueTimeLapse(league: League) -> File:
     return file
 
 
-def LeagueMetagame(league: League) -> list[MetagameResult]:
+async def LeagueMetagame(league: League) -> list[MetagameResult]:
     """Displays the metagame of a league"""
     data: list[MetagameResult] = []
     if league.store_ids[0]:
-        data = GetHubLeagueMetagame(league)
+        data = await GetHubLeagueMetagame(league)
     else:
-        data = GetStoreLeagueMetagame(league)
+        data = await GetStoreLeagueMetagame(league)
     return data
 
 
@@ -150,7 +152,7 @@ async def EditLeague(bot: commands.Bot, interaction: Interaction):
 
 async def CreateLeague(bot: commands.Bot, interaction: Interaction):
     """Create a league"""
-    objects = GetObjectsFromInteraction(interaction)
+    objects = await GetObjectsFromInteraction(interaction)
 
     if (
         (not objects.store and not objects.hub)
@@ -160,8 +162,9 @@ async def CreateLeague(bot: commands.Bot, interaction: Interaction):
         raise KnownError("Insufficient mapping to complete this command")
 
     if objects.store:
+        #TODO: Fix
         modal = LeagueInputModal(bot, objects.store, objects.game, objects.format)
     if objects.hub and objects.format:
-        modal = HubLeagueInputModal(bot, objects.hub, objects.game, objects.format)
+        modal = await HubLeagueInputModal.create(bot, objects.hub, objects.game, objects.format)
     await interaction.response.send_modal(modal)
     await modal.wait()

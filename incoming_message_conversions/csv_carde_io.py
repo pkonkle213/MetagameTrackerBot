@@ -3,9 +3,7 @@ import pandas as pd
 from tuple_conversions import NewPairings, NewStandings, Pairing, Standing
 
 
-def ConvertToPairings(
-    dataframe: pd.DataFrame,
-) -> NewPairings:
+def ConvertToPairings(dataframe: pd.DataFrame, round_number: int) -> NewPairings:
     """Takes a provided dataframe and attempts to make it into a Pairing object"""
     data = []
     errors = []
@@ -22,15 +20,21 @@ def ConvertToPairings(
                 p2name = row["Player 2 First Name"] + " " + row["Player 2 Last Name"]
                 p1gw = row["Player 1 Round Record"][0]
                 p2gw = row["Player 2 Round Record"][0]
-            result = Pairing(p1name, p1gw, p2name, p2gw, 0)
+            result = Pairing(
+                round_number=round_number,
+                player1_name=p1name,
+                player1_game_wins=p1gw,
+                player2_game_wins=p2gw,
+                player2_name=p2name,
+            )
             data.append(result)
 
-        return data if len(data) > 0 else None, errors
+        return NewPairings(data if len(data) > 0 else None, errors)
 
     except Exception as exception:
         print("Carde.io Pairing DataFrame:\n", dataframe)
-        print("Carde.io Official Pairing Exception:", exception)
-        return None, None
+        print("Carde.io Pairing Exception:", exception)
+        return NewPairings(None, [])
 
 
 def ConvertToStandings(
@@ -49,8 +53,8 @@ def ConvertToStandings(
             participant = Standing(name, wins, losses, draws)
             data.append(participant)
 
-        return data if len(data) > 0 else None, errors
+        return NewStandings(data if len(data) > 0 else None, errors)
     except Exception as exception:
-        print("Lorcana Official Standing Rows:\n", dataframe)
-        print("Lorcana Official Standing Exception:", exception)
-        return None, None
+        print("Carde.io Standing Rows:\n", dataframe)
+        print("Carde.io Standing Exception:", exception)
+        return NewStandings(None, [])

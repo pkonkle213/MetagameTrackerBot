@@ -17,19 +17,19 @@ from settings import PHILID
 
 async def EventCheck(bot: commands.Bot) -> None:
     # Find events exactly 3 days old
-    events = ThreeDayOldEvents()
+    events = await ThreeDayOldEvents()
 
     # Loop through channels, see what archetypes are missing, and send the appropriate message to the appropriate channel
     for event in events:
         try:
             # Mark event as complete
-            CompleteEvent(event.event_id)
+            await CompleteEvent(event.event_id)
 
             # Get all unknown archetypes
             end_date = GetToday()
             start_date = GetDaysAgo(end_date, 3)
 
-            needed_archetypes = GetUnknownArchetypes(
+            needed_archetypes = await GetUnknownArchetypes(
                 event.discord_id, event.game_id, event.format_id, start_date, end_date
             )
             if len(needed_archetypes) > 0:
@@ -45,8 +45,8 @@ async def EventCheck(bot: commands.Bot) -> None:
                 # Message each channel with the unknown archetypes
                 await MessageChannel(bot, output, event.discord_id, event.channel_id)
             elif not event.is_complete:
-                real_event = GetEvent(event.event_id)
-                table = OneEventDetails(real_event)
+                real_event = await GetEvent(event.event_id)
+                table = await OneEventDetails(real_event)
                 output = BuildTableOutput(table.title, table.headers, table.data)
                 # Message the newly completed event's details
                 await MessageChannel(bot, output, event.discord_id, event.channel_id)

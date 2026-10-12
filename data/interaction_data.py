@@ -1,11 +1,13 @@
-from custom_errors import KnownError
 from datetime import date
-from discord import Interaction
 from typing import NamedTuple
+
+from discord import DMChannel, GroupChannel, Interaction
+from psycopg import AsyncConnection
 from psycopg.rows import kwargs_row
-import psycopg
-from tuple_conversions import Hub, Store, Game, Format, Region
+
+from custom_errors import KnownError
 from settings import DATABASE_URL
+from tuple_conversions import Format, Game, Hub, Region, Store
 
 
 class InteractionRow(NamedTuple):
@@ -55,7 +57,7 @@ def interaction_row(
             store_owner_name,
             store_address,
             used_for_data,
-            region_id,
+            store_region_id,
             store_is_paid,
         )
         if store_discord_id
@@ -87,14 +89,20 @@ def interaction_row(
     return InteractionRow(store, hub, game, format, region)
 
 
-def GetObjectsFromInteraction(interaction: Interaction) -> InteractionRow:
+async def GetObjectsFromInteraction(interaction: Interaction) -> InteractionRow:
     discord_id = interaction.guild_id
     channel_id = interaction.channel_id
+    if not interaction.channel or isinstance(
+        interaction.channel, (DMChannel, GroupChannel)
+    ):
+        raise KnownError("No channel found")
     category_id = interaction.channel.category_id
 
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=kwargs_row(interaction_row)) as cur:
-        command = f"""
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=kwargs_row(interaction_row)) as cur,
+    ):
+        command = """
         WITH
             criteria AS (
                 SELECT
@@ -183,8 +191,8 @@ def GetObjectsFromInteraction(interaction: Interaction) -> InteractionRow:
             LEFT JOIN regions r ON sh.region_id = r.id
         """
 
-        cur.execute(command, [discord_id, category_id, channel_id])
-        row = cur.fetchone()
+        await cur.execute(command, [discord_id, category_id, channel_id])
+        row = await cur.fetchone()
         if not row:
             raise KnownError("No row found for the interaction")
         return row

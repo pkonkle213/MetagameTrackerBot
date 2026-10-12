@@ -1,14 +1,15 @@
+from tuple_conversions import MTBRoles
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsPaidStore
+from checks import IsPaidStore, HasRequiredRoles
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from services.submitted_archetypes_service import SubmittedArchetypesReport
 
 
 class ArchetypeSubmittedCommand(commands.Cog):
-    def __init__(self, bot:commands.Bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @app_commands.command(
@@ -16,7 +17,7 @@ class ArchetypeSubmittedCommand(commands.Cog):
         description="Generate a report of the archetypes submitted and by whom",
     )
     @app_commands.guild_only()
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @IsPaidStore()
     async def ViewSubmittedArchetypes(
         self, interaction: Interaction, player_name: str = "", event_date: str = ""
@@ -29,8 +30,9 @@ class ArchetypeSubmittedCommand(commands.Cog):
         event_date: string
           The date of the event (MM/DD/YYYY)
         """
+
         await interaction.response.defer(ephemeral=True, thinking=False)
-        table = SubmittedArchetypesReport(interaction, player_name, event_date)
+        table = await SubmittedArchetypesReport(interaction, player_name, event_date)
         if len(table.data) == 0:
             await interaction.followup.send(
                 "No archetypes submitted for this store or format"
@@ -46,5 +48,5 @@ class ArchetypeSubmittedCommand(commands.Cog):
         await Error(self.bot, interaction, error)
 
 
-async def setup(bot:commands.Bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(ArchetypeSubmittedCommand(bot))

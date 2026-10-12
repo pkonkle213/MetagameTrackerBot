@@ -1,11 +1,11 @@
 import discord
-from data.data_input_menus import GetEventTypes, GetPreviousEvents
+
 from services.date_functions import ConvertToDate, GetToday
 from tuple_conversions import Event, EventType, Format, Game, Store, DataInputEnum
 
 
 class SubmitEventModal(discord.ui.Modal, title="Select Event"):
-    def __init__(self, store: Store, game: Game, format: Format):
+    def __init__(self, store: Store, game: Game, format: Format, event_types, previous_events):
         super().__init__()
         self.is_submitted: bool = False
         self.submitted_event: Event | None = None
@@ -15,7 +15,7 @@ class SubmitEventModal(discord.ui.Modal, title="Select Event"):
         self.game = game
         self.format = format
 
-        event_types = GetEventTypes(store.discord_id, game, format)
+        
         if event_types[0].id < 0:
             default_type = "League"
             num_events = f" - Week {event_types[0].num_events + 1}"
@@ -25,7 +25,7 @@ class SubmitEventModal(discord.ui.Modal, title="Select Event"):
 
         default_event_name = f"{format.format_name.title()} {default_type}" + num_events
 
-        self.previous_events = GetPreviousEvents(store, game, format)
+        self.previous_events = previous_events
         default_id = FindDefaultEvent(self.previous_events)
         past_events = SetPastEventsOptions(self.previous_events, default_id)
         list_event_types = SetEventTypes(event_types)

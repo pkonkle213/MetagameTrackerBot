@@ -10,10 +10,11 @@ class SubmitCSVDataModal(discord.ui.Modal, title="Submit Data"):
         self.event = event
         self.converted_data: DataConverted = DataConverted(None, None, None, None, None)
 
+        # TODO: Restore to 10 files when ready
         self.csv_data = discord.ui.Label(
             text="CSV File",
-            description="Upload up to 10 CSV files for this event.",
-            component=discord.ui.FileUpload(required=True, max_values=10),
+            description="Upload a CSV files for this event.",
+            component=discord.ui.FileUpload(required=True, max_values=1),
         )
         self.add_item(self.csv_data)
 

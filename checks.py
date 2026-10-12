@@ -1,3 +1,4 @@
+from tuple_conversions import MTBRoles
 from discord import Guild, Member, User, utils, Interaction, app_commands
 from settings import PHILID
 import timedposts.automated_paid_users as apu
@@ -32,6 +33,18 @@ def IsPaidHub():
     return app_commands.check(predicate)
 
 
+def HasRequiredRoles(roles: list[str | int]):
+    async def predicate(interaction: Interaction) -> bool:
+        allowed = set(roles)
+        user_roles = {role.name for role in interaction.user.roles}
+
+        if not allowed.intersection(user_roles):
+            raise app_commands.MissingAnyRole(roles)
+        return True
+
+    return app_commands.check(predicate)
+
+
 def IsStore():
     async def predicate(interaction: Interaction) -> bool:
         if interaction.guild_id in apu.STORES:
@@ -52,9 +65,12 @@ def IsHub():
     return app_commands.check(predicate)
 
 
-# TOOD: Since this is named "is SUBMITTER", "MTSubmitter should probably be a constant"
-def isSubmitter(guild: Guild, author: Member, role_name: str) -> bool:
-    role = utils.find(lambda r: r.name == role_name, guild.roles)
+def isMTSubmitter(guild: Guild, author: Member) -> bool:
+    role = utils.find(lambda r: r.name == MTBRoles.MTSubmitter.name, guild.roles)
+    return role in author.roles
+
+def isMTStore(guild: Guild, author: Member) -> bool:
+    role = utils.find(lambda r: r.name == MTBRoles.MTStore.name, guild.roles)
     return role in author.roles
 
 

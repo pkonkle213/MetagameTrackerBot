@@ -3,6 +3,7 @@ from datetime import date, datetime
 from tuple_conversions import Pairing
 
 
+# TODO: This needs to return an object
 def MeleeJsonPairings(
     json_data: list[Any],
 ) -> tuple[list[Pairing], list[str], int, date, dict[str, str]]:
@@ -39,7 +40,13 @@ def ByeMatch(match: dict) -> tuple[Pairing, dict[str, str | None]]:
     p2name = "Bye"
     p2gw = 0
     round_number = match["RoundNumber"]
-    pairing = Pairing(p1name, p1gw, p2name, p2gw, round_number)
+    pairing = Pairing(
+        round_number=round_number,
+        player1_name=p1name,
+        player2_name=p2name,
+        player1_game_wins=p1gw,
+        player2_game_wins=p2gw,
+    )
     return pairing, {p1name: p1archetype}
 
 
@@ -62,7 +69,13 @@ def PairedMatch(match: dict) -> tuple[Pairing, dict[str, str | None]]:
 
     round_number = match["RoundNumber"]
 
-    pairing = Pairing(p1name, p1gw, p2name, p2gw, round_number)
+    pairing = Pairing(
+        round_number=round_number,
+        player1_name=p1name,
+        player2_name=p2name,
+        player1_game_wins=p1gw,
+        player2_game_wins=p2gw,
+    )
     return pairing, {p1name: p1archetype, p2name: p2archetype}
 
 

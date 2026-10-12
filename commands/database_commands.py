@@ -16,7 +16,7 @@ class DatabaseCommands(commands.GroupCog, name="database"):
             "Generating spreadsheet, please wait...", ephemeral=True
         )
         try:
-            file = DatabaseCommandsDownload()
+            file = await DatabaseCommandsDownload()
             await interaction.followup.send(
                 "Here's the database!", file=file, ephemeral=True
             )

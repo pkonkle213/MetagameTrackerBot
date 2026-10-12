@@ -1,46 +1,43 @@
-from services.one_event_details import OneEventDetails
-from checks import isSubmitter
-import settings
-from custom_errors import KnownError
-from data.store_data import GetArchetypeFeed
-from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
 from discord import Interaction
-from data.store_data import GetFormatMapByEvent
-from data.archetype_data import AddArchetype
-from data.event_data import GetEventDetails
-from services.input_services import ConvertInput
+from discord.ext import commands
+
+import settings
 from api_calls.moxfield_decklist import GetMoxfieldArchetype
+from custom_errors import KnownError
+from data.archetype_data import BulkAddArchetypes, PlayerInEvent
 from data.claim_result_data import GetEventReportedPercentage, UpdateEvent
-from output_builder import BuildTableOutput
+from data.store_data import GetArchetypeFeed, GetFormatMapByEvent
 from discord_messages import MessageChannel
-from data.interaction_data import GetObjectsFromInteraction
+from output_builder import BuildTableOutput
+from services.ban_word_services import CanSubmitArchetypes, ContainsBadWord
+from services.message_hubs_services import MessageHubs
+from services.one_event_details import OneEventDetails
 from tuple_conversions import (
     Event,
     Format,
-    Store,
     Game,
-    OutputToBuild,
     Hub,
+    PlayerArchetype,
+    Store,
 )
-from discord.ext import commands
-from services.message_hubs_services import MessageHubs
-from data.archetype_data import PlayerInEvent
 
 
-async def Moxfield(link: str) -> tuple[str, str, bool]:
+async def Moxfield(
+    link: str, event: Event, format: Format, player_name: str
+) -> tuple[str, str, bool]:
     moxfield_archetype = ""
     moxfield_error = ""
     success = False
     try:
         moxfield_archetype = await GetMoxfieldArchetype(
-            moxfield_link, event, format, player_name
+            link, event, format, player_name
         )
 
-        AddArchetype(
-            event.id,
-            player_name,
-            moxfield_archetype,
-            None,
+        # TODO: Fix this
+        await BulkAddArchetypes(
+            event,
+            [PlayerArchetype(player_name, moxfield_archetype)],
+            0,
             "Moxfield Import",
             guild_id,
             guild_name,
@@ -73,17 +70,17 @@ async def SubmitArchetype(
     guild_name = interaction.guild.name
     channel_id = interaction.channel.id
 
-    if not PlayerInEvent(event, player_name):
+    if not await PlayerInEvent(event, player_name):
         raise KnownError(
             f"Player name `{player_name}` not found in event. Please try again."
         )
 
     # Make the call to check the archetype for banned words here
-    if ContainsBadWord(event.discord_id, archetype):
+    if await ContainsBadWord(event.discord_id, archetype):
         raise KnownError("Archetype contains a banned word")
 
     # Check if user is allowed to submit archetypes (too many banned words)
-    if not CanSubmitArchetypes(event.discord_id, interaction.user.id):
+    if not await CanSubmitArchetypes(event.discord_id, interaction.user.id):
         raise KnownError(
             "You have submitted too many archetypes with banned words. "
             "Please contact your store owner to have them submit the archetype."
@@ -98,10 +95,9 @@ async def SubmitArchetype(
 
     # If not banned, add to the database
     if archetype != "":
-        AddArchetype(
-            event.id,
-            player_name,
-            archetype,
+        await BulkAddArchetypes(
+            event,
+            [PlayerArchetype(player_name, archetype)],
             interaction.user.id,
             interaction.user.name,
             guild_id,
@@ -110,18 +106,18 @@ async def SubmitArchetype(
         )
 
     feed_output = BuildMessage(interaction, event, archetype, player_name)
-    private_output = (
+    private_output: str = (
         f"Thank you for submitting the archetype for {event.event_name}!"
         + moxfield_error
     )
 
     # If added, check if the event is fully reported and complete
-    public_output, full_event = CheckEventPercentage(event)
+    public_output, full_event = await CheckEventPercentage(event)
 
     # Send all output messages
     await interaction.followup.send(private_output, ephemeral=True)
     await MessageStoreFeed(bot, feed_output, event)
-    format_map = GetFormatMapByEvent(event)
+    format_map = await GetFormatMapByEvent(event)
     mapped_channel = format_map.channel_id
 
     if public_output:
@@ -133,12 +129,10 @@ async def SubmitArchetype(
         await MessageHubs(bot, store, event, output)
 
 
-async def MessageStoreFeed(bot, message: str, event: Event) -> None:
+async def MessageStoreFeed(bot: commands.Bot, message: str, event: Event) -> None:
     """Message the store feed channel specific to the game"""
     try:
-        channel_id = GetArchetypeFeed(
-            event.discord_id, event.game_id
-        )
+        channel_id = await GetArchetypeFeed(event.discord_id, event.game_id)
         await MessageChannel(bot, message, event.discord_id, channel_id)
     except Exception as e:
         await MessageChannel(bot, message, settings.BOTGUILDID, settings.CLAIMCHANNEL)
@@ -161,19 +155,18 @@ def BuildMessage(
     return "\n".join(message_parts)
 
 
-def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
-    percent_reported = GetEventReportedPercentage(event.id)
+async def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
+    followup: str | None = None
+    final: str | None = None
+    percent_reported = await GetEventReportedPercentage(event.id)
     if percent_reported >= (event.last_update + 1) / 4:
-        check = UpdateEvent(event.id)
-        if check is None:
-            raise Exception(f"Unable to update event: {event.id}")
+        await UpdateEvent(event.id)
         str_date = event.event_date.strftime("%B %-d")
         if event.last_update + 1 < 4:
             followup = f"Congratulations! {str_date}'s {event.event_name} is now {percent_reported:.0%} reported!"
             final = None
         elif event.is_complete:
             followup = f"Congratulations! {str_date}'s {event.event_name} is now fully reported! Thank you to all who reported their archetypes!"
-            table = OneEventDetails(event)
+            table = await OneEventDetails(event)
             final = BuildTableOutput(table.title, table.headers, table.data)
-        return followup, final
-    return None, None
+    return followup, final

@@ -6,7 +6,9 @@ from settings import DATAGUILDID
 from services.command_error_service import KnownError
 from tuple_conversions import OutputToBuild, InteractionObjects
 
-def GetAttendance(objects:InteractionObjects, start_date:str, end_date:str) -> OutputToBuild:
+#TODO: Why does this require a game?
+async def GetAttendance(interaction:Interaction, start_date:str, end_date:str) -> OutputToBuild:
+  objects = await GetObjectsFromInteraction(interaction)
   if (not objects.store and not objects.hub) or not objects.game or (not objects.format and not objects.region):
     raise KnownError('No store, hub, game, or region found')
   date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
@@ -16,7 +18,7 @@ def GetAttendance(objects:InteractionObjects, start_date:str, end_date:str) -> O
     headers.insert(1, 'Format')
     
   if objects.store:
-    data = GetStoreAttendance(
+    data = await GetStoreAttendance(
       objects.store,
       objects.game,
       objects.format,
@@ -26,7 +28,7 @@ def GetAttendance(objects:InteractionObjects, start_date:str, end_date:str) -> O
     subject = objects.format.format_name.title() if objects.format else objects.game.game_name.title()
     title = f'{subject} attendance from {date_start.strftime('%m/%d/%Y')} to {date_end.strftime('%m/%d/%Y')}'
   elif objects.hub:
-    data = GetHubAttendance(
+    data = await GetHubAttendance(
       objects.hub,
       objects.region,
       objects.game,

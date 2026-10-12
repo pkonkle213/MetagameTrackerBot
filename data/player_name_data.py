@@ -1,7 +1,7 @@
 from psycopg.rows import class_row
 from typing import NamedTuple
 from custom_errors import KnownError
-import psycopg
+from psycopg import AsyncConnection
 from settings import DATABASE_URL
 from tuple_conversions import Format, Game, Store
 
@@ -11,10 +11,14 @@ class PlayerDetails(NamedTuple):
     archetypes: list[str]
 
 
-def GetArchetypeModalDetails(user_id: int, game: Game, format: Format) -> PlayerDetails:
+async def GetArchetypeModalDetails(
+    user_id: int, game: Game, format: Format
+) -> PlayerDetails:
     """Get's a player's name and their 10 top played archetypes"""
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor(row_factory=class_row(PlayerDetails)) as cur:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(PlayerDetails)) as cur,
+    ):
         command = """
         WITH
             criteria AS (
@@ -39,7 +43,7 @@ def GetArchetypeModalDetails(user_id: int, game: Game, format: Format) -> Player
             archetypes AS (
                 SELECT
                     INITCAP(pn.player_name) AS player_name,
-                    INITCAP(ua.archetype_played) AS archetype_played
+                    ua.archetype_played
                 FROM
                     unique_archetypes ua
                     INNER JOIN events e ON e.id = ua.event_id
@@ -50,7 +54,7 @@ def GetArchetypeModalDetails(user_id: int, game: Game, format: Format) -> Player
                     AND c.format_id = e.format_id
                 GROUP BY
                     INITCAP(pn.player_name),
-                    INITCAP(ua.archetype_played)
+                    ua.archetype_played
                 ORDER BY
                     COUNT(*) DESC
                 LIMIT
@@ -61,23 +65,26 @@ def GetArchetypeModalDetails(user_id: int, game: Game, format: Format) -> Player
             ARRAY_AGG(a.archetype_played) as archetypes
         FROM
             name n
+            --TODO: Test a left join here
             INNER JOIN archetypes a ON a.player_name = n.player_name
         GROUP BY
             n.player_name
         """
 
         criteria = [user_id, game.id, format.id]
-        cur.execute(command, criteria)
-        row = cur.fetchone()
+        await cur.execute(command, criteria)
+        row = await cur.fetchone()
         if not row:
             return PlayerDetails("", [])
         return row
 
 
-def GetUserName(userId: int) -> str:
+async def GetUserName(userId: int) -> str:
     """Gets the user's name from the database"""
-    conn = psycopg.connect(DATABASE_URL)
-    with conn, conn.cursor() as cur:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor() as cur,
+    ):
         command = """
         SELECT
             player_name
@@ -93,6 +100,6 @@ def GetUserName(userId: int) -> str:
         """
 
         criteria = [userId]
-        cur.execute(command, criteria)
-        row = cur.fetchone()
+        await cur.execute(command, criteria)
+        row = await cur.fetchone()
         return row[0] if row else ""

@@ -27,12 +27,8 @@ class EventAttendance(commands.Cog):
         end_date: string
             End of Date Range (MM/DD/YYYY)
         """
-
-        await interaction.response.defer(thinking=False)
-
-        # TODO: Check this works - EXAMPLE
-        objects = interaction.extras.get("db_obj")
-        table = GetAttendance(objects, start_date, end_date)
+        await interaction.response.defer(thinking=True)
+        table = await GetAttendance(interaction, start_date, end_date)
         if len(table.data) == 0:
             await interaction.followup.send(
                 "No attendance data found for this store and/or format"

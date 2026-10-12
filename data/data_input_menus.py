@@ -1,105 +1,110 @@
-from psycopg.rows import class_row
-from settings import DATABASE_URL
-import psycopg
-from tuple_conversions import Event, Format, Game, Store, EventType
 from typing import NamedTuple
 
+from psycopg import AsyncConnection
+from psycopg.rows import class_row
+
+from settings import DATABASE_URL
+from tuple_conversions import Event, EventType, Format, Game, Store
+
+
 class EventSelect(NamedTuple):
-  id: int
-  event_name: str
-  events: int
+    id: int
+    event_name: str
+    events: int
 
-def GetPreviousEvents(
-  store:Store,
-  game:Game,
-  format:Format,
-  event_type:int = 0,
-  interval:int = 2,
-  archetypes:bool = False
+
+async def GetPreviousEvents(
+    store: Store,
+    game: Game,
+    format: Format,
+    event_type: int = 0,
+    interval: int = 2,
+    archetypes: bool = False,
 ) -> list[Event]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(Event)) as cur:
-    command = f'''
-    SELECT
-      e.id,
-      e.custom_event_id,
-      e.discord_id,
-      e.event_date,
-      e.game_id,
-      e.format_id,
-      e.last_update,
-      e.event_name,
-      e.event_type_id,
-      e.reported_as,
-      e.created_by,
-      e.created_at,
-      e.league_id,
-      e.is_complete
-    FROM
-      events_view e
-      INNER JOIN stores s ON s.discord_id = e.discord_id
-      INNER JOIN games g ON g.id = e.game_id
-      INNER JOIN formats f ON f.id = e.format_id
-    WHERE
-      s.discord_id = {store.discord_id}
-      AND e.game_id = {game.id}
-      AND e.format_id = {format.id}
-      AND e.event_date >= CURRENT_DATE - INTERVAL '{interval} weeks'
-      {f'AND e.event_type_id = {event_type}' if event_type else ''}
-    ORDER BY
-      {'e.event_date DESC' if archetypes or event_type else 'e.created_at DESC'}
-    LIMIT 24
-    '''
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(Event)) as cur,
+    ):
+        command = f"""
+        SELECT
+            e.id,
+            e.custom_event_id,
+            e.discord_id,
+            e.event_date,
+            e.game_id,
+            e.format_id,
+            e.last_update,
+            e.event_name,
+            e.event_type_id,
+            e.reported_as,
+            e.created_by,
+            e.created_at,
+            e.league_id,
+            e.is_complete
+        FROM
+            events_view e
+            INNER JOIN stores s ON s.discord_id = e.discord_id
+            INNER JOIN games g ON g.id = e.game_id
+            INNER JOIN formats f ON f.id = e.format_id
+        WHERE
+            s.discord_id = {store.discord_id}
+            AND e.game_id = {game.id}
+            AND e.format_id = {format.id}
+            AND e.event_date >= CURRENT_DATE - INTERVAL '{interval} weeks'
+            {f"AND e.event_type_id = {event_type}" if event_type else ""}
+        ORDER BY
+            {"e.event_date DESC" if archetypes or event_type else "e.created_at DESC"}
+        LIMIT 24
+        """
 
-    cur.execute(command)  # type: ignore[arg-type]
-    rows = cur.fetchall()
-    
-    return rows
+        await cur.execute(command)  # type: ignore[arg-type]
+        rows = await cur.fetchall()
 
-def GetEventTypes(
-  discord_id: int,
-  game: Game,
-  format:Format
-) -> list[EventType]:
-  conn = psycopg.connect(DATABASE_URL)
-  with conn, conn.cursor(row_factory=class_row(EventType)) as cur:
-    command = '''
-    (
-      SELECT
-        - l.id AS id,
-        name,
-        COUNT(e.id) AS num_events
-      FROM
-        leagues l
-        INNER JOIN events e ON e.league_id = l.id
-      WHERE
-        end_date >= NOW()
-        AND start_date <= NOW()
-        AND l.discord_id = %s
-        AND l.game_id = %s
-        AND l.format_id = %s
-      GROUP BY
-        l.id
-      ORDER BY
-        end_date DESC,
-        start_date DESC
-      LIMIT 23
-    )
-    UNION ALL
-    (
-      SELECT
-        id,
-        event_type,
-        0 AS num_events
-      FROM
-        event_types
-      WHERE
-        id NOT IN (3)
-      ORDER BY
-        id
-    )
-    '''
+        return rows
 
-    cur.execute(command, [discord_id, game.id, format.id])
-    rows = cur.fetchall()
-    return rows
+
+async def GetEventTypes(discord_id: int, game: Game, format: Format) -> list[EventType]:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(EventType)) as cur,
+    ):
+        command = """
+        (
+            SELECT
+            - l.id AS id,
+            name,
+            COUNT(e.id) AS num_events
+            FROM
+            leagues l
+            INNER JOIN events e ON e.league_id = l.id
+            WHERE
+            end_date >= NOW()
+            AND start_date <= NOW()
+            AND l.discord_id = %s
+            AND l.game_id = %s
+            AND l.format_id = %s
+            GROUP BY
+            l.id
+            ORDER BY
+            end_date DESC,
+            start_date DESC
+            LIMIT 23
+        )
+        UNION ALL
+        (
+            SELECT
+            id,
+            event_type,
+            0 AS num_events
+            FROM
+            event_types
+            WHERE
+            id NOT IN (3)
+            ORDER BY
+            id
+        )
+        """
+
+        await cur.execute(command, [discord_id, game.id, format.id])
+        rows = await cur.fetchall()
+        return rows

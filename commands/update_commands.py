@@ -1,7 +1,8 @@
+from tuple_conversions import MTBRoles
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsStore, IsPaidStore, isSubmitter
+from checks import IsStore, IsPaidStore, isMTSubmitter, HasRequiredRoles
 from services.command_error_service import Error
 from services.store_services import UpdateDetails
 from input_modals.update_archetype_modal import UpdateArchetypeModal
@@ -15,10 +16,10 @@ class UpdateCommands(commands.GroupCog, name="update"):
 
     @app_commands.command(name="archetypes", description="Mass updates archetypes")
     @app_commands.guild_only()
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @IsStore()
     async def UpdateArchetypes(self, interaction: Interaction):
-        objects = GetObjectsFromInteraction(interaction)
+        objects = await GetObjectsFromInteraction(interaction)
         if not objects.store or not objects.game or not objects.format:
             raise Exception("No store, game, or format found.")
         modal = UpdateArchetypeModal(
@@ -29,10 +30,10 @@ class UpdateCommands(commands.GroupCog, name="update"):
 
     @app_commands.command(name="player_names", description="Mass updates player names")
     @app_commands.guild_only()
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @IsPaidStore()
     async def UpdatePlayerNames(self, interaction: Interaction):
-        objects = GetObjectsFromInteraction(interaction)
+        objects = await GetObjectsFromInteraction(interaction)
         if not objects.store or not objects.game or not objects.format:
             raise Exception("No store, game, or format found.")
 
@@ -45,14 +46,16 @@ class UpdateCommands(commands.GroupCog, name="update"):
     @app_commands.command(name="profile", description="Updates the hub/store profile")
     @app_commands.guild_only()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTStore.name])
     async def UpdateProfile(self, interaction: Interaction):
         """Updates all info in the profile of the hub or store"""
         result = await UpdateDetails(self.bot, interaction)
         if result:
             await result.followup.send("Discord profile updated!", ephemeral=True)
         else:
-            await result.followup.send("Discord profile unable to update.", ephemeral=True)
+            await result.followup.send(
+                "Discord profile unable to update.", ephemeral=True
+            )
 
     @UpdateProfile.error
     @UpdateArchetypes.error

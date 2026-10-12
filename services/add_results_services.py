@@ -1,16 +1,11 @@
-from discord.ext import commands
-from output_builder import BuildTableOutput
-from custom_errors import KnownError
-from data.add_results_data import InsertStanding, InsertPairing, CheckPairings
+from data.add_results_data import CheckPairings, InsertPairing, InsertStanding
+from data.event_data import DeleteStandingsFromEvent
 from services.input_services import ConvertInput
-from data.event_data import GetEvent, CreateEvent, DeleteStandingsFromEvent
-from tuple_conversions import Standing, Pairing, Event
+from tuple_conversions import Event, Pairing, Standing
 
 
 async def AddStandingResults(
-    event: Event,
-    data: list[Standing],
-    submitterId: int
+    event: Event, data: list[Standing], submitterId: int
 ) -> list[Standing]:
     errors: list[Standing] = []
     for person in data:
@@ -19,7 +14,7 @@ async def AddStandingResults(
                 ConvertInput(person.player_name),
                 person.wins,
                 person.losses,
-                person.draws
+                person.draws,
             )
             output = await InsertStanding(event.id, person, submitterId)
             if not output:
@@ -29,12 +24,11 @@ async def AddStandingResults(
 
 
 async def AddPairingResults(
-    event: Event,
-    data: list[Pairing],
-    submitterId: int
+    event: Event, data: list[Pairing], submitterId: int
 ) -> list[Pairing]:
     errors: list[Pairing] = []
-    output = ""
+
+    await DeleteStandingsFromEvent(event.id)
 
     for table in data:
         p1name = ConvertInput(table.player1_name)
@@ -50,10 +44,7 @@ async def AddPairingResults(
         )
 
         unique = await CheckPairings(
-            event.id,
-            pairing.round_number,
-            pairing.player1_name,
-            pairing.player2_name
+            event.id, pairing.round_number, pairing.player1_name, pairing.player2_name
         )
 
         if unique:

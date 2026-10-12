@@ -1,4 +1,4 @@
-from tuple_conversions import League
+from tuple_conversions import League, MTBRoles
 from services.command_error_service import KnownError, Error
 
 from discord.ext import commands
@@ -17,7 +17,7 @@ from services.league_services import (
     HubFullLeagueLeaderboard,
 )
 from output_builder import BuildTableOutput
-from checks import IsStore
+from checks import IsStore, HasRequiredRoles
 
 
 class LeagueCommands(commands.GroupCog, name="league"):
@@ -28,13 +28,13 @@ class LeagueCommands(commands.GroupCog, name="league"):
 
     @app_commands.command(name="create", description="Create a new league")
     @app_commands.guild_only()
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTStore.name])
     async def CreateTheLeague(self, interaction: Interaction):
         await CreateLeague(self.bot, interaction)
 
     @app_commands.command(name="edit", description="Edit a league")
     @app_commands.guild_only()
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTStore.name])
     async def EditTheLeague(self, interaction: Interaction):
         await EditLeague(self.bot, interaction)
 
@@ -54,9 +54,9 @@ class LeagueCommands(commands.GroupCog, name="league"):
     async def TopPlayers(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
         if league.store_ids[0]:
-            data = HubLeagueLeaderboard(league)
+            data = await HubLeagueLeaderboard(league)
         else:
-            data = LeagueLeaderboard(league)
+            data = await LeagueLeaderboard(league)
         if len(data) > 0:
             title = f"Top Players for {league.name}"
             headers = ["Rank", "Player Name", "Points", "Win %"]
@@ -69,14 +69,14 @@ class LeagueCommands(commands.GroupCog, name="league"):
         name="full_leaderboard", description="Display all players' ranks in a league"
     )
     @app_commands.guild_only()
-    @app_commands.checks.has_role("MTSubmitter")
+    @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def FullLeaderboard(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
         if league.store_ids[0]:
-            data = HubFullLeagueLeaderboard(league)
+            data = await HubFullLeagueLeaderboard(league)
         else:
-            data = FullLeagueLeaderboard(league)
+            data = await FullLeagueLeaderboard(league)
         if len(data) > 0:
             title = f"Top Players for {league.name}"
             headers = ["Rank", "Player Name", "Points", "Win %"]
@@ -93,7 +93,7 @@ class LeagueCommands(commands.GroupCog, name="league"):
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.channel.id))
     async def LeaderboardRace(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
-        data = LeagueTimeLapse(league)
+        data = await LeagueTimeLapse(league)
         await interaction.followup.send(file=data)
 
     @app_commands.command(
@@ -103,7 +103,7 @@ class LeagueCommands(commands.GroupCog, name="league"):
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def LeagueMeta(self, interaction: Interaction):
         league = await SelectLeague(self.bot, interaction)
-        data = LeagueMetagame(league)
+        data = await LeagueMetagame(league)
         title = f"Metagame for {league.name}"
         headers = ["Archetype Name", "Meta %", "Win %"]
         output = BuildTableOutput(title, headers, data)
@@ -119,7 +119,9 @@ class LeagueCommands(commands.GroupCog, name="league"):
         league = await SelectLeague(self.bot, interaction)
         if not interaction.guild_id:
             raise KnownError("This command can only be used in a server")
-        data = FindPlayerStanding(league, interaction.user.id, interaction.guild_id)
+        data = await FindPlayerStanding(
+            league, interaction.user.id, interaction.guild_id
+        )
         title = f"Your Status for {league.name}"
         headers = ["Points", "Win %", "Rank"]
         output = BuildTableOutput(title, headers, [data])
