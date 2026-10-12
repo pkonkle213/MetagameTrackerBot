@@ -31,7 +31,15 @@ def StartHealthCheckServer():
 StartHealthCheckServer()
 
 from pytz import timezone
-from discord import Guild, Interaction, app_commands, Intents, NotFound, Forbidden
+from discord import (
+    AppCommandType,
+    Guild,
+    Interaction,
+    app_commands,
+    Intents,
+    NotFound,
+    Forbidden,
+)
 from discord.ext import commands, tasks
 from settings import PHILID, DISCORDTOKEN, BOTLOGCHANNEL
 import timedposts.automated_paid_users as apu
@@ -41,6 +49,10 @@ from services.store_services import NewStoreRegistration
 from services.sync_service import SyncCommands
 from discord_messages import MessageUser
 from data.interaction_data import GetObjectsFromInteraction
+from data.command_invocations_data import (
+    EnsureCommandInvocationsTable,
+    LogCommandInvocation,
+)
 from tuple_conversions import InteractionObjects
 
 
@@ -55,6 +67,14 @@ class DatabaseCommandTree(app_commands.CommandTree):
 
         # Attach the resulting object directly to the interaction object
         interaction.extras["db_object"] = db_data
+
+        command = interaction.command
+        if command is not None and command.type is AppCommandType.chat_input:
+            await LogCommandInvocation(
+                user_id=interaction.user.id,
+                command_name=f"/{command.qualified_name}",
+                guild_id=interaction.guild_id,
+            )
 
         # Return True to allow command execution to proceed
         return True
@@ -74,6 +94,7 @@ TIME_ZONE = timezone("US/Eastern")
 @bot.event
 async def on_ready():
     print(f"Logged on as {format(bot.user)}!")
+    await EnsureCommandInvocationsTable()
     await apu.InitializePaidData()
     data_guild_update.start()
     find_the_unknown.start()
