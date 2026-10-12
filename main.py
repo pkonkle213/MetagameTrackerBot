@@ -32,7 +32,6 @@ StartHealthCheckServer()
 
 from pytz import timezone
 from discord import (
-    AppCommandType,
     Guild,
     Interaction,
     Member,
@@ -71,7 +70,7 @@ class DatabaseCommandTree(app_commands.CommandTree):
         interaction.extras["db_object"] = db_data
 
         command = interaction.command
-        if command is not None and command.type is AppCommandType.chat_input:
+        if isinstance(command, app_commands.Command):
             member = interaction.user
             guild = interaction.guild
             has_mt_submitter_role = (
