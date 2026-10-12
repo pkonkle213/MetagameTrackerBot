@@ -35,6 +35,7 @@ from discord import (
     AppCommandType,
     Guild,
     Interaction,
+    Member,
     app_commands,
     Intents,
     NotFound,
@@ -47,6 +48,7 @@ from timedposts.automated_check_events import EventCheck
 from timedposts.automated_updates import UpdateDataGuild
 from services.store_services import NewStoreRegistration
 from services.sync_service import SyncCommands
+from checks import isMTStore, isMTSubmitter
 from discord_messages import MessageUser
 from data.interaction_data import GetObjectsFromInteraction
 from data.command_invocations_data import (
@@ -70,10 +72,24 @@ class DatabaseCommandTree(app_commands.CommandTree):
 
         command = interaction.command
         if command is not None and command.type is AppCommandType.chat_input:
+            member = interaction.user
+            guild = interaction.guild
+            has_mt_submitter_role = (
+                isinstance(member, Member)
+                and guild is not None
+                and isMTSubmitter(guild, member)
+            )
+            has_mt_store_role = (
+                isinstance(member, Member)
+                and guild is not None
+                and isMTStore(guild, member)
+            )
             await LogCommandInvocation(
                 user_id=interaction.user.id,
                 command_name=f"/{command.qualified_name}",
                 guild_id=interaction.guild_id,
+                has_mt_submitter_role=has_mt_submitter_role,
+                has_mt_store_role=has_mt_store_role,
             )
 
         # Return True to allow command execution to proceed
