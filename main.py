@@ -1,4 +1,3 @@
-
 from datetime import datetime as dt, time, timezone as datetime_timezone
 from threading import Thread
 from contextlib import suppress
@@ -87,6 +86,8 @@ class DatabaseCommandTree(app_commands.CommandTree):
                 user_id=interaction.user.id,
                 command_name=f"/{command.qualified_name}",
                 guild_id=interaction.guild_id,
+                category_id=getattr(interaction.channel, "category_id", None),
+                channel_id=interaction.channel_id,
                 has_mt_submitter_role=has_mt_submitter_role,
                 has_mt_store_role=has_mt_store_role,
             )
@@ -134,58 +135,6 @@ async def on_guild_join(guild: Guild):
         output.append("- Stores check has failed")
     output.insert(0, f"New guild joined: {guild.name}")
     await MessageUser(bot, "\n".join(output), PHILID)
-
-
-@bot.event
-async def on_app_command_completion(
-    interaction: Interaction, command: app_commands.Command
-):
-    """Logs successfully executed slash commands using the interaction object."""
-    username = str(interaction.user)
-    command_name = command.name
-    group_names = []
-
-    current_parent = command.parent
-    while current_parent is not None:
-        group_names.insert(0, current_parent.name)
-        current_parent = current_parent.parent
-
-    full_group_name = " ".join(group_names) if group_names else "None"
-
-    full_command_path = f"/{' '.join(group_names)} {command_name}".replace(
-        "  ", " "
-    ).strip()
-
-    if interaction.namespace:
-        params = ", ".join(f"{name}: {value}" for name, value in interaction.namespace)
-    else:
-        params = "None"
-
-    log_message = (
-        f"```Slash Command Executed\n"
-        f"User: {username} (ID: {interaction.user.id})\n"
-        f"Command Group: {full_group_name}\n"
-        f"Command Name: {command_name}\n"
-        f"Full Invocation: {full_command_path}\n"
-        f"Arguments: {params}\n"
-        f"Guild: {interaction.guild.name}\n"
-        f"Channel: {interaction.channel.id if interaction.channel else 'DM'}```"
-    )
-
-    channel = bot.get_channel(BOTLOGCHANNEL)
-    if channel is None:
-        try:
-            channel = await bot.fetch_channel(BOTLOGCHANNEL)
-        except (NotFound, Forbidden):
-            print(f"Log channel not found or bot lacks permissions.\n{log_message}")
-            return
-
-    try:
-        await channel.send(log_message)
-    except Forbidden:
-        print(
-            f"Bot doesn't have permission to send messages in the log channel.\n{log_message}"
-        )
 
 
 @tasks.loop(time=time(hour=18, minute=00, tzinfo=TIME_ZONE))

@@ -15,6 +15,8 @@ async def EnsureCommandInvocationsTable() -> None:
                 user_id BIGINT NOT NULL,
                 command_name TEXT NOT NULL,
                 guild_id BIGINT,
+                category_id BIGINT,
+                channel_id BIGINT,
                 has_mt_submitter_role BOOLEAN NOT NULL DEFAULT FALSE,
                 has_mt_store_role BOOLEAN NOT NULL DEFAULT FALSE,
                 invoked_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -27,7 +29,9 @@ async def EnsureCommandInvocationsTable() -> None:
                 ADD COLUMN IF NOT EXISTS has_mt_submitter_role
                     BOOLEAN NOT NULL DEFAULT FALSE,
                 ADD COLUMN IF NOT EXISTS has_mt_store_role
-                    BOOLEAN NOT NULL DEFAULT FALSE
+                    BOOLEAN NOT NULL DEFAULT FALSE,
+                ADD COLUMN IF NOT EXISTS category_id BIGINT,
+                ADD COLUMN IF NOT EXISTS channel_id BIGINT
             """
         )
 
@@ -36,6 +40,8 @@ async def LogCommandInvocation(
     user_id: int,
     command_name: str,
     guild_id: int | None,
+    category_id: int | None,
+    channel_id: int | None,
     has_mt_submitter_role: bool,
     has_mt_store_role: bool,
 ) -> None:
@@ -49,15 +55,19 @@ async def LogCommandInvocation(
                 user_id,
                 command_name,
                 guild_id,
+                category_id,
+                channel_id,
                 has_mt_submitter_role,
                 has_mt_store_role
             )
-            VALUES (%s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 user_id,
                 command_name,
                 guild_id,
+                category_id,
+                channel_id,
                 has_mt_submitter_role,
                 has_mt_store_role,
             ),
