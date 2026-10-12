@@ -17,7 +17,6 @@ class Links(commands.Cog):
         description="Display the url to install the bot"
     )
     @app_commands.guilds(settings.BOTGUILDID)
-    @app_commands.guild_only()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def GetBot(self, interaction: Interaction):
         await interaction.response.send_message(
@@ -34,8 +33,7 @@ class Links(commands.Cog):
         output = await GetConnectedHubs(interaction)
         await interaction.response.send_message(output)
 
-    @app_commands.command(name="get_sop", description="Display the url to get the SOP")
-    @app_commands.guild_only()
+    @app_commands.command(name="get_sop", description="Display the url to get the SOP")    
     @app_commands.guilds(settings.BOTGUILDID)
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def GetSOP(self, interaction: Interaction):
@@ -44,7 +42,8 @@ class Links(commands.Cog):
         )
 
     @app_commands.command(
-        name="feedback", description="Display the url to provide feedback on the bot"
+        name="feedback",
+        description="Display the url to provide feedback on the bot"
     )
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def Feedback(self, interaction: Interaction):

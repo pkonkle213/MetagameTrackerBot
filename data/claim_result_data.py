@@ -12,17 +12,17 @@ async def GetEventReportedPercentage(event_id: int) -> float:
     ):
         command = """
         SELECT
-        COUNT(
-            CASE
-            WHEN archetype_played IS NOT NULL THEN 1
-            END
-        ) / SUM(count(*)) OVER () AS percentage
+            COUNT(
+                CASE
+                WHEN archetype_played IS NOT NULL THEN 1
+                END
+            ) / SUM(count(*)) OVER () AS percentage
         FROM
-        full_standings fp
-        LEFT OUTER JOIN unique_archetypes ua ON ua.event_id = fp.event_id
-        AND UPPER(ua.player_name) = UPPER(fp.player_name)
+            full_standings fp
+            LEFT OUTER JOIN unique_archetypes ua ON ua.event_id = fp.event_id
+            AND UPPER(ua.player_name) = UPPER(fp.player_name)
         WHERE
-        fp.event_id = %s
+            fp.event_id = %s
         """
 
         await cur.execute(command, [event_id])

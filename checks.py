@@ -65,8 +65,12 @@ def IsHub():
     return app_commands.check(predicate)
 
 
-def isSubmitter(guild: Guild, author: Member) -> bool:
+def isMTSubmitter(guild: Guild, author: Member) -> bool:
     role = utils.find(lambda r: r.name == MTBRoles.MTSubmitter.name, guild.roles)
+    return role in author.roles
+
+def isMTStore(guild: Guild, author: Member) -> bool:
+    role = utils.find(lambda r: r.name == MTBRoles.MTStore.name, guild.roles)
     return role in author.roles
 
 
