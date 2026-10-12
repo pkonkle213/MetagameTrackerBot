@@ -13,7 +13,8 @@ class Links(commands.Cog):
         self.bot = bot
 
     @app_commands.command(
-        name="get_bot", description="Display the url to install the bot"
+        name="get_bot",
+        description="Display the url to install the bot"
     )
     @app_commands.guilds(settings.BOTGUILDID)
     @app_commands.guild_only()
@@ -24,8 +25,8 @@ class Links(commands.Cog):
         )
 
     @app_commands.command(
-        name="view_hubs",
-        description="See all hubs connected to this store, game, and/or format",
+        name="view_connections",
+        description="See all guilds connected to this store or hub",
     )
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     @IsStore()

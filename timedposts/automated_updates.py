@@ -22,10 +22,7 @@ async def UpdateDataGuild(bot: commands.Bot):
             raise KnownError("Cannot send a message to this channel")
         date_start, date_end = BuildDateRange("", "")
         data = await GetWholeMetagame(
-            data_channel.game_id,
-            data_channel.format_id,
-            date_start,
-            date_end
+            data_channel.game_id, data_channel.format_id, date_start, date_end
         )
         if len(data) > 0:
             title = f"Metagame from {date_start} to {date_end}"
