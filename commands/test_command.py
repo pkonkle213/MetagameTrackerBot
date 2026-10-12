@@ -8,7 +8,8 @@ class TestCommand(commands.Cog):
 
     @app_commands.command(name="test", description="testing")
     async def Test(self, interaction: Interaction):
-        objects = interaction.extras.get("db_obj")
+        await interaction.response.defer(thinking=True, ephemeral=True)
+        objects = interaction.extras.get("db_object")
         print("Objects received:", objects)
         await interaction.followup.send("All done!")
 
