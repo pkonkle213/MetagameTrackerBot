@@ -81,11 +81,15 @@ async def GetPersonalPairingsHistory(
 
     name = "You"
     if objects.hub:
+        # TODO: I think this is covered by hubs_view and doesn't need reiterated
         name = (
-            objects.hub.hub_name if objects.hub.hub_name else objects.hub.discord_name
+            objects.hub.hub_name
+            if objects.hub.hub_name
+            else objects.hub.discord_name
         )
         headers.insert(1, "Store")
     elif objects.store:
+        # TODO: I think this is covered by stores_view and doesn't need reiterated
         name = (
             objects.store.store_name
             if objects.store.store_name

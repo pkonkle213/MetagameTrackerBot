@@ -6,6 +6,7 @@ from settings import DATAGUILDID
 from services.command_error_service import KnownError
 from tuple_conversions import OutputToBuild
 
+#TODO: Why does this require a game?
 async def GetAttendance(interaction:Interaction, start_date:str, end_date:str) -> OutputToBuild:
   objects = await GetObjectsFromInteraction(interaction)
   if (not objects.store and not objects.hub) or not objects.game or (not objects.format and not objects.region):

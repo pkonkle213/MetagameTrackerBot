@@ -43,3 +43,12 @@ async def UpdatePaidStores() -> None:
 async def UpdatePaidHubs() -> None:
     global PAID_HUBS
     PAID_HUBS = await GetHubs(paid=True)
+
+def IsPaidUser(user_id: int) -> bool:
+    return user_id in PAID_USERS
+
+def IsPaidStore(discord_id: int) -> bool:
+    return discord_id in PAID_STORES
+
+def IsPaidHub(discord_id: int) -> bool:
+    return discord_id in PAID_HUBS

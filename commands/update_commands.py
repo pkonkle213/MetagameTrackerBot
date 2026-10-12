@@ -2,7 +2,7 @@ from tuple_conversions import MTBRoles
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsStore, IsPaidStore, isSubmitter, HasRequiredRoles
+from checks import IsStore, IsPaidStore, isMTSubmitter, HasRequiredRoles
 from services.command_error_service import Error
 from services.store_services import UpdateDetails
 from input_modals.update_archetype_modal import UpdateArchetypeModal

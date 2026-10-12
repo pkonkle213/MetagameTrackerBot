@@ -20,9 +20,10 @@ class UniqueSubmitters(commands.Cog):
     )
     @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @app_commands.guild_only()
+    @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     @IsStore()
     async def MyEventsReported(self, interaction: Interaction):
-        await interaction.response.defer(thinking=True)
+        await interaction.response.defer(thinking=True, ephemeral=True)
         objects = await GetObjectsFromInteraction(interaction)
         if not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
