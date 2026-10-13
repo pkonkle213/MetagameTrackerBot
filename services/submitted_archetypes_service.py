@@ -1,6 +1,6 @@
+from custom_errors import KnownError
 from discord import Interaction
 from data.submitted_archetypes_data import GetSubmittedArchetypes
-from data.interaction_data import GetObjectsFromInteraction
 from services.date_functions import ConvertToDate
 from services.input_services import ConvertInput
 from tuple_conversions import OutputToBuild
@@ -10,9 +10,9 @@ async def SubmittedArchetypesReport(
     interaction: Interaction, player_name: str, event_date: str
 ) -> OutputToBuild:
     date_used = ConvertToDate(event_date) if event_date != "" else None
-    objects = await GetObjectsFromInteraction(interaction)
-    if not objects.store or not objects.game:
-        raise Exception("No store, game, or format found")
+    objects = interaction.extras.get("db_object")
+    if not objects or not objects.store or not objects.game:
+        raise KnownError("No store, game, or format found")
     player_name = ConvertInput(player_name)
     data = await GetSubmittedArchetypes(
         objects.game, objects.format, objects.store, player_name, date_used

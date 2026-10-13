@@ -4,7 +4,6 @@ from services.one_event_decklists import OneEventDecklists
 from checks import IsStore
 from custom_errors import KnownError
 from input_modals.event_selector import EventSelector
-from data.interaction_data import GetObjectsFromInteraction
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from services.one_event_details import OneEventDetails, OneEventMeta
@@ -21,8 +20,8 @@ class OneEventCommands(commands.GroupCog, name="one_event"):
     @IsStore()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def OneEventMetaCommand(self, interaction: Interaction):
-        objects = await GetObjectsFromInteraction(interaction)
-        if not objects.store or not objects.game or not objects.format:
+        objects = interaction.extras.get("db_object")
+        if not objects or not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
 
         modal = await EventSelector.create(objects.store, objects.game, objects.format)
@@ -46,8 +45,8 @@ class OneEventCommands(commands.GroupCog, name="one_event"):
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     @IsStore()
     async def OneEvent(self, interaction: Interaction):
-        objects = await GetObjectsFromInteraction(interaction)
-        if not objects.store or not objects.game or not objects.format:
+        objects = interaction.extras.get("db_object")
+        if not objects or not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
 
         modal = await EventSelector.create(objects.store, objects.game, objects.format)
@@ -71,8 +70,8 @@ class OneEventCommands(commands.GroupCog, name="one_event"):
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     @IsStore()
     async def OneEventDecklistsCommand(self, interaction: Interaction):
-        objects = await GetObjectsFromInteraction(interaction)
-        if not objects.store or not objects.game or not objects.format:
+        objects = interaction.extras.get("db_object")
+        if not objects or not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
 
         modal = await EventSelector.create(objects.store, objects.game, objects.format)

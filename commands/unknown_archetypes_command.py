@@ -29,9 +29,12 @@ class UnknownArchetypes(commands.Cog):
         end_date: string
             End of Date Range (MM/DD/YYYY)
         """
-        
+
         await interaction.response.defer(thinking=False)
-        table = await GetAllUnknown(interaction, start_date, end_date)
+        objects = interaction.extras.get("db_object")
+        guild = interaction.guild
+        user = interaction.user
+        table = await GetAllUnknown(objects, start_date, end_date, guild, user)
         if len(table.data) == 0:
             await interaction.followup.send(
                 "Congratulations! No unknown archetypes found for this format"

@@ -15,7 +15,6 @@ from data.store_data import (
 )
 from input_modals.store_profile_update import StoreProfileModal
 from input_modals.hub_profile_update import HubProfileModal
-from data.interaction_data import GetObjectsFromInteraction
 from services.game_mapper_services import GetGameOptions
 from settings import BOTGUILDID, PHILID
 from tuple_conversions import Format, Game, MTBRoles
@@ -23,8 +22,8 @@ from tuple_conversions import Format, Game, MTBRoles
 
 async def UpdateDetails(bot: commands.Bot, interaction: Interaction) -> Interaction:
     """Updates the store details in the database"""
-    objects = await GetObjectsFromInteraction(interaction)
-    if not objects.store and not objects.hub:
+    objects = interaction.extras.get("db_object")
+    if not objects or not objects.store and not objects.hub:
         raise KnownError("No registered discord found")
 
     if objects.store:

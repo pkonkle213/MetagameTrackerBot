@@ -20,7 +20,6 @@ from data.event_data import (
     GetPlayersInEvent,
 )
 from data.player_name_data import GetArchetypeModalDetails, GetUserName
-from data.interaction_data import GetObjectsFromInteraction
 from services.command_error_service import Error
 from services.determine_archetype_input import GetArchetypeModal
 from tuple_conversions import DataInputEnum, ViewButtonEnum, MTBRoles, ReportedAsEnum
@@ -47,20 +46,25 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     async def SubmitCheck(self, interaction: Interaction):
         await interaction.response.defer(ephemeral=True, thinking=False)
         issues = ["Issues I detect:"]
-        objects = await GetObjectsFromInteraction(interaction)
+        objects = interaction.extras.get("db_object")
         if not interaction.guild:
             raise KnownError("How?")
         if isinstance(interaction.user, User):
             raise KnownError("Bad user. Need Member")
 
-        if not objects.store:
-            issues.append("- Store not registered")
-        if not isMTSubmitter(interaction.guild, interaction.user):
-            issues.append("- You don't have the MTSubmitter role.")
-        if not objects.game:
-            issues.append("- Category not mapped to a game")
-        if objects.game and not objects.format:
-            issues.append("- Channel not mapped to a format")
+        if not objects:
+            issues.append(
+                "- The bot wasn't installed correctly, please reinstall the bot"
+            )
+        else:
+            if not objects.store:
+                issues.append("- Store not registered")
+            if not isMTSubmitter(interaction.guild, interaction.user):
+                issues.append("- You don't have the MTSubmitter role.")
+            if not objects.game:
+                issues.append("- Category not mapped to a game")
+            if objects.game and not objects.format:
+                issues.append("- Channel not mapped to a format")
 
         if len(issues) == 1:
             await interaction.followup.send(
@@ -76,10 +80,10 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @IsStore()
     async def MassArchetypeInput(self, interaction: Interaction):
-        objects = await GetObjectsFromInteraction(interaction)
+        objects = interaction.extras.get("db_object")
         user_id = interaction.user.id
 
-        if not objects.store or not objects.game or not objects.format:
+        if not objects or not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
 
         # User needs to select what event to submit archetypes for
@@ -170,9 +174,10 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     )
     @app_commands.guild_only()
     async def SubmitArchetypeCommand(self, interaction: Interaction):
-        objects = await GetObjectsFromInteraction(interaction)
+        objects = interaction.extras.get("db_object")
         if (
-            (not objects.store and not objects.hub)
+            not objects
+            or (not objects.store and not objects.hub)
             or not objects.game
             or not objects.format
         ):
@@ -214,9 +219,9 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     @app_commands.guild_only()
     @IsStore()
     async def SubmitDataCommand(self, interaction: Interaction) -> None:
-        objects = await GetObjectsFromInteraction(interaction)
+        objects = interaction.extras.get("db_object")
 
-        if not objects.store or not objects.game or not objects.format:
+        if not objects or not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
 
         if objects.hub:
@@ -265,19 +270,24 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                 modal = build_data_modal()
                 await active_interaction.response.send_modal(modal)
             await modal.wait()
-            
+
             data = modal.converted_data
 
             output = BuildReviewOutput(modal.converted_data)
 
             next_modal = build_data_modal()
-            view = ConfirmData(next_modal=next_modal, is_standings=bool(data.standings_data))
+            view = ConfirmData(
+                next_modal=next_modal, is_standings=bool(data.standings_data)
+            )
             if data.standings_data:
-                output += '\n:rotating_light::rotating_light:This is standings data and will limit the data used for other commands:rotating_light::rotating_light:'
-                
-            if data.pairings_data and event.reported_as == ReportedAsEnum.Standings.value:
-                output += '\n:rotating_light::rotating_light:This will overwrite the standings data that exists for this event:rotating_light::rotating_light:'
-                
+                output += "\n:rotating_light::rotating_light:This is standings data and will limit the data used for other commands:rotating_light::rotating_light:"
+
+            if (
+                data.pairings_data
+                and event.reported_as == ReportedAsEnum.Standings.value
+            ):
+                output += "\n:rotating_light::rotating_light:This will overwrite the standings data that exists for this event:rotating_light::rotating_light:"
+
             await modal.interaction.followup.send(
                 f"{output}\nPlease select continue if the data is accurate",
                 ephemeral=True,
@@ -296,7 +306,6 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
                     content="Data submission for this round canceled!", view=None
                 )
                 break
-
 
             if data.standings_data:
                 await AddStandingResults(

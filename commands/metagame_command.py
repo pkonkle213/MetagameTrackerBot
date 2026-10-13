@@ -2,7 +2,6 @@ from discord import Interaction, app_commands
 from discord.ext import commands
 
 from custom_errors import KnownError
-from data.interaction_data import GetObjectsFromInteraction
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from services.date_functions import BuildDateRange
@@ -39,9 +38,9 @@ class MetagameCommand(commands.Cog):
             The end date of the metagame (MM/DD/YYYY)
         """
         await interaction.response.defer(thinking=False)
-        objects = await GetObjectsFromInteraction(interaction)
+        objects = interaction.extras.get("db_object")
 
-        if not objects.game or not objects.format:
+        if not objects or not objects.game or not objects.format:
             raise KnownError(
                 "This channel is not set up with a game or format to view a metagame."
             )
@@ -51,14 +50,11 @@ class MetagameCommand(commands.Cog):
         if not interaction.channel_id:
             raise KnownError("Try a channel that has an id")
 
-        # TODO: What if it's a limited format?
-        archetype = "COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,"
-
         title: str = ""
         data: list[MetagameResult] = []
         if interaction.guild_id == DATAGUILDID:
             data = await GetWholeMetagame(
-                objects.game, objects.format, date_start, date_end, archetype
+                objects.game, objects.format, date_start, date_end
             )
             title = f"{objects.format.format_name.title()} metagame from {date_start.strftime('%-m/%-d')} to {date_end.strftime('%-m/%-d')}"
         elif objects.store:
@@ -68,7 +64,6 @@ class MetagameCommand(commands.Cog):
                 objects.format,
                 date_start,
                 date_end,
-                archetype,
             )
             title = f"{objects.format.format_name.title()} metagame from {date_start.strftime('%-m/%-d')} to {date_end.strftime('%-m/%-d')}"
         elif objects.hub and objects.hub.region_id:
@@ -78,7 +73,6 @@ class MetagameCommand(commands.Cog):
                 objects.format,
                 date_start,
                 date_end,
-                archetype,
             )
             title = f"{objects.format.format_name.title()} metagame from {date_start.strftime('%-m/%-d')} to {date_end.strftime('%-m/%-d')}"
         elif objects.hub:
@@ -89,7 +83,6 @@ class MetagameCommand(commands.Cog):
                 objects.region,
                 date_start,
                 date_end,
-                archetype,
             )
             title_name = (
                 objects.region.region_name.title()

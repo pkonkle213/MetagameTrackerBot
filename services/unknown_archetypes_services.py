@@ -1,21 +1,23 @@
-from discord import Interaction, User
+from discord import Interaction, Member, Guild, User
 from data.archetype_data import GetUnknownArchetypes
-from data.interaction_data import GetObjectsFromInteraction
 from services.date_functions import BuildDateRange
 from checks import isMTSubmitter
 from services.command_error_service import KnownError
-from tuple_conversions import OutputToBuild
+from tuple_conversions import OutputToBuild, InteractionObjects
 
 
 async def GetAllUnknown(
-    interaction: Interaction, start_date: str, end_date: str
+    objects: InteractionObjects | None,
+    start_date: str,
+    end_date: str,
+    guild: Guild,
+    user: Member,
 ) -> OutputToBuild:
-    objects = await GetObjectsFromInteraction(interaction)
-    if not objects.store or not objects.game or not objects.format:
+    if not objects or not objects.store or not objects.game or not objects.format:
         raise KnownError("No Store Found")
-    if not interaction.guild or isinstance(interaction.user, User):
+    if not guild or isinstance(user, User):
         raise KnownError("Information was missing, cannot complete command.")
-    weeks = 4 if isMTSubmitter(interaction.guild, interaction.user) else 2
+    weeks = 4 if isMTSubmitter(guild, user) else 2
     date_start, date_end = BuildDateRange(
         start_date,
         end_date,

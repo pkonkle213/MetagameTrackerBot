@@ -23,8 +23,11 @@ class UserInfoCommand(commands.Cog):
         """Callback for the 'Get User Info' context menu command."""
         await interaction.response.defer(ephemeral=True, thinking=False)
         try:
+            objects = interaction.extras.get("db_object")
+            if not objects:
+                raise KnownError('Not enough information found to complete command')
             (player_name, win_percent, last_played, top_decks) = await GetUserData(
-                interaction, member
+                objects, member
             )
 
             output = f"Player Name: {player_name}\n"

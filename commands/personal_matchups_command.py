@@ -27,7 +27,9 @@ class PersonalStatisticsGroup(commands.GroupCog, name="personal_stats"):
         self, interaction: Interaction, start_date: str = "", end_date: str = ""
     ):
         await interaction.response.defer(ephemeral=True, thinking=True)
-        outputs = await PersonalMatchups(interaction, start_date, end_date)
+        user_id = interaction.user.id
+        objects = interaction.extras.get("db_object")
+        outputs = await PersonalMatchups(start_date, end_date, objects, user_id)
         if len(outputs) == 0:
             raise KnownError("No pairings data found for this user")
         view = PaginationView(outputs)
@@ -54,7 +56,9 @@ class PersonalStatisticsGroup(commands.GroupCog, name="personal_stats"):
             End of Date Range (MM/DD/YYYY)
         """
         await interaction.response.defer(ephemeral=True, thinking=True)
-        data, title, header = await PlayRecord(interaction, start_date, end_date)
+        objects = interaction.extras.get("db_object")
+        user_id = interaction.user.id
+        data, title, header = await PlayRecord(start_date, end_date, objects, user_id)
         if len(data) == 1:
             await interaction.followup.send(
                 "No matchup data found for this store and/or format", ephemeral=True

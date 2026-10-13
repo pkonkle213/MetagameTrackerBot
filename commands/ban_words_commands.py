@@ -30,7 +30,10 @@ class BannedWordCommands(commands.GroupCog, name="banned_words"):
         if len(word) < 3:
             await interaction.followup.send("Word must be at least 3 characters long")
         else:
-            check = await AddBadWord(interaction, word)
+            objects = interaction.extras.get("db_object")
+            if not objects or not objects.store:
+                raise KnownError('This aint no store')
+            check = await AddBadWord(objects.store, word)
             if check:
                 await interaction.followup.send(
                     "Word added and offending archetypes disabled"
@@ -47,7 +50,10 @@ class BannedWordCommands(commands.GroupCog, name="banned_words"):
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def StoreOffenders(self, interaction: Interaction):
         await interaction.response.defer(ephemeral=True, thinking=False)
-        table = await Offenders(interaction)
+        objects = interaction.extras.get("db_object")
+        if not objects or not objects.store:
+            raise KnownError("This command is only available to stores")
+        table = await Offenders(objects)
         output = BuildTableOutput(table.title, table.headers, table.data)
         await interaction.followup.send(output)
 

@@ -37,11 +37,10 @@ async def RegionLockedMetagame(
     format: Format,
     start_date: date,
     end_date: date,
-    archetype: str,
 ) -> list[MetagameResult]:
     criteria = f"""
     SELECT
-        {archetype}
+        COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,
         wins,
         losses,
         draws
@@ -69,11 +68,10 @@ async def FormatLockedMetagame(
     region: Region | None,
     start_date: date,
     end_date: date,
-    archetype: str,
 ) -> list[MetagameResult]:
     criteria = f"""
     SELECT
-        {archetype}
+        COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,
         wins,
         losses,
         draws
@@ -100,11 +98,10 @@ async def StoreMetagame(
     format: Format,
     date_start: date,
     date_end: date,
-    archetype: str,
 ) -> list[MetagameResult]:
     criteria = f"""  
     SELECT
-        {archetype}
+        COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,
         wins,
         losses,
         draws

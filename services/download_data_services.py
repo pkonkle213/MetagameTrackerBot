@@ -1,3 +1,4 @@
+from tuple_conversions import InteractionObjects
 from typing import Any
 from discord import File, Interaction
 from io import BytesIO
@@ -8,14 +9,12 @@ from data.download_data import (
     GetPlayerPairingData,
     GetPlayerStandingData,
 )
-from data.interaction_data import GetObjectsFromInteraction
 from services.command_error_service import KnownError
 
 
 async def GetStoreData(
-    interaction: Interaction, start_date: str, end_date: str
+    objects: InteractionObjects, start_date: str, end_date: str
 ) -> tuple[str, list[File]]:
-    objects = await GetObjectsFromInteraction(interaction)
     if not objects.store:
         raise KnownError("No store found")
 
@@ -53,8 +52,8 @@ async def GetStoreData(
 async def GetPlayerData(
     interaction: Interaction, start_date: str, end_date: str
 ) -> tuple[str, list[File]]:
-    objects = await GetObjectsFromInteraction(interaction)
-    if not objects.store:
+    objects = interaction.extras.get("db_object")
+    if not objects or not objects.store:
         raise KnownError("No store found")
 
     user_id = interaction.user.id

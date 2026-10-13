@@ -1,8 +1,10 @@
+from custom_errors import KnownError
 from services.command_error_service import Error
 from tuple_conversions import MTBRoles
 from discord import Interaction, app_commands
 from discord.ext import commands
 from services.commands_services import GetCommandsHere, GetCommandsUser
+
 
 class CommandCommands(commands.GroupCog, name="commands"):
     """A group of commands describing available commands"""
@@ -12,16 +14,24 @@ class CommandCommands(commands.GroupCog, name="commands"):
 
     @app_commands.command(name="all", description="All commands available here")
     @app_commands.guild_only()
-    async def CommandsHere(self, interaction:Interaction):
+    async def CommandsHere(self, interaction: Interaction):
         await interaction.response.defer(thinking=True, ephemeral=True)
-        output = await GetCommandsHere(interaction)
+        objects = interaction.extras.get("db_object")
+        if not objects:
+            raise KnownError("Insufficient information")
+        guild = interaction.guild
+        user = interaction.user
+        output = await GetCommandsHere(objects, guild, user)
         await interaction.followup.send(output)
 
     @app_commands.command(name="for_me", description="All commands available for you")
     @app_commands.guild_only()
-    async def CommandsUser(self, interaction:Interaction):
+    async def CommandsUser(self, interaction: Interaction):
         await interaction.response.defer(thinking=True, ephemeral=True)
-        output = await GetCommandsUser(interaction)
+        objects = interaction.extras.get("db_object")
+        if not objects:
+            raise KnownError("No interaction objects found")
+        output = await GetCommandsUser(objects, interaction.guild, interaction.user)
         await interaction.followup.send(output)
 
     @CommandsHere.error

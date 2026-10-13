@@ -7,7 +7,6 @@ from services.command_error_service import Error
 from services.store_services import UpdateDetails
 from input_modals.update_archetype_modal import UpdateArchetypeModal
 from input_modals.update_playernames_modal import UpdatePlayerNamesModal
-from data.interaction_data import GetObjectsFromInteraction
 
 
 class UpdateCommands(commands.GroupCog, name="update"):
@@ -19,8 +18,8 @@ class UpdateCommands(commands.GroupCog, name="update"):
     @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @IsStore()
     async def UpdateArchetypes(self, interaction: Interaction):
-        objects = await GetObjectsFromInteraction(interaction)
-        if not objects.store or not objects.game or not objects.format:
+        objects = interaction.extras.get("db_object")
+        if not objects or not objects.store or not objects.game or not objects.format:
             raise Exception("No store, game, or format found.")
         modal = UpdateArchetypeModal(
             self.bot, objects.store, objects.game, objects.format
@@ -33,8 +32,8 @@ class UpdateCommands(commands.GroupCog, name="update"):
     @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @IsPaidStore()
     async def UpdatePlayerNames(self, interaction: Interaction):
-        objects = await GetObjectsFromInteraction(interaction)
-        if not objects.store or not objects.game or not objects.format:
+        objects = interaction.extras.get("db_object")
+        if not objects or not objects.store or not objects.game or not objects.format:
             raise Exception("No store, game, or format found.")
 
         modal = UpdatePlayerNamesModal(objects.store, objects.game, objects.format)
