@@ -4,7 +4,7 @@ from data.interaction_data import GetObjectsFromInteraction
 from data.store_attendance_data import GetStoreAttendance, GetHubAttendance
 from settings import DATAGUILDID
 from services.command_error_service import KnownError
-from tuple_conversions import OutputToBuild
+from tuple_conversions import OutputToBuild, InteractionObjects
 
 #TODO: Why does this require a game?
 async def GetAttendance(interaction:Interaction, start_date:str, end_date:str) -> OutputToBuild:

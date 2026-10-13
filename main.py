@@ -30,7 +30,15 @@ def StartHealthCheckServer():
 StartHealthCheckServer()
 
 from pytz import timezone
-from discord import Guild, Interaction, app_commands, Intents, NotFound, Forbidden
+from discord import (
+    Guild,
+    Interaction,
+    Member,
+    app_commands,
+    Intents,
+    NotFound,
+    Forbidden,
+)
 from discord.ext import commands, tasks
 from settings import PHILID, DISCORDTOKEN, BOTLOGCHANNEL
 import timedposts.automated_paid_users as apu
@@ -38,13 +46,61 @@ from timedposts.automated_check_events import EventCheck
 from timedposts.automated_updates import UpdateDataGuild
 from services.store_services import NewStoreRegistration
 from services.sync_service import SyncCommands
+from checks import isMTStore, isMTSubmitter
 from discord_messages import MessageUser
+from data.interaction_data import GetObjectsFromInteraction
+from data.command_invocations_data import (
+    EnsureCommandInvocationsTable,
+    LogCommandInvocation,
+)
+from tuple_conversions import InteractionObjects
+
+
+async def get_interaction_objects(interaction: Interaction) -> InteractionObjects:
+    return await GetObjectsFromInteraction(interaction)
+
+
+class DatabaseCommandTree(app_commands.CommandTree):
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        # Ping your DB every time a slash command is invoked
+        db_data = await get_interaction_objects(interaction)
+
+        # Attach the resulting object directly to the interaction object
+        interaction.extras["db_object"] = db_data
+
+        command = interaction.command
+        if isinstance(command, app_commands.Command):
+            member = interaction.user
+            guild = interaction.guild
+            has_mt_submitter_role = (
+                isinstance(member, Member)
+                and guild is not None
+                and isMTSubmitter(guild, member)
+            )
+            has_mt_store_role = (
+                isinstance(member, Member)
+                and guild is not None
+                and isMTStore(guild, member)
+            )
+            await LogCommandInvocation(
+                user_id=interaction.user.id,
+                command_name=f"/{command.qualified_name}",
+                guild_id=interaction.guild_id,
+                category_id=getattr(interaction.channel, "category_id", None),
+                channel_id=interaction.channel_id,
+                has_mt_submitter_role=has_mt_submitter_role,
+                has_mt_store_role=has_mt_store_role,
+            )
+
+        # Return True to allow command execution to proceed
+        return True
+
 
 intents = Intents.all()
 intents.message_content = True
 intents.members = True
 intents.guilds = True
-bot = commands.Bot(command_prefix="?", intents=intents)
+bot = commands.Bot(command_prefix="?", intents=intents, tree_cls=DatabaseCommandTree)
 
 BASE_DIR = Path(__file__).parent
 CMDS_DIR = BASE_DIR / "commands"
@@ -54,6 +110,7 @@ TIME_ZONE = timezone("US/Eastern")
 @bot.event
 async def on_ready():
     print(f"Logged on as {format(bot.user)}!")
+    await EnsureCommandInvocationsTable()
     await apu.InitializePaidData()
     data_guild_update.start()
     find_the_unknown.start()
@@ -80,58 +137,6 @@ async def on_guild_join(guild: Guild):
     await MessageUser(bot, "\n".join(output), PHILID)
 
 
-@bot.event
-async def on_app_command_completion(
-    interaction: Interaction, command: app_commands.Command
-):
-    """Logs successfully executed slash commands using the interaction object."""
-    username = str(interaction.user)
-    command_name = command.name
-    group_names = []
-
-    current_parent = command.parent
-    while current_parent is not None:
-        group_names.insert(0, current_parent.name)
-        current_parent = current_parent.parent
-
-    full_group_name = " ".join(group_names) if group_names else "None"
-
-    full_command_path = f"/{' '.join(group_names)} {command_name}".replace(
-        "  ", " "
-    ).strip()
-
-    if interaction.namespace:
-        params = ", ".join(f"{name}: {value}" for name, value in interaction.namespace)
-    else:
-        params = "None"
-
-    log_message = (
-        f"```Slash Command Executed\n"
-        f"User: {username} (ID: {interaction.user.id})\n"
-        f"Command Group: {full_group_name}\n"
-        f"Command Name: {command_name}\n"
-        f"Full Invocation: {full_command_path}\n"
-        f"Arguments: {params}\n"
-        f"Guild: {interaction.guild.name}\n"
-        f"Channel: {interaction.channel.id if interaction.channel else 'DM'}```"
-    )
-
-    channel = bot.get_channel(BOTLOGCHANNEL)
-    if channel is None:
-        try:
-            channel = await bot.fetch_channel(BOTLOGCHANNEL)
-        except (NotFound, Forbidden):
-            print(f"Log channel not found or bot lacks permissions.\n{log_message}")
-            return
-
-    try:
-        await channel.send(log_message)
-    except Forbidden:
-        print(
-            f"Bot doesn't have permission to send messages in the log channel.\n{log_message}"
-        )
-
-
 @tasks.loop(time=time(hour=18, minute=00, tzinfo=TIME_ZONE))
 async def find_the_unknown():
     """Every day at 6:00 PM EST, the bot will check for events that are 3 days old and have unknown archetypes."""
@@ -146,12 +151,14 @@ async def before_find_the_unknown():
 @tasks.loop(minutes=60)
 async def sync_paid_users():
     """Every 60 minutes, the bot will sync the paid entities for command permission"""
-    with suppress(Exception):
+    try:
         await apu.UpdateStores()
         await apu.UpdateHubs()
         await apu.UpdatePaidUsers()
         await apu.UpdatePaidStores()
         await apu.UpdatePaidHubs()
+    except Exception as error:
+        await MessageUser(bot, f"Error updating paid entities: {error}", PHILID)
 
 
 @sync_paid_users.before_loop
@@ -167,7 +174,7 @@ async def data_guild_update():
         try:
             await UpdateDataGuild(bot)
         except Exception as error:
-            print(f"Error updating data guild: {error}")
+            await MessageUser(bot, f"Error updating data guild: {error}", PHILID)
 
 
 @data_guild_update.before_loop

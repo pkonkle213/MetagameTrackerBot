@@ -1,1 +1,0 @@
-- [Async modal loading](async-modal-loading.md) — fetch database-backed modal options before construction through an awaited async factory.
