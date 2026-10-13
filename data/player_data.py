@@ -23,7 +23,7 @@ async def GetStats(
         WITH
             results AS (
                 SELECT
-                    f.format_name
+                    f.format_name,
                     archetype_played,
                     wins,
                     losses,
