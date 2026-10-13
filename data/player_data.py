@@ -23,7 +23,7 @@ async def GetStats(
         WITH
             results AS (
                 SELECT
-                    {'f.format_name AS format_name,' if not format else ''}
+                    f.format_name
                     archetype_played,
                     wins,
                     losses,
@@ -78,7 +78,7 @@ async def GetStats(
                     rank
             )
         SELECT
-            format_name,
+            {f'format_name,' if not format else ''}
             archetype_played,
             wins,
             losses,
@@ -88,7 +88,7 @@ async def GetStats(
             ranked
         """
 
-        await cur.execute(command)
+        await cur.execute(command)  # ty:ignore[no-matching-overload]
         rows = await cur.fetchall()
         return rows
 
