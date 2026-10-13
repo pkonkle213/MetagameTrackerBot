@@ -151,12 +151,14 @@ async def before_find_the_unknown():
 @tasks.loop(minutes=60)
 async def sync_paid_users():
     """Every 60 minutes, the bot will sync the paid entities for command permission"""
-    with suppress(Exception):
+    try:
         await apu.UpdateStores()
         await apu.UpdateHubs()
         await apu.UpdatePaidUsers()
         await apu.UpdatePaidStores()
         await apu.UpdatePaidHubs()
+    except Exception as error:
+        await MessageUser(bot, f"Error updating paid entities: {error}", PHILID)
 
 
 @sync_paid_users.before_loop
@@ -172,7 +174,7 @@ async def data_guild_update():
         try:
             await UpdateDataGuild(bot)
         except Exception as error:
-            print(f"Error updating data guild: {error}")
+            await MessageUser(bot, f"Error updating data guild: {error}", PHILID)
 
 
 @data_guild_update.before_loop
