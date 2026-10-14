@@ -1,4 +1,4 @@
-from tuple_conversions import MTBRoles
+from tuple_conversions import MTBRoles, InteractionObjects
 from discord import Interaction, app_commands
 from discord.ext import commands
 
@@ -8,11 +8,11 @@ from data.hubs_data import GetRegions, GetHub
 from input_modals.map_format_modal import MapFormatModal
 from input_modals.map_game_modal import MapGameModal
 from input_modals.map_region_modal import MapRegionModal
-from data.interaction_data import GetObjectsFromInteraction
 from services.command_error_service import Error
 from services.map_claim_feed import MapClaimFeed
 
 
+# TODO: Most of these pass the interaction to later get the category, channel, or guild ID. separate those before passing the interaction
 class MappingCommands(commands.GroupCog, name="map"):
     """A group of commands for mapping channels to games, formats, and claim feeds"""
 
@@ -28,7 +28,8 @@ class MappingCommands(commands.GroupCog, name="map"):
     @IsStore()
     async def AddClaimFeedMap(self, interaction: Interaction):
         await interaction.response.defer(ephemeral=True, thinking=False)
-        output = await MapClaimFeed(interaction)
+        objects = interaction.extras.get("db_object")
+        output = await MapClaimFeed(interaction, objects)
         await interaction.followup.send(output, ephemeral=True)
 
     @app_commands.command(name="region", description="Map your channel to a region")
@@ -54,9 +55,10 @@ class MappingCommands(commands.GroupCog, name="map"):
     @HasRequiredRoles([MTBRoles.MTStore.name])
     @app_commands.guild_only()
     @IsStore()
-    async def AddGameMap(self, interaction: Interaction):
-        objects = await GetObjectsFromInteraction(interaction)
-        if not objects.store:
+    async def AddGameMap(
+        self, interaction: Interaction, objects: InteractionObjects | None
+    ):
+        if not objects or not objects.store:
             raise KnownError("No store found. Please register your store.")
         modal = await MapGameModal.create(objects.store)
         await interaction.response.send_modal(modal)
@@ -67,8 +69,8 @@ class MappingCommands(commands.GroupCog, name="map"):
     @app_commands.guild_only()
     @IsStore()
     async def AddFormatMap(self, interaction: Interaction):
-        objects = await GetObjectsFromInteraction(interaction)
-        if not objects.game or not objects.store:
+        objects = interaction.extras.get("db_object")
+        if not objects or not objects.game or not objects.store:
             raise KnownError(
                 "No store or game found. Please map a game to this category first."
             )

@@ -32,7 +32,8 @@ class DownloadDataGroup(commands.GroupCog, name="download"):
           End of Date Range (MM/DD/YYYY)
         """
         await interaction.response.defer(ephemeral=True, thinking=False)
-        message, files = await GetStoreData(interaction, start_date, end_date)
+        objects = interaction.extras.get("db_object")
+        message, files = await GetStoreData(objects, start_date, end_date)
         if len(files) == 0:
             await interaction.followup.send("No data found for this store")
         else:

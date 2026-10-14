@@ -1,3 +1,4 @@
+from tuple_conversions import InteractionObjects
 from discord import Interaction, app_commands
 from discord.ext import commands
 
@@ -28,7 +29,8 @@ class EventAttendance(commands.Cog):
             End of Date Range (MM/DD/YYYY)
         """
         await interaction.response.defer(thinking=True)
-        table = await GetAttendance(interaction, start_date, end_date)
+        objects = interaction.extras.get("db_object")
+        table = await GetAttendance(objects, start_date, end_date)
         if len(table.data) == 0:
             await interaction.followup.send(
                 "No attendance data found for this store and/or format"

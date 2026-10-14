@@ -1,17 +1,20 @@
+from tuple_conversions import InteractionObjects
 import discord
 from custom_errors import KnownError
-from data.interaction_data import GetObjectsFromInteraction
 from data.personal_history_data import GetStandingsHistory, GetPairingsHistory
 from output_builder import BuildTableOutput
 from services.date_functions import BuildDateRange
 
 
 async def GetPersonalStandingsHistory(
-    interaction: discord.Interaction, start_date: str, end_date: str
+    interaction: discord.Interaction,
+    start_date: str,
+    end_date: str,
+    objects: InteractionObjects | None,
 ):
     """Gets the personal standings history for the user"""
-    objects = await GetObjectsFromInteraction(interaction)
-    if not objects.store and not objects.hub:
+    objects = interaction.extras.get("db_object")
+    if not objects or not objects.store and not objects.hub:
         raise KnownError("No store or hub found")
 
     user_id = interaction.user.id
@@ -57,11 +60,13 @@ async def GetPersonalStandingsHistory(
 
 
 async def GetPersonalPairingsHistory(
-    interaction: discord.Interaction, start_date: str, end_date: str
+    interaction: discord.Interaction,
+    start_date: str,
+    end_date: str,
+    objects: InteractionObjects | None,
 ):
     """Gets the personal pairings history for the user"""
-    objects = await GetObjectsFromInteraction(interaction)
-    if not objects.store and not objects.hub:
+    if not objects or not objects.store and not objects.hub:
         raise KnownError("No store or hub found")
 
     user_id = interaction.user.id
@@ -83,9 +88,7 @@ async def GetPersonalPairingsHistory(
     if objects.hub:
         # TODO: I think this is covered by hubs_view and doesn't need reiterated
         name = (
-            objects.hub.hub_name
-            if objects.hub.hub_name
-            else objects.hub.discord_name
+            objects.hub.hub_name if objects.hub.hub_name else objects.hub.discord_name
         )
         headers.insert(1, "Store")
     elif objects.store:

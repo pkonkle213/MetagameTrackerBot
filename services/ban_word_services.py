@@ -1,8 +1,6 @@
-from tuple_conversions import OutputToBuild
+from tuple_conversions import OutputToBuild, Store, InteractionObjects
 from custom_errors import KnownError
-from typing import Any
 from pyparsing import Word
-from data.interaction_data import GetObjectsFromInteraction
 from data.ban_word_data import (
     AddWord,
     GetWord,
@@ -12,15 +10,14 @@ from data.ban_word_data import (
     CheckStoreBannedWords,
     GetOffenders,
 )
-from discord import Interaction
 
 
-async def AddBadWord(interaction: Interaction, bad_word: str) -> None:
+async def AddBadWord(store: Store, bad_word: str) -> None:
     word = await GetWord(bad_word)
     if not word:
         word = await AddWord(bad_word)
 
-    discord_id = interaction.guild_id
+    discord_id = store.discord_id
     if not discord_id:
         raise KnownError("Only able to ban words from stores")
 
@@ -40,10 +37,7 @@ async def CanSubmitArchetypes(discord_id: int, user_id: int) -> bool:
     return offenses < 3
 
 
-async def Offenders(interaction: Interaction) -> OutputToBuild:
-    objects = await GetObjectsFromInteraction(interaction)
-    if not objects.store:
-        raise KnownError("This command is only available to stores")
+async def Offenders(objects: InteractionObjects) -> OutputToBuild:
     offenders = await GetOffenders(objects.game, objects.format, objects.store)
     headers = [
         "Date Submitted",

@@ -3,7 +3,6 @@ from services.one_event_details import OneEventDetails
 from discord.ext import commands
 from data.event_data import GetEventDetails
 from tuple_conversions import Game, Format, Store
-from data.interaction_data import GetObjectsFromInteraction
 from data.archetype_data import GetUnknownArchetypes
 from data.automated_events_data import ThreeDayOldEvents
 from data.event_data import CompleteEvent
@@ -53,6 +52,6 @@ async def EventCheck(bot: commands.Bot) -> None:
         except Exception as ex:
             await MessageUser(
                 bot,
-                f"Error getting events with unknown archetypes: {ex}\nChannel:{events}",
+                f"Error getting events with stale events: {ex}\nChannel:{events}",
                 PHILID,
             )

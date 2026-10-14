@@ -1,24 +1,23 @@
+from custom_errors import KnownError
 from output_builder import BuildTableOutput
-from tuple_conversions import MTBRoles
+from tuple_conversions import MTBRoles, InteractionObjects
 from checks import isMTStore, HasRequiredRoles, isMTSubmitter
-from discord import Interaction
-from data.interaction_data import GetObjectsFromInteraction
+from discord import Interaction, Member, Guild
 from data.commands_data import GetHereCommands, GetUserCommands
 import timedposts.automated_paid_users as apu
 
 
-async def GetCommandsHere(interaction: Interaction) -> str:
-    objects = await GetObjectsFromInteraction(interaction)
+async def GetCommandsHere(objects: InteractionObjects, guild:Guild, user:Member) -> str:
     is_store = bool(objects.store)
     is_hub = bool(objects.hub)
     is_game = bool(objects.game)
     is_format = bool(objects.format)
     is_region = bool(objects.region)
-    user_is_submitter = isMTSubmitter(interaction.guild, interaction.user)
-    user_is_store = isMTStore(interaction.guild, interaction.user)
-    user_is_paid = apu.IsPaidUser(interaction.user.id)
-    store_is_paid = apu.IsPaidStore(interaction.guild_id)
-    hub_is_paid = apu.IsPaidHub(interaction.guild_id)
+    user_is_submitter = isMTSubmitter(guild, user)
+    user_is_store = isMTStore(guild, user)
+    user_is_paid = apu.IsPaidUser(user.id)
+    store_is_paid = apu.IsPaidStore(guild.id)
+    hub_is_paid = apu.IsPaidHub(guild.id)
     commands = await GetHereCommands(
         is_store,
         is_hub,
@@ -37,18 +36,19 @@ async def GetCommandsHere(interaction: Interaction) -> str:
     return output
 
 
-async def GetCommandsUser(interaction: Interaction) -> str:
-    objects = await GetObjectsFromInteraction(interaction)
+async def GetCommandsUser(
+    objects: InteractionObjects, discord: Guild, user: Member
+) -> str:
     is_store = bool(objects.store)
     is_hub = bool(objects.hub)
     is_game = bool(objects.game)
     is_format = bool(objects.format)
     is_region = bool(objects.region)
-    user_is_submitter = isMTSubmitter(interaction.guild, interaction.user)
-    user_is_store = isMTStore(interaction.guild, interaction.user)
-    user_is_paid = apu.IsPaidUser(interaction.user.id)
-    store_is_paid = apu.IsPaidStore(interaction.guild_id)
-    hub_is_paid = apu.IsPaidHub(interaction.guild_id)
+    user_is_submitter = isMTSubmitter(discord, user)
+    user_is_store = isMTStore(discord, user)
+    user_is_paid = apu.IsPaidUser(user.id)
+    store_is_paid = apu.IsPaidStore(discord.id)
+    hub_is_paid = apu.IsPaidHub(discord.id)
     commands = await GetUserCommands(
         is_store,
         is_hub,

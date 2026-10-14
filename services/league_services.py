@@ -8,8 +8,8 @@ from tuple_conversions import (
     TopPlayers,
     PlayerStanding,
     LeaderboardRace,
+    InteractionObjects,
 )
-from data.interaction_data import GetObjectsFromInteraction
 from data.league_data import (
     GetLeagues,
     GetHubFullLeagueLeaderboard,
@@ -26,13 +26,15 @@ import bar_chart_race as bcr
 
 
 async def SelectLeague(
-    bot: commands.Bot, interaction: Interaction, isEdit: bool = False
+    bot: commands.Bot,
+    interaction: Interaction,
+    objects: InteractionObjects | None,
+    isEdit: bool = False,
 ) -> League:
     """Selects a league from the database"""
-    objects = await GetObjectsFromInteraction(interaction)
-
     if (
-        (not objects.hub and not objects.store)
+        not objects
+        or (not objects.hub and not objects.store)
         or not objects.game
         or not objects.format
         or not objects.region
@@ -134,9 +136,11 @@ async def LeagueMetagame(league: League) -> list[MetagameResult]:
     return data
 
 
-async def ViewLeague(bot: commands.Bot, interaction: Interaction) -> str:
+async def ViewLeague(
+    bot: commands.Bot, interaction: Interaction, objects: InteractionObjects | None
+) -> str:
     """View a league"""
-    league = await SelectLeague(bot, interaction)
+    league = await SelectLeague(bot, interaction, objects)
     return f"""{league.name}
   -------------------
   Start Date: {league.start_date.strftime("%m/%d/%Y")}
@@ -145,26 +149,31 @@ async def ViewLeague(bot: commands.Bot, interaction: Interaction) -> str:
   Description: {league.description}"""
 
 
-async def EditLeague(bot: commands.Bot, interaction: Interaction):
+async def EditLeague(
+    bot: commands.Bot, interaction: Interaction, objects: InteractionObjects | None
+):
     """Edit a league"""
-    await SelectLeague(bot, interaction, isEdit=True)
+    await SelectLeague(bot, interaction, objects, isEdit=True)
 
 
-async def CreateLeague(bot: commands.Bot, interaction: Interaction):
+async def CreateLeague(
+    bot: commands.Bot, interaction: Interaction, objects: InteractionObjects | None
+):
     """Create a league"""
-    objects = await GetObjectsFromInteraction(interaction)
-
     if (
-        (not objects.store and not objects.hub)
+        not objects
+        or (not objects.store and not objects.hub)
         or not objects.game
         or not objects.format
     ):
         raise KnownError("Insufficient mapping to complete this command")
 
     if objects.store:
-        #TODO: Fix
+        # TODO: Fix, make await and other stuff
         modal = LeagueInputModal(bot, objects.store, objects.game, objects.format)
     if objects.hub and objects.format:
-        modal = await HubLeagueInputModal.create(bot, objects.hub, objects.game, objects.format)
+        modal = await HubLeagueInputModal.create(
+            bot, objects.hub, objects.game, objects.format
+        )
     await interaction.response.send_modal(modal)
     await modal.wait()

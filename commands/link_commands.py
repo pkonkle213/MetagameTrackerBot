@@ -13,8 +13,7 @@ class Links(commands.Cog):
         self.bot = bot
 
     @app_commands.command(
-        name="get_bot",
-        description="Display the url to install the bot"
+        name="get_bot", description="Display the url to install the bot"
     )
     @app_commands.guilds(settings.BOTGUILDID)
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
@@ -30,10 +29,11 @@ class Links(commands.Cog):
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     @IsStore()
     async def ViewHubInvites(self, interaction: Interaction):
-        output = await GetConnectedHubs(interaction)
+        objects = interaction.extras.get("db_object")
+        output = await GetConnectedHubs(interaction, objects)
         await interaction.response.send_message(output)
 
-    @app_commands.command(name="get_sop", description="Display the url to get the SOP")    
+    @app_commands.command(name="get_sop", description="Display the url to get the SOP")
     @app_commands.guilds(settings.BOTGUILDID)
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def GetSOP(self, interaction: Interaction):
@@ -42,8 +42,7 @@ class Links(commands.Cog):
         )
 
     @app_commands.command(
-        name="feedback",
-        description="Display the url to provide feedback on the bot"
+        name="feedback", description="Display the url to provide feedback on the bot"
     )
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def Feedback(self, interaction: Interaction):

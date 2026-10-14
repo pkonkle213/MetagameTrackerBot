@@ -30,20 +30,23 @@ class LeagueCommands(commands.GroupCog, name="league"):
     @app_commands.guild_only()
     @HasRequiredRoles([MTBRoles.MTStore.name])
     async def CreateTheLeague(self, interaction: Interaction):
-        await CreateLeague(self.bot, interaction)
+        objects = interaction.extras.get("db_object")
+        await CreateLeague(self.bot, interaction, objects)
 
     @app_commands.command(name="edit", description="Edit a league")
     @app_commands.guild_only()
     @HasRequiredRoles([MTBRoles.MTStore.name])
     async def EditTheLeague(self, interaction: Interaction):
-        await EditLeague(self.bot, interaction)
+        objects = interaction.extras.get("db_object")
+        await EditLeague(self.bot, interaction, objects)
 
     @app_commands.command(
         name="information", description="Display information about a league"
     )
     @app_commands.guild_only()
     async def ViewTheLeague(self, interaction: Interaction):
-        output = await ViewLeague(self.bot, interaction)
+        objects = interaction.extras.get("db_object")
+        output = await ViewLeague(self.bot, interaction, objects)
         await interaction.followup.send(output)
 
     @app_commands.command(
@@ -52,7 +55,8 @@ class LeagueCommands(commands.GroupCog, name="league"):
     @app_commands.guild_only()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def TopPlayers(self, interaction: Interaction):
-        league = await SelectLeague(self.bot, interaction)
+        objects = interaction.extras.get("db_object")
+        league = await SelectLeague(self.bot, interaction, objects)
         if league.store_ids[0]:
             data = await HubLeagueLeaderboard(league)
         else:
@@ -72,7 +76,8 @@ class LeagueCommands(commands.GroupCog, name="league"):
     @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def FullLeaderboard(self, interaction: Interaction):
-        league = await SelectLeague(self.bot, interaction)
+        objects = interaction.extras.get("db_object")
+        league = await SelectLeague(self.bot, interaction, objects)
         if league.store_ids[0]:
             data = await HubFullLeagueLeaderboard(league)
         else:
@@ -92,7 +97,8 @@ class LeagueCommands(commands.GroupCog, name="league"):
     @IsStore()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.channel.id))
     async def LeaderboardRace(self, interaction: Interaction):
-        league = await SelectLeague(self.bot, interaction)
+        objects = interaction.extras.get("db_object")
+        league = await SelectLeague(self.bot, interaction, objects)
         data = await LeagueTimeLapse(league)
         await interaction.followup.send(file=data)
 
@@ -102,7 +108,8 @@ class LeagueCommands(commands.GroupCog, name="league"):
     @app_commands.guild_only()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def LeagueMeta(self, interaction: Interaction):
-        league = await SelectLeague(self.bot, interaction)
+        objects = interaction.extras.get("db_object")
+        league = await SelectLeague(self.bot, interaction, objects)
         data = await LeagueMetagame(league)
         title = f"Metagame for {league.name}"
         headers = ["Archetype Name", "Meta %", "Win %"]
@@ -116,7 +123,8 @@ class LeagueCommands(commands.GroupCog, name="league"):
     @app_commands.guild_only()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def MyStatus(self, interaction: Interaction):
-        league = await SelectLeague(self.bot, interaction)
+        objects = interaction.extras.get("db_object")
+        league = await SelectLeague(self.bot, interaction, objects)
         if not interaction.guild_id:
             raise KnownError("This command can only be used in a server")
         data = await FindPlayerStanding(

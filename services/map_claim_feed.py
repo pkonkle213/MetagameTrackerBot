@@ -1,12 +1,13 @@
+from tuple_conversions import InteractionObjects
 from discord import Interaction
 from custom_errors import KnownError
 from data.map_claim_feed_data import AddClaimFeedMap
-from data.interaction_data import GetObjectsFromInteraction
 
 
-async def MapClaimFeed(interaction: Interaction) -> str:
-    objects = await GetObjectsFromInteraction(interaction)
-    if not objects.store or not objects.game:
+async def MapClaimFeed(
+    interaction: Interaction, objects: InteractionObjects | None
+) -> str:
+    if not objects or not objects.store or not objects.game:
         raise KnownError("Unable to map claim feed. Please try again later.")
 
     if not interaction.guild_id or not interaction.channel_id:

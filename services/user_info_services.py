@@ -2,13 +2,19 @@ from data.player_name_data import GetUserName
 from discord import Interaction, Member
 from custom_errors import KnownError
 from data.get_user_info_data import GetLastArchetype, GetWinPercentage, GetMostPlayed
-from data.interaction_data import GetObjectsFromInteraction
-from tuple_conversions import Format, Game, Store, UserData, LastArchetype, TopDeck
+from tuple_conversions import (
+    Format,
+    Game,
+    Store,
+    UserData,
+    LastArchetype,
+    TopDeck,
+    InteractionObjects,
+)
 
 
-async def GetUserData(interaction: Interaction, member: Member) -> UserData:
+async def GetUserData(objects: InteractionObjects, member: Member) -> UserData:
     """Gets the player name, win percent, last played, and top decks for a user"""
-    objects = await GetObjectsFromInteraction(interaction)
     if (
         (not objects.store and not objects.hub)
         or not objects.game
@@ -22,9 +28,13 @@ async def GetUserData(interaction: Interaction, member: Member) -> UserData:
         member.id, objects.store, objects.game, objects.format
     )
 
-    last_played = await GetLastPlayed(member.id, objects.store, objects.game, objects.format)
+    last_played = await GetLastPlayed(
+        member.id, objects.store, objects.game, objects.format
+    )
 
-    top_decks = await GetTopDecks(member.id, objects.store, objects.game, objects.format)
+    top_decks = await GetTopDecks(
+        member.id, objects.store, objects.game, objects.format
+    )
 
     data = UserData(player_name, win_percent, last_played, top_decks)
     return data

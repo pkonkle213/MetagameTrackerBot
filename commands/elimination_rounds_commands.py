@@ -3,7 +3,6 @@ from discord.ext import commands
 
 from checks import IsStore
 from input_modals.event_selector import EventSelector
-from data.interaction_data import GetObjectsFromInteraction
 from services.command_error_service import Error, KnownError
 from services.elimination_rounds_services import GetEliminationRoundData
 from settings import BOTGUILDID
@@ -24,8 +23,8 @@ class EliminationRoundsCommands(commands.GroupCog, name="elimination_rounds"):
     @IsStore()
     @app_commands.guilds(BOTGUILDID)
     async def EliminationRounds(self, interaction: Interaction):
-        objects = await GetObjectsFromInteraction(interaction)
-        if not objects.store or not objects.game or not objects.format:
+        objects = interaction.extras.get("db_object")
+        if not objects or not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
 
         modal = await EventSelector.create(

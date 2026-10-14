@@ -1,16 +1,14 @@
 from discord import Interaction
 from services.date_functions import BuildDateRange
-from data.interaction_data import GetObjectsFromInteraction
 from data.player_data import GetTopPlayerData
 from services.command_error_service import KnownError
-from tuple_conversions import OutputToBuild
+from tuple_conversions import OutputToBuild, InteractionObjects
 
 
 async def GetTopPlayers(
-    interaction: Interaction, start_date: str, end_date: str
+    objects: InteractionObjects | None, start_date: str, end_date: str
 ) -> OutputToBuild:
-    objects = await GetObjectsFromInteraction(interaction)
-    if not objects.store or not objects.game:
+    if not objects or not objects.store or not objects.game:
         raise KnownError("Unable to find store or game")
 
     date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
