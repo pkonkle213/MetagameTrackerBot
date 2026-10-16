@@ -1,23 +1,20 @@
 from discord import CategoryChannel, ForumChannel
 from discord.abc import PrivateChannel
 from discord.ext import commands
+
 from custom_errors import KnownError
-from output_builder import BuildTableOutput
 from data.automated_updates_data import GetDataChannels
+from output_builder import BuildTableOutput
 from services.date_functions import BuildDateRange
 from services.metagame_services import GetWholeMetagame
-from data.hubs_data import GetHub
 
 
 async def UpdateDataGuild(bot: commands.Bot):
     target_channels = await GetDataChannels()
     for data_channel in target_channels:
         channel = bot.get_channel(data_channel.channel_id)
-        if (
-            not channel
-            or isinstance(channel, ForumChannel)
-            or isinstance(channel, CategoryChannel)
-            or isinstance(channel, PrivateChannel)
+        if not channel or isinstance(
+            channel, (ForumChannel, CategoryChannel, PrivateChannel)
         ):
             raise KnownError("Cannot send a message to this channel")
         date_start, date_end = BuildDateRange("", "")

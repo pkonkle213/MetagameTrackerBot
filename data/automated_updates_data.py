@@ -1,7 +1,7 @@
 from typing import NamedTuple
 
 from psycopg import AsyncConnection
-from psycopg.rows import scalar_row
+from psycopg.rows import class_row
 
 from settings import DATABASE_URL, DATAGUILDID
 
@@ -15,7 +15,7 @@ class DataGuildChannels(NamedTuple):
 async def GetDataChannels() -> list[DataGuildChannels]:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
-        conn.cursor(row_factory=scalar_row) as cur,
+        conn.cursor(row_factory=class_row(DataGuildChannels)) as cur,
     ):
         command = """
         SELECT
