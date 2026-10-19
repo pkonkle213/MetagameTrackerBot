@@ -1,6 +1,8 @@
 import discord
-from tuple_conversions import Event, DataConverted
+
 from services.convert_and_save_input import ConvertAndUploadMessage
+from services.submit_data_errors import EnsureConvertedResults, ReportSubmissionFailure
+from tuple_conversions import DataConverted, Event
 
 
 class SubmitManualDataModal(discord.ui.Modal, title="Submit Data"):
@@ -9,6 +11,7 @@ class SubmitManualDataModal(discord.ui.Modal, title="Submit Data"):
         self.file_path = file_path
         self.event = event
         self.converted_data: DataConverted = DataConverted(None, None, None, None, None)
+        self.conversion_failed = False
 
         self.manual_data = discord.ui.Label(
             text="Event Data",
@@ -24,10 +27,14 @@ class SubmitManualDataModal(discord.ui.Modal, title="Submit Data"):
 
     async def on_submit(self, interaction: discord.Interaction):
         self.interaction = interaction
-        self.converted_data = ConvertAndUploadMessage(
-            self.event,
-            self.file_path,
-            self.manual_data.component.value
-        )
-        self.stop()
         await interaction.response.defer(thinking=True, ephemeral=True)
+        try:
+            self.converted_data = ConvertAndUploadMessage(
+                self.event,
+                self.file_path,
+                self.manual_data.component.value,
+            )
+            EnsureConvertedResults(self.converted_data)
+        except Exception as error:
+            self.conversion_failed = True
+            await ReportSubmissionFailure(interaction, error, "manual data")

@@ -25,7 +25,7 @@ async def GetMeleeTournamentData(
       has_more = response_obj['HasMore']
       page += 1
     else:
-      raise Exception("Unable to get data from Melee.gg. Please try again.")
+      raise KnownError("Unable to get data from Melee.gg. Please try again.")
 
   if not data or data == []:
     raise KnownError("No data found for this tournament. Please try again.")

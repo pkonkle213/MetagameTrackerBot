@@ -1,15 +1,18 @@
 import discord
-from tuple_conversions import Event, Store, DataConverted
+
 from services.convert_and_save_input import ConvertAndUploadMeleeTournament
+from services.submit_data_errors import EnsureConvertedResults, ReportSubmissionFailure
+from tuple_conversions import DataConverted, Event, Store
 
 
 class SubmitMeleeDataModal(discord.ui.Modal, title="Submit Data"):
-    def __init__(self, store:Store, event: Event, file_path: str):
+    def __init__(self, store: Store, event: Event, file_path: str):
         super().__init__()
         self.file_path = file_path
         self.event = event
         self.store = store
         self.converted_data: DataConverted = DataConverted(None, None, None, None, None)
+        self.conversion_failed = False
         self.confirm_response = None
 
         self.melee_data = discord.ui.Label(
@@ -27,6 +30,11 @@ class SubmitMeleeDataModal(discord.ui.Modal, title="Submit Data"):
     async def on_submit(self, interaction: discord.Interaction):
         self.interaction = interaction
         await interaction.response.defer(ephemeral=True)
-        self.converted_data = await ConvertAndUploadMeleeTournament(
-            self.event, self.melee_data.value, self.store, self.file_path
-        )
+        try:
+            self.converted_data = await ConvertAndUploadMeleeTournament(
+                self.event, self.melee_data.value, self.store, self.file_path
+            )
+            EnsureConvertedResults(self.converted_data)
+        except Exception as error:
+            self.conversion_failed = True
+            await ReportSubmissionFailure(interaction, error, "Melee")

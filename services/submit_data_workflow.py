@@ -161,6 +161,9 @@ async def SubmitEventDataWorkflow(
             )
             return
 
+        if getattr(modal, "conversion_failed", False) is True:
+            return
+
         data = modal.converted_data
         output, view = BuildDataReview(
             data, event, input_type, store, game, format
