@@ -11,13 +11,12 @@ from services.metagame_heatmap_services import (
     BuildMetagameHeatmapImage,
     CELL_HEIGHT,
     CELL_WIDTH,
-    COLUMN_LABEL_BOTTOM,
     GRID_LEFT,
-    GRID_TOP,
+    GRID_TOP_PADDING,
     LEFT_MARGIN,
     MAX_HEATMAP_DECKS,
+    OPPONENT_HEADER_Y,
     OVERALL_WIDTH,
-    OVERALL_HEADER_Y,
     SelectTopArchetypes,
 )
 
@@ -55,11 +54,15 @@ class MetagameHeatmapImageTests(unittest.TestCase):
 
         image = Image.open(BytesIO(image_bytes))
         self.assertEqual(image.format, "PNG")
+        archetypes, _, _ = SelectTopArchetypes(self.make_rows(20))
+        draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+        font = heatmap_services._LoadFont(14, bold=True)
+        grid_top = heatmap_services._GetGridTop(draw, archetypes, font)
         self.assertEqual(
             image.size,
             (
                 GRID_LEFT + MAX_HEATMAP_DECKS * CELL_WIDTH + 36,
-                GRID_TOP + MAX_HEATMAP_DECKS * CELL_HEIGHT + 44,
+                grid_top + MAX_HEATMAP_DECKS * CELL_HEIGHT + 44,
             ),
         )
 
@@ -67,22 +70,21 @@ class MetagameHeatmapImageTests(unittest.TestCase):
         self.assertGreater(GRID_LEFT, LEFT_MARGIN + OVERALL_WIDTH)
 
     def test_column_archetypes_end_close_to_matchup_cells(self):
-        self.assertEqual(GRID_TOP - COLUMN_LABEL_BOTTOM, 12)
-        self.assertEqual(GRID_TOP - OVERALL_HEADER_Y, 30)
+        self.assertEqual(GRID_TOP_PADDING, 12)
 
-    def test_opponent_header_position_depends_on_longest_top_archetype(self):
+    def test_grid_height_depends_on_longest_top_archetype(self):
         draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
         font = heatmap_services._LoadFont(14, bold=True)
 
-        short_name_y = heatmap_services._GetOpponentHeaderY(
+        short_name_grid = heatmap_services._GetGridTop(
             draw, ["Aggro"], font
         )
-        long_name_y = heatmap_services._GetOpponentHeaderY(
+        long_name_grid = heatmap_services._GetGridTop(
             draw, ["A considerably longer archetype name"], font
         )
 
-        self.assertGreater(short_name_y, long_name_y)
-        self.assertGreaterEqual(long_name_y, 128)
+        self.assertGreater(long_name_grid, short_name_grid)
+        self.assertEqual(OPPONENT_HEADER_Y, 112)
 
     def test_renders_small_metagames_without_empty_result(self):
         image_bytes = BuildMetagameHeatmapImage(
