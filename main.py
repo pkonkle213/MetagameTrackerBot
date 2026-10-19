@@ -68,30 +68,6 @@ class DatabaseCommandTree(app_commands.CommandTree):
         # Attach the resulting object directly to the interaction object
         interaction.extras["db_object"] = db_data
 
-        command = interaction.command
-        if isinstance(command, app_commands.Command):
-            member = interaction.user
-            guild = interaction.guild
-            has_mt_submitter_role = (
-                isinstance(member, Member)
-                and guild is not None
-                and isMTSubmitter(guild, member)
-            )
-            has_mt_store_role = (
-                isinstance(member, Member)
-                and guild is not None
-                and isMTStore(guild, member)
-            )
-            await LogCommandInvocation(
-                user_id=interaction.user.id,
-                command_name=f"/{command.qualified_name}",
-                guild_id=interaction.guild_id,
-                category_id=getattr(interaction.channel, "category_id", None),
-                channel_id=interaction.channel_id,
-                has_mt_submitter_role=has_mt_submitter_role,
-                has_mt_store_role=has_mt_store_role,
-            )
-
         # Return True to allow command execution to proceed
         return True
 
@@ -101,6 +77,35 @@ intents.message_content = True
 intents.members = True
 intents.guilds = True
 bot = commands.Bot(command_prefix="?", intents=intents, tree_cls=DatabaseCommandTree)
+
+
+@bot.event
+async def on_app_command_completion(
+    interaction: Interaction, command: app_commands.Command
+) -> None:
+    """Log slash-command invocations after successful command completion."""
+    member = interaction.user
+    guild = interaction.guild
+    has_mt_submitter_role = (
+        isinstance(member, Member)
+        and guild is not None
+        and isMTSubmitter(guild, member)
+    )
+    has_mt_store_role = (
+        isinstance(member, Member)
+        and guild is not None
+        and isMTStore(guild, member)
+    )
+    await LogCommandInvocation(
+        user_id=interaction.user.id,
+        command_name=f"/{command.qualified_name}",
+        guild_id=interaction.guild_id,
+        category_id=getattr(interaction.channel, "category_id", None),
+        channel_id=interaction.channel_id,
+        has_mt_submitter_role=has_mt_submitter_role,
+        has_mt_store_role=has_mt_store_role,
+    )
+
 
 BASE_DIR = Path(__file__).parent
 CMDS_DIR = BASE_DIR / "commands"
