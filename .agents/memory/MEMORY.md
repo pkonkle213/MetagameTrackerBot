@@ -1,1 +1,2 @@
 - [Runtime type annotations](python-runtime-annotations.md) — Keep referenced domain types imported when Python evaluates annotations during module import.
+- [Metagame heatmap output](metagame-heatmap.md) — The top 16 archetypes should be shown in an ephemeral PNG with overall and head-to-head win rates and game counts.
