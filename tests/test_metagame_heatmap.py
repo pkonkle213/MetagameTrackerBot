@@ -3,7 +3,7 @@ from decimal import Decimal
 from io import BytesIO
 from unittest.mock import AsyncMock, Mock, patch
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from data.metagame_heatmap_data import MetagameHeatmapRow
 from services import metagame_heatmap_services as heatmap_services
@@ -16,7 +16,6 @@ from services.metagame_heatmap_services import (
     GRID_TOP,
     LEFT_MARGIN,
     MAX_HEATMAP_DECKS,
-    OPPONENT_HEADER_Y,
     OVERALL_WIDTH,
     OVERALL_HEADER_Y,
     SelectTopArchetypes,
@@ -70,6 +69,20 @@ class MetagameHeatmapImageTests(unittest.TestCase):
     def test_column_archetypes_end_close_to_matchup_cells(self):
         self.assertEqual(GRID_TOP - COLUMN_LABEL_BOTTOM, 12)
         self.assertEqual(GRID_TOP - OVERALL_HEADER_Y, 30)
+
+    def test_opponent_header_position_depends_on_longest_top_archetype(self):
+        draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+        font = heatmap_services._LoadFont(14, bold=True)
+
+        short_name_y = heatmap_services._GetOpponentHeaderY(
+            draw, ["Aggro"], font
+        )
+        long_name_y = heatmap_services._GetOpponentHeaderY(
+            draw, ["A considerably longer archetype name"], font
+        )
+
+        self.assertGreater(short_name_y, long_name_y)
+        self.assertGreaterEqual(long_name_y, 128)
 
     def test_renders_small_metagames_without_empty_result(self):
         image_bytes = BuildMetagameHeatmapImage(

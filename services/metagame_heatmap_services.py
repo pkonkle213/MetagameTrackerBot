@@ -14,9 +14,18 @@ LEFT_MARGIN = 360
 GRID_TOP = 470
 OVERALL_WIDTH = 128
 GRID_LEFT = LEFT_MARGIN + OVERALL_WIDTH + 20
-OPPONENT_HEADER_Y = 128
+OPPONENT_HEADER_MIN_Y = 128
+OPPONENT_HEADER_HEIGHT = 20
+OPPONENT_HEADER_GAP = 8
 COLUMN_LABEL_BOTTOM = GRID_TOP - 12
 OVERALL_HEADER_Y = GRID_TOP - 30
+COLUMN_LABEL_MAX_WIDTH = (
+    COLUMN_LABEL_BOTTOM
+    - OPPONENT_HEADER_MIN_Y
+    - OPPONENT_HEADER_HEIGHT
+    - OPPONENT_HEADER_GAP
+    - 4
+)
 BACKGROUND = "#FFFFFF"
 TEXT_COLOR = "#202124"
 MUTED_COLOR = "#65717A"
@@ -58,6 +67,7 @@ def BuildMetagameHeatmapImage(
     draw = ImageDraw.Draw(image)
     title_font = _LoadFont(28, bold=True)
     header_font = _LoadFont(16, bold=True)
+    column_label_font = _LoadFont(14, bold=True)
     body_font = _LoadFont(14)
     cell_font = _LoadFont(16, bold=True)
     small_font = _LoadFont(12)
@@ -76,8 +86,11 @@ def BuildMetagameHeatmapImage(
         font=body_font,
     )
 
+    opponent_header_y = _GetOpponentHeaderY(
+        draw, archetypes, column_label_font
+    )
     draw.text(
-        (GRID_LEFT, OPPONENT_HEADER_Y),
+        (GRID_LEFT, opponent_header_y),
         "Opponent archetype",
         fill=TEXT_COLOR,
         font=header_font,
@@ -87,10 +100,11 @@ def BuildMetagameHeatmapImage(
         _DrawVerticalText(
             image,
             archetype,
-            _LoadFont(14, bold=True),
+            column_label_font,
             TEXT_COLOR,
             x + CELL_WIDTH // 2,
             COLUMN_LABEL_BOTTOM,
+            COLUMN_LABEL_MAX_WIDTH,
         )
 
     overall_x = LEFT_MARGIN
@@ -207,12 +221,13 @@ def _DrawVerticalText(
     color: str,
     center_x: int,
     bottom_y: int,
+    max_text_width: int,
 ) -> None:
     value = _FitText(
         ImageDraw.Draw(image),
         value,
         font,
-        bottom_y - OPPONENT_HEADER_Y - 42,
+        max_text_width,
     )
     bounds = font.getbbox(value)
     text_width = max(1, bounds[2] - bounds[0])
@@ -228,6 +243,31 @@ def _DrawVerticalText(
         (center_x - label.width // 2, bottom_y - label.height),
         label,
     )
+
+
+def _GetOpponentHeaderY(
+    draw: ImageDraw.ImageDraw,
+    archetypes: list[str],
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+) -> int:
+    longest_label_width = max(
+        (
+            draw.textlength(
+                _FitText(draw, archetype, font, COLUMN_LABEL_MAX_WIDTH),
+                font=font,
+            )
+            for archetype in archetypes
+        ),
+        default=0,
+    )
+    header_y = round(
+        COLUMN_LABEL_BOTTOM
+        - longest_label_width
+        - 4
+        - OPPONENT_HEADER_HEIGHT
+        - OPPONENT_HEADER_GAP
+    )
+    return max(OPPONENT_HEADER_MIN_Y, header_y)
 
 
 def _FitText(
