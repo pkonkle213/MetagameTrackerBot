@@ -3,10 +3,6 @@ from output_builder import BuildTableOutput
 from input_modals.mass_archetype_modal import MassArchetypeSubmit
 from views.confirm_event import ConfirmEvent
 from input_modals.event_selector import EventSelector
-from services.message_hubs_services import MessageHubs
-from discord_messages import MessageChannel
-from views.confirm_data import ConfirmData
-from output_builder import BuildTableOutput
 from services.submit_archetype_service import OneEventDetails
 from discord import Interaction, User, app_commands
 from discord.ext import commands
@@ -16,19 +12,13 @@ from custom_errors import KnownError
 from data.event_data import (
     CreateEvent,
     GetEvents,
-    CompleteEvent,
     GetPlayersInEvent,
 )
 from data.player_name_data import GetArchetypeModalDetails, GetUserName
 from services.command_error_service import Error
 from services.determine_archetype_input import GetArchetypeModal
-from tuple_conversions import DataInputEnum, ViewButtonEnum, MTBRoles, ReportedAsEnum
-from services.convert_and_save_input import BuildFilePath
-from input_modals.submit_data_modal import SubmitManualDataModal
-from services.add_results_services import AddStandingResults, AddPairingResults
-from input_modals.submit_csv_modal import SubmitCSVDataModal
-from input_modals.submit_melee_modal import SubmitMeleeDataModal
-from services.submit_data_services import BuildReviewOutput
+from tuple_conversions import ViewButtonEnum, MTBRoles
+from services.submit_data_workflow import SubmitEventDataWorkflow
 
 # TODO: That's a lot of imports. Any chance I could clean this up any?
 
@@ -239,111 +229,18 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             event_id = await CreateEvent(event, interaction.user.id)
             event = event._replace(id=event_id)
 
-        def build_data_modal():
-            match input_type:
-                case DataInputEnum.Manual.value:
-                    save_path = BuildFilePath(
-                        objects.store, objects.game, objects.format, "ManualInput.txt"
-                    )
-                    return SubmitManualDataModal(event, save_path)
-
-                case DataInputEnum.CSV.value:
-                    save_path = BuildFilePath(
-                        objects.store, objects.game, objects.format, "CSVInput.txt"
-                    )
-                    return SubmitCSVDataModal(event, save_path)
-
-                case DataInputEnum.Melee.value:
-                    save_path = BuildFilePath(
-                        objects.store, objects.game, objects.format, "MeleeInput.txt"
-                    )
-                    return SubmitMeleeDataModal(objects.store, event, save_path)
-
-                case _:
-                    raise KnownError("Unknown input type")
-
-        # TODO: How does this work with a CSV import of 10 files?
-        modal = None
-        cont = True
-        while cont:
-            if modal is None:
-                modal = build_data_modal()
-                await active_interaction.response.send_modal(modal)
-            await modal.wait()
-
-            data = modal.converted_data
-
-            output = BuildReviewOutput(modal.converted_data)
-
-            next_modal = build_data_modal()
-            view = ConfirmData(
-                next_modal=next_modal, is_standings=bool(data.standings_data)
-            )
-            if data.standings_data:
-                output += "\n:rotating_light::rotating_light:This is standings data and will limit the data used for other commands:rotating_light::rotating_light:"
-
-            if (
-                data.pairings_data
-                and event.reported_as == ReportedAsEnum.Standings.value
-            ):
-                output += "\n:rotating_light::rotating_light:This will overwrite the standings data that exists for this event:rotating_light::rotating_light:"
-
-            await modal.interaction.followup.send(
-                f"{output}\nPlease select continue if the data is accurate",
-                ephemeral=True,
-                view=view,
-            )
-            await view.wait()
-
-            confirm_response = view.action
-            active_interaction = view.interaction
-
-            if not active_interaction:
-                raise KnownError("No interaction found after confirmation")
-
-            if confirm_response == ViewButtonEnum.Cancel.value:
-                await active_interaction.response.edit_message(
-                    content="Data submission for this round canceled!", view=None
-                )
-                break
-
-            if data.standings_data:
-                await AddStandingResults(
-                    event, data.standings_data, interaction.user.id
-                )
-            elif data.pairings_data:
-                await AddPairingResults(event, data.pairings_data, interaction.user.id)
-
-            if confirm_response in (
-                ViewButtonEnum.DoneComplete.value,
-                ViewButtonEnum.DoneIncomplete.value,
-            ):
-                cont = False
-
-                if confirm_response == ViewButtonEnum.DoneComplete.value:
-                    await CompleteEvent(event.id)
-
-                if is_new_event:
-                    store_message = (
-                        f"New data for {event.event_date.strftime('%B %-d')}'s "
-                        f"{event.event_name} event has been submitted! Use the "
-                        "`/submit archetype` command to input an archetype!"
-                    )
-                    event_date = event.event_date.strftime("%B %d")
-                    hub_message = (
-                        f"New event submitted for {objects.store.store_name}: "
-                        f"{event.event_name} ({event_date}). Waiting for archetypes..."
-                    )
-                    await MessageChannel(
-                        self.bot,
-                        store_message,
-                        interaction.guild_id,
-                        interaction.channel_id,
-                    )
-                    await MessageHubs(self.bot, objects.store, event, hub_message)
-
-            else:
-                modal = next_modal
+        await SubmitEventDataWorkflow(
+            bot=self.bot,
+            interaction=interaction,
+            store=objects.store,
+            game=objects.game,
+            format=objects.format,
+            event=event,
+            input_type=input_type,
+            active_interaction=active_interaction,
+            submitter_id=interaction.user.id,
+            is_new_event=is_new_event,
+        )
 
     @SubmitCheck.error
     @SubmitDataCommand.error
