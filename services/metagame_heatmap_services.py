@@ -12,7 +12,7 @@ MAX_HEATMAP_DECKS = 16
 CELL_WIDTH = 88
 CELL_HEIGHT = 64
 ROW_LABEL_X = 32
-ROW_LABEL_GAP = 12
+ROW_LABEL_GAP = 4
 OVERALL_WIDTH = 128
 MATCHUP_GRID_GAP = 20
 OPPONENT_HEADER_Y = 112
@@ -63,12 +63,17 @@ def BuildMetagameHeatmapImage(
     title_font = _LoadFont(28, bold=True)
     header_font = _LoadFont(16, bold=True)
     column_label_font = _LoadFont(14, bold=True)
+    row_archetype_font = _LoadFont(14, bold=True)
     body_font = _LoadFont(14)
     cell_font = _LoadFont(16, bold=True)
     small_font = _LoadFont(12)
     measure_draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
-    overall_x, grid_left, row_label_width = _GetLeftColumnLayout(
-        measure_draw, archetypes, deck_stats, body_font
+    overall_x, grid_left, _ = _GetLeftColumnLayout(
+        measure_draw,
+        archetypes,
+        deck_stats,
+        row_archetype_font,
+        body_font,
     )
     grid_top = _GetGridTop(measure_draw, archetypes, column_label_font)
     column_label_bottom = grid_top - GRID_TOP_PADDING
@@ -121,11 +126,19 @@ def BuildMetagameHeatmapImage(
     for row_index, archetype in enumerate(archetypes):
         y = grid_top + row_index * CELL_HEIGHT
         player_count = deck_stats[archetype][0]
-        row_label = f"{archetype} ({player_count} players)"
+        player_count_label = f" ({player_count} players)"
+        archetype_width = draw.textlength(archetype, font=row_archetype_font)
         draw.text(
             (ROW_LABEL_X, y + CELL_HEIGHT // 2),
-            _FitText(draw, row_label, body_font, row_label_width),
+            archetype,
             fill=TEXT_COLOR,
+            font=row_archetype_font,
+            anchor="lm",
+        )
+        draw.text(
+            (ROW_LABEL_X + archetype_width, y + CELL_HEIGHT // 2),
+            player_count_label,
+            fill=MUTED_COLOR,
             font=body_font,
             anchor="lm",
         )
@@ -274,14 +287,15 @@ def _GetLeftColumnLayout(
     draw: ImageDraw.ImageDraw,
     archetypes: list[str],
     deck_stats: dict[str, tuple[int, float | None]],
-    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    archetype_font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    count_font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
 ) -> tuple[int, int, int]:
     row_label_width = max(
         (
             ceil(
-                draw.textlength(
-                    f"{archetype} ({deck_stats[archetype][0]} players)",
-                    font=font,
+                draw.textlength(archetype, font=archetype_font)
+                + draw.textlength(
+                    f" ({deck_stats[archetype][0]} players)", font=count_font
                 )
             )
             for archetype in archetypes

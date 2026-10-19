@@ -57,10 +57,11 @@ class MetagameHeatmapImageTests(unittest.TestCase):
         self.assertEqual(image.format, "PNG")
         archetypes, deck_stats, _ = SelectTopArchetypes(self.make_rows(20))
         draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
-        row_font = heatmap_services._LoadFont(14)
+        row_archetype_font = heatmap_services._LoadFont(14, bold=True)
+        row_count_font = heatmap_services._LoadFont(14)
         column_font = heatmap_services._LoadFont(14, bold=True)
         _, grid_left, _ = heatmap_services._GetLeftColumnLayout(
-            draw, archetypes, deck_stats, row_font
+            draw, archetypes, deck_stats, row_archetype_font, row_count_font
         )
         grid_top = heatmap_services._GetGridTop(draw, archetypes, column_font)
         self.assertEqual(
@@ -74,10 +75,11 @@ class MetagameHeatmapImageTests(unittest.TestCase):
     def test_overall_column_is_close_after_longest_archetype_label(self):
         archetypes, deck_stats, _ = SelectTopArchetypes(self.make_rows(20))
         draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
-        font = heatmap_services._LoadFont(14)
+        archetype_font = heatmap_services._LoadFont(14, bold=True)
+        count_font = heatmap_services._LoadFont(14)
 
         overall_x, grid_left, label_width = heatmap_services._GetLeftColumnLayout(
-            draw, archetypes, deck_stats, font
+            draw, archetypes, deck_stats, archetype_font, count_font
         )
 
         self.assertEqual(
