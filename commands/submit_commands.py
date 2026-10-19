@@ -1,8 +1,3 @@
-from data.archetype_data import BulkAddArchetypes
-from output_builder import BuildTableOutput
-from input_modals.mass_archetype_modal import MassArchetypeSubmit
-from views.confirm_event import ConfirmEvent
-from input_modals.event_selector import EventSelector
 from services.submit_archetype_service import OneEventDetails
 from discord import Interaction, User, app_commands
 from discord.ext import commands
@@ -12,13 +7,13 @@ from custom_errors import KnownError
 from data.event_data import (
     CreateEvent,
     GetEvents,
-    GetPlayersInEvent,
 )
 from data.player_name_data import GetArchetypeModalDetails, GetUserName
 from services.command_error_service import Error
 from services.determine_archetype_input import GetArchetypeModal
-from tuple_conversions import ViewButtonEnum, MTBRoles
+from tuple_conversions import MTBRoles
 from services.submit_data_workflow import SubmitEventDataWorkflow
+from services.mass_archetype_workflow import SubmitMassArchetypes
 
 # TODO: That's a lot of imports. Any chance I could clean this up any?
 
@@ -71,92 +66,12 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     @IsStore()
     async def MassArchetypeInput(self, interaction: Interaction):
         objects = interaction.extras.get("db_object")
-        user_id = interaction.user.id
 
         if not objects or not objects.store or not objects.game or not objects.format:
             raise KnownError("No store, game, or format found.")
 
-        # User needs to select what event to submit archetypes for
-        modal = await EventSelector.create(objects.store, objects.game, objects.format)
-        await interaction.response.send_modal(modal)
-        await modal.wait()
-
-        if not modal.is_submitted:
-            raise Exception("Modal was not submitted")
-
-        event = modal.event
-
-        view = ConfirmEvent()
-        await interaction.followup.send(
-            f"You selected {event.event_date.strftime('%m/%d')} - {event.event_name}. Is this correct?",
-            view=view,
-            ephemeral=True,
-        )
-        await view.wait()
-
-        if view.action == ViewButtonEnum.Cancel.value:
-            await interaction.followup.send("Canceled!", ephemeral=True)
-
-        active_interaction = view.interaction
-        # Grab by event.id all user names and current archetype submissions for those players
-        if not event:
-            raise KnownError("No event found.")
-
-        total_players = await GetPlayersInEvent(event.id)
-        if len(total_players) == 0:
-            raise KnownError("No players found for this event.")
-
-        # Loop through the users 5 at a time and send a modal to submit archetypes for those players
-        for i in range(0, len(total_players), 5):
-            players = total_players[i : i + 5]
-            modal = MassArchetypeSubmit(players)
-
-            await active_interaction.response.send_modal(modal)
-            await modal.wait()
-
-            if not modal.is_submitted:
-                raise KnownError("Modal was not submitted")
-
-            # Confirm archetypes
-            active_interaction = modal.new_interaction
-            archetypes = modal.new_archetypes
-
-            title = "Please confirm the new archetypes:"
-            headers = ["Name", "Archetype"]
-            data = archetypes
-            output = BuildTableOutput(title, headers, data)
-
-            archetypes_output = "\n".join(
-                [
-                    f"{player.player_name}: {player.archetype_played}"
-                    for player in archetypes
-                ]
-            )
-            view = ConfirmEvent()
-            await interaction.followup.send(
-                f"{output}\nAre these correct?", view=view, ephemeral=True
-            )
-            await view.wait()
-
-            if view.action == ViewButtonEnum.Cancel.value:
-                await interaction.followup.send("Canceled!", ephemeral=True)
-                break
-
-            # Save archetypes
-            await BulkAddArchetypes(
-                event,
-                archetypes,
-                user_id,
-                interaction.user.name,
-                interaction.guild_id,
-                interaction.guild.name,
-            )
-
-            # Continue or end loop if there are no more players
-            active_interaction = view.interaction
-
-        await interaction.followup.send(
-            "All archetypes have been submitted!", ephemeral=True
+        await SubmitMassArchetypes(
+            interaction, objects.store, objects.game, objects.format
         )
 
     @app_commands.command(

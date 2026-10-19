@@ -2,7 +2,7 @@ from services.submit_archetype_service import SubmitArchetype
 import discord
 from discord import ui
 from discord.ext import commands
-from tuple_conversions import Game, Format, Event, Store
+from tuple_conversions import Game, Format, Event, Hub, Store
 from services.command_error_service import KnownError
 
 MAGIC_MANA = [
@@ -17,18 +17,23 @@ class MagicLimitedSubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype
   def __init__(
     self,
     bot: commands.Bot,
+    store: Store | None,
+    hub: Hub | None,
     game: Game,
     format: Format,
     userId: int,
     events: list[Event],
     player_name: str,
-    prev_archetypes: list[str]
+    is_submitter: bool = False,
   ):
     super().__init__()
     self.bot = bot
+    self.store = store
+    self.hub = hub
     self.game = game
     self.format = format
     self.previous_events = events
+    self.is_submitter = is_submitter
   
     past_events:list[discord.SelectOption] = []
     for i in range(len(events)):
@@ -90,8 +95,12 @@ class MagicLimitedSubmitArchetypeModal(discord.ui.Modal, title='Submit Archetype
       submitted_player_name,
       submitted_event,
       submitted_archetype,
+      self.store,
+      self.hub,
       self.game,
-      self.format)
+      self.format,
+      None,
+      self.is_submitter)
 
   async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
     await interaction.followup.send(f'Oops! Something went wrong: {error}', ephemeral=True)

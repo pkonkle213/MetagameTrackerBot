@@ -15,8 +15,6 @@ from services.one_event_details import OneEventDetails
 from tuple_conversions import (
     Event,
     Format,
-    Game,
-    Hub,
     PlayerArchetype,
     Store,
 )
@@ -25,32 +23,15 @@ from tuple_conversions import (
 async def Moxfield(
     link: str, event: Event, format: Format, player_name: str
 ) -> tuple[str, str, bool]:
-    moxfield_archetype = ""
-    moxfield_error = ""
-    success = False
     try:
         moxfield_archetype = await GetMoxfieldArchetype(
             link, event, format, player_name
         )
-
-        # TODO: Fix this
-        await BulkAddArchetypes(
-            event,
-            [PlayerArchetype(player_name, moxfield_archetype)],
-            0,
-            "Moxfield Import",
-            guild_id,
-            guild_name,
-            is_submitter,
-        )
-
-        moxfield_archetype += " decklist "
-        success = True
-    except KnownError as e:
-        moxfield_error = (
+        return moxfield_archetype, "", True
+    except KnownError:
+        return "", (
             " Unable to load the decklist from Moxfield. Please try again later."
-        )
-    return moxfield_archetype, moxfield_error, success
+        ), False
 
 
 async def SubmitArchetype(
@@ -66,57 +47,105 @@ async def SubmitArchetype(
     moxfield_link: str | None,
     is_submitter: bool,
 ) -> None:
-    guild_id = interaction.guild.id
-    guild_name = interaction.guild.name
-    channel_id = interaction.channel.id
+    ValidateArchetypeContext(interaction)
+    await ValidateArchetypeSubmission(
+        interaction, event, player_name, archetype
+    )
 
+    moxfield_error = ""
+    if moxfield_link:
+        imported_archetype, moxfield_error, moxfield_success = await Moxfield(
+            moxfield_link, event, format, player_name
+        )
+        if moxfield_success:
+            archetype = imported_archetype
+            await ValidateArchetypeSubmission(
+                interaction, event, player_name, archetype
+            )
+
+    if not archetype:
+        raise KnownError(
+            "No archetype submitted. Please try again." + moxfield_error
+        )
+
+    await SaveArchetypeSubmission(
+        interaction, event, player_name, archetype, is_submitter
+    )
+
+    await NotifyArchetypeSubmission(
+        bot,
+        interaction,
+        event,
+        player_name,
+        archetype,
+        store,
+        moxfield_error,
+    )
+
+
+
+def ValidateArchetypeContext(interaction: Interaction) -> None:
+    if interaction.guild is None or interaction.channel is None:
+        raise KnownError("Archetypes can only be submitted in a server channel.")
+
+
+async def ValidateArchetypeSubmission(
+    interaction: Interaction, event: Event, player_name: str, archetype: str
+) -> None:
     if not await PlayerInEvent(event, player_name):
         raise KnownError(
             f"Player name `{player_name}` not found in event. Please try again."
         )
 
-    # Make the call to check the archetype for banned words here
     if await ContainsBadWord(event.discord_id, archetype):
         raise KnownError("Archetype contains a banned word")
 
-    # Check if user is allowed to submit archetypes (too many banned words)
     if not await CanSubmitArchetypes(event.discord_id, interaction.user.id):
         raise KnownError(
             "You have submitted too many archetypes with banned words. "
             "Please contact your store owner to have them submit the archetype."
         )
 
-    # If a moxfield link is provided, get the archetype from it
-    moxfield_error = ""
-    if moxfield_link:
-        moxfield_archetype, moxfield_error, moxfield_success = await Moxfield(
-            moxfield_link
-        )
 
-    # If not banned, add to the database
-    if archetype != "":
-        await BulkAddArchetypes(
-            event,
-            [PlayerArchetype(player_name, archetype)],
-            interaction.user.id,
-            interaction.user.name,
-            guild_id,
-            guild_name,
-            is_submitter,
-        )
+async def SaveArchetypeSubmission(
+    interaction: Interaction,
+    event: Event,
+    player_name: str,
+    archetype: str,
+    is_submitter: bool,
+) -> None:
+    if not archetype:
+        return
+    await BulkAddArchetypes(
+        event,
+        [PlayerArchetype(player_name, archetype)],
+        interaction.user.id,
+        interaction.user.name,
+        interaction.guild_id,
+        interaction.guild.name if interaction.guild else "",
+        is_submitter,
+    )
 
-    feed_output = BuildMessage(interaction, event, archetype, player_name)
-    private_output: str = (
+
+async def NotifyArchetypeSubmission(
+    bot: commands.Bot,
+    interaction: Interaction,
+    event: Event,
+    player_name: str,
+    archetype: str,
+    store: Store | None,
+    moxfield_error: str,
+) -> None:
+    private_output = (
         f"Thank you for submitting the archetype for {event.event_name}!"
         + moxfield_error
     )
-
-    # If added, check if the event is fully reported and complete
-    public_output, full_event = await CheckEventPercentage(event)
-
-    # Send all output messages
     await interaction.followup.send(private_output, ephemeral=True)
-    await MessageStoreFeed(bot, feed_output, event)
+    await MessageStoreFeed(
+        bot, BuildMessage(interaction, event, archetype, player_name), event
+    )
+
+    public_output, full_event = await CheckEventPercentage(event)
     format_map = await GetFormatMapByEvent(event)
     mapped_channel = format_map.channel_id
 
@@ -124,9 +153,12 @@ async def SubmitArchetype(
         await MessageChannel(bot, public_output, event.discord_id, mapped_channel)
 
     if full_event:
-        await MessageChannel(bot, full_event, guild_id, mapped_channel)
-        output = f"```{event.event_name} - " + full_event[3:]
-        await MessageHubs(bot, store, event, output)
+        await MessageChannel(
+            bot, full_event, interaction.guild_id, mapped_channel
+        )
+        await MessageHubs(
+            bot, store, event, f"```{event.event_name} - " + full_event[3:]
+        )
 
 
 async def MessageStoreFeed(bot: commands.Bot, message: str, event: Event) -> None:

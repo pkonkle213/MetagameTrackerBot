@@ -93,6 +93,11 @@ class SubmitArchetypeModal(ui.Modal, title="Submit Archetype"):
         submitted_player_name: str = ConvertInput(
             self.player_name_input.component.value
         )
+        moxfield_link = (
+            self.moxfield_link.component.value
+            if self.game.id == GameEnum.Magic.value
+            else None
+        )
         await interaction.response.defer(thinking=False)
         await SubmitArchetype(
             self.bot,
@@ -104,8 +109,7 @@ class SubmitArchetypeModal(ui.Modal, title="Submit Archetype"):
             self.hub,
             self.game,
             self.format,
-            # Fix moxfield input
-            None,
+            moxfield_link,
             self.is_submitter,
         )
 
@@ -117,6 +121,11 @@ class SubmitArchetypeModal(ui.Modal, title="Submit Archetype"):
 
 
 def DetermineArchetype(self) -> str:
+    moxfield_link = (
+        self.moxfield_link.component.value
+        if self.game.id == GameEnum.Magic.value
+        else ""
+    )
     archetype = ""
     if (
         not self.archetype_select.component.values
@@ -127,7 +136,7 @@ def DetermineArchetype(self) -> str:
         archetype = self.archetype_select.component.values[0]
 
     archetype = ConvertInput(archetype)
-    if archetype == "" and not self.moxfield_link.component.value:
+    if archetype == "" and not moxfield_link:
         raise KnownError("No archetype submitted. Please try again.")
     return archetype
 
