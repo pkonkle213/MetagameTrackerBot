@@ -11,9 +11,12 @@ MAX_HEATMAP_DECKS = 16
 CELL_WIDTH = 88
 CELL_HEIGHT = 64
 LEFT_MARGIN = 360
-GRID_TOP = 440
+GRID_TOP = 470
 OVERALL_WIDTH = 128
 GRID_LEFT = LEFT_MARGIN + OVERALL_WIDTH + 20
+OPPONENT_HEADER_Y = 128
+COLUMN_LABEL_TOP = 154
+OVERALL_HEADER_Y = GRID_TOP - 30
 BACKGROUND = "#FFFFFF"
 TEXT_COLOR = "#202124"
 MUTED_COLOR = "#65717A"
@@ -74,7 +77,7 @@ def BuildMetagameHeatmapImage(
     )
 
     draw.text(
-        (GRID_LEFT, 128),
+        (GRID_LEFT, OPPONENT_HEADER_Y),
         "Opponent archetype",
         fill=TEXT_COLOR,
         font=header_font,
@@ -87,12 +90,12 @@ def BuildMetagameHeatmapImage(
             _LoadFont(14, bold=True),
             TEXT_COLOR,
             x + CELL_WIDTH // 2,
-            GRID_TOP - 12,
+            COLUMN_LABEL_TOP,
         )
 
     overall_x = LEFT_MARGIN
     draw.text(
-        (overall_x + OVERALL_WIDTH // 2, 128),
+        (overall_x + OVERALL_WIDTH // 2, OVERALL_HEADER_Y),
         "Overall",
         fill=TEXT_COLOR,
         font=header_font,
@@ -203,8 +206,14 @@ def _DrawVerticalText(
     font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
     color: str,
     center_x: int,
-    bottom_y: int,
+    top_y: int,
 ) -> None:
+    value = _FitText(
+        ImageDraw.Draw(image),
+        value,
+        font,
+        GRID_TOP - COLUMN_LABEL_TOP - 12,
+    )
     bounds = font.getbbox(value)
     text_width = max(1, bounds[2] - bounds[0])
     text_height = max(1, bounds[3] - bounds[1])
@@ -214,7 +223,7 @@ def _DrawVerticalText(
         (2 - bounds[0], 2 - bounds[1]), value, font=font, fill=color
     )
     label = label.rotate(90, expand=True)
-    image.paste(label, (center_x - label.width // 2, bottom_y - label.height), label)
+    image.paste(label, (center_x - label.width // 2, top_y), label)
 
 
 def _FitText(
