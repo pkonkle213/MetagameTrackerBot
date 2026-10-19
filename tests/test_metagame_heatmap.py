@@ -11,6 +11,7 @@ from services.metagame_heatmap_services import (
     BuildMetagameHeatmapImage,
     CELL_HEIGHT,
     CELL_WIDTH,
+    GRID_LEFT,
     GRID_TOP,
     LEFT_MARGIN,
     MAX_HEATMAP_DECKS,
@@ -55,14 +56,13 @@ class MetagameHeatmapImageTests(unittest.TestCase):
         self.assertEqual(
             image.size,
             (
-                LEFT_MARGIN
-                + MAX_HEATMAP_DECKS * CELL_WIDTH
-                + 20
-                + OVERALL_WIDTH
-                + 36,
+                GRID_LEFT + MAX_HEATMAP_DECKS * CELL_WIDTH + 36,
                 GRID_TOP + MAX_HEATMAP_DECKS * CELL_HEIGHT + 44,
             ),
         )
+
+    def test_overall_column_is_between_deck_labels_and_matchup_grid(self):
+        self.assertGreater(GRID_LEFT, LEFT_MARGIN + OVERALL_WIDTH)
 
     def test_renders_small_metagames_without_empty_result(self):
         image_bytes = BuildMetagameHeatmapImage(

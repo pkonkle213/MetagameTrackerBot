@@ -13,6 +13,7 @@ CELL_HEIGHT = 64
 LEFT_MARGIN = 360
 GRID_TOP = 440
 OVERALL_WIDTH = 128
+GRID_LEFT = LEFT_MARGIN + OVERALL_WIDTH + 20
 BACKGROUND = "#FFFFFF"
 TEXT_COLOR = "#202124"
 MUTED_COLOR = "#65717A"
@@ -48,7 +49,7 @@ def BuildMetagameHeatmapImage(
     archetypes, deck_stats, matchups = SelectTopArchetypes(rows)
     count = len(archetypes)
     grid_width = count * CELL_WIDTH
-    image_width = LEFT_MARGIN + grid_width + 20 + OVERALL_WIDTH + 36
+    image_width = GRID_LEFT + grid_width + 36
     image_height = GRID_TOP + count * CELL_HEIGHT + 44
     image = Image.new("RGB", (image_width, image_height), BACKGROUND)
     draw = ImageDraw.Draw(image)
@@ -73,13 +74,13 @@ def BuildMetagameHeatmapImage(
     )
 
     draw.text(
-        (LEFT_MARGIN, 128),
+        (GRID_LEFT, 128),
         "Opponent archetype",
         fill=TEXT_COLOR,
         font=header_font,
     )
     for index, archetype in enumerate(archetypes):
-        x = LEFT_MARGIN + index * CELL_WIDTH
+        x = GRID_LEFT + index * CELL_WIDTH
         _DrawVerticalText(
             image,
             archetype,
@@ -89,7 +90,7 @@ def BuildMetagameHeatmapImage(
             GRID_TOP - 12,
         )
 
-    overall_x = LEFT_MARGIN + grid_width + 20
+    overall_x = LEFT_MARGIN
     draw.text(
         (overall_x + OVERALL_WIDTH // 2, 128),
         "Overall",
@@ -134,7 +135,7 @@ def BuildMetagameHeatmapImage(
         )
 
         for column_index, opponent in enumerate(archetypes):
-            x = LEFT_MARGIN + column_index * CELL_WIDTH
+            x = GRID_LEFT + column_index * CELL_WIDTH
             rect = (x + 2, y + 2, x + CELL_WIDTH - 2, y + CELL_HEIGHT - 2)
             if opponent == archetype:
                 fill = "#E6E9EB"
