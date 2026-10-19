@@ -1,99 +1,255 @@
 from collections import OrderedDict
+from io import BytesIO
+from pathlib import Path
 
-from discord import Interaction
+from PIL import Image, ImageDraw, ImageFont
+from discord import File, Interaction
 
 from data.metagame_heatmap_data import MetagameHeatmapRow
 
+MAX_HEATMAP_DECKS = 16
+CELL_WIDTH = 88
+CELL_HEIGHT = 64
+LEFT_MARGIN = 360
+GRID_TOP = 390
+OVERALL_WIDTH = 128
+BACKGROUND = "#FFFFFF"
+TEXT_COLOR = "#202124"
+MUTED_COLOR = "#65717A"
+GRID_COLOR = "#D3D9DD"
 
-def BuildMetagameHeatmapMessages(
-    title: str, rows: list[MetagameHeatmapRow]
-) -> list[str]:
-    archetypes: OrderedDict[str, dict[str, object]] = OrderedDict()
-    matchups: dict[tuple[str, str], tuple[int, float]] = {}
+
+def SelectTopArchetypes(
+    rows: list[MetagameHeatmapRow], limit: int = MAX_HEATMAP_DECKS
+) -> tuple[list[str], dict[str, tuple[int, float | None]], dict[tuple[str, str], tuple[int, float | None]]]:
+    deck_stats: OrderedDict[str, tuple[int, float | None]] = OrderedDict()
+    matchups: dict[tuple[str, str], tuple[int, float | None]] = {}
 
     for row in rows:
-        archetype = archetypes.setdefault(
-            row.archetype,
-            {
-                "player_count": row.player_count,
-                "overall_win_percent": row.overall_win_percent,
-            },
+        deck_stats.setdefault(
+            row.archetype, (row.player_count, row.overall_win_percent)
         )
         if row.opponent_archetype is not None:
             matchups[(row.archetype, row.opponent_archetype)] = (
                 row.games_against or 0,
-                row.matchup_win_percent or 0.0,
+                row.matchup_win_percent,
             )
 
-    ranked_archetypes = list(archetypes)
-    lines = [
-        f"**{title}**",
-        "Matchup win-rate key: 🟦 under 45% · 🩵 45–49% · ⬜ 50–54% · 🟨 55–59% · 🟧 60%+",
-        "",
-    ]
+    ranked = sorted(
+        deck_stats,
+        key=lambda name: (-deck_stats[name][0], name.casefold()),
+    )[:limit]
+    return ranked, dict(deck_stats), matchups
 
-    for rank, archetype_name in enumerate(ranked_archetypes, start=1):
-        archetype = archetypes[archetype_name]
-        overall_win_percent = archetype["overall_win_percent"]
+
+def BuildMetagameHeatmapImage(
+    title: str, rows: list[MetagameHeatmapRow]
+) -> bytes:
+    archetypes, deck_stats, matchups = SelectTopArchetypes(rows)
+    count = len(archetypes)
+    grid_width = count * CELL_WIDTH
+    image_width = LEFT_MARGIN + grid_width + 20 + OVERALL_WIDTH + 36
+    image_height = GRID_TOP + count * CELL_HEIGHT + 44
+    image = Image.new("RGB", (image_width, image_height), BACKGROUND)
+    draw = ImageDraw.Draw(image)
+    title_font = _LoadFont(28, bold=True)
+    header_font = _LoadFont(16, bold=True)
+    body_font = _LoadFont(14)
+    cell_font = _LoadFont(16, bold=True)
+    small_font = _LoadFont(12)
+
+    draw.text((32, 22), title, fill=TEXT_COLOR, font=title_font)
+    draw.text(
+        (32, 64),
+        f"Top {count} archetypes by player count. Cell: matchup win rate / games played.",
+        fill=MUTED_COLOR,
+        font=body_font,
+    )
+    draw.text(
+        (32, 91),
+        "Blue = lower win rate · white = 50% · orange = higher win rate",
+        fill=MUTED_COLOR,
+        font=body_font,
+    )
+
+    legend_top = 132
+    half_width = (image_width - 64) // 2
+    for index, archetype in enumerate(archetypes):
+        column = index // 8
+        row_index = index % 8
+        x = 32 + column * half_width
+        y = legend_top + row_index * 27
+        player_count = deck_stats[archetype][0]
+        label = f"{index + 1:02d}  {archetype} ({player_count} players)"
+        draw.text(
+            (x, y),
+            _FitText(draw, label, body_font, half_width - 28),
+            fill=TEXT_COLOR,
+            font=body_font,
+        )
+
+    draw.text(
+        (LEFT_MARGIN, GRID_TOP - 32),
+        "Opponent archetype (rank)",
+        fill=TEXT_COLOR,
+        font=header_font,
+    )
+    for index, archetype in enumerate(archetypes):
+        x = LEFT_MARGIN + index * CELL_WIDTH
+        draw.text(
+            (x + CELL_WIDTH // 2, GRID_TOP - 7),
+            f"{index + 1:02d}",
+            fill=TEXT_COLOR,
+            font=header_font,
+            anchor="mm",
+        )
+
+    overall_x = LEFT_MARGIN + grid_width + 20
+    draw.text(
+        (overall_x + OVERALL_WIDTH // 2, GRID_TOP - 32),
+        "Overall",
+        fill=TEXT_COLOR,
+        font=header_font,
+        anchor="mm",
+    )
+
+    for row_index, archetype in enumerate(archetypes):
+        y = GRID_TOP + row_index * CELL_HEIGHT
+        row_label = f"{row_index + 1:02d}  {archetype}"
+        draw.text(
+            (32, y + CELL_HEIGHT // 2),
+            _FitText(draw, row_label, body_font, LEFT_MARGIN - 48),
+            fill=TEXT_COLOR,
+            font=body_font,
+            anchor="lm",
+        )
+
+        overall_percent = deck_stats[archetype][1]
         overall_text = (
-            f"{overall_win_percent:.1f}%"
-            if overall_win_percent is not None
-            else "N/A"
+            f"{overall_percent:.1f}%" if overall_percent is not None else "N/A"
         )
-        lines.append(
-            f"**{rank}. {archetype_name} — overall win rate: {overall_text}**"
+        draw.rounded_rectangle(
+            (
+                overall_x,
+                y + 3,
+                overall_x + OVERALL_WIDTH - 4,
+                y + CELL_HEIGHT - 3,
+            ),
+            radius=5,
+            fill="#EEF1F3",
+            outline=GRID_COLOR,
+        )
+        draw.text(
+            (overall_x + (OVERALL_WIDTH - 4) // 2, y + CELL_HEIGHT // 2),
+            overall_text,
+            fill=TEXT_COLOR,
+            font=cell_font,
+            anchor="mm",
         )
 
-        for opponent_name in ranked_archetypes:
-            if opponent_name == archetype_name:
-                continue
-            matchup = matchups.get((archetype_name, opponent_name))
-            if matchup is None:
-                lines.append(f"⬜ vs {opponent_name}: N/A (0 games)")
+        for column_index, opponent in enumerate(archetypes):
+            x = LEFT_MARGIN + column_index * CELL_WIDTH
+            rect = (x + 2, y + 2, x + CELL_WIDTH - 2, y + CELL_HEIGHT - 2)
+            if opponent == archetype:
+                fill = "#E6E9EB"
+                draw.rounded_rectangle(
+                    rect, radius=4, fill=fill, outline=GRID_COLOR
+                )
+                draw.text(
+                    (x + CELL_WIDTH // 2, y + CELL_HEIGHT // 2),
+                    "—",
+                    fill=MUTED_COLOR,
+                    font=cell_font,
+                    anchor="mm",
+                )
                 continue
 
-            games, win_percent = matchup
-            lines.append(
-                f"{_HeatColor(win_percent)} vs {opponent_name}: "
-                f"{win_percent:.1f}% ({games} games)"
+            matchup = matchups.get((archetype, opponent))
+            if matchup is None or matchup[1] is None:
+                fill = "#F4F5F6"
+                percent_text = "N/A"
+                games_text = "0 games"
+            else:
+                games, win_percent = matchup
+                fill = _WinRateColor(win_percent)
+                percent_text = f"{win_percent:.1f}%"
+                games_text = f"{games} games"
+
+            draw.rounded_rectangle(
+                rect, radius=4, fill=fill, outline=GRID_COLOR
             )
-        lines.append("")
+            draw.text(
+                (x + CELL_WIDTH // 2, y + 23),
+                percent_text,
+                fill=TEXT_COLOR,
+                font=cell_font,
+                anchor="mm",
+            )
+            draw.text(
+                (x + CELL_WIDTH // 2, y + 44),
+                games_text,
+                fill=TEXT_COLOR,
+                font=small_font,
+                anchor="mm",
+            )
 
-    return _SplitDiscordMessages(lines)
+    output = BytesIO()
+    image.save(output, format="PNG", optimize=True)
+    return output.getvalue()
 
 
-def _HeatColor(win_percent: float) -> str:
-    if win_percent < 45:
-        return "🟦"
-    if win_percent < 50:
-        return "🩵"
-    if win_percent < 55:
-        return "⬜"
-    if win_percent < 60:
-        return "🟨"
-    return "🟧"
+def _LoadFont(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    filename = "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"
+    candidates = (
+        Path("/usr/share/fonts/truetype/dejavu") / filename,
+        Path("/usr/share/fonts/dejavu") / filename,
+    )
+    for path in candidates:
+        if path.is_file():
+            return ImageFont.truetype(str(path), size)
+    return ImageFont.load_default(size=size)
 
 
-def _SplitDiscordMessages(lines: list[str], max_chars: int = 1900) -> list[str]:
-    messages: list[str] = []
-    active_lines: list[str] = []
-    active_length = 0
+def _FitText(
+    draw: ImageDraw.ImageDraw,
+    value: str,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    max_width: int,
+) -> str:
+    if draw.textlength(value, font=font) <= max_width:
+        return value
+    return _Ellipsize(draw, value, font, max_width)
 
-    for line in lines:
-        if active_lines and active_length + len(line) + 1 > max_chars:
-            messages.append("\n".join(active_lines))
-            active_lines = []
-            active_length = 0
-        active_lines.append(line)
-        active_length += len(line) + 1
 
-    if active_lines:
-        messages.append("\n".join(active_lines))
-    return messages
+def _Ellipsize(
+    draw: ImageDraw.ImageDraw,
+    value: str,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    max_width: int,
+) -> str:
+    suffix = "…"
+    while value and draw.textlength(value + suffix, font=font) > max_width:
+        value = value[:-1]
+    return value + suffix if value else suffix
+
+
+def _WinRateColor(win_percent: float) -> str:
+    blue = (38, 114, 166)
+    white = (255, 255, 255)
+    orange = (233, 159, 46)
+    if win_percent <= 50:
+        start, end, weight = blue, white, max(0.0, min(win_percent / 50, 1.0))
+    else:
+        start, end, weight = white, orange, max(0.0, min((win_percent - 50) / 50, 1.0))
+    color = tuple(round(a + (b - a) * weight) for a, b in zip(start, end))
+    return "#{:02X}{:02X}{:02X}".format(*color)
 
 
 async def SendMetagameHeatmap(
     interaction: Interaction, title: str, rows: list[MetagameHeatmapRow]
 ) -> None:
-    for message in BuildMetagameHeatmapMessages(title, rows):
-        await interaction.followup.send(message)
+    image_bytes = BuildMetagameHeatmapImage(title, rows)
+    await interaction.followup.send(
+        file=File(BytesIO(image_bytes), filename="metagame_heatmap.png"),
+        ephemeral=True,
+    )

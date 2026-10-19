@@ -108,7 +108,7 @@ class MetagameCommand(commands.Cog):
 
     @app_commands.command(
         name="metagame_heatmap",
-        description="Compare archetype win rates against each other in this format",
+        description="Get a private heatmap of the top 16 archetypes in this format",
     )
     @app_commands.checks.cooldown(
         1, 60.0, key=lambda i: (i.guild_id, i.user.id, i.channel_id)
@@ -117,7 +117,7 @@ class MetagameCommand(commands.Cog):
     async def ViewMetagameHeatmap(
         self, interaction: Interaction, start_date: str = "", end_date: str = ""
     ) -> None:
-        await interaction.response.defer(thinking=True)
+        await interaction.response.defer(ephemeral=True, thinking=True)
         objects = interaction.extras.get("db_object")
         if not objects or not objects.game or not objects.format:
             raise KnownError(
@@ -149,7 +149,8 @@ class MetagameCommand(commands.Cog):
         )
         if not rows:
             await interaction.followup.send(
-                "No matchup data found for this format and date range."
+                "No matchup data found for this format and date range.",
+                ephemeral=True,
             )
             return
 

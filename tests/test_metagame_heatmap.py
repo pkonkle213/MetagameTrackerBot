@@ -1,48 +1,94 @@
 import unittest
+from io import BytesIO
+from unittest.mock import AsyncMock, Mock, patch
+
+from PIL import Image
 
 from data.metagame_heatmap_data import MetagameHeatmapRow
-from services.metagame_heatmap_services import BuildMetagameHeatmapMessages
+from services import metagame_heatmap_services as heatmap_services
+from services.metagame_heatmap_services import (
+    BuildMetagameHeatmapImage,
+    CELL_HEIGHT,
+    CELL_WIDTH,
+    GRID_TOP,
+    LEFT_MARGIN,
+    MAX_HEATMAP_DECKS,
+    OVERALL_WIDTH,
+    SelectTopArchetypes,
+)
 
 
-class MetagameHeatmapOutputTests(unittest.TestCase):
-    def test_ranks_archetypes_and_shows_overall_and_matchup_rates(self):
-        rows = [
-            MetagameHeatmapRow("Deck A", 10, 55.0, "Deck B", 3, 66.7),
-            MetagameHeatmapRow("Deck B", 5, 40.0, "Deck A", 3, 33.3),
-            MetagameHeatmapRow("Deck C", 1, None, None, None, None),
-        ]
-
-        messages = BuildMetagameHeatmapMessages("Heatmap title", rows)
-        output = "\n".join(messages)
-
-        self.assertLess(output.index("1. Deck A"), output.index("2. Deck B"))
-        self.assertLess(output.index("2. Deck B"), output.index("3. Deck C"))
-        self.assertIn("overall win rate: 55.0%", output)
-        self.assertIn("vs Deck B: 66.7% (3 games)", output)
-        self.assertIn("vs Deck A: 33.3% (3 games)", output)
-        self.assertIn("vs Deck C: N/A (0 games)", output)
-        self.assertIn("overall win rate: N/A", output)
-
-    def test_splits_long_heatmaps_under_discord_message_limit(self):
+class MetagameHeatmapImageTests(unittest.TestCase):
+    def make_rows(self, count: int) -> list[MetagameHeatmapRow]:
         rows = []
-        for index in range(18):
-            for opponent_index in range(18):
-                if index != opponent_index:
-                    rows.append(
-                        MetagameHeatmapRow(
-                            f"Deck {index}",
-                            18 - index,
-                            50.0,
-                            f"Deck {opponent_index}",
-                            4,
-                            50.0,
-                        )
-                    )
+        for index in range(count):
+            opponent_index = (index + 1) % count
+            rows.append(
+                MetagameHeatmapRow(
+                    f"Deck {index + 1}",
+                    count - index,
+                    55.0 - index,
+                    f"Deck {opponent_index + 1}",
+                    12,
+                    48.5 + index,
+                )
+            )
+        return rows
 
-        messages = BuildMetagameHeatmapMessages("Heatmap title", rows)
+    def test_selects_the_16_most_played_archetypes(self):
+        rows = self.make_rows(20)
 
-        self.assertGreater(len(messages), 1)
-        self.assertTrue(all(len(message) <= 1900 for message in messages))
+        archetypes, _, _ = SelectTopArchetypes(rows)
+
+        self.assertEqual(len(archetypes), MAX_HEATMAP_DECKS)
+        self.assertEqual(archetypes[0], "Deck 1")
+        self.assertEqual(archetypes[-1], "Deck 16")
+
+    def test_builds_a_png_with_space_for_matrix_and_overall_rates(self):
+        image_bytes = BuildMetagameHeatmapImage(
+            "Standard heatmap", self.make_rows(20)
+        )
+
+        image = Image.open(BytesIO(image_bytes))
+        self.assertEqual(image.format, "PNG")
+        self.assertEqual(
+            image.size,
+            (
+                LEFT_MARGIN
+                + MAX_HEATMAP_DECKS * CELL_WIDTH
+                + 20
+                + OVERALL_WIDTH
+                + 36,
+                GRID_TOP + MAX_HEATMAP_DECKS * CELL_HEIGHT + 44,
+            ),
+        )
+
+    def test_renders_small_metagames_without_empty_result(self):
+        image_bytes = BuildMetagameHeatmapImage(
+            "Small heatmap", self.make_rows(2)
+        )
+
+        image = Image.open(BytesIO(image_bytes))
+        self.assertGreater(image.width, 0)
+        self.assertGreater(image.height, 0)
+
+
+class MetagameHeatmapDeliveryTests(unittest.IsolatedAsyncioTestCase):
+    async def test_sends_the_chart_attachment_ephemerally(self):
+        interaction = Mock()
+        interaction.followup.send = AsyncMock()
+
+        with patch.object(
+            heatmap_services, "BuildMetagameHeatmapImage", return_value=b"png"
+        ):
+            await heatmap_services.SendMetagameHeatmap(
+                interaction, "Heatmap", []
+            )
+
+        interaction.followup.send.assert_awaited_once()
+        call = interaction.followup.send.await_args
+        self.assertTrue(call.kwargs["ephemeral"])
+        self.assertEqual(call.kwargs["file"].filename, "metagame_heatmap.png")
 
 
 if __name__ == "__main__":
