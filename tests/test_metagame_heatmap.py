@@ -11,12 +11,13 @@ from services.metagame_heatmap_services import (
     BuildMetagameHeatmapImage,
     CELL_HEIGHT,
     CELL_WIDTH,
-    GRID_LEFT,
     GRID_TOP_PADDING,
-    LEFT_MARGIN,
+    MATCHUP_GRID_GAP,
     MAX_HEATMAP_DECKS,
     OPPONENT_HEADER_Y,
     OVERALL_WIDTH,
+    ROW_LABEL_GAP,
+    ROW_LABEL_X,
     SelectTopArchetypes,
 )
 
@@ -54,20 +55,39 @@ class MetagameHeatmapImageTests(unittest.TestCase):
 
         image = Image.open(BytesIO(image_bytes))
         self.assertEqual(image.format, "PNG")
-        archetypes, _, _ = SelectTopArchetypes(self.make_rows(20))
+        archetypes, deck_stats, _ = SelectTopArchetypes(self.make_rows(20))
         draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
-        font = heatmap_services._LoadFont(14, bold=True)
-        grid_top = heatmap_services._GetGridTop(draw, archetypes, font)
+        row_font = heatmap_services._LoadFont(14)
+        column_font = heatmap_services._LoadFont(14, bold=True)
+        _, grid_left, _ = heatmap_services._GetLeftColumnLayout(
+            draw, archetypes, deck_stats, row_font
+        )
+        grid_top = heatmap_services._GetGridTop(draw, archetypes, column_font)
         self.assertEqual(
             image.size,
             (
-                GRID_LEFT + MAX_HEATMAP_DECKS * CELL_WIDTH + 36,
+                grid_left + MAX_HEATMAP_DECKS * CELL_WIDTH + 36,
                 grid_top + MAX_HEATMAP_DECKS * CELL_HEIGHT + 44,
             ),
         )
 
-    def test_overall_column_is_between_deck_labels_and_matchup_grid(self):
-        self.assertGreater(GRID_LEFT, LEFT_MARGIN + OVERALL_WIDTH)
+    def test_overall_column_is_close_after_longest_archetype_label(self):
+        archetypes, deck_stats, _ = SelectTopArchetypes(self.make_rows(20))
+        draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+        font = heatmap_services._LoadFont(14)
+
+        overall_x, grid_left, label_width = heatmap_services._GetLeftColumnLayout(
+            draw, archetypes, deck_stats, font
+        )
+
+        self.assertEqual(
+            overall_x,
+            ROW_LABEL_X + label_width + ROW_LABEL_GAP,
+        )
+        self.assertEqual(
+            grid_left,
+            overall_x + OVERALL_WIDTH + MATCHUP_GRID_GAP,
+        )
 
     def test_column_archetypes_end_close_to_matchup_cells(self):
         self.assertEqual(GRID_TOP_PADDING, 12)

@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from io import BytesIO
+from math import ceil
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
@@ -10,9 +11,10 @@ from data.metagame_heatmap_data import MetagameHeatmapRow
 MAX_HEATMAP_DECKS = 16
 CELL_WIDTH = 88
 CELL_HEIGHT = 64
-LEFT_MARGIN = 360
+ROW_LABEL_X = 32
+ROW_LABEL_GAP = 12
 OVERALL_WIDTH = 128
-GRID_LEFT = LEFT_MARGIN + OVERALL_WIDTH + 20
+MATCHUP_GRID_GAP = 20
 OPPONENT_HEADER_Y = 112
 OPPONENT_HEADER_HEIGHT = 20
 OPPONENT_HEADER_GAP = 8
@@ -58,7 +60,6 @@ def BuildMetagameHeatmapImage(
     archetypes, deck_stats, matchups = SelectTopArchetypes(rows)
     count = len(archetypes)
     grid_width = count * CELL_WIDTH
-    image_width = GRID_LEFT + grid_width + 36
     title_font = _LoadFont(28, bold=True)
     header_font = _LoadFont(16, bold=True)
     column_label_font = _LoadFont(14, bold=True)
@@ -66,9 +67,13 @@ def BuildMetagameHeatmapImage(
     cell_font = _LoadFont(16, bold=True)
     small_font = _LoadFont(12)
     measure_draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+    overall_x, grid_left, row_label_width = _GetLeftColumnLayout(
+        measure_draw, archetypes, deck_stats, body_font
+    )
     grid_top = _GetGridTop(measure_draw, archetypes, column_label_font)
     column_label_bottom = grid_top - GRID_TOP_PADDING
     overall_header_y = grid_top - 30
+    image_width = grid_left + grid_width + 36
     image_height = grid_top + count * CELL_HEIGHT + 44
     image = Image.new("RGB", (image_width, image_height), BACKGROUND)
     draw = ImageDraw.Draw(image)
@@ -88,13 +93,13 @@ def BuildMetagameHeatmapImage(
     )
 
     draw.text(
-        (GRID_LEFT, OPPONENT_HEADER_Y),
+        (grid_left, OPPONENT_HEADER_Y),
         "Opponent archetype",
         fill=TEXT_COLOR,
         font=header_font,
     )
     for index, archetype in enumerate(archetypes):
-        x = GRID_LEFT + index * CELL_WIDTH
+        x = grid_left + index * CELL_WIDTH
         _DrawVerticalText(
             image,
             archetype,
@@ -105,7 +110,6 @@ def BuildMetagameHeatmapImage(
             COLUMN_LABEL_MAX_WIDTH,
         )
 
-    overall_x = LEFT_MARGIN
     draw.text(
         (overall_x + OVERALL_WIDTH // 2, overall_header_y),
         "Overall",
@@ -119,8 +123,8 @@ def BuildMetagameHeatmapImage(
         player_count = deck_stats[archetype][0]
         row_label = f"{archetype} ({player_count} players)"
         draw.text(
-            (32, y + CELL_HEIGHT // 2),
-            _FitText(draw, row_label, body_font, LEFT_MARGIN - 48),
+            (ROW_LABEL_X, y + CELL_HEIGHT // 2),
+            _FitText(draw, row_label, body_font, row_label_width),
             fill=TEXT_COLOR,
             font=body_font,
             anchor="lm",
@@ -150,7 +154,7 @@ def BuildMetagameHeatmapImage(
         )
 
         for column_index, opponent in enumerate(archetypes):
-            x = GRID_LEFT + column_index * CELL_WIDTH
+            x = grid_left + column_index * CELL_WIDTH
             rect = (x + 2, y + 2, x + CELL_WIDTH - 2, y + CELL_HEIGHT - 2)
             if opponent == archetype:
                 fill = "#E6E9EB"
@@ -264,6 +268,29 @@ def _GetGridTop(
         + COLUMN_LABEL_PADDING
         + GRID_TOP_PADDING
     )
+
+
+def _GetLeftColumnLayout(
+    draw: ImageDraw.ImageDraw,
+    archetypes: list[str],
+    deck_stats: dict[str, tuple[int, float | None]],
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+) -> tuple[int, int, int]:
+    row_label_width = max(
+        (
+            ceil(
+                draw.textlength(
+                    f"{archetype} ({deck_stats[archetype][0]} players)",
+                    font=font,
+                )
+            )
+            for archetype in archetypes
+        ),
+        default=0,
+    )
+    overall_x = ROW_LABEL_X + row_label_width + ROW_LABEL_GAP
+    grid_left = overall_x + OVERALL_WIDTH + MATCHUP_GRID_GAP
+    return overall_x, grid_left, row_label_width
 
 
 def _FitText(
