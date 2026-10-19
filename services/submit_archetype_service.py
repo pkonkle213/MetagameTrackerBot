@@ -15,6 +15,8 @@ from services.one_event_details import OneEventDetails
 from tuple_conversions import (
     Event,
     Format,
+    Game,
+    Hub,
     PlayerArchetype,
     Store,
 )

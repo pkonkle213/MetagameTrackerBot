@@ -1,0 +1,1 @@
+- [Runtime type annotations](python-runtime-annotations.md) — Keep referenced domain types imported when Python evaluates annotations during module import.
