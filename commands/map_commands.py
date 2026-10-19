@@ -55,9 +55,8 @@ class MappingCommands(commands.GroupCog, name="map"):
     @HasRequiredRoles([MTBRoles.MTStore.name])
     @app_commands.guild_only()
     @IsStore()
-    async def AddGameMap(
-        self, interaction: Interaction, objects: InteractionObjects | None
-    ):
+    async def AddGameMap(self, interaction: Interaction):
+        objects = interaction.extras.get("db_object")
         if not objects or not objects.store:
             raise KnownError("No store found. Please register your store.")
         modal = await MapGameModal.create(objects.store)
