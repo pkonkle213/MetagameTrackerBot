@@ -128,18 +128,34 @@ async def SubmitEventDataWorkflow(
         if modal is None:
             modal = BuildDataModal(input_type, event, store, game, format)
             await active_interaction.response.send_modal(modal)
-        await modal.wait()
+        modal_timed_out = await modal.wait()
+        if modal_timed_out:
+            await active_interaction.followup.send(
+                "Data entry timed out. No data from this step was added to "
+                "the event results.",
+                ephemeral=True,
+            )
+            return
 
         data = modal.converted_data
         output, view = BuildDataReview(
             data, event, input_type, store, game, format
         )
-        await modal.interaction.followup.send(
+        review_message = await modal.interaction.followup.send(
             f"{output}\nPlease select continue if the data is accurate",
             ephemeral=True,
             view=view,
         )
-        await view.wait()
+        confirmation_timed_out = await view.wait()
+        if confirmation_timed_out:
+            await review_message.edit(
+                content=(
+                    "Confirmation timed out. This submission was not added "
+                    "to the event results."
+                ),
+                view=None,
+            )
+            return
 
         confirm_response = view.action
         active_interaction = view.interaction
