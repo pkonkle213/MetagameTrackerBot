@@ -3,10 +3,10 @@ name: Metagame heatmap output
 description: Product expectations for the Discord metagame heatmap command.
 ---
 
-The `/metagame_heatmap` command should privately send a chart image for the 16 most-played archetypes in the mapped format. Include each deck's overall win percentage and each head-to-head win percentage with games played. Place overall win percentage between each archetype row label and the matchup grid. Keep both section headings close to their values and archetype labels. Label matchup columns with archetype names, not numeric keys, and use translucent red for lower win rates and translucent green for higher rates. Preserve the existing `/metagame` command.
+The `/metagame_heatmap` command should privately send a chart image for the 16 most-played archetypes in the mapped format. Include each deck's overall win percentage and each head-to-head win percentage with games played. Place overall win percentage between each archetype row label and the matchup grid, with its heading near the values. Bottom-align matchup column names just above the head-to-head cells; use archetype names, not numeric keys. Use translucent red for lower win rates and translucent green for higher rates. Preserve the existing `/metagame` command.
 
 Normalize database `Decimal` win-rate values before doing color arithmetic; psycopg numeric values are not interchangeable with floats in mixed arithmetic.
 
 **Why:** The user explicitly requested this output and visual treatment, and a live invocation exposed Decimal/float arithmetic incompatibility.
 
-**How to apply:** Keep chart ranking, column order, labels, compact header spacing, colors, metrics, image output, and ephemeral visibility consistent when changing this command; normalize numeric types at rendering boundaries.
+**How to apply:** Keep chart ranking, column order, label placement, colors, metrics, image output, and ephemeral visibility consistent when changing this command; normalize numeric types at rendering boundaries.

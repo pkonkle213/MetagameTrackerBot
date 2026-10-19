@@ -15,7 +15,7 @@ GRID_TOP = 470
 OVERALL_WIDTH = 128
 GRID_LEFT = LEFT_MARGIN + OVERALL_WIDTH + 20
 OPPONENT_HEADER_Y = 128
-COLUMN_LABEL_TOP = 154
+COLUMN_LABEL_BOTTOM = GRID_TOP - 12
 OVERALL_HEADER_Y = GRID_TOP - 30
 BACKGROUND = "#FFFFFF"
 TEXT_COLOR = "#202124"
@@ -90,7 +90,7 @@ def BuildMetagameHeatmapImage(
             _LoadFont(14, bold=True),
             TEXT_COLOR,
             x + CELL_WIDTH // 2,
-            COLUMN_LABEL_TOP,
+            COLUMN_LABEL_BOTTOM,
         )
 
     overall_x = LEFT_MARGIN
@@ -206,13 +206,13 @@ def _DrawVerticalText(
     font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
     color: str,
     center_x: int,
-    top_y: int,
+    bottom_y: int,
 ) -> None:
     value = _FitText(
         ImageDraw.Draw(image),
         value,
         font,
-        GRID_TOP - COLUMN_LABEL_TOP - 12,
+        bottom_y - OPPONENT_HEADER_Y - 42,
     )
     bounds = font.getbbox(value)
     text_width = max(1, bounds[2] - bounds[0])
@@ -223,7 +223,11 @@ def _DrawVerticalText(
         (2 - bounds[0], 2 - bounds[1]), value, font=font, fill=color
     )
     label = label.rotate(90, expand=True)
-    image.paste(label, (center_x - label.width // 2, top_y), label)
+    image.paste(
+        label,
+        (center_x - label.width // 2, bottom_y - label.height),
+        label,
+    )
 
 
 def _FitText(

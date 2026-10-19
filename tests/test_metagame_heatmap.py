@@ -11,7 +11,7 @@ from services.metagame_heatmap_services import (
     BuildMetagameHeatmapImage,
     CELL_HEIGHT,
     CELL_WIDTH,
-    COLUMN_LABEL_TOP,
+    COLUMN_LABEL_BOTTOM,
     GRID_LEFT,
     GRID_TOP,
     LEFT_MARGIN,
@@ -67,8 +67,8 @@ class MetagameHeatmapImageTests(unittest.TestCase):
     def test_overall_column_is_between_deck_labels_and_matchup_grid(self):
         self.assertGreater(GRID_LEFT, LEFT_MARGIN + OVERALL_WIDTH)
 
-    def test_column_headers_are_close_to_archetype_labels_and_overall_values(self):
-        self.assertLessEqual(COLUMN_LABEL_TOP - OPPONENT_HEADER_Y, 32)
+    def test_column_archetypes_end_close_to_matchup_cells(self):
+        self.assertEqual(GRID_TOP - COLUMN_LABEL_BOTTOM, 12)
         self.assertEqual(GRID_TOP - OVERALL_HEADER_Y, 30)
 
     def test_renders_small_metagames_without_empty_result(self):
