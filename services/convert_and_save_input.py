@@ -43,13 +43,18 @@ async def ConvertAndUploadMeleeTournament(
     """Takes in a Melee.gg tournament id, retrieves the data, and converts the data to a list of Pairing objects"""
     json_data = await GetMeleeTournamentData(melee_tournament_id, store)
 
+    data, errors, round_number, date, archetypes = MeleeJsonPairings(json_data)
+    staged_source_files = ()
     try:
         upload_json(json_data, file_path)
     except Exception as e:
         print("Tried to save JSON data to App Storage and failed.")
+    else:
+        staged_source_files = (file_path,)
 
-    data, errors, round_number, date, archetypes = MeleeJsonPairings(json_data)
-    return DataConverted(data, None, errors, archetypes, event.custom_event_id)
+    return DataConverted(
+        data, None, errors, archetypes, event.custom_event_id, staged_source_files
+    )
 
 
 async def ConvertAndUploadCSV(
@@ -57,11 +62,6 @@ async def ConvertAndUploadCSV(
 ) -> DataConverted:
     """Takes in a CSV file and converts it to a list of Pairing or Standing objects"""
     csv_data = await csv_file.read()
-
-    try:
-        upload_bytes(csv_data, file_path)
-    except Exception as e:
-        print("Tried to save CSV data to App Storage and failed.")
 
     df = pd.read_csv(
         io.StringIO(csv_data.decode("utf-8")), na_values=["FALSE", "False"]
@@ -79,12 +79,21 @@ async def ConvertAndUploadCSV(
 
     custom_event_id = int(filename_split[2])
 
+    staged_source_files = ()
+    try:
+        upload_bytes(csv_data, file_path)
+    except Exception as e:
+        print("Tried to save CSV data to App Storage and failed.")
+    else:
+        staged_source_files = (file_path,)
+
     return DataConverted(
         submitted_data.pairings_data,
         submitted_data.standings_data,
         submitted_data.errors,
         None,
         custom_event_id,
+        staged_source_files,
     )
 
     return event
@@ -112,11 +121,14 @@ def ConvertAndUploadMessage(
         ]
     )
 
+    converted_data = ConvertMessageToData(data)
+
+    staged_source_files = ()
     try:
         upload_string(submission, save_path)
     except Exception as e:
         print("Tried to save message data to App Storage and failed.")
+    else:
+        staged_source_files = (save_path,)
 
-    converted_data = ConvertMessageToData(data)
-
-    return converted_data
+    return converted_data._replace(staged_source_files=staged_source_files)

@@ -38,4 +38,11 @@ class SubmitCSVDataModal(discord.ui.Modal, title="Submit Data"):
                 [error for csv in converted_csvs for error in csv.errors],
                 None,
                 None,
+                tuple(
+                    dict.fromkeys(
+                        path
+                        for csv in converted_csvs
+                        for path in csv.staged_source_files
+                    )
+                ),
             )

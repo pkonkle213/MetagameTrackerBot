@@ -1,3 +1,5 @@
+import logging
+
 from discord import Interaction
 from discord.ext import commands
 
@@ -10,6 +12,7 @@ from input_modals.submit_melee_modal import SubmitMeleeDataModal
 from services.add_results_services import AddPairingResults, AddStandingResults
 from services.convert_and_save_input import BuildFilePath
 from services.message_hubs_services import MessageHubs
+from services.object_storage_service import delete_file
 from services.submit_data_services import BuildReviewOutput
 from tuple_conversions import (
     DataInputEnum,
@@ -22,6 +25,8 @@ from tuple_conversions import (
     ViewButtonEnum,
 )
 from views.confirm_data import ConfirmData
+
+logger = logging.getLogger(__name__)
 
 
 def BuildDataModal(
@@ -86,6 +91,24 @@ async def SaveDataSubmission(
         await AddPairingResults(event, data.pairings_data, submitter_id)
 
 
+def DiscardStagedSourceFiles(data: DataConverted) -> None:
+    """Delete uploaded source files for a review that will not be committed."""
+    failures = []
+    for file_path in data.staged_source_files:
+        try:
+            if not delete_file(file_path):
+                raise RuntimeError("Object storage did not confirm file deletion")
+        except Exception as error:
+            logger.exception("Failed to delete staged source file %s", file_path)
+            failures.append(error)
+
+    if failures:
+        raise KnownError(
+            "Uploaded source files could not be cleaned up. "
+            "No event results were saved."
+        ) from failures[0]
+
+
 async def NotifyNewEventSubmission(
     bot: commands.Bot,
     interaction: Interaction,
@@ -130,6 +153,7 @@ async def SubmitEventDataWorkflow(
             await active_interaction.response.send_modal(modal)
         modal_timed_out = await modal.wait()
         if modal_timed_out:
+            DiscardStagedSourceFiles(modal.converted_data)
             await active_interaction.followup.send(
                 "Data entry timed out. No data from this step was added to "
                 "the event results.",
@@ -148,6 +172,7 @@ async def SubmitEventDataWorkflow(
         )
         confirmation_timed_out = await view.wait()
         if confirmation_timed_out:
+            DiscardStagedSourceFiles(data)
             await review_message.edit(
                 content=(
                     "Confirmation timed out. This submission was not added "
@@ -159,6 +184,8 @@ async def SubmitEventDataWorkflow(
 
         confirm_response = view.action
         active_interaction = view.interaction
+        if confirm_response == ViewButtonEnum.Cancel.value:
+            DiscardStagedSourceFiles(data)
         if not active_interaction:
             raise KnownError("No interaction found after confirmation")
 

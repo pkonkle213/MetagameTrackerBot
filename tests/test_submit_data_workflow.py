@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from commands.submit_commands import SubmitDataChecker
 from custom_errors import KnownError
+from services import convert_and_save_input as convert_input
 from services import submit_data_workflow as workflow
 from tuple_conversions import (
     DataConverted,
@@ -199,7 +200,9 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         return view
 
     async def test_cancel_does_not_persist_data(self):
-        modal = self.make_modal(DataConverted(None, STANDINGS, None, None, None))
+        modal = self.make_modal(
+            DataConverted(None, STANDINGS, None, None, None, ("/upload/staged.csv",))
+        )
         active_interaction = Mock()
         active_interaction.response.send_modal = AsyncMock()
         cancel_interaction = Mock()
@@ -212,6 +215,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             patch.object(
                 workflow, "SaveDataSubmission", new_callable=AsyncMock
             ) as save,
+            patch.object(workflow, "delete_file", return_value=True) as delete_file,
             patch.object(
                 workflow, "NotifyNewEventSubmission", new_callable=AsyncMock
             ) as notify,
@@ -226,12 +230,17 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             content="Data submission for this round canceled!", view=None
         )
         save.assert_not_awaited()
+        delete_file.assert_called_once_with("/upload/staged.csv")
         notify.assert_not_awaited()
 
     async def test_continue_saves_each_review_then_completes_and_notifies_new_event(self):
         event = make_event()
-        first_modal = self.make_modal(DataConverted(None, STANDINGS, None, None, None))
-        second_modal = self.make_modal(DataConverted(PAIRINGS, None, None, None, None))
+        first_modal = self.make_modal(
+            DataConverted(None, STANDINGS, None, None, None, ("/upload/first.csv",))
+        )
+        second_modal = self.make_modal(
+            DataConverted(PAIRINGS, None, None, None, None, ("/upload/second.csv",))
+        )
         initial_interaction = Mock()
         initial_interaction.response.send_modal = AsyncMock()
         continue_interaction = Mock()
@@ -255,6 +264,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             patch.object(
                 workflow, "SaveDataSubmission", new_callable=AsyncMock
             ) as save,
+            patch.object(workflow, "delete_file") as delete_file,
             patch.object(workflow, "CompleteEvent", new_callable=AsyncMock) as complete,
             patch.object(
                 workflow, "NotifyNewEventSubmission", new_callable=AsyncMock
@@ -273,12 +283,15 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
                 (event, second_modal.converted_data, 88),
             ],
         )
+        delete_file.assert_not_called()
         complete.assert_awaited_once_with(event.id)
         notify.assert_awaited_once_with(bot, interaction, STORE, event)
 
     async def test_incomplete_submission_saves_but_does_not_complete(self):
         event = make_event()
-        modal = self.make_modal(DataConverted(PAIRINGS, None, None, None, None))
+        modal = self.make_modal(
+            DataConverted(PAIRINGS, None, None, None, None, ("/upload/staged.csv",))
+        )
         active_interaction = Mock()
         active_interaction.response.send_modal = AsyncMock()
         done_interaction = Mock()
@@ -290,6 +303,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             patch.object(
                 workflow, "SaveDataSubmission", new_callable=AsyncMock
             ) as save,
+            patch.object(workflow, "delete_file") as delete_file,
             patch.object(workflow, "CompleteEvent", new_callable=AsyncMock) as complete,
             patch.object(
                 workflow, "NotifyNewEventSubmission", new_callable=AsyncMock
@@ -301,6 +315,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             )
 
         save.assert_awaited_once_with(event, modal.converted_data, 88)
+        delete_file.assert_not_called()
         complete.assert_not_awaited()
         notify.assert_awaited_once()
 
@@ -360,7 +375,9 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
         save.assert_not_awaited()
 
     async def test_confirmation_timeout_edits_review_without_persisting(self):
-        modal = self.make_modal(DataConverted(None, STANDINGS, None, None, None))
+        modal = self.make_modal(
+            DataConverted(None, STANDINGS, None, None, None, ("/upload/staged.csv",))
+        )
         active_interaction = Mock()
         active_interaction.response.send_modal = AsyncMock()
         review_message = Mock()
@@ -375,6 +392,7 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             patch.object(
                 workflow, "SaveDataSubmission", new_callable=AsyncMock
             ) as save,
+            patch.object(workflow, "delete_file", return_value=True) as delete_file,
         ):
             await workflow.SubmitEventDataWorkflow(
                 Mock(), Mock(), STORE, GAME, FORMAT, make_event(),
@@ -389,6 +407,37 @@ class WorkflowTests(unittest.IsolatedAsyncioTestCase):
             view=None,
         )
         save.assert_not_awaited()
+        delete_file.assert_called_once_with("/upload/staged.csv")
+
+    async def test_cleanup_failure_is_reported_and_prevents_persistence(self):
+        modal = self.make_modal(
+            DataConverted(None, STANDINGS, None, None, None, ("/upload/staged.csv",))
+        )
+        active_interaction = Mock()
+        active_interaction.response.send_modal = AsyncMock()
+        cancel_interaction = Mock()
+        cancel_interaction.response.edit_message = AsyncMock()
+        view = self.make_view(ViewButtonEnum.Cancel.value, cancel_interaction)
+
+        with (
+            patch.object(workflow, "BuildDataModal", return_value=modal),
+            patch.object(workflow, "BuildDataReview", return_value=("review", view)),
+            patch.object(
+                workflow, "SaveDataSubmission", new_callable=AsyncMock
+            ) as save,
+            patch.object(
+                workflow, "delete_file", side_effect=OSError("storage unavailable")
+            ) as delete_file,
+        ):
+            with self.assertRaisesRegex(KnownError, "No event results were saved"):
+                await workflow.SubmitEventDataWorkflow(
+                    Mock(), Mock(), STORE, GAME, FORMAT, make_event(),
+                    DataInputEnum.Manual.value, active_interaction, 88, False
+                )
+
+        delete_file.assert_called_once_with("/upload/staged.csv")
+        save.assert_not_awaited()
+        cancel_interaction.response.edit_message.assert_not_awaited()
 
 
 class NewEventNotificationTests(unittest.IsolatedAsyncioTestCase):
@@ -501,6 +550,69 @@ class SubmitDataCommandTests(unittest.IsolatedAsyncioTestCase):
         )
         create_event.assert_not_awaited()
         submit_workflow.assert_not_awaited()
+
+
+class UploadedSourceTrackingTests(unittest.IsolatedAsyncioTestCase):
+    async def test_csv_conversion_records_only_successfully_uploaded_source(self):
+        csv_file = Mock()
+        csv_file.filename = "PAIRINGS-store-321-format-4"
+        csv_file.read = AsyncMock(return_value=b"header\nvalue")
+        converted_csv = SimpleNamespace(
+            pairings_data=PAIRINGS, standings_data=None, errors=[]
+        )
+
+        with (
+            patch.object(
+                convert_input.pd, "read_csv", return_value=SimpleNamespace(empty=False)
+            ),
+            patch.object(convert_input, "ConvertCSVToData", return_value=converted_csv),
+            patch.object(convert_input, "upload_bytes") as upload,
+        ):
+            result = await convert_input.ConvertAndUploadCSV(
+                make_event(), "/upload/source.csv", csv_file
+            )
+
+        upload.assert_called_once_with(b"header\nvalue", "/upload/source.csv")
+        self.assertEqual(result.staged_source_files, ("/upload/source.csv",))
+
+    async def test_melee_conversion_records_uploaded_source(self):
+        with (
+            patch.object(
+                convert_input, "GetMeleeTournamentData", new_callable=AsyncMock,
+                return_value={"rounds": []},
+            ),
+            patch.object(
+                convert_input, "MeleeJsonPairings",
+                return_value=(PAIRINGS, [], 1, None, {}),
+            ),
+            patch.object(convert_input, "upload_json") as upload,
+        ):
+            result = await convert_input.ConvertAndUploadMeleeTournament(
+                make_event(), "tournament", STORE, "/upload/source.json"
+            )
+
+        upload.assert_called_once_with({"rounds": []}, "/upload/source.json")
+        self.assertEqual(result.staged_source_files, ("/upload/source.json",))
+
+    def test_manual_conversion_records_uploaded_source(self):
+        event = SimpleNamespace(
+            event_type_id=1,
+            event_date=None,
+            event_name="Example Event",
+        )
+        converted = DataConverted(PAIRINGS, None, None, None, None)
+
+        with (
+            patch.object(convert_input, "ConvertMessageToData", return_value=converted),
+            patch.object(convert_input, "upload_string") as upload,
+        ):
+            result = convert_input.ConvertAndUploadMessage(
+                event, "/upload/source.txt", "sample event data"
+            )
+
+        upload.assert_called_once()
+        self.assertEqual(result.staged_source_files, ("/upload/source.txt",))
+
 
 if __name__ == "__main__":
     unittest.main()
