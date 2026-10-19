@@ -72,6 +72,17 @@ class MetagameHeatmapImageTests(unittest.TestCase):
         self.assertGreater(image.width, 0)
         self.assertGreater(image.height, 0)
 
+    def test_win_rate_cells_use_translucent_red_and_green_tints(self):
+        red = heatmap_services._WinRateColor(30)
+        neutral = heatmap_services._WinRateColor(50)
+        green = heatmap_services._WinRateColor(70)
+
+        self.assertGreater(int(red[1:3], 16), int(red[3:5], 16))
+        self.assertEqual(neutral, "#FFFFFF")
+        self.assertGreater(int(green[3:5], 16), int(green[1:3], 16))
+        self.assertNotEqual(red, "#DC3545")
+        self.assertNotEqual(green, "#28A745")
+
 
 class MetagameHeatmapDeliveryTests(unittest.IsolatedAsyncioTestCase):
     async def test_sends_the_chart_attachment_ephemerally(self):

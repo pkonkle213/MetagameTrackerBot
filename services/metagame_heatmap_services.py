@@ -11,7 +11,7 @@ MAX_HEATMAP_DECKS = 16
 CELL_WIDTH = 88
 CELL_HEIGHT = 64
 LEFT_MARGIN = 360
-GRID_TOP = 390
+GRID_TOP = 440
 OVERALL_WIDTH = 128
 BACKGROUND = "#FFFFFF"
 TEXT_COLOR = "#202124"
@@ -67,46 +67,31 @@ def BuildMetagameHeatmapImage(
     )
     draw.text(
         (32, 91),
-        "Blue = lower win rate · white = 50% · orange = higher win rate",
+        "Red = lower win rate · green = higher win rate",
         fill=MUTED_COLOR,
         font=body_font,
     )
 
-    legend_top = 132
-    half_width = (image_width - 64) // 2
-    for index, archetype in enumerate(archetypes):
-        column = index // 8
-        row_index = index % 8
-        x = 32 + column * half_width
-        y = legend_top + row_index * 27
-        player_count = deck_stats[archetype][0]
-        label = f"{index + 1:02d}  {archetype} ({player_count} players)"
-        draw.text(
-            (x, y),
-            _FitText(draw, label, body_font, half_width - 28),
-            fill=TEXT_COLOR,
-            font=body_font,
-        )
-
     draw.text(
-        (LEFT_MARGIN, GRID_TOP - 32),
-        "Opponent archetype (rank)",
+        (LEFT_MARGIN, 128),
+        "Opponent archetype",
         fill=TEXT_COLOR,
         font=header_font,
     )
     for index, archetype in enumerate(archetypes):
         x = LEFT_MARGIN + index * CELL_WIDTH
-        draw.text(
-            (x + CELL_WIDTH // 2, GRID_TOP - 7),
-            f"{index + 1:02d}",
-            fill=TEXT_COLOR,
-            font=header_font,
-            anchor="mm",
+        _DrawVerticalText(
+            image,
+            archetype,
+            _LoadFont(14, bold=True),
+            TEXT_COLOR,
+            x + CELL_WIDTH // 2,
+            GRID_TOP - 12,
         )
 
     overall_x = LEFT_MARGIN + grid_width + 20
     draw.text(
-        (overall_x + OVERALL_WIDTH // 2, GRID_TOP - 32),
+        (overall_x + OVERALL_WIDTH // 2, 128),
         "Overall",
         fill=TEXT_COLOR,
         font=header_font,
@@ -115,7 +100,8 @@ def BuildMetagameHeatmapImage(
 
     for row_index, archetype in enumerate(archetypes):
         y = GRID_TOP + row_index * CELL_HEIGHT
-        row_label = f"{row_index + 1:02d}  {archetype}"
+        player_count = deck_stats[archetype][0]
+        row_label = f"{archetype} ({player_count} players)"
         draw.text(
             (32, y + CELL_HEIGHT // 2),
             _FitText(draw, row_label, body_font, LEFT_MARGIN - 48),
@@ -210,6 +196,26 @@ def _LoadFont(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFo
     return ImageFont.load_default(size=size)
 
 
+def _DrawVerticalText(
+    image: Image.Image,
+    value: str,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    color: str,
+    center_x: int,
+    bottom_y: int,
+) -> None:
+    bounds = font.getbbox(value)
+    text_width = max(1, bounds[2] - bounds[0])
+    text_height = max(1, bounds[3] - bounds[1])
+    label = Image.new("RGBA", (text_width + 4, text_height + 4), (255, 255, 255, 0))
+    label_draw = ImageDraw.Draw(label)
+    label_draw.text(
+        (2 - bounds[0], 2 - bounds[1]), value, font=font, fill=color
+    )
+    label = label.rotate(90, expand=True)
+    image.paste(label, (center_x - label.width // 2, bottom_y - label.height), label)
+
+
 def _FitText(
     draw: ImageDraw.ImageDraw,
     value: str,
@@ -234,14 +240,12 @@ def _Ellipsize(
 
 
 def _WinRateColor(win_percent: float) -> str:
-    blue = (38, 114, 166)
-    white = (255, 255, 255)
-    orange = (233, 159, 46)
-    if win_percent <= 50:
-        start, end, weight = blue, white, max(0.0, min(win_percent / 50, 1.0))
-    else:
-        start, end, weight = white, orange, max(0.0, min((win_percent - 50) / 50, 1.0))
-    color = tuple(round(a + (b - a) * weight) for a, b in zip(start, end))
+    if win_percent == 50:
+        return "#FFFFFF"
+
+    tint = (220, 53, 69) if win_percent < 50 else (40, 167, 69)
+    opacity = 0.12 + 0.48 * min(abs(win_percent - 50) / 50, 1.0)
+    color = tuple(round(255 * (1 - opacity) + channel * opacity) for channel in tint)
     return "#{:02X}{:02X}{:02X}".format(*color)
 
 

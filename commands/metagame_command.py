@@ -12,6 +12,7 @@ from services.metagame_services import (
     RegionLockedMetagame,
     StoreMetagame,
 )
+from checks import IsPaidUser, IsStore
 from settings import DATAGUILDID
 from tuple_conversions import GameEnum, MetagameResult
 from data.metagame_heatmap_data import GetMetagameHeatmap
@@ -114,6 +115,8 @@ class MetagameCommand(commands.Cog):
         1, 60.0, key=lambda i: (i.guild_id, i.user.id, i.channel_id)
     )
     @app_commands.guild_only()
+    # @IsPaidUser()
+    @IsStore()
     async def ViewMetagameHeatmap(
         self, interaction: Interaction, start_date: str = "", end_date: str = ""
     ) -> None:
