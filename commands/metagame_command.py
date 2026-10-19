@@ -5,6 +5,7 @@ from custom_errors import KnownError
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from services.date_functions import BuildDateRange
+from services.metagame_heatmap_services import SendMetagameHeatmap
 from services.metagame_services import (
     FormatLockedMetagame,
     GetWholeMetagame,
@@ -13,6 +14,7 @@ from services.metagame_services import (
 )
 from settings import DATAGUILDID
 from tuple_conversions import GameEnum, MetagameResult
+from data.metagame_heatmap_data import GetMetagameHeatmap
 
 
 class MetagameCommand(commands.Cog):
@@ -104,7 +106,62 @@ class MetagameCommand(commands.Cog):
             output = BuildTableOutput(title, headers, data)
             await interaction.followup.send(output)
 
+    @app_commands.command(
+        name="metagame_heatmap",
+        description="Compare archetype win rates against each other in this format",
+    )
+    @app_commands.checks.cooldown(
+        1, 60.0, key=lambda i: (i.guild_id, i.user.id, i.channel_id)
+    )
+    @app_commands.guild_only()
+    async def ViewMetagameHeatmap(
+        self, interaction: Interaction, start_date: str = "", end_date: str = ""
+    ) -> None:
+        await interaction.response.defer(thinking=True)
+        objects = interaction.extras.get("db_object")
+        if not objects or not objects.game or not objects.format:
+            raise KnownError(
+                "This channel is not set up with a game or format to view a metagame."
+            )
+
+        date_start, date_end = BuildDateRange(
+            start_date, end_date, objects.format
+        )
+
+        if interaction.guild_id == DATAGUILDID:
+            scope, scope_id = "data", None
+        elif objects.store:
+            scope, scope_id = "store", objects.store.discord_id
+        elif objects.hub:
+            scope, scope_id = "hub", objects.hub.discord_id
+        else:
+            raise KnownError(
+                "This channel is not set up with a store or hub to view a metagame."
+            )
+
+        rows = await GetMetagameHeatmap(
+            objects.game.id,
+            objects.format.id,
+            date_start,
+            date_end,
+            scope,
+            scope_id,
+        )
+        if not rows:
+            await interaction.followup.send(
+                "No matchup data found for this format and date range."
+            )
+            return
+
+        title = (
+            f"{objects.format.format_name.title()} metagame heatmap "
+            f"from {date_start.strftime('%-m/%-d')} to "
+            f"{date_end.strftime('%-m/%-d')}"
+        )
+        await SendMetagameHeatmap(interaction, title, rows)
+
     @ViewMetagame.error
+    @ViewMetagameHeatmap.error
     async def Errors(
         self, interaction: Interaction, error: app_commands.AppCommandError
     ):
