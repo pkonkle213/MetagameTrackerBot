@@ -240,6 +240,7 @@ def _Ellipsize(
 
 
 def _WinRateColor(win_percent: float) -> str:
+    win_percent = float(win_percent)
     if win_percent == 50:
         return "#FFFFFF"
 

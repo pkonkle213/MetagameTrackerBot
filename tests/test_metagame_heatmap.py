@@ -1,4 +1,5 @@
 import unittest
+from decimal import Decimal
 from io import BytesIO
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -82,6 +83,7 @@ class MetagameHeatmapImageTests(unittest.TestCase):
         self.assertGreater(int(green[3:5], 16), int(green[1:3], 16))
         self.assertNotEqual(red, "#DC3545")
         self.assertNotEqual(green, "#28A745")
+        self.assertEqual(heatmap_services._WinRateColor(Decimal("30.0")), red)
 
 
 class MetagameHeatmapDeliveryTests(unittest.IsolatedAsyncioTestCase):
