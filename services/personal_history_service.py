@@ -1,7 +1,11 @@
 from tuple_conversions import InteractionObjects
 import discord
 from custom_errors import KnownError
-from data.personal_history_data import GetStandingsHistory, GetPairingsHistory
+from data.personal_history_data import (
+    GetStandingsHistory,
+    GetHubPairingsHistory,
+    GetStorePairingsHistory,
+)
 from output_builder import BuildTableOutput
 from services.date_functions import BuildDateRange
 
@@ -66,17 +70,15 @@ async def GetPersonalPairingsHistory(
     objects: InteractionObjects | None,
 ):
     """Gets the personal pairings history for the user"""
-    if not objects or not objects.store and not objects.hub:
+    if not objects or (not objects.store and not objects.hub):
         raise KnownError("No store or hub found")
 
     user_id = interaction.user.id
     date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
 
-    data = await GetPairingsHistory(
+    data = await GetStorePairingsHistory(
         user_id,
         objects.store,
-        objects.hub,
-        objects.region,
         objects.game,
         objects.format,
         date_start,
