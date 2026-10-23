@@ -30,9 +30,10 @@ class Links(commands.Cog):
     @IsStore()
     async def ViewHubInvites(self, interaction: Interaction):
         objects = interaction.extras.get("db_object")
+        await interaction.response.defer(thinking=False)
         output = await GetConnectedHubs(interaction, objects)
         for message in output:
-            await interaction.response.send_message(message)
+            await interaction.followup.send(message)
 
     @app_commands.command(name="get_sop", description="Display the url to get the SOP")
     @app_commands.guilds(settings.BOTGUILDID)
