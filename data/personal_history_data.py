@@ -103,7 +103,7 @@ async def GetHubPairingsHistory(
         WHERE
             pn.submitter_id = {user_id}
             AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
-            AND sah.hub_discord_id = {hub.discord_id}
+            {f"AND sah.hub_discord_id = {hub.discord_id}" if hub.discord_id != DATAGUILDID else ""}
             {f"AND e.game_id = {game.id}" if game else ""}
             {f"AND e.format_id = {format.id}" if format else ""}
             {f"AND s.region_id = {region.id}" if region else ""}
@@ -158,8 +158,8 @@ async def GetHubStandingsHistory(
             AND upper(ua.player_name) = upper(fs.player_name)
         WHERE
             pn.submitter_id = {user_id}
-            AND sah.hub_discord_id = {hub.discord_id}
             AND ev.event_date BETWEEN '{start_date}' AND '{end_date}'
+            {f"AND sah.hub_discord_id = {hub.discord_id}" if hub.discord_id != DATAGUILDID else ""}
             {f"AND ev.game_id = {game.id}" if game else ""}
             {f"AND ev.format_id = {format.id}" if format else ""}
             {f"AND sv.region_id = {region.id}" if region else ""}
