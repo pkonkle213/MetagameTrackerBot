@@ -72,8 +72,8 @@ async def GetHubPairingsHistory(
         command = f"""
         SELECT
             TO_CHAR(e.event_date, 'MM/DD/YYYY') AS event_date,
-            s.store_name,
             {"INITCAP(r.region_name) AS region_name," if not region else ""}
+            s.store_name,
             {"INITCAP(g.game_name) AS game_name," if not game else ""}
             {"INITCAP(f.format_name) AS format_name," if not format else ""}
             fp.round_number,

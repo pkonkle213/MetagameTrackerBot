@@ -24,6 +24,13 @@ async def GetPersonalStandingsHistory(
     date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
     headers = ["Date", "Archetype", "Wins", "Losses", "Draws"]
 
+    if not objects.format:
+        headers.insert(1, "Format")
+    if not objects.game:
+        headers.insert(1, "Game")
+    if objects.hub and not objects.region:
+        headers.insert(1, "Region")
+        
     if objects.store:
         data = await GetStoreStandingsHistory(
             user_id,
@@ -43,13 +50,7 @@ async def GetPersonalStandingsHistory(
             date_start,
             date_end,
         )
-        headers.insert(1, "Store Name")
-    if not objects.format:
-        headers.insert(2, "Format")
-    if not objects.game:
-        headers.insert(2, "Game")
-    if objects.hub and not objects.region:
-        headers.insert(2, "Region")
+        headers.insert(2, "Store Name")
 
     name = "You"
     if objects.hub:
@@ -78,6 +79,12 @@ async def GetPersonalPairingsHistory(
 
     date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
     headers = ["Date", "Round", "Your Archetype", "Opponent's Archetype", "Result"]
+    if not objects.format:
+        headers.insert(1, "Format")
+    if not objects.game:
+        headers.insert(1, "Game")
+    if objects.hub and not objects.region:
+        headers.insert(1, "Region")
 
     if objects.store:
         data = await GetStorePairingsHistory(
@@ -98,13 +105,7 @@ async def GetPersonalPairingsHistory(
             date_start,
             date_end,
         )
-        headers.insert(1, "Store Name")
-    if not objects.format:
-        headers.insert(2, "Format")
-    if not objects.game:
-        headers.insert(2, "Game")
-    if objects.hub and not objects.region:
-        headers.insert(2, "Region")
+        headers.insert(2, "Store Name")
 
     name = "You"
     if objects.hub:
