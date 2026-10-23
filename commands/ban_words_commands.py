@@ -1,12 +1,12 @@
-from tuple_conversions import MTBRoles
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsPaidStore, HasRequiredRoles
+from checks import HasRequiredRoles, IsPaidStore
 from custom_errors import KnownError
 from output_builder import BuildTableOutput
 from services.ban_word_services import AddBadWord, Offenders
 from services.command_error_service import Error
+from tuple_conversions import MTBRoles
 
 
 class BannedWordCommands(commands.GroupCog, name="banned_words"):
