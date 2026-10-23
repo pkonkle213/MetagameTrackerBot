@@ -1,14 +1,13 @@
-from tuple_conversions import InteractionObjects
-import discord
 from custom_errors import KnownError
 from data.personal_history_data import (
-    GetHubStandingsHistory,
-    GetStoreStandingsHistory,
     GetHubPairingsHistory,
+    GetHubStandingsHistory,
     GetStorePairingsHistory,
+    GetStoreStandingsHistory,
 )
 from output_builder import BuildTableOutput
 from services.date_functions import BuildDateRange
+from tuple_conversions import InteractionObjects
 
 
 async def GetPersonalStandingsHistory(
@@ -23,6 +22,7 @@ async def GetPersonalStandingsHistory(
 
     date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
     headers = ["Date", "Archetype", "Wins", "Losses", "Draws"]
+    data = []
 
     if not objects.format:
         headers.insert(1, "Format")
@@ -30,7 +30,7 @@ async def GetPersonalStandingsHistory(
         headers.insert(1, "Game")
     if objects.hub and not objects.region:
         headers.insert(1, "Region")
-        
+
     if objects.store:
         data = await GetStoreStandingsHistory(
             user_id,
@@ -58,7 +58,7 @@ async def GetPersonalStandingsHistory(
     elif objects.store:
         name = objects.store.store_name
 
-    if data is None or len(data) == 0:
+    if len(data) == 0:
         return "No history found."
 
     title = f"Personal History for {name.title()}"
@@ -79,6 +79,8 @@ async def GetPersonalPairingsHistory(
 
     date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
     headers = ["Date", "Round", "Your Archetype", "Opponent's Archetype", "Result"]
+    data = []
+
     if not objects.format:
         headers.insert(1, "Format")
     if not objects.game:
@@ -113,7 +115,7 @@ async def GetPersonalPairingsHistory(
     elif objects.store:
         name = objects.store.store_name
 
-    if data is None or len(data) == 0:
+    if len(data) == 0:
         return "No history found."
 
     title = f"Personal History for {name.title()}"

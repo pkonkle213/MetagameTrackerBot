@@ -1,7 +1,7 @@
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsPaidUser, IsStore
+from checks import IsPaidUser
 from services.command_error_service import Error
 from services.personal_history_service import (
     GetPersonalPairingsHistory,
