@@ -35,7 +35,10 @@ class PersonalHistoryCommands(commands.GroupCog, name="history"):
 
         await interaction.response.defer(ephemeral=True, thinking=False)
         objects = interaction.extras.get("db_object")
-        output = await GetPersonalStandingsHistory(interaction, start_date, end_date, objects)
+        user_id = interaction.user.id
+        output = await GetPersonalStandingsHistory(
+            user_id, start_date, end_date, objects
+        )
         await interaction.followup.send(output, ephemeral=True)
 
     @app_commands.command(
@@ -58,7 +61,10 @@ class PersonalHistoryCommands(commands.GroupCog, name="history"):
 
         await interaction.response.defer(ephemeral=True, thinking=False)
         objects = interaction.extras.get("db_object")
-        output = await GetPersonalPairingsHistory(interaction, start_date, end_date, objects)
+        user_id = interaction.user.id
+        output = await GetPersonalPairingsHistory(
+            user_id, start_date, end_date, objects
+        )
         await interaction.followup.send(output, ephemeral=True)
 
     @GetPersonalStandingsHistory.error

@@ -22,7 +22,6 @@ async def GetStorePairingsHistory(
         command = f"""
         SELECT
             TO_CHAR(e.event_date, 'MM/DD') as event_date,
-            s.store_name
             {"INITCAP(g.game_name) AS game_name," if not game else ""}
             {"INITCAP(f.format_name) AS format_name," if not format else ""}
             fp.round_number,
@@ -138,7 +137,7 @@ async def GetHubStandingsHistory(
             sv.store_name,
             {"INITCAP(g.game_name) AS game_name," if not game else ""}
             {"INITCAP(f.format_name) AS format_name," if not format else ""}
-            COALESCE(ua.archetype_played, 'Unknown') as archetype_played,,
+            COALESCE(ua.archetype_played, 'Unknown') as archetype_played,
             wins,
             losses,
             draws
@@ -188,7 +187,6 @@ async def GetStoreStandingsHistory(
         command = f"""
         SELECT
             TO_CHAR(event_date, 'MM/DD/YYYY') as event_date,
-            COALESCE(store_name, discord_name) AS store_name,
             {"INITCAP(g.game_name) AS game_name," if not game else ""}
             {"INITCAP(f.format_name) AS format_name," if not format else ""}
             COALESCE(archetype_played, 'Unknown') as archetype_played,
