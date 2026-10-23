@@ -96,7 +96,7 @@ async def GetHubPairingsHistory(
             INNER JOIN games g ON g.id = e.game_id
             INNER JOIN formats f ON f.id = e.format_id
             INNER JOIN regions r ON r.id = s.region_id
-            INNER JOIN stores_approved_hubs sah ON sah.store_discord_id = s.discord_id
+            LEFT JOIN stores_approved_hubs sah ON sah.store_discord_id = s.discord_id
             AND sah.game_id = e.game_id
             AND sah.format_id = e.format_id
             AND sah.region_id = s.region_id
@@ -150,7 +150,7 @@ async def GetHubStandingsHistory(
             INNER JOIN formats f ON f.id = ev.format_id
             INNER JOIN stores_view sv ON sv.discord_id = ev.discord_id
             INNER JOIN regions r ON r.id = sv.region_id
-            INNER JOIN stores_approved_hubs sah ON sah.store_discord_id = sv.discord_id
+            LEFT JOIN stores_approved_hubs sah ON sah.store_discord_id = sv.discord_id
             AND sah.format_id = ev.format_id
             AND sah.game_id = ev.game_id
             AND sah.region_id = sv.region_id

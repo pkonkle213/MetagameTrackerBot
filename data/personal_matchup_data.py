@@ -1,4 +1,3 @@
-from discord_messages import MessageUser
 from datetime import date
 
 from psycopg import AsyncConnection
@@ -20,7 +19,7 @@ async def GetPersonalMatchups(
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor(row_factory=class_row(PersonalMatchupRows)) as cur,
     ):
-        command = f"""
+        command = """
         WITH
             criteria AS (
                 SELECT
