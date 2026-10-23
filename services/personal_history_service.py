@@ -1,70 +1,74 @@
-from tuple_conversions import InteractionObjects
-import discord
 from custom_errors import KnownError
 from data.personal_history_data import (
-    GetStandingsHistory,
     GetHubPairingsHistory,
+    GetHubStandingsHistory,
     GetStorePairingsHistory,
+    GetStoreStandingsHistory,
 )
 from output_builder import BuildTableOutput
 from services.date_functions import BuildDateRange
+from tuple_conversions import InteractionObjects
 
 
 async def GetPersonalStandingsHistory(
-    interaction: discord.Interaction,
+    user_id: int,
     start_date: str,
     end_date: str,
     objects: InteractionObjects | None,
 ):
     """Gets the personal standings history for the user"""
-    objects = interaction.extras.get("db_object")
     if not objects or not objects.store and not objects.hub:
         raise KnownError("No store or hub found")
 
-    user_id = interaction.user.id
-
     date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
-
-    data = await GetStandingsHistory(
-        user_id,
-        objects.store,
-        objects.hub,
-        objects.region,
-        objects.game,
-        objects.format,
-        date_start,
-        date_end,
-    )
     headers = ["Date", "Archetype", "Wins", "Losses", "Draws"]
+    data = []
 
+    if not objects.format:
+        headers.insert(1, "Format")
+    if not objects.game:
+        headers.insert(1, "Game")
+    if objects.hub and not objects.region:
+        headers.insert(1, "Region")
+
+    if objects.store:
+        data = await GetStoreStandingsHistory(
+            user_id,
+            objects.store,
+            objects.game,
+            objects.format,
+            date_start,
+            date_end,
+        )
+    elif objects.hub:
+        data = await GetHubStandingsHistory(
+            user_id,
+            objects.hub,
+            objects.region,
+            objects.game,
+            objects.format,
+            date_start,
+            date_end,
+        )
+        headers.insert(2, "Store Name")
+
+    name = "You"
     if objects.hub:
-        name = (
-            objects.hub.hub_name if objects.hub.hub_name else objects.hub.discord_name
-        )
-        headers.insert(1, "Store")
+        name = objects.hub.hub_name
     elif objects.store:
-        name = (
-            objects.store.store_name
-            if objects.store.store_name
-            else objects.store.discord_name
-        )
+        name = objects.store.store_name
 
-    if data is None or len(data) == 0:
+    if len(data) == 0:
         return "No history found."
 
     title = f"Personal History for {name.title()}"
-
-    if not format:
-        headers.insert(2, "Format")
-    if not objects.game:
-        headers.insert(2, "Game")
 
     output = BuildTableOutput(title, headers, data)
     return output
 
 
 async def GetPersonalPairingsHistory(
-    interaction: discord.Interaction,
+    user_id: int,
     start_date: str,
     end_date: str,
     objects: InteractionObjects | None,
@@ -73,42 +77,48 @@ async def GetPersonalPairingsHistory(
     if not objects or (not objects.store and not objects.hub):
         raise KnownError("No store or hub found")
 
-    user_id = interaction.user.id
     date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
-
-    data = await GetStorePairingsHistory(
-        user_id,
-        objects.store,
-        objects.game,
-        objects.format,
-        date_start,
-        date_end,
-    )
     headers = ["Date", "Round", "Your Archetype", "Opponent's Archetype", "Result"]
+    data = []
+
+    if not objects.format:
+        headers.insert(1, "Format")
+    if not objects.game:
+        headers.insert(1, "Game")
+    if objects.hub and not objects.region:
+        headers.insert(1, "Region")
+
+    if objects.store:
+        data = await GetStorePairingsHistory(
+            user_id,
+            objects.store,
+            objects.game,
+            objects.format,
+            date_start,
+            date_end,
+        )
+    elif objects.hub:
+        data = await GetHubPairingsHistory(
+            user_id,
+            objects.hub,
+            objects.region,
+            objects.game,
+            objects.format,
+            date_start,
+            date_end,
+        )
+        headers.insert(2, "Store Name")
 
     name = "You"
     if objects.hub:
-        # TODO: I think this is covered by hubs_view and doesn't need reiterated
-        name = (
-            objects.hub.hub_name if objects.hub.hub_name else objects.hub.discord_name
-        )
-        headers.insert(1, "Store")
+        name = objects.hub.hub_name
     elif objects.store:
-        # TODO: I think this is covered by stores_view and doesn't need reiterated
-        name = (
-            objects.store.store_name
-            if objects.store.store_name
-            else objects.store.discord_name
-        )
+        name = objects.store.store_name
 
-    if data is None or len(data) == 0:
+    if len(data) == 0:
         return "No history found."
 
     title = f"Personal History for {name.title()}"
-    if not objects.format:
-        headers.insert(2, "Format")
-    if not objects.game:
-        headers.insert(2, "Game")
 
     output = BuildTableOutput(title, headers, data)
     return output

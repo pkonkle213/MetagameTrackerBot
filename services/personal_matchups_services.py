@@ -1,21 +1,21 @@
 from discord import Embed
-from discord import Interaction
+
 from data.personal_matchup_data import GetPersonalMatchups
 from services.command_error_service import KnownError
 from services.date_functions import BuildDateRange
 from tuple_conversions import (
-    OutputToBuild,
-    PersonalMatchupRows,
+    InteractionObjects,
+    OpponentArchetype,
     PersonalArchetype,
-    OpponentArchetype, InteractionObjects,
+    PersonalMatchupRows,
 )
 
 
 async def PersonalMatchups(
-    start_date: str, end_date: str, objects: InteractionObjects | None, user_id:int
+    start_date: str, end_date: str, objects: InteractionObjects | None, user_id: int
 ) -> list[Embed]:
     if not objects or not objects.store or not objects.game or not objects.format:
-        raise KnownError("No Store, Game, or Format Found")    
+        raise KnownError("No Store, Game, or Format Found")
     date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
 
     data = await GetPersonalMatchups(
