@@ -75,40 +75,45 @@ async def GetPersonalPairingsHistory(
 
     user_id = interaction.user.id
     date_start, date_end = BuildDateRange(start_date, end_date, objects.format)
-
-    data = await GetStorePairingsHistory(
-        user_id,
-        objects.store,
-        objects.game,
-        objects.format,
-        date_start,
-        date_end,
-    )
     headers = ["Date", "Round", "Your Archetype", "Opponent's Archetype", "Result"]
+
+    if objects.store:
+        data = await GetStorePairingsHistory(
+            user_id,
+            objects.store,
+            objects.game,
+            objects.format,
+            date_start,
+            date_end,
+        )
+    elif objects.hub:
+        data = await GetHubPairingsHistory(
+            user_id,
+            objects.hub,
+            objects.region,
+            objects.game,
+            objects.format,
+            date_start,
+            date_end,
+        )
+        headers.insert(1, "Store Name")
+    if not objects.format:
+        headers.insert(2, "Format")
+    if not objects.game:
+        headers.insert(2, "Game")
+    if objects.hub and not objects.region:
+        headers.insert(2, "Region")
 
     name = "You"
     if objects.hub:
-        # TODO: I think this is covered by hubs_view and doesn't need reiterated
-        name = (
-            objects.hub.hub_name if objects.hub.hub_name else objects.hub.discord_name
-        )
-        headers.insert(1, "Store")
+        name = objects.hub.hub_name
     elif objects.store:
-        # TODO: I think this is covered by stores_view and doesn't need reiterated
-        name = (
-            objects.store.store_name
-            if objects.store.store_name
-            else objects.store.discord_name
-        )
+        name = objects.store.store_name
 
     if data is None or len(data) == 0:
         return "No history found."
 
     title = f"Personal History for {name.title()}"
-    if not objects.format:
-        headers.insert(2, "Format")
-    if not objects.game:
-        headers.insert(2, "Game")
 
     output = BuildTableOutput(title, headers, data)
     return output
