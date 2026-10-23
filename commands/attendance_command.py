@@ -37,7 +37,8 @@ class EventAttendance(commands.Cog):
             )
         else:
             output = BuildTableOutput(table.title, table.headers, table.data)
-            await interaction.followup.send(output)
+            for message in output:
+                await interaction.followup.send(message)
 
     @Attendance.error
     async def Errors(

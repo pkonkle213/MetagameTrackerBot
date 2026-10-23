@@ -31,9 +31,11 @@ async def Moxfield(
         )
         return moxfield_archetype, "", True
     except KnownError:
-        return "", (
-            " Unable to load the decklist from Moxfield. Please try again later."
-        ), False
+        return (
+            "",
+            (" Unable to load the decklist from Moxfield. Please try again later."),
+            False,
+        )
 
 
 async def SubmitArchetype(
@@ -50,9 +52,7 @@ async def SubmitArchetype(
     is_submitter: bool,
 ) -> None:
     ValidateArchetypeContext(interaction)
-    await ValidateArchetypeSubmission(
-        interaction, event, player_name, archetype
-    )
+    await ValidateArchetypeSubmission(interaction, event, player_name, archetype)
 
     moxfield_error = ""
     if moxfield_link:
@@ -66,9 +66,7 @@ async def SubmitArchetype(
             )
 
     if not archetype:
-        raise KnownError(
-            "No archetype submitted. Please try again." + moxfield_error
-        )
+        raise KnownError("No archetype submitted. Please try again." + moxfield_error)
 
     await SaveArchetypeSubmission(
         interaction, event, player_name, archetype, is_submitter
@@ -83,7 +81,6 @@ async def SubmitArchetype(
         store,
         moxfield_error,
     )
-
 
 
 def ValidateArchetypeContext(interaction: Interaction) -> None:
@@ -154,10 +151,9 @@ async def NotifyArchetypeSubmission(
     if public_output:
         await MessageChannel(bot, public_output, event.discord_id, mapped_channel)
 
+    # TODO: This is broken and needs fixed (broke it by updating the table builder)
     if full_event:
-        await MessageChannel(
-            bot, full_event, interaction.guild_id, mapped_channel
-        )
+        await MessageChannel(bot, full_event, interaction.guild_id, mapped_channel)
         await MessageHubs(
             bot, store, event, f"```{event.event_name} - " + full_event[3:]
         )
@@ -189,9 +185,9 @@ def BuildMessage(
     return "\n".join(message_parts)
 
 
-async def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
+async def CheckEventPercentage(event: Event) -> tuple[str | None, list[str] | None]:
     followup: str | None = None
-    final: str | None = None
+    final: list[str] | None = None
     percent_reported = await GetEventReportedPercentage(event.id)
     if percent_reported >= (event.last_update + 1) / 4:
         await UpdateEvent(event.id)

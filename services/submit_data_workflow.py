@@ -57,7 +57,7 @@ def BuildDataReview(
     store: Store,
     game: Game,
     format: Format,
-) -> tuple[str, ConfirmData]:
+) -> tuple[list[str], ConfirmData]:
     output = BuildReviewOutput(data)
     next_modal = BuildDataModal(input_type, event, store, game, format)
     view = ConfirmData(
@@ -66,14 +66,14 @@ def BuildDataReview(
     )
 
     if data.standings_data:
-        output += (
-            "\n:rotating_light::rotating_light:This is standings data and will "
+        output.append(
+            f"\n:rotating_light::rotating_light:This is standings data and will "
             "limit the data used for other commands:rotating_light::rotating_light:"
         )
 
     if data.pairings_data and event.reported_as == ReportedAsEnum.Standings.value:
-        output += (
-            "\n:rotating_light::rotating_light:This will overwrite the standings "
+        output.append(
+            f"\n:rotating_light::rotating_light:This will overwrite the standings "
             "data that exists for this event:rotating_light::rotating_light:"
         )
 
@@ -168,8 +168,10 @@ async def SubmitEventDataWorkflow(
         output, view = BuildDataReview(
             data, event, input_type, store, game, format
         )
+        for message in output:
+            await modal.interaction.followup.send(message)
         review_message = await modal.interaction.followup.send(
-            f"{output}\nPlease select continue if the data is accurate",
+            "Please select continue if the data is accurate",
             ephemeral=True,
             view=view,
         )

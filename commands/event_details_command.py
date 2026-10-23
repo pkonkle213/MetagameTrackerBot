@@ -28,7 +28,8 @@ class UniqueSubmitters(commands.Cog):
             raise KnownError("No store, game, or format found.")
         table = await GetEventStats(objects.store, objects.game, objects.format)
         output = BuildTableOutput(table.title, table.headers, table.data)
-        await interaction.followup.send(output, ephemeral=True)
+        for message in output:
+            await interaction.followup.send(message, ephemeral=True)
 
     @MyEventsReported.error
     async def Errors(

@@ -32,7 +32,7 @@ class BannedWordCommands(commands.GroupCog, name="banned_words"):
         else:
             objects = interaction.extras.get("db_object")
             if not objects or not objects.store:
-                raise KnownError('This aint no store')
+                raise KnownError("This aint no store")
             check = await AddBadWord(objects.store, word)
             if check:
                 await interaction.followup.send(
@@ -55,7 +55,8 @@ class BannedWordCommands(commands.GroupCog, name="banned_words"):
             raise KnownError("This command is only available to stores")
         table = await Offenders(objects)
         output = BuildTableOutput(table.title, table.headers, table.data)
-        await interaction.followup.send(output)
+        for message in output:
+            await interaction.followup.send(message)
 
     @BadWord.error
     @StoreOffenders.error

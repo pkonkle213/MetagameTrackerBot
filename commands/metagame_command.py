@@ -102,7 +102,8 @@ class MetagameCommand(commands.Cog):
         else:
             headers = ["Deck Archetype", "Meta %", "Win %"]
             output = BuildTableOutput(title, headers, data)
-            await interaction.followup.send(output)
+            for message in output:
+                await interaction.followup.send(message)
 
     @ViewMetagame.error
     async def Errors(

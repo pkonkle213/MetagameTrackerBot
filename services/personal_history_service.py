@@ -15,7 +15,7 @@ async def GetPersonalStandingsHistory(
     start_date: str,
     end_date: str,
     objects: InteractionObjects | None,
-):
+) -> list[str]:
     """Gets the personal standings history for the user"""
     objects = interaction.extras.get("db_object")
     if not objects or not objects.store and not objects.hub:
@@ -50,7 +50,7 @@ async def GetPersonalStandingsHistory(
         )
 
     if data is None or len(data) == 0:
-        return "No history found."
+        return ["No history found."]
 
     title = f"Personal History for {name.title()}"
 
@@ -68,7 +68,7 @@ async def GetPersonalPairingsHistory(
     start_date: str,
     end_date: str,
     objects: InteractionObjects | None,
-):
+) -> list[str]:
     """Gets the personal pairings history for the user"""
     if not objects or (not objects.store and not objects.hub):
         raise KnownError("No store or hub found")
@@ -102,7 +102,7 @@ async def GetPersonalPairingsHistory(
         )
 
     if data is None or len(data) == 0:
-        return "No history found."
+        return ["No history found."]
 
     title = f"Personal History for {name.title()}"
     if not objects.format:

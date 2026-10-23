@@ -75,7 +75,8 @@ async def GetUserCommands(
           CASE
             WHEN command_group IS NULL THEN '/' || command_name
             ELSE '/' || command_group || ' ' || command_name
-          END AS command_invoke
+          END AS command_invoke,
+          description
         FROM
           commands
         WHERE

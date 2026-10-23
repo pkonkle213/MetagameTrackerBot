@@ -39,7 +39,8 @@ class ArchetypeSubmittedCommand(commands.Cog):
             )
         else:
             output = BuildTableOutput(table.title, table.headers, table.data)
-            await interaction.followup.send(output, ephemeral=True)
+            for message in output:
+                await interaction.followup.send(message, ephemeral=True)
 
     @ViewSubmittedArchetypes.error
     async def Errors(

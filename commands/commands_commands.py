@@ -22,7 +22,8 @@ class CommandCommands(commands.GroupCog, name="commands"):
         guild = interaction.guild
         user = interaction.user
         output = await GetCommandsHere(objects, guild, user)
-        await interaction.followup.send(output)
+        for message in output:
+            await interaction.followup.send(message)
 
     @app_commands.command(name="for_me", description="All commands available for you")
     @app_commands.guild_only()
@@ -31,10 +32,8 @@ class CommandCommands(commands.GroupCog, name="commands"):
         objects = interaction.extras.get("db_object")
         if not objects:
             raise KnownError("No interaction objects found")
-        messages = await GetCommandsUser(
-            objects, interaction.guild, interaction.user, self.bot.tree
-        )
-        for message in messages:
+        output = await GetCommandsUser(objects, interaction.guild, interaction.user)
+        for message in output:
             await interaction.followup.send(message, ephemeral=True)
 
     @CommandsHere.error

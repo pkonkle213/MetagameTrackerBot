@@ -7,7 +7,7 @@ from custom_errors import KnownError
 
 async def GetConnectedHubs(
     interaction: Interaction, objects: InteractionObjects | None
-) -> str:
+) -> list[str]:
     if not objects or not objects.store or not objects.format:
         raise KnownError("No store or format found")
 

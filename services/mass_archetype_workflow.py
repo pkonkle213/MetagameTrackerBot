@@ -6,7 +6,14 @@ from data.event_data import GetPlayersInEvent
 from input_modals.event_selector import EventSelector
 from input_modals.mass_archetype_modal import MassArchetypeSubmit
 from output_builder import BuildTableOutput
-from tuple_conversions import Event, Format, Game, PlayerArchetype, Store, ViewButtonEnum
+from tuple_conversions import (
+    Event,
+    Format,
+    Game,
+    PlayerArchetype,
+    Store,
+    ViewButtonEnum,
+)
 from views.confirm_event import ConfirmEvent
 
 
@@ -94,8 +101,10 @@ async def SubmitArchetypeBatch(
         modal.new_archetypes,
     )
     confirmation = ConfirmEvent()
+    for message in output:
+        await interaction.followup.send(message)
     await interaction.followup.send(
-        f"{output}\nAre these correct?", view=confirmation, ephemeral=True
+        "Are these correct?", view=confirmation, ephemeral=True
     )
     await confirmation.wait()
 

@@ -35,7 +35,8 @@ class OneEventCommands(commands.GroupCog, name="one_event"):
 
         title, headers, data = await OneEventMeta(event)
         output = BuildTableOutput(title, headers, data)
-        await interaction.followup.send(output)
+        for message in output:
+            await interaction.followup.send(message)
 
     @app_commands.command(
         name="top_results",
@@ -61,7 +62,8 @@ class OneEventCommands(commands.GroupCog, name="one_event"):
         table = await OneEventDetails(event)
         output = BuildTableOutput(table.title, table.headers, table.data)
 
-        await interaction.followup.send(output)
+        for message in output:
+            await interaction.followup.send(message)
 
     @app_commands.command(
         name="decklists", description="View decklists that were provided for the event"
