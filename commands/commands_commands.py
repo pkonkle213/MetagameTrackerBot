@@ -31,8 +31,11 @@ class CommandCommands(commands.GroupCog, name="commands"):
         objects = interaction.extras.get("db_object")
         if not objects:
             raise KnownError("No interaction objects found")
-        output = await GetCommandsUser(objects, interaction.guild, interaction.user)
-        await interaction.followup.send(output)
+        messages = await GetCommandsUser(
+            objects, interaction.guild, interaction.user, self.bot.tree
+        )
+        for message in messages:
+            await interaction.followup.send(message, ephemeral=True)
 
     @CommandsHere.error
     @CommandsUser.error
