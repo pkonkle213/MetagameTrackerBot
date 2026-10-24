@@ -35,8 +35,9 @@ class UserInfoCommand(commands.Cog):
             ) = await GetUserData(objects, member)
 
             output = f"Player Name: {player_name}\n"
+            output += "For the past year...\n"
             # output += f"Win %: {win_percent}\n"
-            output += f"Attendance %: {attendance_rate}\n"
+            output += f"Attendance: {attendance_rate}%\n"
             output += f"Last Played: {last_played.archetype_played} ({last_played.event_date})\n"
             output += "Most Played Decks - % played:\n"
             for deck in top_decks:
