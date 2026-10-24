@@ -56,7 +56,6 @@ async def BulkAddArchetypes(
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor() as cur,
     ):
-        # TODO: Is this how it's formatted when prettier? It looks bad to my eyes
         command = """
         INSERT INTO archetype_submissions 
         (event_id,
@@ -74,8 +73,8 @@ async def BulkAddArchetypes(
         %s,
         %s,
         NOW(),
-        %s,
-        %s,
+        NULL,
+        %s || ' via mass update',
         FALSE,
         %s,
         %s,
