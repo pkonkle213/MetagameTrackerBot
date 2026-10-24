@@ -1,7 +1,12 @@
 from data.player_name_data import GetUserName
 from discord import Interaction, Member
 from custom_errors import KnownError
-from data.get_user_info_data import GetLastArchetype, GetWinPercentage, GetMostPlayed
+from data.get_user_info_data import (
+    GetLastArchetype,
+    GetWinPercentage,
+    GetMostPlayed,
+    GetAttendanceRate,
+)
 from tuple_conversions import (
     Format,
     Game,
@@ -15,16 +20,16 @@ from tuple_conversions import (
 
 async def GetUserData(objects: InteractionObjects, member: Member) -> UserData:
     """Gets the player name, win percent, last played, and top decks for a user"""
-    if (
-        (not objects.store and not objects.hub)
-        or not objects.game
-        or not objects.format
-    ):
-        raise Exception("Unable to get store, game, or format")
+    if not objects.store or not objects.game or not objects.format:
+        raise KnownError("Unable to get store, game, or format")
 
     player_name = await GetPlayerName(member.id)
 
     win_percent = await GetWinPercent(
+        member.id, objects.store, objects.game, objects.format
+    )
+
+    attendance_rate = await GetAttendanceRate(
         member.id, objects.store, objects.game, objects.format
     )
 
@@ -36,7 +41,7 @@ async def GetUserData(objects: InteractionObjects, member: Member) -> UserData:
         member.id, objects.store, objects.game, objects.format
     )
 
-    data = UserData(player_name, win_percent, last_played, top_decks)
+    data = UserData(player_name, win_percent, attendance_rate, last_played, top_decks)
     return data
 
 
