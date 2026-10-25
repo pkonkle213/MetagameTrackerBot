@@ -83,7 +83,9 @@ def interaction_row(
     )
 
 
-async def GetObjectsFromInteraction(interaction: Interaction) -> InteractionObjects:
+async def GetObjectsFromInteraction(
+    interaction: Interaction,
+) -> InteractionObjects | None:
     discord_id = interaction.guild_id
     channel_id = interaction.channel_id
     if not interaction.channel or isinstance(
@@ -187,6 +189,4 @@ async def GetObjectsFromInteraction(interaction: Interaction) -> InteractionObje
 
         await cur.execute(command, [discord_id, category_id, channel_id])
         row = await cur.fetchone()
-        if not row:
-            raise KnownError("No row found for the interaction")
         return row
