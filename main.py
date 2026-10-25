@@ -3,6 +3,7 @@ from threading import Thread
 from contextlib import suppress
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from legal_pages import get_legal_page
 
 
 class HealthCheckHandler(BaseHTTPRequestHandler):
@@ -12,6 +13,17 @@ class HealthCheckHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/plain; charset=utf-8")
             self.end_headers()
             self.wfile.write(b"OK")
+            return
+
+        legal_page = get_legal_page(self.path)
+        if legal_page is not None:
+            content_type, page_content = legal_page
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Content-Length", str(len(page_content)))
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.end_headers()
+            self.wfile.write(page_content)
             return
 
         self.send_error(404)
