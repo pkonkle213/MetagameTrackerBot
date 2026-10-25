@@ -66,7 +66,8 @@ class PersonalStatisticsGroup(commands.GroupCog, name="personal_stats"):
             )
         else:
             output = BuildTableOutput(title, header, data)
-            await interaction.followup.send(output, ephemeral=True)
+            for message in output:
+                await interaction.followup.send(message, ephemeral=True)
 
     @PersonalMatchupReport.error
     @WLDRecord.error

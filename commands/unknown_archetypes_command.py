@@ -41,11 +41,15 @@ class UnknownArchetypes(commands.Cog):
             )
         else:
             output = BuildTableOutput(table.title, table.headers, table.data)
-            output = (
-                output[:1940]
-                + "\nTo submit an archetype, use the command `/submit archetype`"
-            )
-            await interaction.followup.send(output)
+            for i in range(len(output)):
+                if i != len(output) - 1:
+                    await interaction.followup.send(output[i])
+                else:
+                    message = (
+                        output[i][:1940]
+                        + "\nTo submit an archetype, use the command `/submit archetype`"
+                    )
+                    await interaction.followup.send(message)
 
     @IntoTheUnknown.error
     async def Errors(

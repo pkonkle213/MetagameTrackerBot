@@ -39,7 +39,9 @@ class PersonalHistoryCommands(commands.GroupCog, name="history"):
         output = await GetPersonalStandingsHistory(
             user_id, start_date, end_date, objects
         )
-        await interaction.followup.send(output, ephemeral=True)
+       
+        for message in output:
+            await interaction.followup.send(message, ephemeral=True)
 
     @app_commands.command(
         name="pairings", description="Your history according to pairings"
@@ -65,7 +67,9 @@ class PersonalHistoryCommands(commands.GroupCog, name="history"):
         output = await GetPersonalPairingsHistory(
             user_id, start_date, end_date, objects
         )
-        await interaction.followup.send(output, ephemeral=True)
+      
+        for message in output:
+            await interaction.followup.send(message, ephemeral=True)
 
     @GetPersonalStandingsHistory.error
     @GetPersonalPairingsHistory.error

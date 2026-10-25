@@ -35,7 +35,8 @@ class StoreTopPlayers(commands.Cog):
             await interaction.followup.send("No players found for this game or format")
         else:
             output = BuildTableOutput(table.title, table.headers, table.data)
-            await interaction.followup.send(output)
+            for message in output:
+                await interaction.followup.send(message)
 
     @Leaderboard.error
     async def Errors(

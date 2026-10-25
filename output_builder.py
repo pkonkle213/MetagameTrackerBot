@@ -19,10 +19,11 @@ def MaxLength(headers: list[str], collection: list[Any]):
     return maxLengths
 
 
-def BuildTableOutput(title: str, headers: list[str], items: list[Any]) -> str:
+def BuildTableOutput(title: str, headers: list[str], items: list[Any]) -> list[str]:
     """Builds a table output out of the title, headers, and items provided"""
-    if headers == []:
-        raise KnownError("No headers provided")
+    list_output: list[str] = []
+    if len(headers) == 0 or len(title) == 0 or len(items) == 0:
+        raise KnownError("Insufficient information provided")
     column_widths = MaxLength(headers, items)
     align = ""
     output = f"```{title}\n\n"
@@ -31,23 +32,24 @@ def BuildTableOutput(title: str, headers: list[str], items: list[Any]) -> str:
         width = "{:" + align + str(column_widths[headers.index(header)]) + "s}"
         output += width.format(header)
 
-    output += "\n" + "-" * sum(column_widths) + "\n"
+    pre_elements = output + "\n" + "-" * sum(column_widths) + "\n"
+    post_elements = ""
 
     for item in items:
+        line = ""
         for i in range(len(column_widths)):
             element = str(item[i])
             column_format = "{:" + align + str(column_widths[i]) + "s}"
             if element[0] == "-":
-                output = output[:-1]
+                line = line[:-1]
 
-            output += column_format.format(element)
+            line += column_format.format(element)
 
-        output += "\n"
+        if len(pre_elements) + len(post_elements) + len(line) > 1997:
+            list_output.append(pre_elements + post_elements + "```")
+            post_elements = ""
 
-    if len(output) > 1994:
-        output = output[:1994] + "..."
-    else:
-        output = output[:1997]
+        post_elements += line + "\n"
 
-    output += "```"
-    return output
+    list_output.append(pre_elements + post_elements + "```")
+    return list_output
