@@ -1,8 +1,6 @@
-from tuple_conversions import InteractionObjects
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsStore
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from services.store_attendance_services import GetAttendance
@@ -37,7 +35,8 @@ class EventAttendance(commands.Cog):
             )
         else:
             output = BuildTableOutput(table.title, table.headers, table.data)
-            await interaction.followup.send(output)
+            for message in output:
+                await interaction.followup.send(message)
 
     @Attendance.error
     async def Errors(

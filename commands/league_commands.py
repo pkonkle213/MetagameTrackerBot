@@ -65,7 +65,8 @@ class LeagueCommands(commands.GroupCog, name="league"):
             title = f"Top Players for {league.name}"
             headers = ["Rank", "Player Name", "Points", "Win %"]
             output = BuildTableOutput(title, headers, data)
-            await interaction.followup.send(output)
+            for message in output:
+                await interaction.followup.send(message)
         else:
             await interaction.followup.send("No players found", ephemeral=True)
 
@@ -86,7 +87,8 @@ class LeagueCommands(commands.GroupCog, name="league"):
             title = f"Top Players for {league.name}"
             headers = ["Rank", "Player Name", "Points", "Win %"]
             output = BuildTableOutput(title, headers, data)
-            await interaction.followup.send(output, ephemeral=True)
+            for message in output:
+                await interaction.followup.send(message, ephemeral=True)
         else:
             await interaction.followup.send("No players found", ephemeral=True)
 
@@ -114,7 +116,8 @@ class LeagueCommands(commands.GroupCog, name="league"):
         title = f"Metagame for {league.name}"
         headers = ["Archetype Name", "Meta %", "Win %"]
         output = BuildTableOutput(title, headers, data)
-        await interaction.followup.send(output)
+        for message in output:
+            await interaction.followup.send(message)
 
     @app_commands.command(
         name="my_status",
@@ -133,7 +136,8 @@ class LeagueCommands(commands.GroupCog, name="league"):
         title = f"Your Status for {league.name}"
         headers = ["Points", "Win %", "Rank"]
         output = BuildTableOutput(title, headers, [data])
-        await interaction.followup.send(output, ephemeral=True)
+        for message in output:
+            await interaction.followup.send(message, ephemeral=True)
 
     @CreateTheLeague.error
     @EditTheLeague.error

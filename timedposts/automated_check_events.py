@@ -37,18 +37,28 @@ async def EventCheck(bot: commands.Bot) -> None:
                     ["Date", "Event Name", "Player Name"],
                     needed_archetypes,
                 )
-                output = (
-                    output[:1940]
-                    + "\nTo submit an archetype, use the command `/submit archetype`"
-                )
-                # Message each channel with the unknown archetypes
-                await MessageChannel(bot, output, event.discord_id, event.channel_id)
+                for i in range(len(output)):
+                    if i != len(output) - 1:
+                        await MessageChannel(
+                            bot, output[i], event.discord_id, event.channel_id
+                        )
+                    else:
+                        message = (
+                            output[i][:1940]
+                            + "\nTo submit an archetype, use the command `/submit archetype`"
+                        )
+                        await MessageChannel(
+                            bot, output[i], event.discord_id, event.channel_id
+                        )
             elif not event.is_complete:
                 real_event = await GetEvent(event.event_id)
                 table = await OneEventDetails(real_event)
                 output = BuildTableOutput(table.title, table.headers, table.data)
                 # Message the newly completed event's details
-                await MessageChannel(bot, output, event.discord_id, event.channel_id)
+                for message in output:
+                    await MessageChannel(
+                        bot, message, event.discord_id, event.channel_id
+                    )
         except Exception as ex:
             await MessageUser(
                 bot,

@@ -8,6 +8,60 @@ from settings import DATABASE_URL
 from tuple_conversions import Format, Game, LastArchetype, Store, TopDeck
 
 
+async def GetAttendanceRate(
+    user_id: int, store: Store, game: Game, format: Format
+) -> float:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=scalar_row) as cur,
+    ):
+        command = """
+        WITH
+          store_events AS (
+            SELECT
+              id
+            FROM
+              events
+            WHERE
+              discord_id = %s
+              AND event_date >= CURRENT_DATE - INTERVAL '1 year'
+              AND game_id = %s
+              AND format_id = %s
+          ),
+          attended_events AS (
+            SELECT
+              event_id,
+              fs.player_name
+            FROM
+              full_standings fs
+              INNER JOIN events_view e ON e.id = fs.event_id
+              INNER JOIN player_names pn ON pn.discord_id = e.discord_id
+              AND upper(pn.player_name) = upper(fs.player_name)
+            WHERE
+              pn.submitter_id = %s
+          )
+        SELECT
+          ROUND(
+            100.0 * SUM(
+              CASE
+                WHEN player_name IS NOT NULL THEN 1
+                ELSE 0
+              END
+            ) / COUNT(*),
+            2
+          ) AS attendance_percent
+        FROM
+          store_events s
+          LEFT JOIN attended_events a ON a.event_id = s.id
+        """
+
+        await cur.execute(command, [store.discord_id, game.id, format.id, user_id])
+        attendance = await cur.fetchone()
+        if not attendance:
+            return 0.0
+        return attendance
+
+
 async def GetWinPercentage(
     user_id: int, store: Store, game: Game, format: Format
 ) -> float:

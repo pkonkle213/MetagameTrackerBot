@@ -37,7 +37,6 @@ async def SelectLeague(
         or (not objects.hub and not objects.store)
         or not objects.game
         or not objects.format
-        or not objects.region
     ):
         raise KnownError(
             "No store, game, or format found. Leagues must be created in a format mapped channel"

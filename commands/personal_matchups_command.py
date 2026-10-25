@@ -1,12 +1,13 @@
-from custom_errors import KnownError
 from discord import Interaction, app_commands
 from discord.ext import commands
-from views.pagination_view import PaginationView
+
 from checks import IsPaidUser, IsStore
+from custom_errors import KnownError
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from services.personal_matchups_services import PersonalMatchups
 from services.player_win_record_services import PlayRecord
+from views.pagination_view import PaginationView
 
 
 class PersonalStatisticsGroup(commands.GroupCog, name="personal_stats"):
@@ -65,7 +66,8 @@ class PersonalStatisticsGroup(commands.GroupCog, name="personal_stats"):
             )
         else:
             output = BuildTableOutput(title, header, data)
-            await interaction.followup.send(output, ephemeral=True)
+            for message in output:
+                await interaction.followup.send(message, ephemeral=True)
 
     @PersonalMatchupReport.error
     @WLDRecord.error

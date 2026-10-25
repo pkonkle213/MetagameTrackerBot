@@ -1,7 +1,7 @@
 from output_builder import BuildTableOutput
 from tuple_conversions import DataConverted
 
-def BuildReviewOutput(data: DataConverted) -> str:
+def BuildReviewOutput(data: DataConverted) -> list[str]:
   if data.standings_data:
     title = "Data Received"
     headers = ["Player Name","Wins","Losses","Draws"]
@@ -15,6 +15,6 @@ def BuildReviewOutput(data: DataConverted) -> str:
 
   if data.errors:
     for error in data.errors:
-      output += f'\n`{error}`'
+      output.append(f'\n`{error}`')
 
   return output

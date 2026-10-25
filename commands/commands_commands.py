@@ -1,8 +1,8 @@
-from custom_errors import KnownError
-from services.command_error_service import Error
-from tuple_conversions import MTBRoles
 from discord import Interaction, app_commands
 from discord.ext import commands
+
+from custom_errors import KnownError
+from services.command_error_service import Error
 from services.commands_services import GetCommandsHere, GetCommandsUser
 
 
@@ -22,7 +22,8 @@ class CommandCommands(commands.GroupCog, name="commands"):
         guild = interaction.guild
         user = interaction.user
         output = await GetCommandsHere(objects, guild, user)
-        await interaction.followup.send(output)
+        for message in output:
+            await interaction.followup.send(message)
 
     @app_commands.command(name="for_me", description="All commands available for you")
     @app_commands.guild_only()
@@ -32,7 +33,8 @@ class CommandCommands(commands.GroupCog, name="commands"):
         if not objects:
             raise KnownError("No interaction objects found")
         output = await GetCommandsUser(objects, interaction.guild, interaction.user)
-        await interaction.followup.send(output)
+        for message in output:
+            await interaction.followup.send(message, ephemeral=True)
 
     @CommandsHere.error
     @CommandsUser.error

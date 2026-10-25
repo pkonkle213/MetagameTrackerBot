@@ -1,7 +1,7 @@
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsPaidUser, IsStore
+from checks import IsPaidUser
 from services.command_error_service import Error
 from services.personal_history_service import (
     GetPersonalPairingsHistory,
@@ -35,8 +35,13 @@ class PersonalHistoryCommands(commands.GroupCog, name="history"):
 
         await interaction.response.defer(ephemeral=True, thinking=False)
         objects = interaction.extras.get("db_object")
-        output = await GetPersonalStandingsHistory(interaction, start_date, end_date, objects)
-        await interaction.followup.send(output, ephemeral=True)
+        user_id = interaction.user.id
+        output = await GetPersonalStandingsHistory(
+            user_id, start_date, end_date, objects
+        )
+       
+        for message in output:
+            await interaction.followup.send(message, ephemeral=True)
 
     @app_commands.command(
         name="pairings", description="Your history according to pairings"
@@ -58,8 +63,13 @@ class PersonalHistoryCommands(commands.GroupCog, name="history"):
 
         await interaction.response.defer(ephemeral=True, thinking=False)
         objects = interaction.extras.get("db_object")
-        output = await GetPersonalPairingsHistory(interaction, start_date, end_date, objects)
-        await interaction.followup.send(output, ephemeral=True)
+        user_id = interaction.user.id
+        output = await GetPersonalPairingsHistory(
+            user_id, start_date, end_date, objects
+        )
+      
+        for message in output:
+            await interaction.followup.send(message, ephemeral=True)
 
     @GetPersonalStandingsHistory.error
     @GetPersonalPairingsHistory.error

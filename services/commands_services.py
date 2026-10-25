@@ -1,13 +1,14 @@
-from custom_errors import KnownError
 from output_builder import BuildTableOutput
-from tuple_conversions import MTBRoles, InteractionObjects
-from checks import isMTStore, HasRequiredRoles, isMTSubmitter
+from tuple_conversions import InteractionObjects
+from checks import isMTStore, isMTSubmitter
 from discord import Interaction, Member, Guild
 from data.commands_data import GetHereCommands, GetUserCommands
 import timedposts.automated_paid_users as apu
 
 
-async def GetCommandsHere(objects: InteractionObjects, guild:Guild, user:Member) -> str:
+async def GetCommandsHere(
+    objects: InteractionObjects, guild: Guild, user: Member
+) -> list[str]:
     is_store = bool(objects.store)
     is_hub = bool(objects.hub)
     is_game = bool(objects.game)
@@ -38,7 +39,7 @@ async def GetCommandsHere(objects: InteractionObjects, guild:Guild, user:Member)
 
 async def GetCommandsUser(
     objects: InteractionObjects, discord: Guild, user: Member
-) -> str:
+) -> list[str]:
     is_store = bool(objects.store)
     is_hub = bool(objects.hub)
     is_game = bool(objects.game)
@@ -61,5 +62,7 @@ async def GetCommandsUser(
         store_is_paid,
         hub_is_paid,
     )
-    output = BuildTableOutput("Commands in this channel", ["Name"], commands)
+    output = BuildTableOutput(
+        "Commands for you in this channel", ["Name", "Description"], commands
+    )
     return output
