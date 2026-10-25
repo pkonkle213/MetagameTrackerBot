@@ -13,13 +13,23 @@ class DatabaseCommands(commands.GroupCog, name="database"):
     @app_commands.check(isPhil)
     async def DownloadDatabase(self, interaction: Interaction):
         await interaction.response.send_message(
-            "Generating spreadsheet, please wait...", ephemeral=True
+            "Generating database export archives, please wait...", ephemeral=True
         )
         try:
-            file = await DatabaseCommandsDownload()
-            await interaction.followup.send(
-                "Here's the database!", file=file, ephemeral=True
-            )
+            with await DatabaseCommandsDownload() as export:
+                total_parts = len(export.files)
+                for start in range(0, total_parts, 10):
+                    files = export.files[start : start + 10]
+                    first_part = start + 1
+                    last_part = start + len(files)
+                    await interaction.followup.send(
+                        content=(
+                            f"Database export archives "
+                            f"{first_part}-{last_part} of {total_parts}."
+                        ),
+                        files=files,
+                        ephemeral=True,
+                    )
         except Exception as e:
             await interaction.followup.send(f"An error occurred: {e}", ephemeral=True)
 
