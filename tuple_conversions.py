@@ -239,6 +239,7 @@ class TopDeck(NamedTuple):
 class UserData(NamedTuple):
     player_name: str
     win_percent: float
+    attendance_rate: float
     last_played: LastArchetype
     top_decks: list[TopDeck]
 
