@@ -1,0 +1,351 @@
+from collections import OrderedDict
+from io import BytesIO
+from math import ceil
+from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
+from discord import File, Interaction
+
+from data.metagame_heatmap_data import MetagameHeatmapRow
+
+MAX_HEATMAP_DECKS = 16
+CELL_WIDTH = 88
+CELL_HEIGHT = 64
+ROW_LABEL_X = 32
+ROW_LABEL_GAP = 4
+OVERALL_WIDTH = 128
+MATCHUP_GRID_GAP = 20
+OPPONENT_HEADER_Y = 112
+OPPONENT_HEADER_HEIGHT = 20
+OPPONENT_HEADER_GAP = 8
+COLUMN_LABEL_TOP = OPPONENT_HEADER_Y + OPPONENT_HEADER_HEIGHT + OPPONENT_HEADER_GAP
+COLUMN_LABEL_PADDING = 4
+GRID_TOP_PADDING = 12
+MAX_GRID_TOP = 470
+COLUMN_LABEL_MAX_WIDTH = (
+    MAX_GRID_TOP - COLUMN_LABEL_TOP - COLUMN_LABEL_PADDING - GRID_TOP_PADDING
+)
+BACKGROUND = "#FFFFFF"
+TEXT_COLOR = "#202124"
+MUTED_COLOR = "#65717A"
+GRID_COLOR = "#D3D9DD"
+
+
+def SelectTopArchetypes(
+    rows: list[MetagameHeatmapRow], limit: int = MAX_HEATMAP_DECKS
+) -> tuple[list[str], dict[str, tuple[int, float | None]], dict[tuple[str, str], tuple[int, float | None]]]:
+    deck_stats: OrderedDict[str, tuple[int, float | None]] = OrderedDict()
+    matchups: dict[tuple[str, str], tuple[int, float | None]] = {}
+
+    for row in rows:
+        deck_stats.setdefault(
+            row.archetype, (row.player_count, row.overall_win_percent)
+        )
+        if row.opponent_archetype is not None:
+            matchups[(row.archetype, row.opponent_archetype)] = (
+                row.games_against or 0,
+                row.matchup_win_percent,
+            )
+
+    ranked = sorted(
+        deck_stats,
+        key=lambda name: (-deck_stats[name][0], name.casefold()),
+    )[:limit]
+    return ranked, dict(deck_stats), matchups
+
+
+def BuildMetagameHeatmapImage(
+    title: str, rows: list[MetagameHeatmapRow]
+) -> bytes:
+    archetypes, deck_stats, matchups = SelectTopArchetypes(rows)
+    count = len(archetypes)
+    grid_width = count * CELL_WIDTH
+    title_font = _LoadFont(28, bold=True)
+    header_font = _LoadFont(16, bold=True)
+    column_label_font = _LoadFont(14, bold=True)
+    row_archetype_font = _LoadFont(14, bold=True)
+    body_font = _LoadFont(14)
+    cell_font = _LoadFont(16, bold=True)
+    small_font = _LoadFont(12)
+    measure_draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
+    overall_x, grid_left, _ = _GetLeftColumnLayout(
+        measure_draw,
+        archetypes,
+        deck_stats,
+        row_archetype_font,
+        body_font,
+    )
+    grid_top = _GetGridTop(measure_draw, archetypes, column_label_font)
+    column_label_bottom = grid_top - GRID_TOP_PADDING
+    overall_header_y = grid_top - 30
+    image_width = grid_left + grid_width + 36
+    image_height = grid_top + count * CELL_HEIGHT + 44
+    image = Image.new("RGB", (image_width, image_height), BACKGROUND)
+    draw = ImageDraw.Draw(image)
+
+    draw.text((32, 22), title, fill=TEXT_COLOR, font=title_font)
+    draw.text(
+        (32, 64),
+        f"Top {count} archetypes by player count. Cell: matchup win rate / games played.",
+        fill=MUTED_COLOR,
+        font=body_font,
+    )
+    draw.text(
+        (32, 91),
+        "Red = lower win rate · green = higher win rate",
+        fill=MUTED_COLOR,
+        font=body_font,
+    )
+
+    draw.text(
+        (grid_left, OPPONENT_HEADER_Y),
+        "Opponent archetype",
+        fill=TEXT_COLOR,
+        font=header_font,
+    )
+    for index, archetype in enumerate(archetypes):
+        x = grid_left + index * CELL_WIDTH
+        _DrawVerticalText(
+            image,
+            archetype,
+            column_label_font,
+            TEXT_COLOR,
+            x + CELL_WIDTH // 2,
+            column_label_bottom,
+            COLUMN_LABEL_MAX_WIDTH,
+        )
+
+    draw.text(
+        (overall_x + OVERALL_WIDTH // 2, overall_header_y),
+        "Overall",
+        fill=TEXT_COLOR,
+        font=header_font,
+        anchor="mm",
+    )
+
+    for row_index, archetype in enumerate(archetypes):
+        y = grid_top + row_index * CELL_HEIGHT
+        player_count = deck_stats[archetype][0]
+        player_count_label = f" ({player_count} players)"
+        archetype_width = draw.textlength(archetype, font=row_archetype_font)
+        draw.text(
+            (ROW_LABEL_X, y + CELL_HEIGHT // 2),
+            archetype,
+            fill=TEXT_COLOR,
+            font=row_archetype_font,
+            anchor="lm",
+        )
+        draw.text(
+            (ROW_LABEL_X + archetype_width, y + CELL_HEIGHT // 2),
+            player_count_label,
+            fill=MUTED_COLOR,
+            font=body_font,
+            anchor="lm",
+        )
+
+        overall_percent = deck_stats[archetype][1]
+        overall_text = (
+            f"{overall_percent:.1f}%" if overall_percent is not None else "N/A"
+        )
+        draw.rounded_rectangle(
+            (
+                overall_x,
+                y + 3,
+                overall_x + OVERALL_WIDTH - 4,
+                y + CELL_HEIGHT - 3,
+            ),
+            radius=5,
+            fill="#EEF1F3",
+            outline=GRID_COLOR,
+        )
+        draw.text(
+            (overall_x + (OVERALL_WIDTH - 4) // 2, y + CELL_HEIGHT // 2),
+            overall_text,
+            fill=TEXT_COLOR,
+            font=cell_font,
+            anchor="mm",
+        )
+
+        for column_index, opponent in enumerate(archetypes):
+            x = grid_left + column_index * CELL_WIDTH
+            rect = (x + 2, y + 2, x + CELL_WIDTH - 2, y + CELL_HEIGHT - 2)
+            if opponent == archetype:
+                fill = "#E6E9EB"
+                draw.rounded_rectangle(
+                    rect, radius=4, fill=fill, outline=GRID_COLOR
+                )
+                draw.text(
+                    (x + CELL_WIDTH // 2, y + CELL_HEIGHT // 2),
+                    "—",
+                    fill=MUTED_COLOR,
+                    font=cell_font,
+                    anchor="mm",
+                )
+                continue
+
+            matchup = matchups.get((archetype, opponent))
+            if matchup is None or matchup[1] is None:
+                fill = "#F4F5F6"
+                percent_text = "N/A"
+                games_text = "0 games"
+            else:
+                games, win_percent = matchup
+                fill = _WinRateColor(win_percent)
+                percent_text = f"{win_percent:.1f}%"
+                games_text = f"{games} games"
+
+            draw.rounded_rectangle(
+                rect, radius=4, fill=fill, outline=GRID_COLOR
+            )
+            draw.text(
+                (x + CELL_WIDTH // 2, y + 23),
+                percent_text,
+                fill=TEXT_COLOR,
+                font=cell_font,
+                anchor="mm",
+            )
+            draw.text(
+                (x + CELL_WIDTH // 2, y + 44),
+                games_text,
+                fill=TEXT_COLOR,
+                font=small_font,
+                anchor="mm",
+            )
+
+    output = BytesIO()
+    image.save(output, format="PNG", optimize=True)
+    return output.getvalue()
+
+
+def _LoadFont(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    filename = "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"
+    candidates = (
+        Path("/usr/share/fonts/truetype/dejavu") / filename,
+        Path("/usr/share/fonts/dejavu") / filename,
+    )
+    for path in candidates:
+        if path.is_file():
+            return ImageFont.truetype(str(path), size)
+    return ImageFont.load_default(size=size)
+
+
+def _DrawVerticalText(
+    image: Image.Image,
+    value: str,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    color: str,
+    center_x: int,
+    bottom_y: int,
+    max_text_width: int,
+) -> None:
+    value = _FitText(
+        ImageDraw.Draw(image),
+        value,
+        font,
+        max_text_width,
+    )
+    bounds = font.getbbox(value)
+    text_width = max(1, bounds[2] - bounds[0])
+    text_height = max(1, bounds[3] - bounds[1])
+    label = Image.new("RGBA", (text_width + 4, text_height + 4), (255, 255, 255, 0))
+    label_draw = ImageDraw.Draw(label)
+    label_draw.text(
+        (2 - bounds[0], 2 - bounds[1]), value, font=font, fill=color
+    )
+    label = label.rotate(90, expand=True)
+    image.paste(
+        label,
+        (center_x - label.width // 2, bottom_y - label.height),
+        label,
+    )
+
+
+def _GetGridTop(
+    draw: ImageDraw.ImageDraw,
+    archetypes: list[str],
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+) -> int:
+    longest_label_width = max(
+        (
+            draw.textlength(
+                _FitText(draw, archetype, font, COLUMN_LABEL_MAX_WIDTH),
+                font=font,
+            )
+            for archetype in archetypes
+        ),
+        default=0,
+    )
+    return round(
+        COLUMN_LABEL_TOP
+        + longest_label_width
+        + COLUMN_LABEL_PADDING
+        + GRID_TOP_PADDING
+    )
+
+
+def _GetLeftColumnLayout(
+    draw: ImageDraw.ImageDraw,
+    archetypes: list[str],
+    deck_stats: dict[str, tuple[int, float | None]],
+    archetype_font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    count_font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+) -> tuple[int, int, int]:
+    row_label_width = max(
+        (
+            ceil(
+                draw.textlength(archetype, font=archetype_font)
+                + draw.textlength(
+                    f" ({deck_stats[archetype][0]} players)", font=count_font
+                )
+            )
+            for archetype in archetypes
+        ),
+        default=0,
+    )
+    overall_x = ROW_LABEL_X + row_label_width + ROW_LABEL_GAP
+    grid_left = overall_x + OVERALL_WIDTH + MATCHUP_GRID_GAP
+    return overall_x, grid_left, row_label_width
+
+
+def _FitText(
+    draw: ImageDraw.ImageDraw,
+    value: str,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    max_width: int,
+) -> str:
+    if draw.textlength(value, font=font) <= max_width:
+        return value
+    return _Ellipsize(draw, value, font, max_width)
+
+
+def _Ellipsize(
+    draw: ImageDraw.ImageDraw,
+    value: str,
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont,
+    max_width: int,
+) -> str:
+    suffix = "…"
+    while value and draw.textlength(value + suffix, font=font) > max_width:
+        value = value[:-1]
+    return value + suffix if value else suffix
+
+
+def _WinRateColor(win_percent: float) -> str:
+    win_percent = float(win_percent)
+    if win_percent == 50:
+        return "#FFFFFF"
+
+    tint = (220, 53, 69) if win_percent < 50 else (40, 167, 69)
+    opacity = 0.12 + 0.48 * min(abs(win_percent - 50) / 50, 1.0)
+    color = tuple(round(255 * (1 - opacity) + channel * opacity) for channel in tint)
+    return "#{:02X}{:02X}{:02X}".format(*color)
+
+
+async def SendMetagameHeatmap(
+    interaction: Interaction, title: str, rows: list[MetagameHeatmapRow]
+) -> None:
+    image_bytes = BuildMetagameHeatmapImage(title, rows)
+    await interaction.followup.send(
+        file=File(BytesIO(image_bytes), filename="metagame_heatmap.png"),
+        ephemeral=True,
+    )
