@@ -3,7 +3,7 @@ modules = ["postgresql-16", "python3", "python-3.12"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["cacert", "cairo", "cargo", "ffmpeg-full", "freetype", "ghostscript", "glibcLocales", "gobject-introspection", "gtk3", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssl", "pkg-config", "postgresql", "qhull", "rustc", "tcl", "tesseract", "tk", "zlib"]
+packages = ["cacert", "cairo", "cargo", "ffmpeg-full", "freetype", "ghostscript", "glibcLocales", "gobject-introspection", "gtk3", "gumbo", "harfbuzz", "jbig2dec", "lcms2", "libiconv", "libimagequant", "libjpeg", "libjpeg_turbo", "libtiff", "libwebp", "libxcrypt", "mupdf", "openjpeg", "openssl", "pkg-config", "postgresql", "qhull", "rustc", "swig", "tcl", "tesseract", "tk", "xcbuild", "zlib"]
 
 [unitTest]
 language = "python3"
