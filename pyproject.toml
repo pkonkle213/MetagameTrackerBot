@@ -19,4 +19,5 @@ dependencies = [
     "pytz==2026.3.post1",
     "replit-object-storage==1.0.2",
     "requests==2.34.2",
+    "stripe>=16.0.0",
 ]
