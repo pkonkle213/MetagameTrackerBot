@@ -2,6 +2,7 @@ import stripe
 import discord
 from aiohttp import web
 import settings
+from legal_pages import get_legal_page
 
 
 async def handle_stripe_webhook(request: web.Request, bot: discord.Client) -> web.Response:
@@ -16,7 +17,7 @@ async def handle_stripe_webhook(request: web.Request, bot: discord.Client) -> we
   try:
     event = stripe.Webhook.construct_event(
       payload, sig_header, settings.STRIPE_WEBHOOK_SECRET
-    )
+    ).to_dict()
   except (stripe.SignatureVerificationError, ValueError):
     print('Invalid Stripe webhook signature')
     return web.Response(status=400, text='Invalid signature')
@@ -53,16 +54,43 @@ async def handle_stripe_webhook(request: web.Request, bot: discord.Client) -> we
   return web.Response(status=200, text='OK')
 
 
-async def start_webhook_server(bot: discord.Client, port: int = 8081) -> None:
-  if not settings.STRIPE_SECRET_KEY:
-    raise RuntimeError("Stripe payments are not configured")
-  stripe.api_key = settings.STRIPE_SECRET_KEY
+async def handle_health_and_legal(request: web.Request) -> web.Response:
+  if request.path == '/':
+    return web.Response(status=200, text='OK', content_type='text/plain')
 
+  legal_page = get_legal_page(request.path)
+  if legal_page is None:
+    raise web.HTTPNotFound()
+
+  content_type, page_content = legal_page
+  return web.Response(
+    status=200,
+    body=page_content,
+    headers={
+      'Content-Type': content_type,
+      'X-Content-Type-Options': 'nosniff',
+    },
+  )
+
+
+def create_web_app(bot: discord.Client) -> web.Application:
   app = web.Application()
-  app.router.add_post('/stripe/webhook', lambda req: handle_stripe_webhook(req, bot))
 
+  async def stripe_webhook_route(request: web.Request) -> web.Response:
+    return await handle_stripe_webhook(request, bot)
+
+  app.router.add_post('/stripe/webhook', stripe_webhook_route)
+  app.router.add_get('/{path:.*}', handle_health_and_legal)
+  return app
+
+
+async def start_webhook_server(
+  bot: discord.Client, port: int = settings.HTTP_SERVER_PORT
+) -> web.AppRunner:
+  app = create_web_app(bot)
   runner = web.AppRunner(app)
   await runner.setup()
   site = web.TCPSite(runner, '0.0.0.0', port)
   await site.start()
-  print(f'Stripe webhook server listening on port {port}')
+  print(f'Health and Stripe webhook server listening on port {port}')
+  return runner
