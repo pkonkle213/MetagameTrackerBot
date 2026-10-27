@@ -185,7 +185,7 @@ def BuildMessage(
     return "\n".join(message_parts)
 
 
-async def CheckEventPercentage(event: Event) -> tuple[str | None, list[str] | None]:
+async def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
     followup: str | None = None
     final: list[str] | None = None
     percent_reported = await GetEventReportedPercentage(event.id)
@@ -199,4 +199,5 @@ async def CheckEventPercentage(event: Event) -> tuple[str | None, list[str] | No
             followup = f"Congratulations! {str_date}'s {event.event_name} is now fully reported! Thank you to all who reported their archetypes!"
             table = await OneEventDetails(event)
             final = BuildTableOutput(table.title, table.headers, table.data)
-    return followup, final
+    final_out = final[0] if final else None
+    return followup, final_out

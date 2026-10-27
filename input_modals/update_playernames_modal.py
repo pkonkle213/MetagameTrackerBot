@@ -29,7 +29,7 @@ class UpdatePlayerNamesModal(ui.Modal, title="Update Player Names"):
         self.add_item(self.new_name)
 
     async def on_submit(self, interaction: Interaction) -> None:
-        await interaction.response.defer(thinking=True, ephemeral=True)
+        await interaction.response.defer(ephemeral=True)
         old_name = ConvertInput(self.old_name.component.value)
         new_name = ConvertInput(self.new_name.component.value)
         standings = UpdatePlayerNamesInStandings(
