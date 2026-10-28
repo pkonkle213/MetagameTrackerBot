@@ -39,6 +39,40 @@ def make_interaction():
 
 
 class SubmissionModalErrorTests(unittest.IsolatedAsyncioTestCase):
+    async def test_csv_modal_accepts_and_processes_ten_files(self):
+        modal = submit_csv_modal.SubmitCSVDataModal(make_event(), "/upload/input.csv")
+        uploads = [Mock() for _ in range(10)]
+        self.assertEqual(modal.csv_data.component.max_values, 10)
+        modal.csv_data = SimpleNamespace(
+            component=SimpleNamespace(values=uploads, max_values=10)
+        )
+        interaction = make_interaction()
+
+        async def convert_csv(_event, file_path, upload):
+            return DataConverted(
+                [upload],
+                None,
+                None,
+                None,
+                None,
+                (file_path,),
+            )
+
+        with patch.object(
+            submit_csv_modal,
+            "ConvertAndUploadCSV",
+            new_callable=AsyncMock,
+            side_effect=convert_csv,
+        ) as convert:
+            await modal.on_submit(interaction)
+
+        self.assertEqual(convert.await_count, 10)
+        upload_paths = [call.args[1] for call in convert.await_args_list]
+        self.assertEqual(len(set(upload_paths)), 10)
+        self.assertEqual(modal.converted_data.pairings_data, uploads)
+        self.assertEqual(modal.converted_data.staged_source_files, tuple(upload_paths))
+        self.assertFalse(modal.conversion_failed)
+
     async def test_csv_conversion_failure_is_reported_and_marked_failed(self):
         modal = submit_csv_modal.SubmitCSVDataModal(make_event(), "/upload/input.csv")
         modal.csv_data = SimpleNamespace(component=SimpleNamespace(values=[Mock()]))
@@ -76,7 +110,7 @@ class SubmissionModalErrorTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertTrue(modal.conversion_failed)
         self.assertIn(
-            "Only one standings file can be submitted",
+            "A standings CSV must be submitted by itself",
             interaction.followup.send.await_args.args[0],
         )
         self.assertIn(

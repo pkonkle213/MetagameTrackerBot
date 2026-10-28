@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import discord
 from custom_errors import KnownError
 from services.convert_and_save_input import ConvertAndUploadCSV
@@ -13,11 +15,10 @@ class SubmitCSVDataModal(discord.ui.Modal, title="Submit Data"):
         self.converted_data: DataConverted = DataConverted(None, None, None, None, None)
         self.conversion_failed = False
 
-        # TODO: Restore to 10 files when ready
         self.csv_data = discord.ui.Label(
             text="CSV File",
-            description="Upload a CSV files for this event.",
-            component=discord.ui.FileUpload(required=True, max_values=1),
+            description="Upload up to 10 CSV files for this event.",
+            component=discord.ui.FileUpload(required=True, max_values=10),
         )
         self.add_item(self.csv_data)
 
@@ -26,8 +27,11 @@ class SubmitCSVDataModal(discord.ui.Modal, title="Submit Data"):
         await interaction.response.defer(ephemeral=True)
         try:
             converted_csvs: list[DataConverted] = []
-            for csv in self.csv_data.component.values:
-                converted = await ConvertAndUploadCSV(self.event, self.file_path, csv)
+            upload_batch_id = uuid4().hex
+            base_path = self.file_path.rsplit(".", 1)[0]
+            for index, csv in enumerate(self.csv_data.component.values, start=1):
+                upload_path = f"{base_path}_{upload_batch_id}_{index}.csv"
+                converted = await ConvertAndUploadCSV(self.event, upload_path, csv)
                 converted_csvs.append(converted)
 
             standings_files = [
@@ -35,7 +39,7 @@ class SubmitCSVDataModal(discord.ui.Modal, title="Submit Data"):
             ]
             if standings_files and len(converted_csvs) > 1:
                 raise KnownError(
-                    "Only one standings file can be submitted for an event."
+                    "A standings CSV must be submitted by itself."
                 )
 
             if standings_files:
