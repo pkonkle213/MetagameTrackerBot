@@ -35,7 +35,7 @@ def MeleeJsonPairings(
 
 def ByeMatch(match: dict) -> tuple[Pairing, dict[str, str | None]]:
     p1name = match["Competitors"][0]["Team"]["Players"][0]["Name"]
-    p1gw = match["Competitors"][0]["GameByes"]
+    p1gw = match["Competitors"][0]["GameWinsAndGameByes"]
     p1archetype = DetermineAchetype(match["Competitors"][0])
     p2name = "Bye"
     p2gw = 0
@@ -52,18 +52,24 @@ def ByeMatch(match: dict) -> tuple[Pairing, dict[str, str | None]]:
 
 def PairedMatch(match: dict) -> tuple[Pairing, dict[str, str | None]]:
     p1name = match["Competitors"][0]["Team"]["Players"][0]["Name"]
-    p1gw = (
-        match["Competitors"][0]["GameWins"]
-        if match["Competitors"][0]["GameWins"]
-        else 0
+    p1gw = min(
+        2,
+        (
+            match["Competitors"][0]["GameWins"]
+            if match["Competitors"][0]["GameWins"]
+            else 0
+        ),
     )
     p1archetype = DetermineAchetype(match["Competitors"][0])
 
     p2name = match["Competitors"][1]["Team"]["Players"][0]["Name"]
-    p2gw = (
-        match["Competitors"][1]["GameWins"]
-        if match["Competitors"][1]["GameWins"]
-        else 0
+    p2gw = min(
+        2,
+        (
+            match["Competitors"][1]["GameWins"]
+            if match["Competitors"][1]["GameWins"]
+            else 0
+        ),
     )
     p2archetype = DetermineAchetype(match["Competitors"][1])
 

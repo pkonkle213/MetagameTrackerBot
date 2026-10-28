@@ -165,11 +165,9 @@ async def SubmitEventDataWorkflow(
             return
 
         data = modal.converted_data
-        output, view = BuildDataReview(
-            data, event, input_type, store, game, format
-        )
+        output, view = BuildDataReview(data, event, input_type, store, game, format)
         for message in output:
-            await modal.interaction.followup.send(message)
+            await modal.interaction.followup.send(message, ephemeral=True)
         review_message = await modal.interaction.followup.send(
             "Please select continue if the data is accurate",
             ephemeral=True,
