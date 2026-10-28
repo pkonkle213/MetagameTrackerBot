@@ -68,7 +68,7 @@ class MappingCommands(commands.GroupCog, name="map"):
         if category is None:
             raise KnownError("Must map a game to a category")
         
-        modal = await MapGameModal.create(objects.store, category_id)
+        modal = await MapGameModal.create(objects.store, category)
         await interaction.response.send_modal(modal)
         await modal.wait()
 
