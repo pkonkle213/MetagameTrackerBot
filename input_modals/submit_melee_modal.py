@@ -32,7 +32,7 @@ class SubmitMeleeDataModal(discord.ui.Modal, title="Submit Data"):
         await interaction.response.defer(ephemeral=True)
         try:
             self.converted_data = await ConvertAndUploadMeleeTournament(
-                self.event, self.melee_data.value, self.store, self.file_path
+                self.event, self.melee_data.component.value, self.store, self.file_path
             )
             EnsureConvertedResults(self.converted_data)
         except Exception as error:
