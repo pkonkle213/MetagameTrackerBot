@@ -6,7 +6,7 @@ from settings import DATABASE_URL
 from tuple_conversions import Game
 
 
-async def AddGameMap(discord_id: int, game_id: int, category_id: int) -> int:
+async def AddGameMap(discord_id: int, game_id: int, category_id: int) -> None:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor(row_factory=scalar_row) as cur,
@@ -30,7 +30,6 @@ async def AddGameMap(discord_id: int, game_id: int, category_id: int) -> int:
         row = await cur.fetchone()
         if not row:
             raise KnownError("Unable to add game map")
-        return row
 
 
 async def GetAllGames() -> list[Game]:

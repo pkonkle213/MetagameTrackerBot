@@ -2,15 +2,18 @@ from custom_errors import KnownError
 from data.games_data import GetAllGames, AddGameMap
 from services.game_mapper_services import AddStoreGameMap
 from tuple_conversions import Game, Store
-from discord import ui, SelectOption, Interaction
+from discord import ui, SelectOption, Interaction, CategoryChannel
 
 
 class MapGameModal(ui.Modal, title="Map Game"):
     is_submitted = False
 
-    def __init__(self, store: Store, games: list[Game] | None = None):
+    def __init__(
+        self, store: Store, category: CategoryChannel, games: list[Game] | None = None
+    ):
         super().__init__()
-        self.store = store
+        self.store: Store = store
+        self.category: CategoryChannel = category
 
         self.games = games or []
 
@@ -26,14 +29,14 @@ class MapGameModal(ui.Modal, title="Map Game"):
         self.add_item(self.select_game)
 
     @classmethod
-    async def create(cls, store: Store):
+    async def create(cls, store: Store, category: CategoryChannel):
         games = await GetAllGames()
-        return cls(store, games)
+        return cls(store, category, games)
 
     async def on_submit(self, interaction: Interaction) -> None:
         selected_game = GetGame(self.select_game.component.values[0], self.games)
         await interaction.response.defer(thinking=False)
-        result = await AddStoreGameMap(interaction, selected_game)
+        result = await AddStoreGameMap(self.store, self.category, selected_game)
         await interaction.followup.send(result, ephemeral=True)
 
     async def on_error(self, interaction: Interaction, error: Exception) -> None:

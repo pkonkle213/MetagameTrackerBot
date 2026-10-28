@@ -20,10 +20,11 @@ from settings import BOTGUILDID, PHILID
 from tuple_conversions import Format, Game, MTBRoles
 
 
+# TODO: Revisit and fix this
 async def UpdateDetails(bot: commands.Bot, interaction: Interaction) -> Interaction:
     """Updates the store details in the database"""
     objects = interaction.extras.get("db_object")
-    if not objects or not objects.store and not objects.hub:
+    if not objects or (not objects.store and not objects.hub):
         raise KnownError("No registered discord found")
 
     if objects.store:
@@ -56,12 +57,12 @@ async def UpdateDetails(bot: commands.Bot, interaction: Interaction) -> Interact
         if not modal.is_submitted:
             raise KnownError("Modal not submitted correctly")
 
-    result = await UpdateHub(
-        interaction,
-        objects.hub.discord_id,
-        modal.submitted_hub_name,
-        modal.submitted_hub_invite,
-    )
+        result = await UpdateHub(
+            interaction,
+            objects.hub.discord_id,
+            modal.submitted_hub_name,
+            modal.submitted_hub_invite,
+        )
 
     return modal.new_interaction
 

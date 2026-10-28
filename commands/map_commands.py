@@ -1,6 +1,7 @@
 from tuple_conversions import MTBRoles, InteractionObjects
-from discord import Interaction, app_commands
+from discord import Interaction, app_commands, TextChannel
 from discord.ext import commands
+
 
 from checks import IsHub, IsStore, HasRequiredRoles
 from custom_errors import KnownError
@@ -12,7 +13,6 @@ from services.command_error_service import Error
 from services.map_claim_feed import MapClaimFeed
 
 
-# TODO: Most of these pass the interaction to later get the category, channel, or guild ID. separate those before passing the interaction
 class MappingCommands(commands.GroupCog, name="map"):
     """A group of commands for mapping channels to games, formats, and claim feeds"""
 
@@ -59,7 +59,16 @@ class MappingCommands(commands.GroupCog, name="map"):
         objects = interaction.extras.get("db_object")
         if not objects or not objects.store:
             raise KnownError("No store found. Please register your store.")
-        modal = await MapGameModal.create(objects.store)
+        channel = interaction.channel
+        if not isinstance(channel, TextChannel):
+            raise KnownError(
+                "Cannot map a game to a category that does not have text channels"
+            )
+        category = channel.category
+        if category is None:
+            raise KnownError("Must map a game to a category")
+        
+        modal = await MapGameModal.create(objects.store, category_id)
         await interaction.response.send_modal(modal)
         await modal.wait()
 
