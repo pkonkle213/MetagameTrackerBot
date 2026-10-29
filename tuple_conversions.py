@@ -217,6 +217,9 @@ class DataConverted(NamedTuple):
     archetypes: dict[str, str] | None
     custom_event_id: int | None
     staged_source_files: tuple[str, ...] = ()
+    event_name: str | None = None
+    event_date: date | None = None
+    replace_pairings: bool = False
 
 
 class LeaderboardRace(NamedTuple):

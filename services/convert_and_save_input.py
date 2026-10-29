@@ -40,10 +40,32 @@ def BuildFilePath(
 async def ConvertAndUploadMeleeTournament(
     event, melee_tournament_id: str, store: Store, file_path: str
 ) -> DataConverted:
-    """Takes in a Melee.gg tournament id, retrieves the data, and converts the data to a list of Pairing objects"""
-    json_data = await GetMeleeTournamentData(melee_tournament_id, store)
+    """Fetch and convert Melee pairings and, when available, event details."""
+    tournament_data = await GetMeleeTournamentData(melee_tournament_id, store)
+    json_data = tournament_data.pairings
 
     data, errors, round_number, date, archetypes = MeleeJsonPairings(json_data)
+    event_name = None
+    event_date = None
+    custom_event_id = event.custom_event_id
+    if tournament_data.event_details is not None:
+        details = tournament_data.event_details
+        event_name = str(details["Name"])
+        custom_event_id = int(details["ID"])
+        date_string = str(details["LastPairDateTime"])
+        event_datetime = datetime.fromisoformat(date_string.replace("Z", "+00:00"))
+        if event_datetime.tzinfo is None:
+            event_datetime = pytz.utc.localize(event_datetime)
+        event_date = event_datetime.astimezone(
+            pytz.timezone("America/New_York")
+        ).date()
+    elif tournament_data.event_details_error:
+        errors.append(
+            "Melee event details could not be retrieved. Existing event details "
+            "will be kept; refreshed pairings will replace the current pairings "
+            "after confirmation."
+        )
+
     staged_source_files = ()
     try:
         upload_json(json_data, file_path)
@@ -53,7 +75,15 @@ async def ConvertAndUploadMeleeTournament(
         staged_source_files = (file_path,)
 
     return DataConverted(
-        data, None, errors, archetypes, event.custom_event_id, staged_source_files
+        data,
+        None,
+        errors,
+        archetypes,
+        custom_event_id,
+        staged_source_files,
+        event_name,
+        event_date,
+        tournament_data.event_details_error is not None,
     )
 
 

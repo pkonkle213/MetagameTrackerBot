@@ -4,12 +4,16 @@ from discord import Interaction
 from discord.ext import commands
 
 from custom_errors import KnownError
-from data.event_data import CompleteEvent
+from data.event_data import CompleteEvent, UpdateEventDetails
 from discord_messages import MessageChannel
 from input_modals.submit_csv_modal import SubmitCSVDataModal
 from input_modals.submit_data_modal import SubmitManualDataModal
 from input_modals.submit_melee_modal import SubmitMeleeDataModal
-from services.add_results_services import AddPairingResults, AddStandingResults
+from services.add_results_services import (
+    AddPairingResults,
+    AddStandingResults,
+    ReplacePairingResults,
+)
 from services.convert_and_save_input import BuildFilePath
 from services.message_hubs_services import MessageHubs
 from services.object_storage_service import delete_file
@@ -84,11 +88,31 @@ async def SaveDataSubmission(
     event: Event,
     data: DataConverted,
     submitter_id: int,
-) -> None:
+) -> Event:
+    if (
+        data.event_name is not None
+        and data.event_date is not None
+        and data.custom_event_id is not None
+    ):
+        updated = await UpdateEventDetails(
+            event.id, data.event_name, data.event_date, data.custom_event_id
+        )
+        if not updated:
+            raise KnownError("Unable to update event details.")
+        event = event._replace(
+            event_name=data.event_name,
+            event_date=data.event_date,
+            custom_event_id=data.custom_event_id,
+        )
+
     if data.standings_data:
         await AddStandingResults(event, data.standings_data, submitter_id)
     elif data.pairings_data:
-        await AddPairingResults(event, data.pairings_data, submitter_id)
+        if data.replace_pairings:
+            await ReplacePairingResults(event, data.pairings_data, submitter_id)
+        else:
+            await AddPairingResults(event, data.pairings_data, submitter_id)
+    return event
 
 
 def DiscardStagedSourceFiles(data: DataConverted) -> None:
@@ -199,7 +223,7 @@ async def SubmitEventDataWorkflow(
             )
             break
 
-        await SaveDataSubmission(event, data, submitter_id)
+        event = await SaveDataSubmission(event, data, submitter_id)
 
         if confirm_response in (
             ViewButtonEnum.DoneComplete.value,

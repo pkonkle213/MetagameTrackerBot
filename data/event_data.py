@@ -1,3 +1,4 @@
+from datetime import date
 from typing import NamedTuple
 
 from psycopg import AsyncConnection
@@ -28,6 +29,28 @@ async def CompleteEvent(event_id: int) -> bool:
         await conn.commit()
         row = await cur.fetchone()
         return bool(row)
+
+
+async def UpdateEventDetails(
+    event_id: int, event_name: str, event_date: date, custom_event_id: int
+) -> bool:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=scalar_row) as cur,
+    ):
+        command = """
+        UPDATE events
+        SET
+            event_name = %s,
+            event_date = %s,
+            custom_event_id = %s
+        WHERE id = %s
+        RETURNING id
+        """
+        await cur.execute(command, [event_name, event_date, custom_event_id, event_id])
+        row = await cur.fetchone()
+        await conn.commit()
+        return row is not None
 
 
 async def GetEvent(event_id: int) -> Event:

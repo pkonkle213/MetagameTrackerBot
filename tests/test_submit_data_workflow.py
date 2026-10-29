@@ -7,6 +7,7 @@ from commands.submit_commands import SubmitDataChecker
 from custom_errors import KnownError
 from services import convert_and_save_input as convert_input
 from services import submit_data_workflow as workflow
+from services.submit_data_services import BuildReviewOutput
 from tuple_conversions import (
     DataConverted,
     DataInputEnum,
@@ -83,19 +84,62 @@ class BuildDataModalTests(unittest.TestCase):
 
 
 class ReviewAndPersistenceTests(unittest.IsolatedAsyncioTestCase):
+    def test_review_includes_melee_event_details(self):
+        data = DataConverted(
+            PAIRINGS,
+            None,
+            None,
+            None,
+            321,
+            event_name="Updated Event",
+            event_date=date(2026, 10, 18),
+        )
+
+        output = BuildReviewOutput(data)
+
+        self.assertIn(
+            "Melee event details: Updated Event (10/18/2026, ID 321)",
+            output[-1],
+        )
+
+    async def test_save_persists_melee_event_details(self):
+        event = make_event()
+        data = DataConverted(
+            PAIRINGS,
+            None,
+            None,
+            None,
+            321,
+            event_name="Updated Event",
+            event_date=date(2026, 10, 18),
+        )
+
+        with (
+            patch.object(
+                workflow, "UpdateEventDetails", new_callable=AsyncMock, return_value=True
+            ) as update_event,
+            patch.object(workflow, "AddPairingResults", new_callable=AsyncMock),
+        ):
+            updated_event = await workflow.SaveDataSubmission(event, data, 88)
+
+        update_event.assert_awaited_once_with(17, "Updated Event", date(2026, 10, 18), 321)
+        self.assertEqual(updated_event.event_name, "Updated Event")
+        self.assertEqual(updated_event.event_date, date(2026, 10, 18))
+        self.assertEqual(updated_event.custom_event_id, 321)
+
     def test_review_displays_standings_warning_and_hides_continue(self):
         data = DataConverted(None, STANDINGS, None, None, None)
         next_modal = object()
 
         with (
-            patch.object(workflow, "BuildReviewOutput", return_value="standings"),
+            patch.object(workflow, "BuildReviewOutput", return_value=["standings"]),
             patch.object(workflow, "BuildDataModal", return_value=next_modal),
         ):
             output, view = workflow.BuildDataReview(
                 data, make_event(), DataInputEnum.Manual.value, STORE, GAME, FORMAT
             )
 
-        self.assertIn("This is standings data", output)
+        self.assertIn("This is standings data", "\n".join(output))
         self.assertIs(view.next_modal, next_modal)
         self.assertFalse(view.btn_continue in view.children)
         self.assertTrue(view.btn_complete in view.children)
@@ -104,7 +148,7 @@ class ReviewAndPersistenceTests(unittest.IsolatedAsyncioTestCase):
         data = DataConverted(PAIRINGS, None, None, None, None)
 
         with (
-            patch.object(workflow, "BuildReviewOutput", return_value="pairings"),
+            patch.object(workflow, "BuildReviewOutput", return_value=["pairings"]),
             patch.object(workflow, "BuildDataModal", return_value=object()),
         ):
             output, view = workflow.BuildDataReview(
@@ -116,13 +160,16 @@ class ReviewAndPersistenceTests(unittest.IsolatedAsyncioTestCase):
                 FORMAT,
             )
 
-        self.assertIn("overwrite the standings data", output)
+        self.assertIn("overwrite the standings data", "\n".join(output))
         self.assertIn(view.btn_continue, view.children)
 
     async def test_save_routes_standings_and_pairings_to_their_own_persistence(self):
         standings_data = DataConverted(None, STANDINGS, None, None, None)
         pairings_data = DataConverted(PAIRINGS, None, None, None, None)
         empty_data = DataConverted(None, None, None, None, None)
+        replacement_data = DataConverted(
+            PAIRINGS, None, None, None, None, replace_pairings=True
+        )
         event = make_event()
 
         with (
@@ -132,13 +179,18 @@ class ReviewAndPersistenceTests(unittest.IsolatedAsyncioTestCase):
             patch.object(
                 workflow, "AddPairingResults", new_callable=AsyncMock
             ) as add_pairings,
+            patch.object(
+                workflow, "ReplacePairingResults", new_callable=AsyncMock
+            ) as replace_pairings,
         ):
             await workflow.SaveDataSubmission(event, standings_data, 88)
             await workflow.SaveDataSubmission(event, pairings_data, 88)
             await workflow.SaveDataSubmission(event, empty_data, 88)
+            await workflow.SaveDataSubmission(event, replacement_data, 88)
 
         add_standings.assert_awaited_once_with(event, STANDINGS, 88)
         add_pairings.assert_awaited_once_with(event, PAIRINGS, 88)
+        replace_pairings.assert_awaited_once_with(event, PAIRINGS, 88)
 
 
 class ConfirmDataTests(unittest.IsolatedAsyncioTestCase):
@@ -576,10 +628,19 @@ class UploadedSourceTrackingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result.staged_source_files, ("/upload/source.csv",))
 
     async def test_melee_conversion_records_uploaded_source(self):
+        event_details = {
+            "Name": "Updated Melee Event",
+            "ID": 321,
+            "LastPairDateTime": "2026-10-19T02:30:00Z",
+        }
         with (
             patch.object(
                 convert_input, "GetMeleeTournamentData", new_callable=AsyncMock,
-                return_value={"rounds": []},
+                return_value=SimpleNamespace(
+                    pairings={"rounds": []},
+                    event_details=event_details,
+                    event_details_error=None,
+                ),
             ),
             patch.object(
                 convert_input, "MeleeJsonPairings",
@@ -593,6 +654,34 @@ class UploadedSourceTrackingTests(unittest.IsolatedAsyncioTestCase):
 
         upload.assert_called_once_with({"rounds": []}, "/upload/source.json")
         self.assertEqual(result.staged_source_files, ("/upload/source.json",))
+        self.assertEqual(result.custom_event_id, 321)
+        self.assertEqual(result.event_name, "Updated Melee Event")
+        self.assertEqual(result.event_date, date(2026, 10, 18))
+
+    async def test_melee_event_details_failure_marks_pairings_for_replacement(self):
+        with (
+            patch.object(
+                convert_input, "GetMeleeTournamentData", new_callable=AsyncMock,
+                return_value=SimpleNamespace(
+                    pairings={"rounds": []},
+                    event_details=None,
+                    event_details_error="Melee event details unavailable",
+                ),
+            ),
+            patch.object(
+                convert_input, "MeleeJsonPairings",
+                return_value=(PAIRINGS, [], 1, None, {}),
+            ),
+            patch.object(convert_input, "upload_json"),
+        ):
+            result = await convert_input.ConvertAndUploadMeleeTournament(
+                make_event(), "tournament", STORE, "/upload/source.json"
+            )
+
+        self.assertTrue(result.replace_pairings)
+        self.assertIsNone(result.event_name)
+        self.assertIsNone(result.event_date)
+        self.assertIn("Existing event details will be kept", result.errors[0])
 
     def test_manual_conversion_records_uploaded_source(self):
         event = SimpleNamespace(

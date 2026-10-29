@@ -50,6 +50,46 @@ async def InsertPairing(
         return None
 
 
+async def ReplaceEventPairings(
+    event_id: int, pairings: list[Pairing], submitter_id: int
+) -> None:
+    """Atomically replace an event's pairings and remove its obsolete standings."""
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor() as cur,
+    ):
+        await cur.execute("DELETE FROM pairings WHERE event_id = %s", [event_id])
+        await cur.execute("DELETE FROM standings WHERE event_id = %s", [event_id])
+
+        if pairings:
+            command = """
+            INSERT INTO pairings
+            (event_id,
+            round_number,
+            player1_game_wins,
+            player2_game_wins,
+            player1_name,
+            player2_name,
+            submitter_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+            values = [
+                (
+                    event_id,
+                    pairing.round_number,
+                    pairing.player1_game_wins,
+                    pairing.player2_game_wins,
+                    pairing.player1_name,
+                    pairing.player2_name,
+                    submitter_id,
+                )
+                for pairing in pairings
+            ]
+            await cur.executemany(command, values)
+
+        await conn.commit()
+
+
 async def CheckPairings(
     event_id: int, round_number: int, p1name: str, p2name: str
 ) -> bool:

@@ -1,4 +1,9 @@
-from data.add_results_data import CheckPairings, InsertPairing, InsertStanding
+from data.add_results_data import (
+    CheckPairings,
+    InsertPairing,
+    InsertStanding,
+    ReplaceEventPairings,
+)
 from data.event_data import DeleteStandingsFromEvent
 from services.input_services import ConvertInput
 from tuple_conversions import Event, Pairing, Standing
@@ -56,3 +61,19 @@ async def AddPairingResults(
             errors.append(pairing)
 
     return errors
+
+
+async def ReplacePairingResults(
+    event: Event, data: list[Pairing], submitterId: int
+) -> None:
+    pairings = [
+        Pairing(
+            table.round_number,
+            ConvertInput(table.player1_name),
+            table.player1_game_wins,
+            table.player2_game_wins,
+            ConvertInput(table.player2_name),
+        )
+        for table in data
+    ]
+    await ReplaceEventPairings(event.id, pairings, submitterId)

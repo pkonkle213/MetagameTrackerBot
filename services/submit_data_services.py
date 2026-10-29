@@ -17,4 +17,14 @@ def BuildReviewOutput(data: DataConverted) -> list[str]:
     for error in data.errors:
       output.append(f'\n`{error}`')
 
+  if (
+    data.event_name is not None
+    and data.event_date is not None
+    and data.custom_event_id is not None
+  ):
+    output.append(
+      f"\nMelee event details: {data.event_name} "
+      f"({data.event_date:%m/%d/%Y}, ID {data.custom_event_id})"
+    )
+
   return output
