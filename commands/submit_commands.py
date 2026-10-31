@@ -4,18 +4,13 @@ from discord.ext import commands
 from services.event_services import EventForData
 from checks import IsStore, isMTSubmitter, HasRequiredRoles
 from custom_errors import KnownError
-from data.event_data import (
-    CreateEvent,
-    GetEvents,
-)
+from data.event_data import CreateEvent, GetEvents
 from data.player_name_data import GetArchetypeModalDetails, GetUserName
 from services.command_error_service import Error
 from services.determine_archetype_input import GetArchetypeModal
 from tuple_conversions import MTBRoles
 from services.submit_data_workflow import SubmitEventDataWorkflow
 from services.mass_archetype_workflow import SubmitMassArchetypes
-
-# TODO: That's a lot of imports. Any chance I could clean this up any?
 
 
 class SubmitDataChecker(commands.GroupCog, name="submit"):
