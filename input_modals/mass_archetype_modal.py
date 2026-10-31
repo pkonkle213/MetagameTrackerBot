@@ -37,6 +37,6 @@ class MassArchetypeSubmit(discord.ui.Modal, title="Submit Archetypes"):
             ) and new_archetype != "":
                 self.new_archetypes.append(PlayerArchetype(name, new_archetype.title()))
 
-        self.new_interaction = interaction
+        self.interaction = interaction
         await interaction.response.defer(ephemeral=True)
         self.is_submitted = True

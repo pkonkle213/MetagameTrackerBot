@@ -35,14 +35,12 @@ async def SubmitMassArchetypes(
     if not players:
         raise KnownError("No players found for this event.")
 
-    for start in range(0, len(players), 5):
-        batch = players[start : start + 5]
-        active_interaction = await SubmitArchetypeBatch(
-            interaction, active_interaction, event, batch
-        )
-        if active_interaction is None:
-            await interaction.followup.send("Canceled!", ephemeral=True)
-            return
+    active_interaction = await SubmitArchetypeBatch(
+        interaction, active_interaction, event, players
+    )
+    if active_interaction is None:
+        await interaction.followup.send("Canceled!", ephemeral=True)
+        return
 
     await interaction.followup.send(
         "All archetypes have been submitted!", ephemeral=True
@@ -88,7 +86,11 @@ async def SubmitArchetypeBatch(
     event: Event,
     players: list[PlayerArchetype],
 ) -> Interaction | None:
-    modal = MassArchetypeSubmit(players)
+    """Submit and confirm batches of five, recursively chaining fresh interactions."""
+    batch = players[:5]
+    remaining_players = players[5:]
+
+    modal = MassArchetypeSubmit(batch)
     await active_interaction.response.send_modal(modal)
     await modal.wait()
 
@@ -123,4 +125,12 @@ async def SubmitArchetypeBatch(
         interaction.guild_id,
         interaction.guild.name if interaction.guild else "",
     )
+
+    if remaining_players:
+        return await SubmitArchetypeBatch(
+            interaction, confirmation.interaction, event, remaining_players
+        )
+
+    # The final Continue click has no next modal to acknowledge its interaction.
+    await confirmation.interaction.response.defer(ephemeral=True)
     return confirmation.interaction
