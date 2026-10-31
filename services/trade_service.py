@@ -88,7 +88,7 @@ def _GetScryfallDownloadURL() -> str:
         timeout=30,
     )
     response.raise_for_status()
-    return response.json()["download_uri"]
+    return response.json()["jsonl_download_uri"]
 
 
 def _GetCardsphereDownloadURL() -> str:
@@ -138,13 +138,21 @@ def _Money(cents: int) -> str:
     return f"${cents // 100:,}.{cents % 100:02d}"
 
 
-def BuildTradeTable(rows: list[tuple[str, int, int, int, int]]) -> tuple[list[str], int]:
+def BuildTradeTable(
+    rows: list[tuple[str, int, int | None, int | None, int]]
+) -> tuple[list[str], int]:
     """Format (name, quantity, Cardsphere cents, rounded unit cents, line total cents)."""
     grand_total = sum(row[4] for row in rows)
     grand_total = math.ceil(grand_total / 500) * 500
     headers = ("Card", "Qty", "Cardsphere", "My price", "Total")
     values = [
-        (name, str(quantity), _Money(card_price), _Money(my_price), _Money(total))
+        (
+            name,
+            str(quantity),
+            _Money(card_price) if card_price is not None else "N/A",
+            _Money(my_price) if my_price is not None else "N/A",
+            _Money(total),
+        )
         for name, quantity, card_price, my_price, total in rows
     ]
     widths = [
@@ -164,9 +172,10 @@ def BuildTradeTable(rows: list[tuple[str, int, int, int, int]]) -> tuple[list[st
     chunks: list[str] = []
     while body:
         portion = body[:1900]
-        newline = portion.rfind("\n")
-        if newline > 0 and newline < len(body):
-            portion = body[:newline]
+        if len(body) > 1900:
+            newline = portion.rfind("\n")
+            if newline > 0:
+                portion = body[:newline]
         chunks.append(f"```text\n{portion}\n```")
         body = body[len(portion):].lstrip("\n")
     return chunks, grand_total
@@ -187,11 +196,16 @@ async def BuildTrade(text: str) -> list[str]:
         by_name[row[1].casefold()].append(row)
 
     allocations: list[tuple[int, str, str, int]] = []
+    report_rows: list[tuple[str, int, int | None, int | None, int]] = []
     for name_key, requested_quantity in totals.items():
         remaining = min(
             requested_quantity,
             sum(row[3] for row in by_name.get(name_key, [])),
         )
+        if remaining == 0:
+            report_rows.append(
+                (f"{display_names[name_key]} (no stock)", 0, None, None, 0)
+            )
         for inventory_id, card_name, edition, available in by_name.get(name_key, []):
             used = min(remaining, available)
             if used:
@@ -199,7 +213,8 @@ async def BuildTrade(text: str) -> list[str]:
                 remaining -= used
 
     if not allocations:
-        raise KnownError("None of the requested cards are currently in inventory.")
+        messages, _ = BuildTradeTable(report_rows)
+        return messages
 
     requested_printings = {
         (card_name.casefold(), edition.casefold())
@@ -229,7 +244,6 @@ async def BuildTrade(text: str) -> list[str]:
 
         scryfall_cards, prices = await asyncio.to_thread(prepare_references)
 
-    report_rows: list[tuple[str, int, int, int, int]] = []
     deductions: list[tuple[int, int]] = []
     for inventory_id, card_name, edition, quantity in allocations:
         matching = scryfall_cards.get((card_name.casefold(), edition.casefold()), [])
