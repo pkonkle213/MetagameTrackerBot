@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from checks import isPhil
 from services.command_error_service import Error
+from input_modals.inventory_received_modal import InventoryReceivedModal
 from input_modals.inventory_trade_modal import InventoryTradeModal
 from services.inventory_service import SyncInventoryFromLatestFile
 from settings import BOTGUILDID
@@ -36,6 +37,13 @@ class InventoryCommands(commands.GroupCog, name="inventory"):
     async def Trade(self, interaction: Interaction):
         await interaction.response.send_modal(InventoryTradeModal(self.bot))
 
+    @app_commands.command(
+        name="received",
+        description="Add newly received cards to your inventory",
+    )
+    async def Received(self, interaction: Interaction):
+        await interaction.response.send_modal(InventoryReceivedModal(self.bot))
+
     @Sync.error
     async def SyncError(
         self, interaction: Interaction, error: app_commands.AppCommandError
@@ -44,6 +52,12 @@ class InventoryCommands(commands.GroupCog, name="inventory"):
 
     @Trade.error
     async def TradeError(
+        self, interaction: Interaction, error: app_commands.AppCommandError
+    ):
+        await Error(self.bot, interaction, error)
+
+    @Received.error
+    async def ReceivedError(
         self, interaction: Interaction, error: app_commands.AppCommandError
     ):
         await Error(self.bot, interaction, error)

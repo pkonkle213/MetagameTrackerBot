@@ -4,7 +4,7 @@ import io
 import re
 
 from custom_errors import KnownError
-from data.inventory_data import ReplaceInventory
+from data.inventory_data import AddReceivedInventory, ReplaceInventory
 from services.object_storage_service import get_latest_file_bytes
 
 INVENTORY_FOLDER = "Inventory Files/"
@@ -80,6 +80,49 @@ def ParseInventoryCSV(content: bytes) -> list[tuple[int, str, str]]:
     if not rows:
         raise KnownError("The inventory CSV contains no inventory rows; existing data was not changed.")
     return rows
+
+
+def ParseReceivedInventoryInput(text: str) -> list[tuple[int, str, str]]:
+    rows: list[tuple[int, str, str]] = []
+    for line_number, raw_line in enumerate(text.splitlines(), start=1):
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        parts = line.split(maxsplit=1)
+        if len(parts) != 2:
+            raise KnownError(
+                f"Line {line_number} must use: quantity card name - card edition."
+            )
+        quantity_text, card_details = parts
+        card_name, edition_separator, card_edition = card_details.partition(" - ")
+        try:
+            quantity = int(quantity_text)
+        except ValueError as error:
+            raise KnownError(
+                f"Line {line_number} must start with a positive card quantity."
+            ) from error
+
+        card_name = card_name.strip()
+        card_edition = card_edition.strip()
+        if (
+            quantity <= 0
+            or not edition_separator
+            or not card_name
+            or not card_edition
+        ):
+            raise KnownError(
+                f"Line {line_number} must use: quantity card name - card edition."
+            )
+        rows.append((quantity, card_name, card_edition))
+
+    if not rows:
+        raise KnownError("Enter at least one card to receive.")
+    return rows
+
+
+async def ReceiveInventory(text: str) -> tuple[int, int]:
+    return await AddReceivedInventory(ParseReceivedInventoryInput(text))
 
 
 async def SyncInventoryFromLatestFile() -> tuple[str, int]:

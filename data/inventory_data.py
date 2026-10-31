@@ -36,6 +36,70 @@ async def ReplaceInventory(rows: list[tuple[int, str, str]]) -> int:
     return len(rows)
 
 
+async def AddReceivedInventory(
+    rows: list[tuple[int, str, str]],
+) -> tuple[int, int]:
+    """Increment exact card-name/edition matches or insert new inventory rows."""
+    updated_count = 0
+    inserted_count = 0
+
+    async with await AsyncConnection.connect(DATABASE_URL) as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS inventory (
+                    inventory_id BIGSERIAL PRIMARY KEY,
+                    quantity INTEGER NOT NULL CHECK (quantity >= 0),
+                    card_name TEXT NOT NULL,
+                    card_edition TEXT NOT NULL
+                )
+                """
+            )
+            await cur.execute(
+                "ALTER TABLE inventory ADD COLUMN IF NOT EXISTS inventory_id BIGSERIAL"
+            )
+            await cur.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS inventory_inventory_id_uq "
+                "ON inventory (inventory_id)"
+            )
+            await cur.execute("LOCK TABLE inventory IN SHARE ROW EXCLUSIVE MODE")
+
+            for quantity, card_name, card_edition in rows:
+                await cur.execute(
+                    """
+                    SELECT inventory_id
+                    FROM inventory
+                    WHERE card_name = %s AND card_edition = %s
+                    ORDER BY inventory_id
+                    LIMIT 1
+                    """,
+                    [card_name, card_edition],
+                )
+                existing = await cur.fetchone()
+                if existing:
+                    await cur.execute(
+                        """
+                        UPDATE inventory
+                        SET quantity = quantity + %s
+                        WHERE inventory_id = %s
+                        """,
+                        [quantity, existing[0]],
+                    )
+                    updated_count += 1
+                else:
+                    await cur.execute(
+                        """
+                        INSERT INTO inventory (quantity, card_name, card_edition)
+                        VALUES (%s, %s, %s)
+                        """,
+                        [quantity, card_name, card_edition],
+                    )
+                    inserted_count += 1
+        await conn.commit()
+
+    return updated_count, inserted_count
+
+
 async def GetInventoryForNames(names: list[str]) -> list[tuple[int, str, str, int]]:
     async with await AsyncConnection.connect(DATABASE_URL) as conn:
         async with conn.cursor() as cur:
