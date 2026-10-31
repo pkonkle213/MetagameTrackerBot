@@ -39,7 +39,7 @@ class MassArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
         )
         submitted_interaction.response.defer.assert_awaited_once_with(ephemeral=True)
 
-    async def test_batches_recurse_using_each_confirmation_interaction(self):
+    async def test_blank_batch_reports_no_changes_and_recurses(self):
         players = [PlayerArchetype(f"Player {i}", "") for i in range(6)]
         active_interaction = make_interaction()
         modal_instances = []
@@ -48,7 +48,9 @@ class MassArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
         def make_modal(batch):
             modal = SimpleNamespace(
                 players=batch,
-                new_archetypes=[],
+                new_archetypes=(
+                    [PlayerArchetype("Player 5", "Deck")] if len(batch) == 1 else []
+                ),
                 is_submitted=True,
                 interaction=make_interaction(),
                 wait=AsyncMock(),
@@ -69,7 +71,9 @@ class MassArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
         with (
             patch.object(workflow, "MassArchetypeSubmit", side_effect=make_modal),
             patch.object(workflow, "ConfirmEvent", side_effect=make_confirmation),
-            patch.object(workflow, "BuildTableOutput", return_value=["table"]),
+            patch.object(
+                workflow, "BuildTableOutput", return_value=["table"]
+            ) as build_table,
             patch.object(workflow, "BulkAddArchetypes", new_callable=AsyncMock) as save,
         ):
             returned_interaction = await workflow.SubmitArchetypeBatch(
@@ -90,7 +94,43 @@ class MassArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
             ephemeral=True
         )
         self.assertIs(returned_interaction, confirmation_instances[1].interaction)
-        self.assertEqual(save.await_count, 2)
+        self.assertEqual(save.await_count, 1)
+        build_table.assert_called_once()
+        self.assertTrue(
+            any(
+                "No archetype changes were made in this batch" in call.args[0]
+                for call in original_interaction.followup.send.await_args_list
+            )
+        )
+
+    async def test_final_blank_batch_is_not_saved(self):
+        active_interaction = make_interaction()
+        modal = SimpleNamespace(
+            players=[PlayerArchetype(f"Player {i}", "") for i in range(5)],
+            new_archetypes=[],
+            is_submitted=True,
+            interaction=make_interaction(),
+            wait=AsyncMock(),
+        )
+        confirmation = SimpleNamespace(
+            action=ViewButtonEnum.Continue.value,
+            interaction=make_interaction(),
+            wait=AsyncMock(),
+        )
+
+        with (
+            patch.object(workflow, "MassArchetypeSubmit", return_value=modal),
+            patch.object(workflow, "ConfirmEvent", return_value=confirmation),
+            patch.object(workflow, "BuildTableOutput") as build_table,
+            patch.object(workflow, "BulkAddArchetypes", new_callable=AsyncMock) as save,
+        ):
+            returned_interaction = await workflow.SubmitArchetypeBatch(
+                make_interaction(), active_interaction, object(), modal.players
+            )
+
+        self.assertIs(returned_interaction, confirmation.interaction)
+        build_table.assert_not_called()
+        save.assert_not_awaited()
 
 
 if __name__ == "__main__":

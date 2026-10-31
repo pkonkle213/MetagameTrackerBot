@@ -43,7 +43,7 @@ async def SubmitMassArchetypes(
         return
 
     await interaction.followup.send(
-        "All archetypes have been submitted!", ephemeral=True
+        "Mass archetype batch processing is complete.", ephemeral=True
     )
 
 
@@ -97,17 +97,20 @@ async def SubmitArchetypeBatch(
     if not modal.is_submitted or modal.interaction is None:
         raise KnownError("Archetype batch was not submitted.")
 
-    output = BuildTableOutput(
-        "Please confirm the new archetypes:",
-        ["Name", "Archetype"],
-        modal.new_archetypes,
-    )
     confirmation = ConfirmEvent()
-    for message in output:
-        await interaction.followup.send(message)
-    await interaction.followup.send(
-        "Are these correct?", view=confirmation, ephemeral=True
-    )
+    if modal.new_archetypes:
+        output = BuildTableOutput(
+            "Please confirm the new archetypes:",
+            ["Name", "Archetype"],
+            modal.new_archetypes,
+        )
+        for message in output:
+            await interaction.followup.send(message)
+        prompt = "Are these correct?"
+    else:
+        prompt = "No archetype changes were made in this batch. Continue?"
+
+    await interaction.followup.send(prompt, view=confirmation, ephemeral=True)
     await confirmation.wait()
 
     if confirmation.action == ViewButtonEnum.Cancel.value:
@@ -117,14 +120,15 @@ async def SubmitArchetypeBatch(
     if confirmation.interaction is None:
         raise KnownError("Archetype batch confirmation was not received.")
 
-    await BulkAddArchetypes(
-        event,
-        modal.new_archetypes,
-        interaction.user.id,
-        interaction.user.name,
-        interaction.guild_id,
-        interaction.guild.name if interaction.guild else "",
-    )
+    if modal.new_archetypes:
+        await BulkAddArchetypes(
+            event,
+            modal.new_archetypes,
+            interaction.user.id,
+            interaction.user.name,
+            interaction.guild_id,
+            interaction.guild.name if interaction.guild else "",
+        )
 
     if remaining_players:
         return await SubmitArchetypeBatch(
