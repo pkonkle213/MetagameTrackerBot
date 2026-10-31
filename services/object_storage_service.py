@@ -186,6 +186,12 @@ def get_latest_file_bytes(prefix: str, allowed_suffix: str) -> tuple[str, bytes]
     return latest.name, latest.download_as_bytes()
 
 
+def get_object_updated(object_name: str):
+    """Return the App Storage update timestamp for one object, if it exists."""
+    blob = get_client()._Client__bucket().get_blob(object_name)
+    return blob.updated if blob is not None else None
+
+
 def file_exists(file_name: str) -> bool:
     """
     Checks if a file exists in the NewEventData bucket.

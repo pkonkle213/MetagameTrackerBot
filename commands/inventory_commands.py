@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from checks import isPhil
 from services.command_error_service import Error
+from input_modals.inventory_trade_modal import InventoryTradeModal
 from services.inventory_service import SyncInventoryFromLatestFile
 from settings import BOTGUILDID
 
@@ -28,8 +29,21 @@ class InventoryCommands(commands.GroupCog, name="inventory"):
             ephemeral=True,
         )
 
+    @app_commands.command(
+        name="trade",
+        description="Quote and deduct cards from your inventory",
+    )
+    async def Trade(self, interaction: Interaction):
+        await interaction.response.send_modal(InventoryTradeModal(self.bot))
+
     @Sync.error
     async def SyncError(
+        self, interaction: Interaction, error: app_commands.AppCommandError
+    ):
+        await Error(self.bot, interaction, error)
+
+    @Trade.error
+    async def TradeError(
         self, interaction: Interaction, error: app_commands.AppCommandError
     ):
         await Error(self.bot, interaction, error)
