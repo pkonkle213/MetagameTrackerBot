@@ -1,11 +1,13 @@
-from discord import Interaction, Object, app_commands
+from io import BytesIO
+
+from discord import File, Interaction, Object, app_commands
 from discord.ext import commands
 
 from checks import isPhil
 from services.command_error_service import Error
 from input_modals.inventory_received_modal import InventoryReceivedModal
 from input_modals.inventory_trade_modal import InventoryTradeModal
-from services.inventory_service import SyncInventoryFromLatestFile
+from services.inventory_service import ExportInventoryCsv, SyncInventoryFromLatestFile
 from settings import BOTGUILDID
 
 
@@ -44,6 +46,18 @@ class InventoryCommands(commands.GroupCog, name="inventory"):
     async def Received(self, interaction: Interaction):
         await interaction.response.send_modal(InventoryReceivedModal(self.bot))
 
+    @app_commands.command(
+        name="export",
+        description="Download inventory as a Moxfield Haves CSV",
+    )
+    async def Export(self, interaction: Interaction):
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        csv_data = await ExportInventoryCsv()
+        await interaction.followup.send(
+            file=File(BytesIO(csv_data), filename="moxfield_haves.csv"),
+            ephemeral=True,
+        )
+
     @Sync.error
     async def SyncError(
         self, interaction: Interaction, error: app_commands.AppCommandError
@@ -58,6 +72,12 @@ class InventoryCommands(commands.GroupCog, name="inventory"):
 
     @Received.error
     async def ReceivedError(
+        self, interaction: Interaction, error: app_commands.AppCommandError
+    ):
+        await Error(self.bot, interaction, error)
+
+    @Export.error
+    async def ExportError(
         self, interaction: Interaction, error: app_commands.AppCommandError
     ):
         await Error(self.bot, interaction, error)

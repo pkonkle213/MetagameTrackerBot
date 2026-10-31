@@ -2,9 +2,10 @@ import asyncio
 import csv
 import io
 import re
+from datetime import datetime
 
 from custom_errors import KnownError
-from data.inventory_data import AddReceivedInventory, ReplaceInventory
+from data.inventory_data import AddReceivedInventory, GetAllInventory, ReplaceInventory
 from services.object_storage_service import get_latest_file_bytes
 
 INVENTORY_FOLDER = "Inventory Files/"
@@ -123,6 +124,53 @@ def ParseReceivedInventoryInput(text: str) -> list[tuple[int, str, str]]:
 
 async def ReceiveInventory(text: str) -> tuple[int, int]:
     return await AddReceivedInventory(ParseReceivedInventoryInput(text))
+
+
+def BuildMoxfieldHavesCsv(rows: list[tuple[int, str, str]]) -> bytes:
+    output = io.StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow(
+        [
+            "Count",
+            "Tradelist Count",
+            "Name",
+            "Edition",
+            "Condition",
+            "Language",
+            "Foil",
+            "Tags",
+            "Last Modified",
+            "Collector Number",
+            "Alter",
+            "Proxy",
+            "Purchase Price",
+        ]
+    )
+
+    last_modified = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+    for quantity, card_name, card_edition in rows:
+        writer.writerow(
+            [
+                quantity,
+                quantity,
+                card_name,
+                card_edition.casefold(),
+                "Near Mint",
+                "English",
+                "",
+                "",
+                last_modified,
+                "",
+                "False",
+                "False",
+                "",
+            ]
+        )
+    return output.getvalue().encode("utf-8")
+
+
+async def ExportInventoryCsv() -> bytes:
+    return BuildMoxfieldHavesCsv(await GetAllInventory())
 
 
 async def SyncInventoryFromLatestFile() -> tuple[str, int]:

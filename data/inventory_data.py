@@ -115,6 +115,19 @@ async def GetInventoryForNames(names: list[str]) -> list[tuple[int, str, str, in
             return await cur.fetchall()
 
 
+async def GetAllInventory() -> list[tuple[int, str, str]]:
+    async with await AsyncConnection.connect(DATABASE_URL) as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                SELECT quantity, card_name, card_edition
+                FROM inventory
+                ORDER BY lower(card_name), card_edition, inventory_id
+                """
+            )
+            return await cur.fetchall()
+
+
 async def DeductInventory(rows: list[tuple[int, int]]) -> None:
     """Deduct from locked inventory row IDs; roll back if any row changed."""
     async with await AsyncConnection.connect(DATABASE_URL) as conn:
