@@ -1,7 +1,10 @@
 import unittest
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from custom_errors import KnownError
+from commands.trade_quote_command import TradeQuoteCommand
+from input_modals.inventory_trade_modal import InventoryTradeModal
 from services.trade_service import BuildTradeTable, ParseTradeInput, BuildTrade
 
 
@@ -62,6 +65,75 @@ class TradeExecutionTests(unittest.IsolatedAsyncioTestCase):
 
         deduct.assert_awaited_once_with([(17, 2)])
         self.assertIn("$5.00", messages[-1])
+
+    async def test_quote_builds_same_report_without_deducting_inventory(self):
+        card = {
+            "name": "Sol Ring",
+            "set": "cmr",
+            "set_name": "Commander Legends",
+            "collector_number": "335",
+            "id": "scryfall-card-id",
+        }
+        with (
+            patch(
+                "services.trade_service.GetInventoryForNames",
+                new=AsyncMock(return_value=[(17, "Sol Ring", "cmr", 2)]),
+            ),
+            patch(
+                "services.trade_service._EnsureCachedFile",
+                side_effect=lambda _name, _ttl, path, _url: path,
+            ),
+            patch(
+                "services.trade_service._LoadScryfallPrintings",
+                return_value={("sol ring", "cmr"): [card]},
+            ),
+            patch(
+                "services.trade_service._LoadNormalPrices",
+                return_value={"scryfall-card-id": 246},
+            ),
+            patch(
+                "services.trade_service.DeductInventory",
+                new=AsyncMock(),
+            ) as deduct,
+        ):
+            messages = await BuildTrade("5x Sol Ring", deduct_inventory=False)
+
+        deduct.assert_not_awaited()
+        self.assertIn("$5.00", messages[-1])
+
+    async def test_quote_modal_passes_no_deduction_option(self):
+        modal = InventoryTradeModal(object(), deduct_inventory=False)
+        modal.cards = SimpleNamespace(component=SimpleNamespace(value="2 Sol Ring"))
+        interaction = SimpleNamespace(
+            response=SimpleNamespace(defer=AsyncMock()),
+            followup=SimpleNamespace(send=AsyncMock()),
+        )
+
+        with patch(
+            "input_modals.inventory_trade_modal.BuildTrade",
+            new=AsyncMock(return_value=["quote"]),
+        ) as build:
+            await modal.on_submit(interaction)
+
+        build.assert_awaited_once_with("2 Sol Ring", deduct_inventory=False)
+
+
+class TradeQuoteCommandTests(unittest.IsolatedAsyncioTestCase):
+    async def test_top_level_command_opens_non_deducting_trade_modal(self):
+        cog = TradeQuoteCommand(object())
+        interaction = SimpleNamespace(
+            response=SimpleNamespace(send_modal=AsyncMock())
+        )
+        modal = object()
+
+        with patch(
+            "commands.trade_quote_command.InventoryTradeModal",
+            return_value=modal,
+        ) as create_modal:
+            await TradeQuoteCommand.TradeQuote.callback(cog, interaction)
+
+        create_modal.assert_called_once_with(cog.bot, deduct_inventory=False)
+        interaction.response.send_modal.assert_awaited_once_with(modal)
 
 
 if __name__ == "__main__":

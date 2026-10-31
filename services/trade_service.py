@@ -181,7 +181,7 @@ def BuildTradeTable(
     return chunks, grand_total
 
 
-async def BuildTrade(text: str) -> list[str]:
+async def BuildTrade(text: str, deduct_inventory: bool = True) -> list[str]:
     requests_for_trade = ParseTradeInput(text)
     totals: dict[str, int] = defaultdict(int)
     display_names: dict[str, str] = {}
@@ -268,6 +268,7 @@ async def BuildTrade(text: str) -> list[str]:
         deductions.append((inventory_id, quantity))
 
     messages, _ = BuildTradeTable(report_rows)
-    # The deduction locks the table and checks each row ID and available quantity.
-    await DeductInventory(deductions)
+    if deduct_inventory:
+        # The deduction locks the table and checks each row ID and available quantity.
+        await DeductInventory(deductions)
     return messages
