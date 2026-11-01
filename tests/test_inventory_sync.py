@@ -28,6 +28,11 @@ class InventoryCsvTests(unittest.TestCase):
 
         self.assertEqual(ParseInventoryCSV(content), [(3, "Forest", "MKM")])
 
+    def test_accepts_count_name_edition_headers(self):
+        content = b"Count,Name,Edition\n3,Forest,MKM\n"
+
+        self.assertEqual(ParseInventoryCSV(content), [(3, "Forest", "MKM")])
+
     def test_rejects_invalid_rows_and_empty_imports(self):
         with self.assertRaises(KnownError):
             ParseInventoryCSV(b"Quantity,Card Name,Card Edition\n-1,Card,SET\n")

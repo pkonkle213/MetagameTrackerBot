@@ -28,7 +28,7 @@ def ParseInventoryCSV(content: bytes) -> list[tuple[int, str, str]]:
         raise KnownError("The inventory CSV must include a header row.")
 
     aliases = {
-        "quantity": {"quantity", "qty"},
+        "quantity": {"quantity", "qty", "count"},
         "card name": {"card name", "name"},
         "card edition": {"card edition", "edition", "set"},
     }
