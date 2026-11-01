@@ -164,6 +164,34 @@ def list_files(prefix: str | None = None) -> list:
     return [obj.name for obj in objects]
 
 
+def get_latest_file_bytes(prefix: str, allowed_suffix: str) -> tuple[str, bytes]:
+    """Download the most recently updated matching object under a storage prefix."""
+    client = get_client()
+    # The App Storage SDK's public list() result includes names only. Its bucket
+    # listing exposes GCS updated metadata, which is needed to identify the latest upload.
+    bucket = client._Client__bucket()
+    blobs = [
+        blob
+        for blob in bucket.list_blobs(prefix=prefix)
+        if blob.name.lower().endswith(allowed_suffix.lower())
+    ]
+    if not blobs:
+        raise FileNotFoundError(
+            f"No {allowed_suffix} files found in the App Storage folder."
+        )
+    if any(blob.updated is None for blob in blobs):
+        raise RuntimeError("App Storage did not return upload timestamps for all files.")
+
+    latest = max(blobs, key=lambda blob: blob.updated)
+    return latest.name, latest.download_as_bytes()
+
+
+def get_object_updated(object_name: str):
+    """Return the App Storage update timestamp for one object, if it exists."""
+    blob = get_client()._Client__bucket().get_blob(object_name)
+    return blob.updated if blob is not None else None
+
+
 def file_exists(file_name: str) -> bool:
     """
     Checks if a file exists in the NewEventData bucket.
