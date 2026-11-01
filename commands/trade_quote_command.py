@@ -12,10 +12,9 @@ class TradeQuoteCommand(commands.Cog):
 
     @app_commands.command(
         name="trade_quote",
-        description="Quote inventory cards without deducting stock",
+        description="Quote inventory cards",
     )
     @app_commands.guild_only()
-    @app_commands.check(isPhil)
     async def TradeQuote(self, interaction: Interaction):
         await interaction.response.send_modal(
             InventoryTradeModal(self.bot, deduct_inventory=False)
