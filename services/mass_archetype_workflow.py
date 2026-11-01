@@ -105,7 +105,7 @@ async def SubmitArchetypeBatch(
             modal.new_archetypes,
         )
         for message in output:
-            await interaction.followup.send(message)
+            await interaction.followup.send(message, ephemeral=True)
         prompt = "Are these correct?"
     else:
         prompt = "No archetype changes were made in this batch. Continue?"

@@ -96,6 +96,13 @@ class MassArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertIs(returned_interaction, confirmation_instances[1].interaction)
         self.assertEqual(save.await_count, 1)
         build_table.assert_called_once()
+        table_messages = [
+            call
+            for call in original_interaction.followup.send.await_args_list
+            if call.args == ("table",)
+        ]
+        self.assertEqual(len(table_messages), 1)
+        self.assertTrue(table_messages[0].kwargs["ephemeral"])
         self.assertTrue(
             any(
                 "No archetype changes were made in this batch" in call.args[0]
