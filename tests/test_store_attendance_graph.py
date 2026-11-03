@@ -8,32 +8,41 @@ from PIL import Image
 
 from commands.attendance_command import EventAttendance
 from discord import app_commands
+from custom_errors import KnownError
 from services import store_attendance_graph_services as graph_services
+from services import date_functions
+from services.date_functions import BuildDateRange
 
 
 class AttendanceGraphDateRangeTests(unittest.TestCase):
-    @patch.object(graph_services, "GetToday", return_value=date(2025, 6, 15))
+    @patch.object(date_functions, "GetToday", return_value=date(2025, 6, 15))
     def test_defaults_to_one_year_ending_today(self, _today):
         self.assertEqual(
-            graph_services.BuildAttendanceGraphDateRange(None, None),
+            BuildDateRange("", "", years=1),
             (date(2024, 6, 15), date(2025, 6, 15)),
         )
 
     def test_defaults_start_date_to_one_year_before_explicit_end_date(self):
         self.assertEqual(
-            graph_services.BuildAttendanceGraphDateRange(None, "02/28/2025"),
+            BuildDateRange("", "02/28/2025", years=1),
             (date(2024, 2, 28), date(2025, 2, 28)),
         )
 
     def test_clamps_leap_day_when_previous_year_has_no_february_29(self):
         self.assertEqual(
-            graph_services.BuildAttendanceGraphDateRange(None, "02/29/2024"),
+            BuildDateRange("", "02/29/2024", years=1),
             (date(2023, 2, 28), date(2024, 2, 29)),
         )
 
     def test_rejects_start_after_end(self):
-        with self.assertRaises(Exception):
-            graph_services.BuildAttendanceGraphDateRange("06/16/2025", "06/15/2025")
+        with self.assertRaises(KnownError):
+            BuildDateRange("06/16/2025", "06/15/2025", years=1)
+
+    def test_default_eight_week_behavior_is_unchanged(self):
+        self.assertEqual(
+            BuildDateRange("", "06/15/2025"),
+            (date(2025, 4, 14), date(2025, 6, 15)),
+        )
 
 
 class AttendanceGraphImageTests(unittest.TestCase):
@@ -122,7 +131,7 @@ class AttendanceCommandGroupTests(unittest.TestCase):
         command_names = {
             command.name for command in EventAttendance.__cog_app_commands__
         }
-        self.assertEqual(command_names, {"chart", "graph"})
+        self.assertEqual(command_names, {"table", "graph"})
 
     def test_graph_has_optional_start_and_end_dates(self):
         graph = next(

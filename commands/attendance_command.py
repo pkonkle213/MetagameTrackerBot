@@ -16,11 +16,11 @@ class EventAttendance(commands.GroupCog, name="attendance"):
         self.bot = bot
 
     @app_commands.command(
-        name="chart", description="Get the attendance table for a date range"
+        name="table", description="Get the attendance table for a date range"
     )
     @app_commands.guild_only()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
-    async def Chart(
+    async def Table(
         self, interaction: Interaction, start_date: str = "", end_date: str = ""
     ):
         """Show attendance in a table (dates use MM/DD/YYYY)."""
@@ -58,14 +58,9 @@ class EventAttendance(commands.GroupCog, name="attendance"):
             file=File(BytesIO(graph), filename="attendance_graph.png")
         )
 
-    @Chart.error
-    async def ChartError(
-        self, interaction: Interaction, error: app_commands.AppCommandError
-    ):
-        await Error(self.bot, interaction, error)
-
+    @Table.error
     @Graph.error
-    async def GraphError(
+    async def AttendanceError(
         self, interaction: Interaction, error: app_commands.AppCommandError
     ):
         await Error(self.bot, interaction, error)

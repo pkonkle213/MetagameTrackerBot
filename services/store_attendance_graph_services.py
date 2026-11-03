@@ -1,4 +1,3 @@
-from calendar import monthrange
 from datetime import date
 from io import BytesIO
 from typing import Any
@@ -7,32 +6,13 @@ from PIL import Image, ImageDraw, ImageFont
 
 from custom_errors import KnownError
 from data.store_attendance_data import GetStoreAttendanceGraph
-from services.date_functions import ConvertToDate, GetToday
+from services.date_functions import BuildDateRange
 from tuple_conversions import InteractionObjects
 
 WIDTH = 1100
 HEIGHT = 680
 COLORS = ["#1F74AD", "#E98E2E", "#61A9BD", "#9267C6", "#44986D", "#D8524F", "#DD83C9", "#8D6C5B"]
 TREND_COLOR = "#666666"
-
-
-def BuildAttendanceGraphDateRange(
-    start_date: str | None, end_date: str | None
-) -> tuple[date, date]:
-    date_end = ConvertToDate(end_date) if end_date else GetToday()
-    if start_date:
-        date_start = ConvertToDate(start_date)
-    else:
-        try:
-            date_start = date_end.replace(year=date_end.year - 1)
-        except ValueError:
-            date_start = date_end.replace(
-                year=date_end.year - 1,
-                day=monthrange(date_end.year - 1, date_end.month)[1],
-            )
-    if date_start > date_end:
-        raise KnownError("The start date cannot be after the end date.")
-    return date_start, date_end
 
 
 def _Font(size: int, bold: bool = False) -> ImageFont.ImageFont:
@@ -174,7 +154,9 @@ async def GetAttendanceGraph(
 ) -> bytes:
     if not objects or not objects.store:
         raise KnownError("This command must be run in a store server.")
-    date_start, date_end = BuildAttendanceGraphDateRange(start_date, end_date)
+    date_start, date_end = BuildDateRange(
+        start_date or "", end_date or "", years=1
+    )
     game_configured = objects.game is not None
     format_configured = game_configured and objects.format is not None
     rows = await GetStoreAttendanceGraph(
