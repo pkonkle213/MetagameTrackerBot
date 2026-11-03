@@ -155,7 +155,7 @@ async def GetAttendanceGraph(
     if not objects or not objects.store:
         raise KnownError("This command must be run in a store server.")
     date_start, date_end = BuildDateRange(
-        start_date or "", end_date or "", years=1
+        start_date or "", end_date or "", weeks=52
     )
     game_configured = objects.game is not None
     format_configured = game_configured and objects.format is not None

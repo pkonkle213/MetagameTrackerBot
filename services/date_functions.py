@@ -1,6 +1,5 @@
 from custom_errors import KnownError
 from datetime import datetime, timedelta, date
-from calendar import monthrange
 import pytz
 from tuple_conversions import Format
 
@@ -11,33 +10,13 @@ TIMEZONE = pytz.timezone("America/New_York")
 # If the yeras are not both equal to the current year, then we should use the full date format
 # Otherwise, we can use the month/day format
 def BuildDateRange(
-    start_date: str,
-    end_date: str,
-    format: Format | None = None,
-    weeks: int = 8,
-    *,
-    years: int | None = None,
+    start_date: str, end_date: str, format: Format | None = None, weeks: int = 8
 ) -> tuple[date, date]:
     date_end = GetToday() if end_date == "" else ConvertToDate(end_date)
-    if years is None:
-        date_start = GetStartDate(date_end, weeks)
-    else:
-        previous_year = date_end.year - years
-        try:
-            date_start = date_end.replace(year=previous_year)
-        except ValueError:
-            date_start = date_end.replace(
-                year=previous_year,
-                day=monthrange(previous_year, date_end.month)[1],
-            )
+    date_start = GetStartDate(date_end, weeks)
     if start_date != "":
         date_start = ConvertToDate(start_date)
-    elif (
-        years is None
-        and format
-        and format.last_ban_update
-        and format.last_ban_update > date_start
-    ):
+    elif format and format.last_ban_update and format.last_ban_update > date_start:
         date_start = format.last_ban_update
     if date_start > date_end:
         raise KnownError("The start date cannot be after the end date")

@@ -16,27 +16,21 @@ from services.date_functions import BuildDateRange
 
 class AttendanceGraphDateRangeTests(unittest.TestCase):
     @patch.object(date_functions, "GetToday", return_value=date(2025, 6, 15))
-    def test_defaults_to_one_year_ending_today(self, _today):
+    def test_defaults_to_52_weeks_ending_today(self, _today):
         self.assertEqual(
-            BuildDateRange("", "", years=1),
-            (date(2024, 6, 15), date(2025, 6, 15)),
+            BuildDateRange("", "", weeks=52),
+            (date(2024, 6, 10), date(2025, 6, 15)),
         )
 
-    def test_defaults_start_date_to_one_year_before_explicit_end_date(self):
+    def test_defaults_start_date_to_52_weeks_before_explicit_end_date(self):
         self.assertEqual(
-            BuildDateRange("", "02/28/2025", years=1),
-            (date(2024, 2, 28), date(2025, 2, 28)),
-        )
-
-    def test_clamps_leap_day_when_previous_year_has_no_february_29(self):
-        self.assertEqual(
-            BuildDateRange("", "02/29/2024", years=1),
-            (date(2023, 2, 28), date(2024, 2, 29)),
+            BuildDateRange("", "02/28/2025", weeks=52),
+            (date(2024, 2, 26), date(2025, 2, 28)),
         )
 
     def test_rejects_start_after_end(self):
         with self.assertRaises(KnownError):
-            BuildDateRange("06/16/2025", "06/15/2025", years=1)
+            BuildDateRange("06/16/2025", "06/15/2025", weeks=52)
 
     def test_default_eight_week_behavior_is_unchanged(self):
         self.assertEqual(
@@ -93,7 +87,11 @@ class AttendanceGraphImageTests(unittest.TestCase):
 
         self.assertEqual(result, b"png")
         get_attendance.assert_awaited_once_with(
-            objects.store, objects.game, objects.format, date(2024, 1, 10), date(2025, 1, 10)
+            objects.store,
+            objects.game,
+            objects.format,
+            date(2024, 1, 8),
+            date(2025, 1, 10),
         )
         build_image.assert_called_once_with(rows, "Test Store attendance: Standard", True, True)
 
