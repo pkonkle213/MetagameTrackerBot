@@ -127,9 +127,7 @@ class MetagameCommand(commands.Cog):
                 "This channel is not set up with a game or format to view a metagame."
             )
 
-        date_start, date_end = BuildDateRange(
-            start_date, end_date, objects.format, 52
-        )
+        date_start, date_end = BuildDateRange(start_date, end_date, objects.format, 52)
 
         if interaction.guild_id == DATAGUILDID:
             scope, scope_id = "data", None
