@@ -4,19 +4,24 @@ version = "0.1.0"
 description = "Add your description here"
 requires-python = ">=3.12"
 dependencies = [
+    "aiohttp>=3.14.4",
     "asyncpg==0.31.0",
     "bar-chart-race==0.1.0",
+    "certifi>=2026.10.18",
     "click==8.5.0",
     "cryptography==50.0.1",
     "discord-py==2.7.1",
+    "multidict>=6.9.1",
     "openpyxl>=3.1.5",
     "pandas==3.0.5",
-    "pillow>=12.3.0",
+    "pillow>=13.0.0",
     "protobuf==7.36.1",
     "psycopg[binary]==3.3.5",
+    "pyasn1>=0.6.5",
     "pyseto==1.10.0",
     "python-dotenv==1.2.3",
     "pytz==2026.3.post1",
     "replit-object-storage==1.0.2",
     "requests==2.34.2",
+    "urllib3>=2.8.0",
 ]

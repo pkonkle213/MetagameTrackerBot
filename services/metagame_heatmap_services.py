@@ -33,7 +33,11 @@ GRID_COLOR = "#D3D9DD"
 
 def SelectTopArchetypes(
     rows: list[MetagameHeatmapRow], limit: int = MAX_HEATMAP_DECKS
-) -> tuple[list[str], dict[str, tuple[int, float | None]], dict[tuple[str, str], tuple[int, float | None]]]:
+) -> tuple[
+    list[str],
+    dict[str, tuple[int, float | None]],
+    dict[tuple[str, str], tuple[int, float | None]],
+]:
     deck_stats: OrderedDict[str, tuple[int, float | None]] = OrderedDict()
     matchups: dict[tuple[str, str], tuple[int, float | None]] = {}
 
@@ -54,9 +58,7 @@ def SelectTopArchetypes(
     return ranked, dict(deck_stats), matchups
 
 
-def BuildMetagameHeatmapImage(
-    title: str, rows: list[MetagameHeatmapRow]
-) -> bytes:
+def BuildMetagameHeatmapImage(title: str, rows: list[MetagameHeatmapRow]) -> bytes:
     archetypes, deck_stats, matchups = SelectTopArchetypes(rows)
     count = len(archetypes)
     grid_width = count * CELL_WIDTH
@@ -171,9 +173,7 @@ def BuildMetagameHeatmapImage(
             rect = (x + 2, y + 2, x + CELL_WIDTH - 2, y + CELL_HEIGHT - 2)
             if opponent == archetype:
                 fill = "#E6E9EB"
-                draw.rounded_rectangle(
-                    rect, radius=4, fill=fill, outline=GRID_COLOR
-                )
+                draw.rounded_rectangle(rect, radius=4, fill=fill, outline=GRID_COLOR)
                 draw.text(
                     (x + CELL_WIDTH // 2, y + CELL_HEIGHT // 2),
                     "—",
@@ -194,9 +194,7 @@ def BuildMetagameHeatmapImage(
                 percent_text = f"{win_percent:.1f}%"
                 games_text = f"{games} games"
 
-            draw.rounded_rectangle(
-                rect, radius=4, fill=fill, outline=GRID_COLOR
-            )
+            draw.rounded_rectangle(rect, radius=4, fill=fill, outline=GRID_COLOR)
             draw.text(
                 (x + CELL_WIDTH // 2, y + 23),
                 percent_text,
@@ -217,7 +215,9 @@ def BuildMetagameHeatmapImage(
     return output.getvalue()
 
 
-def _LoadFont(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+def _LoadFont(
+    size: int, bold: bool = False
+) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
     filename = "DejaVuSans-Bold.ttf" if bold else "DejaVuSans.ttf"
     candidates = (
         Path("/usr/share/fonts/truetype/dejavu") / filename,
@@ -249,9 +249,7 @@ def _DrawVerticalText(
     text_height = max(1, bounds[3] - bounds[1])
     label = Image.new("RGBA", (text_width + 4, text_height + 4), (255, 255, 255, 0))
     label_draw = ImageDraw.Draw(label)
-    label_draw.text(
-        (2 - bounds[0], 2 - bounds[1]), value, font=font, fill=color
-    )
+    label_draw.text((2 - bounds[0], 2 - bounds[1]), value, font=font, fill=color)
     label = label.rotate(90, expand=True)
     image.paste(
         label,
@@ -276,10 +274,7 @@ def _GetGridTop(
         default=0,
     )
     return round(
-        COLUMN_LABEL_TOP
-        + longest_label_width
-        + COLUMN_LABEL_PADDING
-        + GRID_TOP_PADDING
+        COLUMN_LABEL_TOP + longest_label_width + COLUMN_LABEL_PADDING + GRID_TOP_PADDING
     )
 
 
@@ -347,5 +342,5 @@ async def SendMetagameHeatmap(
     image_bytes = BuildMetagameHeatmapImage(title, rows)
     await interaction.followup.send(
         file=File(BytesIO(image_bytes), filename="metagame_heatmap.png"),
-        ephemeral=True,
+        ephemeral=False,
     )

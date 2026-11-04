@@ -88,3 +88,51 @@ async def GetStoreAttendance(
         await cur.execute(command)
         rows = await cur.fetchall()
         return rows
+
+
+async def GetStoreAttendanceGraph(
+    store: Store,
+    game: Game | None,
+    format: Format | None,
+    start_date: date,
+    end_date: date,
+) -> list[Any]:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor() as cur,
+    ):
+        filters = ["e.event_date BETWEEN %s AND %s", "s.discord_id = %s"]
+        params: list[Any] = [start_date, end_date, store.discord_id]
+        if game:
+            filters.append("e.game_id = %s")
+            params.append(game.id)
+        if format:
+            filters.append("e.format_id = %s")
+            params.append(format.id)
+        command = f"""
+        SELECT
+            e.event_date,
+            e.event_name,
+            g.game_name,
+            f.format_name,
+            COUNT(fp.player_name)
+        FROM
+            events e
+            INNER JOIN stores s ON s.discord_id = e.discord_id
+            INNER JOIN games g ON g.id = e.game_id
+            INNER JOIN formats f ON f.id = e.format_id
+            INNER JOIN full_standings fp ON fp.event_id = e.id
+        WHERE
+            {" AND ".join(filters)}
+        GROUP BY
+            e.id,
+            e.event_date,
+            e.event_name,
+            g.game_name,
+            f.format_name
+        ORDER BY
+            e.event_date,
+            e.id
+        """
+        await cur.execute(command, params)
+        return await cur.fetchall()
