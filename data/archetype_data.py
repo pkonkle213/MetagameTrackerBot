@@ -74,7 +74,7 @@ async def BulkAddArchetypes(
         %s,
         NOW(),
         %s,
-        %s || ' via mass update',
+        %s,
         FALSE,
         %s,
         %s,

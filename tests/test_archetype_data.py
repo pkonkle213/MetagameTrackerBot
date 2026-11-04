@@ -72,6 +72,7 @@ class BulkAddArchetypesTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(inserted, 1)
         self.assertEqual(connection.fake_cursor.command.count("%s"), 8)
+        self.assertNotIn("via mass update", connection.fake_cursor.command)
         self.assertEqual(
             connection.fake_cursor.parameters,
             [
