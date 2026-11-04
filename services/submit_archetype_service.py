@@ -143,9 +143,9 @@ async def NotifyArchetypeSubmission(
         bot, BuildMessage(interaction, event, archetypes), event
     )
 
-    public_output, full_event, update_counted = await CheckEventPercentage(event)
-    if update_counted:
-        event = event._replace(last_update=event.last_update + 1)
+    public_output, full_event, updates_counted = await CheckEventPercentage(event)
+    if updates_counted:
+        event = event._replace(last_update=event.last_update + updates_counted)
     format_map = await GetFormatMapByEvent(event)
     mapped_channel = format_map.channel_id
 
@@ -190,21 +190,23 @@ def BuildMessage(
 
 async def CheckEventPercentage(
     event: Event,
-) -> tuple[str | None, str | None, bool]:
+) -> tuple[str | None, str | None, int]:
     followup: str | None = None
     final: list[str] | None = None
-    update_counted = False
     percent_reported = await GetEventReportedPercentage(event.id)
-    if percent_reported >= (event.last_update + 1) / 4:
-        await UpdateEvent(event.id)
-        update_counted = True
+    target_update = min(4, int(percent_reported * 4))
+    updates_counted = max(0, target_update - event.last_update)
+
+    if updates_counted:
+        for _ in range(updates_counted):
+            await UpdateEvent(event.id)
+
         str_date = event.event_date.strftime("%B %-d")
-        if event.last_update + 1 < 4:
+        if event.last_update + updates_counted < 4:
             followup = f"Congratulations! {str_date}'s {event.event_name} is now {percent_reported:.0%} reported!"
-            final = None
         elif event.is_complete:
             followup = f"Congratulations! {str_date}'s {event.event_name} is now fully reported! Thank you to all who reported their archetypes!"
             table = await OneEventDetails(event)
             final = BuildTableOutput(table.title, table.headers, table.data)
     final_out = final[0] if final else None
-    return followup, final_out, update_counted
+    return followup, final_out, updates_counted

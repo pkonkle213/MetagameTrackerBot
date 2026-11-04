@@ -38,9 +38,15 @@ async def SubmitMassArchetypes(
     if not players:
         raise KnownError("No players found for this event.")
 
+    submitted_archetypes: list[PlayerArchetype] = []
     active_interaction = await SubmitArchetypeBatch(
-        bot, interaction, active_interaction, event, players, store
+        interaction, active_interaction, event, players, submitted_archetypes
     )
+    if submitted_archetypes:
+        await NotifyArchetypeSubmission(
+            bot, interaction, event, submitted_archetypes, store, ""
+        )
+
     if active_interaction is None:
         await interaction.followup.send("Canceled!", ephemeral=True)
         return
@@ -84,12 +90,11 @@ async def SelectEvent(
 
 
 async def SubmitArchetypeBatch(
-    bot: commands.Bot,
     interaction: Interaction,
     active_interaction: Interaction,
     event: Event,
     players: list[PlayerArchetype],
-    store: Store,
+    submitted_archetypes: list[PlayerArchetype],
 ) -> Interaction | None:
     """Submit and confirm batches of five, recursively chaining fresh interactions."""
     batch = players[:5]
@@ -134,24 +139,15 @@ async def SubmitArchetypeBatch(
             interaction.guild_id,
             interaction.guild.name if interaction.guild else "",
         )
-        for archetype in modal.new_archetypes:
-            event = await NotifyArchetypeSubmission(
-                bot,
-                interaction,
-                event,
-                [archetype],
-                store,
-                "",
-            )
+        submitted_archetypes.extend(modal.new_archetypes)
 
     if remaining_players:
         return await SubmitArchetypeBatch(
-            bot,
             interaction,
             confirmation.interaction,
             event,
             remaining_players,
-            store,
+            submitted_archetypes,
         )
 
     # The final Continue click has no next modal to acknowledge its interaction.
