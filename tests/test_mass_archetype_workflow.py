@@ -208,6 +208,70 @@ class MassArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
 
         notify.assert_awaited_once_with(bot, interaction, event, submitted, store, "")
 
+    async def test_canceling_later_modal_notifies_previously_saved_archetypes(self):
+        bot = object()
+        interaction = make_interaction()
+        active_interaction = make_interaction()
+        store, game, format = object(), object(), object()
+        event = SimpleNamespace(id=10)
+        players = [PlayerArchetype(f"Player {i}", "") for i in range(6)]
+        submitted = [PlayerArchetype(f"Player {i}", "Deck") for i in range(5)]
+        modal_instances = []
+        confirmation = SimpleNamespace(
+            action=ViewButtonEnum.Continue.value,
+            interaction=make_interaction(),
+            wait=AsyncMock(),
+        )
+
+        def make_modal(batch):
+            modal = SimpleNamespace(
+                players=batch,
+                new_archetypes=submitted if len(batch) == 5 else [],
+                is_submitted=len(batch) == 5,
+                interaction=make_interaction() if len(batch) == 5 else None,
+                wait=AsyncMock(),
+            )
+            modal_instances.append(modal)
+            return modal
+
+        with (
+            patch.object(
+                workflow,
+                "SelectEvent",
+                new=AsyncMock(return_value=(event, active_interaction)),
+            ),
+            patch.object(
+                workflow, "GetPlayersInEvent", new=AsyncMock(return_value=players)
+            ),
+            patch.object(workflow, "MassArchetypeSubmit", side_effect=make_modal),
+            patch.object(workflow, "ConfirmEvent", return_value=confirmation),
+            patch.object(workflow, "BuildTableOutput", return_value=["table"]),
+            patch.object(
+                workflow, "BulkAddArchetypes", new_callable=AsyncMock
+            ) as save,
+            patch.object(
+                workflow,
+                "NotifyArchetypeSubmission",
+                new_callable=AsyncMock,
+                return_value=event,
+            ) as notify,
+        ):
+            await workflow.SubmitMassArchetypes(
+                bot, interaction, store, game, format
+            )
+
+        self.assertEqual(len(modal_instances), 2)
+        save.assert_awaited_once()
+        notify.assert_awaited_once_with(
+            bot, interaction, event, submitted, store, ""
+        )
+        self.assertTrue(
+            any(
+                call.args[0] == "Canceled!"
+                for call in interaction.followup.send.await_args_list
+            )
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

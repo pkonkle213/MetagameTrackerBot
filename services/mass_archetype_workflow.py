@@ -104,7 +104,9 @@ async def SubmitArchetypeBatch(
     await active_interaction.response.send_modal(modal)
     await modal.wait()
 
-    if not modal.is_submitted or modal.interaction is None:
+    if not modal.is_submitted:
+        return None
+    if modal.interaction is None:
         raise KnownError("Archetype batch was not submitted.")
 
     confirmation = ConfirmEvent()
