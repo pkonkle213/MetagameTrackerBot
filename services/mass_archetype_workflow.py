@@ -1,4 +1,5 @@
 from discord import Interaction
+from discord.ext import commands
 
 from custom_errors import KnownError
 from data.archetype_data import BulkAddArchetypes
@@ -6,6 +7,7 @@ from data.event_data import GetPlayersInEvent
 from input_modals.event_selector import EventSelector
 from input_modals.mass_archetype_modal import MassArchetypeSubmit
 from output_builder import BuildTableOutput
+from services.submit_archetype_service import NotifyArchetypeSubmission
 from tuple_conversions import (
     Event,
     Format,
@@ -18,6 +20,7 @@ from views.confirm_event import ConfirmEvent
 
 
 async def SubmitMassArchetypes(
+    bot: commands.Bot,
     interaction: Interaction,
     store: Store,
     game: Game,
@@ -36,7 +39,7 @@ async def SubmitMassArchetypes(
         raise KnownError("No players found for this event.")
 
     active_interaction = await SubmitArchetypeBatch(
-        interaction, active_interaction, event, players
+        bot, interaction, active_interaction, event, players, store
     )
     if active_interaction is None:
         await interaction.followup.send("Canceled!", ephemeral=True)
@@ -81,10 +84,12 @@ async def SelectEvent(
 
 
 async def SubmitArchetypeBatch(
+    bot: commands.Bot,
     interaction: Interaction,
     active_interaction: Interaction,
     event: Event,
     players: list[PlayerArchetype],
+    store: Store,
 ) -> Interaction | None:
     """Submit and confirm batches of five, recursively chaining fresh interactions."""
     batch = players[:5]
@@ -129,10 +134,25 @@ async def SubmitArchetypeBatch(
             interaction.guild_id,
             interaction.guild.name if interaction.guild else "",
         )
+        for archetype in modal.new_archetypes:
+            event = await NotifyArchetypeSubmission(
+                bot,
+                interaction,
+                event,
+                archetype.player_name,
+                archetype.archetype_played,
+                store,
+                "",
+            )
 
     if remaining_players:
         return await SubmitArchetypeBatch(
-            interaction, confirmation.interaction, event, remaining_players
+            bot,
+            interaction,
+            confirmation.interaction,
+            event,
+            remaining_players,
+            store,
         )
 
     # The final Continue click has no next modal to acknowledge its interaction.

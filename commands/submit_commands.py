@@ -67,7 +67,7 @@ class SubmitDataAndArchetypes(commands.GroupCog, name="submit"):
             raise KnownError("No store, game, or format found.")
 
         await SubmitMassArchetypes(
-            interaction, objects.store, objects.game, objects.format
+            self.bot, interaction, objects.store, objects.game, objects.format
         )
 
     @app_commands.command(
@@ -82,7 +82,7 @@ class SubmitDataAndArchetypes(commands.GroupCog, name="submit"):
             raise KnownError("No store, game, or format found.")
 
         await SubmitOpponentArchetypes(
-            interaction, objects.store, objects.game, objects.format
+            self.bot, interaction, objects.store, objects.game, objects.format
         )
 
     @app_commands.command(

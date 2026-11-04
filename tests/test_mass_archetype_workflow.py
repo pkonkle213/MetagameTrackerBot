@@ -68,6 +68,9 @@ class MassArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
             return confirmation
 
         original_interaction = make_interaction()
+        bot = object()
+        store = object()
+        event = object()
         with (
             patch.object(workflow, "MassArchetypeSubmit", side_effect=make_modal),
             patch.object(workflow, "ConfirmEvent", side_effect=make_confirmation),
@@ -75,12 +78,19 @@ class MassArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
                 workflow, "BuildTableOutput", return_value=["table"]
             ) as build_table,
             patch.object(workflow, "BulkAddArchetypes", new_callable=AsyncMock) as save,
+            patch.object(
+                workflow,
+                "NotifyArchetypeSubmission",
+                new_callable=AsyncMock,
+            ) as notify,
         ):
             returned_interaction = await workflow.SubmitArchetypeBatch(
+                bot,
                 original_interaction,
                 active_interaction,
-                object(),
+                event,
                 players,
+                store,
             )
 
         self.assertEqual([len(modal.players) for modal in modal_instances], [5, 1])
@@ -95,6 +105,15 @@ class MassArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertIs(returned_interaction, confirmation_instances[1].interaction)
         self.assertEqual(save.await_count, 1)
+        notify.assert_awaited_once_with(
+            bot,
+            original_interaction,
+            event,
+            "Player 5",
+            "Deck",
+            store,
+            "",
+        )
         build_table.assert_called_once()
         table_messages = [
             call
@@ -124,20 +143,34 @@ class MassArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
             interaction=make_interaction(),
             wait=AsyncMock(),
         )
+        event = object()
+        bot = object()
+        store = object()
 
         with (
             patch.object(workflow, "MassArchetypeSubmit", return_value=modal),
             patch.object(workflow, "ConfirmEvent", return_value=confirmation),
             patch.object(workflow, "BuildTableOutput") as build_table,
             patch.object(workflow, "BulkAddArchetypes", new_callable=AsyncMock) as save,
+            patch.object(
+                workflow,
+                "NotifyArchetypeSubmission",
+                new_callable=AsyncMock,
+            ) as notify,
         ):
             returned_interaction = await workflow.SubmitArchetypeBatch(
-                make_interaction(), active_interaction, object(), modal.players
+                bot,
+                make_interaction(),
+                active_interaction,
+                event,
+                modal.players,
+                store,
             )
 
         self.assertIs(returned_interaction, confirmation.interaction)
         build_table.assert_not_called()
         save.assert_not_awaited()
+        notify.assert_not_awaited()
 
 
 if __name__ == "__main__":

@@ -134,7 +134,7 @@ async def NotifyArchetypeSubmission(
     archetype: str,
     store: Store | None,
     moxfield_error: str,
-) -> None:
+) -> Event:
     private_output = (
         f"Thank you for submitting the archetype for {event.event_name}!"
         + moxfield_error
@@ -144,7 +144,9 @@ async def NotifyArchetypeSubmission(
         bot, BuildMessage(interaction, event, archetype, player_name), event
     )
 
-    public_output, full_event = await CheckEventPercentage(event)
+    public_output, full_event, update_counted = await CheckEventPercentage(event)
+    if update_counted:
+        event = event._replace(last_update=event.last_update + 1)
     format_map = await GetFormatMapByEvent(event)
     mapped_channel = format_map.channel_id
 
@@ -157,6 +159,7 @@ async def NotifyArchetypeSubmission(
         await MessageHubs(
             bot, store, event, f"```{event.event_name} - " + full_event[3:]
         )
+    return event
 
 
 async def MessageStoreFeed(bot: commands.Bot, message: str, event: Event) -> None:
@@ -185,12 +188,16 @@ def BuildMessage(
     return "\n".join(message_parts)
 
 
-async def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
+async def CheckEventPercentage(
+    event: Event,
+) -> tuple[str | None, str | None, bool]:
     followup: str | None = None
     final: list[str] | None = None
+    update_counted = False
     percent_reported = await GetEventReportedPercentage(event.id)
     if percent_reported >= (event.last_update + 1) / 4:
         await UpdateEvent(event.id)
+        update_counted = True
         str_date = event.event_date.strftime("%B %-d")
         if event.last_update + 1 < 4:
             followup = f"Congratulations! {str_date}'s {event.event_name} is now {percent_reported:.0%} reported!"
@@ -200,4 +207,4 @@ async def CheckEventPercentage(event: Event) -> tuple[str | None, str | None]:
             table = await OneEventDetails(event)
             final = BuildTableOutput(table.title, table.headers, table.data)
     final_out = final[0] if final else None
-    return followup, final_out
+    return followup, final_out, update_counted

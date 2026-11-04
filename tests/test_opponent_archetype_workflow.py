@@ -66,6 +66,8 @@ class OpponentArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
             wait=AsyncMock(),
         )
         event = SimpleNamespace(id=10)
+        bot = object()
+        store = object()
 
         with (
             patch.object(
@@ -74,12 +76,20 @@ class OpponentArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
             patch.object(
                 workflow, "BulkAddArchetypes", new_callable=AsyncMock
             ) as save,
+            patch.object(
+                workflow,
+                "NotifyArchetypeSubmission",
+                new_callable=AsyncMock,
+                return_value=event,
+            ) as notify,
         ):
             result = await workflow.SubmitOpponentArchetypeBatch(
+                bot,
                 interaction,
                 make_interaction(),
                 event,
                 [OpponentArchetype(1, "Opponent", None)],
+                store,
             )
 
         self.assertIs(result, modal_interaction)
@@ -91,6 +101,15 @@ class OpponentArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
             456,
             "Example Server",
             is_submitter=False,
+        )
+        notify.assert_awaited_once_with(
+            bot,
+            interaction,
+            event,
+            "Opponent",
+            "Deck Name",
+            store,
+            "",
         )
         modal_interaction.followup.send.assert_awaited_once()
 
