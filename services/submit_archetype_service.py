@@ -76,8 +76,7 @@ async def SubmitArchetype(
         bot,
         interaction,
         event,
-        player_name,
-        archetype,
+        [PlayerArchetype(player_name, archetype)],
         store,
         moxfield_error,
     )
@@ -130,18 +129,18 @@ async def NotifyArchetypeSubmission(
     bot: commands.Bot,
     interaction: Interaction,
     event: Event,
-    player_name: str,
-    archetype: str,
+    archetypes: list[PlayerArchetype],
     store: Store | None,
     moxfield_error: str,
 ) -> Event:
+    submission_label = "archetype" if len(archetypes) == 1 else "archetypes"
     private_output = (
-        f"Thank you for submitting the archetype for {event.event_name}!"
+        f"Thank you for submitting {submission_label} for {event.event_name}!"
         + moxfield_error
     )
     await interaction.followup.send(private_output, ephemeral=True)
     await MessageStoreFeed(
-        bot, BuildMessage(interaction, event, archetype, player_name), event
+        bot, BuildMessage(interaction, event, archetypes), event
     )
 
     public_output, full_event, update_counted = await CheckEventPercentage(event)
@@ -172,14 +171,15 @@ async def MessageStoreFeed(bot: commands.Bot, message: str, event: Event) -> Non
 
 
 def BuildMessage(
-    interaction: Interaction, event: Event, archetype: str, player_name: str
+    interaction: Interaction, event: Event, archetypes: list[PlayerArchetype]
 ) -> str:
     message_parts = ["```"]
     message_parts.append(
         f"Submitter Username: {interaction.user.display_name} ({interaction.user.id})"
     )
-    message_parts.append(f"Archetype submitted: {archetype}")
-    message_parts.append(f"For player name: {player_name}")
+    for archetype in archetypes:
+        message_parts.append(f"Archetype submitted: {archetype.archetype_played}")
+        message_parts.append(f"For player name: {archetype.player_name}")
     message_parts.append(f"For event name: {event.event_name}")
     message_parts.append(
         f"From Discord: {interaction.guild.name} ({interaction.guild.id})"

@@ -139,8 +139,7 @@ async def SubmitArchetypeBatch(
                 bot,
                 interaction,
                 event,
-                archetype.player_name,
-                archetype.archetype_played,
+                [archetype],
                 store,
                 "",
             )

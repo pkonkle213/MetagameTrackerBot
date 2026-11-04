@@ -109,8 +109,7 @@ class MassArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
             bot,
             original_interaction,
             event,
-            "Player 5",
-            "Deck",
+            [PlayerArchetype("Player 5", "Deck")],
             store,
             "",
         )

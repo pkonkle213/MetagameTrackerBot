@@ -56,7 +56,7 @@ class OpponentArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
         self.assertIs(modal.interaction, submit_interaction)
         submit_interaction.response.defer.assert_awaited_once_with(ephemeral=True)
 
-    async def test_changed_archetypes_are_saved_as_opponent_submissions(self):
+    async def test_changed_archetypes_are_saved_without_batch_summary_output(self):
         interaction = make_interaction()
         modal_interaction = make_interaction()
         modal = SimpleNamespace(
@@ -66,8 +66,7 @@ class OpponentArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
             wait=AsyncMock(),
         )
         event = SimpleNamespace(id=10)
-        bot = object()
-        store = object()
+        all_changed = []
 
         with (
             patch.object(
@@ -76,23 +75,17 @@ class OpponentArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
             patch.object(
                 workflow, "BulkAddArchetypes", new_callable=AsyncMock
             ) as save,
-            patch.object(
-                workflow,
-                "NotifyArchetypeSubmission",
-                new_callable=AsyncMock,
-                return_value=event,
-            ) as notify,
         ):
             result = await workflow.SubmitOpponentArchetypeBatch(
-                bot,
                 interaction,
                 make_interaction(),
                 event,
                 [OpponentArchetype(1, "Opponent", None)],
-                store,
+                all_changed,
             )
 
         self.assertIs(result, modal_interaction)
+        self.assertEqual(all_changed, [PlayerArchetype("Opponent", "Deck Name")])
         save.assert_awaited_once_with(
             event,
             [PlayerArchetype("Opponent", "Deck Name")],
@@ -102,16 +95,62 @@ class OpponentArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
             "Example Server",
             is_submitter=False,
         )
+        modal_interaction.followup.send.assert_not_awaited()
+
+    async def test_command_notifies_once_with_all_saved_changes(self):
+        bot = object()
+        interaction = make_interaction()
+        event = SimpleNamespace(id=10)
+        active_interaction = make_interaction()
+        store, game, format = object(), object(), object()
+        changed = [
+            PlayerArchetype("Opponent One", "Deck One"),
+            PlayerArchetype("Opponent Two", "Deck Two"),
+        ]
+        final_interaction = make_interaction()
+
+        async def submit_batches(
+            command_interaction,
+            selected_interaction,
+            selected_event,
+            opponents,
+            changed_output,
+        ):
+            changed_output.extend(changed)
+            return final_interaction
+
+        with (
+            patch.object(
+                workflow,
+                "SelectEvent",
+                new=AsyncMock(return_value=(event, active_interaction)),
+            ),
+            patch.object(
+                workflow,
+                "GetOpponentArchetypes",
+                new=AsyncMock(
+                    return_value=[OpponentArchetype(1, "Opponent One", None)]
+                ),
+            ),
+            patch.object(
+                workflow,
+                "SubmitOpponentArchetypeBatch",
+                new=AsyncMock(side_effect=submit_batches),
+            ),
+            patch.object(
+                workflow,
+                "NotifyArchetypeSubmission",
+                new=AsyncMock(return_value=event),
+            ) as notify,
+        ):
+            await workflow.SubmitOpponentArchetypes(
+                bot, interaction, store, game, format
+            )
+
         notify.assert_awaited_once_with(
-            bot,
-            interaction,
-            event,
-            "Opponent",
-            "Deck Name",
-            store,
-            "",
+            bot, interaction, event, changed, store, ""
         )
-        modal_interaction.followup.send.assert_awaited_once()
+        interaction.followup.send.assert_not_awaited()
 
 
 if __name__ == "__main__":

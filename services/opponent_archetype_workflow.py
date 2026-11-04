@@ -36,20 +36,24 @@ async def SubmitOpponentArchetypes(
     if not opponents:
         raise KnownError("No opponents were found for you in this event.")
 
+    changed: list[PlayerArchetype] = []
     final_interaction = await SubmitOpponentArchetypeBatch(
-        bot, interaction, active_interaction, event, opponents, store
+        interaction, active_interaction, event, opponents, changed
     )
+    if changed:
+        await NotifyArchetypeSubmission(
+            bot, interaction, event, changed, store, ""
+        )
     if final_interaction is None:
         await interaction.followup.send("Canceled!", ephemeral=True)
 
 
 async def SubmitOpponentArchetypeBatch(
-    bot: commands.Bot,
     interaction: Interaction,
     active_interaction: Interaction,
     event: Event,
     opponents: list[OpponentArchetype],
-    store: Store,
+    all_changed: list[PlayerArchetype],
 ) -> Interaction | None:
     batch = opponents[:5]
     remaining_opponents = opponents[5:]
@@ -72,24 +76,14 @@ async def SubmitOpponentArchetypeBatch(
             interaction.guild.name if interaction.guild else "",
             is_submitter=False,
         )
-        for archetype in changed:
-            event = await NotifyArchetypeSubmission(
-                bot,
-                interaction,
-                event,
-                archetype.player_name,
-                archetype.archetype_played,
-                store,
-                "",
-            )
-        status = f"Saved {len(changed)} changed opponent archetype(s)."
+        all_changed.extend(changed)
     else:
-        status = "No opponent archetypes changed in this batch."
+        status = "No opponent archetypes changed in this batch. "
 
     if remaining_opponents:
         continuation = ConfirmEvent()
         await modal.interaction.followup.send(
-            f"{status} Continue to the next batch?",
+            f"{status}Continue to the next batch?",
             view=continuation,
             ephemeral=True,
         )
@@ -103,13 +97,15 @@ async def SubmitOpponentArchetypeBatch(
             raise KnownError("Opponent archetype continuation was not received.")
 
         return await SubmitOpponentArchetypeBatch(
-            bot,
             interaction,
             continuation.interaction,
             event,
             remaining_opponents,
-            store,
+            all_changed,
         )
 
-    await modal.interaction.followup.send(status, ephemeral=True)
+    if not changed:
+        await modal.interaction.followup.send(
+            "No opponent archetypes changed.", ephemeral=True
+        )
     return modal.interaction
