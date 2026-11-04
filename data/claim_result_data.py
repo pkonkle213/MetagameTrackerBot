@@ -32,19 +32,19 @@ async def GetEventReportedPercentage(event_id: int) -> float:
         return row
 
 
-async def UpdateEvent(event_id: int):
+async def UpdateEvent(event_id: int, update_target:int):
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor(row_factory=scalar_row) as cur,
     ):
         command = """
         UPDATE events
-        SET last_update = last_update + 1
+        SET last_update = %s
         WHERE id = %s
         RETURNING id
         """
 
-        await cur.execute(command, [event_id])
+        await cur.execute(command, [update_target, event_id])
         await conn.commit()
         row = await cur.fetchone()
         if not row:

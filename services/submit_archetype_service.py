@@ -139,9 +139,7 @@ async def NotifyArchetypeSubmission(
         + moxfield_error
     )
     await interaction.followup.send(private_output, ephemeral=True)
-    await MessageStoreFeed(
-        bot, BuildMessage(interaction, event, archetypes), event
-    )
+    await MessageStoreFeed(bot, BuildMessage(interaction, event, archetypes), event)
 
     public_output, full_event, updates_counted = await CheckEventPercentage(event)
     if updates_counted:
@@ -196,10 +194,12 @@ async def CheckEventPercentage(
     percent_reported = await GetEventReportedPercentage(event.id)
     target_update = min(4, int(percent_reported * 4))
     updates_counted = max(0, target_update - event.last_update)
+    print("target:", target_update)
+    print("counted:", updates_counted)
 
     if updates_counted:
         for _ in range(updates_counted):
-            await UpdateEvent(event.id)
+            await UpdateEvent(event.id, target_update)
 
         str_date = event.event_date.strftime("%B %-d")
         if event.last_update + updates_counted < 4:
