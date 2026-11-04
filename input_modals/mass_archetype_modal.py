@@ -4,7 +4,7 @@ from tuple_conversions import PlayerArchetype
 
 class MassArchetypeSubmit(discord.ui.Modal, title="Submit Archetypes"):
     def __init__(self, players: list[PlayerArchetype]):
-        super().__init__()
+        super().__init__(timeout=300)
         self.interaction: discord.Interaction | None = None
         self.players = players
         self.new_archetypes: list[PlayerArchetype] = []

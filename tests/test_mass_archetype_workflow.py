@@ -21,6 +21,11 @@ def make_interaction():
 
 
 class MassArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
+    async def test_mass_modal_uses_five_minute_timeout(self):
+        modal = MassArchetypeSubmit([])
+
+        self.assertEqual(modal.timeout, 300)
+
     async def test_modal_stores_and_acknowledges_its_submit_interaction(self):
         modal = SimpleNamespace(
             players=[PlayerArchetype("Player", "")],
