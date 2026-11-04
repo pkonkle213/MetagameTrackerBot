@@ -1,3 +1,4 @@
 - [Runtime type annotations](python-runtime-annotations.md) — Keep referenced domain types imported when Python evaluates annotations during module import.
 - [Metagame heatmap output](metagame-heatmap.md) — The top 16 archetypes should be shown in an ephemeral PNG with overall and head-to-head win rates and game counts.
 - [App Storage listing metadata](app-storage-listing.md) — The public list API returns names only; latest-upload selection needs update metadata.
+- [Dependency security floors](dependency-security-floors.md) — Keep explicit safe minimums for vulnerable transitive packages when refreshing the lockfile.
