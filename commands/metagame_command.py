@@ -120,7 +120,7 @@ class MetagameCommand(commands.Cog):
     async def ViewMetagameHeatmap(
         self, interaction: Interaction, start_date: str = "", end_date: str = ""
     ) -> None:
-        await interaction.response.defer(ephemeral=True, thinking=True)
+        await interaction.response.defer(thinking=True)
         objects = interaction.extras.get("db_object")
         if not objects or not objects.game or not objects.format:
             raise KnownError(
