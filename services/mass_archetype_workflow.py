@@ -24,7 +24,7 @@ async def SubmitMassArchetypes(
     format: Format,
 ) -> None:
     """Coordinate selecting an event, reviewing player batches, and saving them."""
-    event, active_interaction = await SelectMassArchetypeEvent(
+    event, active_interaction = await SelectEvent(
         interaction, store, game, format
     )
     if event is None:
@@ -47,7 +47,7 @@ async def SubmitMassArchetypes(
     )
 
 
-async def SelectMassArchetypeEvent(
+async def SelectEvent(
     interaction: Interaction, store: Store, game: Game, format: Format
 ) -> tuple[Event | None, Interaction | None]:
     selector = await EventSelector.create(store, game, format)

@@ -92,6 +92,45 @@ class UnknownArchetypes(NamedTuple):
     player_name: str
 
 
+class OpponentArchetype(NamedTuple):
+    round_number: int
+    opponent_name: str
+    archetype_played: str | None
+
+
+async def GetOpponentArchetypes(
+    event_id: int, user_id: int, discord_id: int
+) -> list[OpponentArchetype]:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(OpponentArchetype)) as cur,
+    ):
+        command = """
+        SELECT
+            fp.round_number,
+            fp.opponent_name,
+            ua.archetype_played
+        FROM
+            full_pairings fp
+            INNER JOIN events e ON e.id = fp.event_id
+            LEFT JOIN player_names pn
+                ON upper(fp.player_name) = upper(pn.player_name)
+                AND e.discord_id = pn.discord_id
+            LEFT JOIN unique_archetypes ua
+                ON ua.event_id = fp.event_id
+                AND upper(ua.player_name) = upper(fp.opponent_name)
+        WHERE
+            fp.event_id = %s
+            AND upper(fp.opponent_name) != 'BYE'
+            AND pn.submitter_id = %s
+            AND e.discord_id = %s
+        ORDER BY
+            fp.round_number
+        """
+        await cur.execute(command, [event_id, user_id, discord_id])
+        return await cur.fetchall()
+
+
 async def GetUnknownArchetypes(
     discord_id: int, game_id: int, format_id: int, start_date: date, end_date: date
 ) -> list[UnknownArchetypes]:

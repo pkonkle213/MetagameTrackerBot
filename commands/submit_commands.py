@@ -11,9 +11,10 @@ from services.determine_archetype_input import GetArchetypeModal
 from tuple_conversions import MTBRoles
 from services.submit_data_workflow import SubmitEventDataWorkflow
 from services.mass_archetype_workflow import SubmitMassArchetypes
+from services.opponent_archetype_workflow import SubmitOpponentArchetypes
 
 
-class SubmitDataChecker(commands.GroupCog, name="submit"):
+class SubmitDataAndArchetypes(commands.GroupCog, name="submit"):
     """A group of commands to submit event data and archetypes"""
 
     def __init__(self, bot: commands.Bot):
@@ -66,6 +67,21 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
             raise KnownError("No store, game, or format found.")
 
         await SubmitMassArchetypes(
+            interaction, objects.store, objects.game, objects.format
+        )
+
+    @app_commands.command(
+        name="opponent_archetypes",
+        description="Submit archetypes for your opponents in an event",
+    )
+    @app_commands.guild_only()
+    @IsStore()
+    async def OpponentArchetypeInput(self, interaction: Interaction):
+        objects = interaction.extras.get("db_object")
+        if not objects or not objects.store or not objects.game or not objects.format:
+            raise KnownError("No store, game, or format found.")
+
+        await SubmitOpponentArchetypes(
             interaction, objects.store, objects.game, objects.format
         )
 
@@ -155,6 +171,7 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
     @SubmitCheck.error
     @SubmitDataCommand.error
     @SubmitArchetypeCommand.error
+    @OpponentArchetypeInput.error
     async def Errors(
         self, interaction: Interaction, error: app_commands.AppCommandError
     ):
@@ -162,4 +179,4 @@ class SubmitDataChecker(commands.GroupCog, name="submit"):
 
 
 async def setup(bot: commands.Bot):
-    await bot.add_cog(SubmitDataChecker(bot))
+    await bot.add_cog(SubmitDataAndArchetypes(bot))
