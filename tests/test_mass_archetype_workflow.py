@@ -105,6 +105,13 @@ class MassArchetypeWorkflowTests(unittest.IsolatedAsyncioTestCase):
         )
         self.assertIs(returned_interaction, confirmation_instances[1].interaction)
         self.assertEqual(save.await_count, 1)
+        self.assertTrue(original_interaction.followup.send.await_args_list)
+        self.assertTrue(
+            all(
+                call.kwargs.get("ephemeral") is True
+                for call in original_interaction.followup.send.await_args_list
+            )
+        )
         notify.assert_awaited_once_with(
             bot,
             original_interaction,
