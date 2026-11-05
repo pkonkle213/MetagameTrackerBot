@@ -51,11 +51,11 @@ class EventAttendance(commands.GroupCog, name="attendance"):
         start_date: str | None = None,
         end_date: str | None = None,
     ):
-        await interaction.response.defer(thinking=True)
+        await interaction.response.defer(ephemeral=True, thinking=True)
         objects = interaction.extras.get("db_object")
         graph = await GetAttendanceGraph(objects, start_date, end_date)
         await interaction.followup.send(
-            file=File(BytesIO(graph), filename="attendance_graph.png")
+            file=File(BytesIO(graph), filename="attendance_graph.png"), ephemeral=True
         )
 
     @Table.error
