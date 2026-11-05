@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "DOVyGFZm5X89POZ_kd0wW"
+uri = "file://.local/outputs/production_database_export.xlsx"
+type = "table"
+title = "Production database export"
+description = "Excel workbook containing all 25 public application tables and 7,078 production rows, with a separate worksheet for each table."
+logical_id = "f3658625-38c7-4d57-9a74-e1c03e4e8e7d"
+content_hash = "sha256:47a0291fb2fe9d796c07513cd07a5bb8300894094856496695e6187c1d02db8c"
+size = 338237
+mtime_ms = 1793909032703
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:fc99d633-b51f-48ab-b42e-d5c057d0586f/f3658625-38c7-4d57-9a74-e1c03e4e8e7d/610c0a16-d981-4ef2-a34b-ac4554eca9fe"
+storage_version_token = "1793909046658834"
+content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

@@ -1,5 +1,5 @@
 entrypoint = "main.py"
-modules = ["postgresql-16", "python3", "python-3.12"]
+modules = ["python3", "python-3.12", "postgresql-16"]
 
 [nix]
 channel = "stable-24_05"
