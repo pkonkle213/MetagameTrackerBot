@@ -14,7 +14,7 @@ requiredFiles = [".replit", "replit.nix"]
 [deployment]
 run = ["python3", "main.py"]
 deploymentTarget = "vm"
-ignorePorts = false
+ignorePorts = true
 
 [agent]
 expertMode = true
