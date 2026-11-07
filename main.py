@@ -27,6 +27,8 @@ from settings import DISCORDTOKEN, PHILID
 from timedposts.automated_check_events import EventCheck
 from timedposts.automated_updates import UpdateDataGuild
 from tuple_conversions import InteractionObjects
+from services.stripe_webhook_service import start_webhook_server
+from settings import HTTP_SERVER_PORT
 
 
 async def get_interaction_objects(
@@ -51,7 +53,21 @@ intents = Intents.all()
 intents.message_content = True
 intents.members = True
 intents.guilds = True
-bot = commands.Bot(command_prefix="?", intents=intents, tree_cls=DatabaseCommandTree)
+
+
+class StoreBot(commands.Bot):
+    async def setup_hook(self) -> None:
+        self.webhook_runner = await start_webhook_server(
+            self, port=HTTP_SERVER_PORT
+        )
+
+    async def close(self) -> None:
+        if hasattr(self, "webhook_runner"):
+            await self.webhook_runner.cleanup()
+        await super().close()
+
+
+bot = StoreBot(command_prefix="?", intents=intents, tree_cls=DatabaseCommandTree)
 
 
 @bot.event

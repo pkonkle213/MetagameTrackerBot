@@ -24,4 +24,5 @@ dependencies = [
     "replit-object-storage==1.0.2",
     "requests==2.34.2",
     "urllib3>=2.8.0",
+    "stripe>=16.0.0",
 ]
