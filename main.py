@@ -1,37 +1,39 @@
-from datetime import datetime as dt, time, timezone as datetime_timezone
+from datetime import UTC, time
+from datetime import datetime as dt
 from pathlib import Path
+from typing import Any
 
-
-from pytz import timezone
 from discord import (
     Guild,
+    Intents,
     Interaction,
     Member,
     app_commands,
-    Intents,
-    NotFound,
-    Forbidden,
 )
 from discord.ext import commands, tasks
-from settings import PHILID, DISCORDTOKEN, BOTLOGCHANNEL
+from pytz import timezone
+
 import timedposts.automated_paid_users as apu
-from timedposts.automated_check_events import EventCheck
-from timedposts.automated_updates import UpdateDataGuild
-from services.store_services import NewStoreRegistration
-from services.sync_service import SyncCommands
 from checks import isMTStore, isMTSubmitter
-from discord_messages import MessageUser
-from data.interaction_data import GetObjectsFromInteraction
 from data.command_invocations_data import (
     EnsureCommandInvocationsTable,
     LogCommandInvocation,
 )
+from data.interaction_data import GetObjectsFromInteraction
+from discord_messages import MessageUser
+from services.store_services import NewStoreRegistration
+from services.sync_service import SyncCommands
+from settings import DISCORDTOKEN, PHILID
+from timedposts.automated_check_events import EventCheck
+from timedposts.automated_updates import UpdateDataGuild
 from tuple_conversions import InteractionObjects
 from services.stripe_webhook_service import start_webhook_server
 from settings import HTTP_SERVER_PORT
 
 
-async def get_interaction_objects(interaction: Interaction) -> InteractionObjects:
+async def get_interaction_objects(
+    interaction: Interaction,
+) -> InteractionObjects | None:
     return await GetObjectsFromInteraction(interaction)
 
 
@@ -70,7 +72,7 @@ bot = StoreBot(command_prefix="?", intents=intents, tree_cls=DatabaseCommandTree
 
 @bot.event
 async def on_app_command_completion(
-    interaction: Interaction, command: app_commands.Command
+    interaction: Interaction, command: app_commands.Command[Any, ..., Any]
 ) -> None:
     """Log slash-command invocations after successful command completion."""
     member = interaction.user
@@ -81,9 +83,7 @@ async def on_app_command_completion(
         and isMTSubmitter(guild, member)
     )
     has_mt_store_role = (
-        isinstance(member, Member)
-        and guild is not None
-        and isMTStore(guild, member)
+        isinstance(member, Member) and guild is not None and isMTStore(guild, member)
     )
     await LogCommandInvocation(
         user_id=interaction.user.id,
@@ -163,7 +163,7 @@ async def before_sync_paid_users():
 @tasks.loop(time=time(hour=10, minute=00, tzinfo=TIME_ZONE))
 async def data_guild_update():
     """Every Friday at 10:00 AM EST, the data guild is updated with new data"""
-    time_now = dt.now(datetime_timezone.utc)
+    time_now = dt.now(UTC)
     if time_now.weekday() == 4:  # Check if it's Friday, 0 = Monday
         try:
             await UpdateDataGuild(bot)
