@@ -55,9 +55,6 @@ async def handle_stripe_webhook(request: web.Request, bot: discord.Client) -> we
 
 
 async def handle_health_and_legal(request: web.Request) -> web.Response:
-  if request.path == '/':
-    return web.Response(status=200, text='OK', content_type='text/plain')
-
   legal_page = get_legal_page(request.path)
   if legal_page is None:
     raise web.HTTPNotFound()

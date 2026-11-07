@@ -87,13 +87,16 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status, 400)
         self.assertEqual(await response.text(), "Invalid signature")
 
-    async def test_preserves_health_and_legal_get_routes(self):
+    async def test_serves_homepage_and_legal_get_routes(self):
         health_response = await self.client.get("/")
         privacy_response = await self.client.get("/privacy")
         terms_response = await self.client.get("/terms")
 
         self.assertEqual(health_response.status, 200)
-        self.assertEqual(await health_response.text(), "OK")
+        homepage = await health_response.text()
+        self.assertIn("Metagame Tracker Bot", homepage)
+        self.assertIn('href="/privacy"', homepage)
+        self.assertIn('href="/terms"', homepage)
         self.assertEqual(privacy_response.status, 200)
         self.assertIn("text/html", privacy_response.headers["Content-Type"])
         self.assertEqual(terms_response.status, 200)
