@@ -1,45 +1,6 @@
 from datetime import datetime as dt, time, timezone as datetime_timezone
-from threading import Thread
-from contextlib import suppress
 from pathlib import Path
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from legal_pages import get_legal_page
 
-
-class HealthCheckHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        if self.path == "/":
-            self.send_response(200)
-            self.send_header("Content-Type", "text/plain; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(b"OK")
-            return
-
-        legal_page = get_legal_page(self.path)
-        if legal_page is not None:
-            content_type, page_content = legal_page
-            self.send_response(200)
-            self.send_header("Content-Type", content_type)
-            self.send_header("Content-Length", str(len(page_content)))
-            self.send_header("X-Content-Type-Options", "nosniff")
-            self.end_headers()
-            self.wfile.write(page_content)
-            return
-
-        self.send_error(404)
-
-    def log_message(self, format, *args):
-        pass
-
-
-def StartHealthCheckServer():
-    port = 8080
-    server = ThreadingHTTPServer(("0.0.0.0", port), HealthCheckHandler)
-    Thread(target=server.serve_forever, daemon=True).start()
-    print(f"Health check server listening on port {port}", flush=True)
-
-
-StartHealthCheckServer()
 
 from pytz import timezone
 from discord import (
@@ -66,6 +27,8 @@ from data.command_invocations_data import (
     LogCommandInvocation,
 )
 from tuple_conversions import InteractionObjects
+from services.stripe_webhook_service import start_webhook_server
+from settings import HTTP_SERVER_PORT
 
 
 async def get_interaction_objects(interaction: Interaction) -> InteractionObjects:
@@ -88,7 +51,21 @@ intents = Intents.all()
 intents.message_content = True
 intents.members = True
 intents.guilds = True
-bot = commands.Bot(command_prefix="?", intents=intents, tree_cls=DatabaseCommandTree)
+
+
+class StoreBot(commands.Bot):
+    async def setup_hook(self) -> None:
+        self.webhook_runner = await start_webhook_server(
+            self, port=HTTP_SERVER_PORT
+        )
+
+    async def close(self) -> None:
+        if hasattr(self, "webhook_runner"):
+            await self.webhook_runner.cleanup()
+        await super().close()
+
+
+bot = StoreBot(command_prefix="?", intents=intents, tree_cls=DatabaseCommandTree)
 
 
 @bot.event
