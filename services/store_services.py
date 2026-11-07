@@ -192,6 +192,8 @@ async def CreateRole(guild: Guild, role_name: str) -> list[str]:
             )
             mtsubmitter_role = await guild.create_role(
                 name=role_name,
+                #color=discord.Colour(0xFFCB05) <- Maize
+                #color=discord.Colour(0x00274C) <- Blue
                 reason="Automatic role creation on join",
             )
             output.append(f"- {role_name} role created.")
