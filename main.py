@@ -1,74 +1,37 @@
-from datetime import datetime as dt, time, timezone as datetime_timezone
-from threading import Thread
-from contextlib import suppress
+from datetime import UTC, time
+from datetime import datetime as dt
 from pathlib import Path
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from legal_pages import get_legal_page
+from typing import Any
 
-
-class HealthCheckHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        if self.path == "/":
-            self.send_response(200)
-            self.send_header("Content-Type", "text/plain; charset=utf-8")
-            self.end_headers()
-            self.wfile.write(b"OK")
-            return
-
-        legal_page = get_legal_page(self.path)
-        if legal_page is not None:
-            content_type, page_content = legal_page
-            self.send_response(200)
-            self.send_header("Content-Type", content_type)
-            self.send_header("Content-Length", str(len(page_content)))
-            self.send_header("X-Content-Type-Options", "nosniff")
-            self.end_headers()
-            self.wfile.write(page_content)
-            return
-
-        self.send_error(404)
-
-    def log_message(self, format, *args):
-        pass
-
-
-def StartHealthCheckServer():
-    port = 8080
-    server = ThreadingHTTPServer(("0.0.0.0", port), HealthCheckHandler)
-    Thread(target=server.serve_forever, daemon=True).start()
-    print(f"Health check server listening on port {port}", flush=True)
-
-
-StartHealthCheckServer()
-
-from pytz import timezone
 from discord import (
     Guild,
+    Intents,
     Interaction,
     Member,
     app_commands,
-    Intents,
-    NotFound,
-    Forbidden,
 )
 from discord.ext import commands, tasks
-from settings import PHILID, DISCORDTOKEN, BOTLOGCHANNEL
+from pytz import timezone
+
 import timedposts.automated_paid_users as apu
-from timedposts.automated_check_events import EventCheck
-from timedposts.automated_updates import UpdateDataGuild
-from services.store_services import NewStoreRegistration
-from services.sync_service import SyncCommands
 from checks import isMTStore, isMTSubmitter
-from discord_messages import MessageUser
-from data.interaction_data import GetObjectsFromInteraction
 from data.command_invocations_data import (
     EnsureCommandInvocationsTable,
     LogCommandInvocation,
 )
+from data.interaction_data import GetObjectsFromInteraction
+from discord_messages import MessageUser
+from services.store_services import NewStoreRegistration
+from services.sync_service import SyncCommands
+from settings import DISCORDTOKEN, PHILID
+from timedposts.automated_check_events import EventCheck
+from timedposts.automated_updates import UpdateDataGuild
 from tuple_conversions import InteractionObjects
 
 
-async def get_interaction_objects(interaction: Interaction) -> InteractionObjects:
+async def get_interaction_objects(
+    interaction: Interaction,
+) -> InteractionObjects | None:
     return await GetObjectsFromInteraction(interaction)
 
 
@@ -93,7 +56,7 @@ bot = commands.Bot(command_prefix="?", intents=intents, tree_cls=DatabaseCommand
 
 @bot.event
 async def on_app_command_completion(
-    interaction: Interaction, command: app_commands.Command
+    interaction: Interaction, command: app_commands.Command[Any, ..., Any]
 ) -> None:
     """Log slash-command invocations after successful command completion."""
     member = interaction.user
@@ -104,9 +67,7 @@ async def on_app_command_completion(
         and isMTSubmitter(guild, member)
     )
     has_mt_store_role = (
-        isinstance(member, Member)
-        and guild is not None
-        and isMTStore(guild, member)
+        isinstance(member, Member) and guild is not None and isMTStore(guild, member)
     )
     await LogCommandInvocation(
         user_id=interaction.user.id,
@@ -186,7 +147,7 @@ async def before_sync_paid_users():
 @tasks.loop(time=time(hour=10, minute=00, tzinfo=TIME_ZONE))
 async def data_guild_update():
     """Every Friday at 10:00 AM EST, the data guild is updated with new data"""
-    time_now = dt.now(datetime_timezone.utc)
+    time_now = dt.now(UTC)
     if time_now.weekday() == 4:  # Check if it's Friday, 0 = Monday
         try:
             await UpdateDataGuild(bot)
