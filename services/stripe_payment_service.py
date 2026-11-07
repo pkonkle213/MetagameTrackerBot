@@ -40,7 +40,6 @@ async def create_subscription_session(
     stripe.api_key = settings.STRIPE_SECRET_KEY
     return await asyncio.to_thread(
         stripe.checkout.Session.create,
-        payment_method_types=["card"],
         line_items=[
             {
                 "price_data": {
