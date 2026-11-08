@@ -32,6 +32,15 @@ class StripePaymentServiceTests(unittest.IsolatedAsyncioTestCase):
         kwargs = run_in_thread.await_args.kwargs
         self.assertNotIn("payment_method_types", kwargs)
         self.assertEqual(kwargs["mode"], "subscription")
+        self.assertEqual(
+            kwargs["subscription_data"]["metadata"],
+            {
+                "discord_user_id": "123",
+                "discord_user_name": "test-user",
+                "discord_guild_id": "456",
+                "tier": "player",
+            },
+        )
 
 
 if __name__ == "__main__":

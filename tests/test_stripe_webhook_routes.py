@@ -4,7 +4,7 @@ import json
 import os
 import time
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import TestClient, TestServer
 
@@ -86,6 +86,86 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response.status, 400)
         self.assertEqual(await response.text(), "Invalid signature")
+
+    async def test_completed_subscription_notifies_owner_with_discord_and_period(self):
+        subscription_id = "sub_test"
+        user_id = "12345"
+        guild_id = "67890"
+        checkout_session = {
+            "id": "cs_test",
+            "mode": "subscription",
+            "payment_status": "paid",
+            "subscription": subscription_id,
+            "metadata": {
+                "discord_user_id": user_id,
+                "discord_user_name": "test-user",
+                "discord_guild_id": guild_id,
+                "tier": "store",
+            },
+        }
+        event_payload = json.dumps(
+            {
+                "id": "evt_checkout",
+                "object": "event",
+                "type": "checkout.session.completed",
+                "data": {"object": checkout_session},
+            },
+            separators=(",", ":"),
+        )
+        owner = Mock()
+        owner.send = AsyncMock()
+        subscriber = Mock()
+        subscriber.send = AsyncMock()
+        self.bot.fetch_user = AsyncMock(side_effect=[owner, subscriber])
+        subscription = {
+            "id": subscription_id,
+            "current_period_start": 1_800_000_000,
+            "current_period_end": 1_802_592_000,
+            "items": {
+                "data": [
+                    {
+                        "price": {
+                            "recurring": {"interval": "month", "interval_count": 1}
+                        }
+                    }
+                ]
+            },
+        }
+
+        with (
+            patch.object(
+                stripe_webhook_service.settings,
+                "STRIPE_WEBHOOK_SECRET",
+                self.signing_secret,
+            ),
+            patch.object(
+                stripe_webhook_service.settings,
+                "STRIPE_SECRET_KEY",
+                "sk_test_placeholder",
+            ),
+            patch.object(
+                stripe_webhook_service.stripe.Subscription,
+                "retrieve",
+                return_value=subscription,
+            ),
+        ):
+            response = await self.client.post(
+                "/stripe/webhook",
+                data=event_payload,
+                headers={"Stripe-Signature": self.make_signature(event_payload)},
+            )
+
+        self.assertEqual(response.status, 200)
+        owner_message = owner.send.await_args.args[0]
+        self.assertIn(user_id, owner_message)
+        self.assertIn(guild_id, owner_message)
+        self.assertIn("Store", owner_message)
+        self.assertIn("Every 1 month", owner_message)
+        self.assertIn("<t:1800000000:d>", owner_message)
+        self.assertIn("<t:1802592000:d>", owner_message)
+        self.assertIn(subscription_id, owner_message)
+        self.assertIn("Checkout Session ID", owner_message)
+        subscriber.send.assert_awaited_once()
 
     async def test_serves_homepage_and_legal_get_routes(self):
         health_response = await self.client.get("/")

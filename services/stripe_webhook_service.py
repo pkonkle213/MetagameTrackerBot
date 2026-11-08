@@ -1,8 +1,43 @@
+import asyncio
+
 import stripe
 import discord
 from aiohttp import web
 import settings
 from legal_pages import get_legal_page
+
+
+def _subscription_period(subscription: dict) -> tuple[str, str]:
+  items = subscription.get('items', {}).get('data', [])
+  first_item = items[0] if items else {}
+  price = first_item.get('price', {})
+  recurring = price.get('recurring', {})
+  interval = recurring.get('interval')
+  interval_count = recurring.get('interval_count', 1)
+
+  if interval:
+    interval_name = interval.replace('_', ' ')
+    billing_frequency = (
+      f"Every {interval_count} {interval_name}{'s' if interval_count != 1 else ''}"
+    )
+  else:
+    billing_frequency = 'Recurring subscription'
+
+  period_start = subscription.get('current_period_start')
+  period_end = subscription.get('current_period_end')
+  if period_start is None:
+    period_start = first_item.get('current_period_start')
+  if period_end is None:
+    period_end = first_item.get('current_period_end')
+
+  if period_start is not None and period_end is not None:
+    period = (
+      f"<t:{int(period_start)}:d> – <t:{int(period_end)}:d>"
+    )
+  else:
+    period = 'Current billing dates unavailable'
+
+  return billing_frequency, period
 
 
 async def handle_stripe_webhook(request: web.Request, bot: discord.Client) -> web.Response:
@@ -35,18 +70,58 @@ async def handle_stripe_webhook(request: web.Request, bot: discord.Client) -> we
     discord_guild_id = metadata.get('discord_guild_id')
     discord_user_name = metadata.get('discord_user_name', 'Unknown')
     tier = metadata.get('tier', 'Unknown').title()
+    subscription_id = session.get('subscription')
+    if isinstance(subscription_id, dict):
+      subscription_id = subscription_id.get('id')
+
+    if not subscription_id or not settings.STRIPE_SECRET_KEY:
+      print('Stripe checkout completed without subscription details configuration')
+      return web.Response(status=503, text='Subscription details unavailable')
+
+    try:
+      stripe.api_key = settings.STRIPE_SECRET_KEY
+      subscription = await asyncio.to_thread(
+        stripe.Subscription.retrieve, subscription_id
+      )
+      if hasattr(subscription, 'to_dict_recursive'):
+        subscription = subscription.to_dict_recursive()
+      billing_frequency, billing_period = _subscription_period(subscription)
+    except (stripe.StripeError, TypeError, ValueError) as e:
+      print(f'Unable to retrieve Stripe subscription details: {type(e).__name__}')
+      return web.Response(status=503, text='Unable to retrieve subscription details')
+
+    confirmation = (
+      f"Thank you for subscribing, **{discord_user_name}**!\n\n"
+      f"Here's your confirmation:\n"
+      f"> **Tier:** {tier}\n"
+      f"> **Billing:** {billing_frequency}\n"
+      f"> **Current period:** {billing_period}\n"
+      f"> **Your Discord ID:** `{discord_user_id or 'Unknown'}`\n"
+      f"> **Server ID:** `{discord_guild_id or 'Unknown'}`\n\n"
+      f"If you have any questions, please reach out to the server owner."
+    )
+    owner_message = (
+      "Stripe subscription purchase completed\n"
+      f"> **Discord user:** {discord_user_name} (`{discord_user_id or 'Unknown'}`)\n"
+      f"> **Server ID:** `{discord_guild_id or 'Unknown'}`\n"
+      f"> **Level:** {tier}\n"
+      f"> **Billing:** {billing_frequency}\n"
+      f"> **Current period:** {billing_period}\n"
+      f"> **Subscription ID:** `{subscription_id}`\n"
+      f"> **Checkout Session ID:** `{session.get('id', 'Unknown')}`"
+    )
+
+    try:
+      owner = await bot.fetch_user(settings.PHILID)
+      await owner.send(owner_message)
+    except Exception as e:
+      print(f'Failed to send Stripe purchase notification: {type(e).__name__}')
+      return web.Response(status=503, text='Unable to send purchase notification')
 
     if discord_user_id and discord_user_id.isdigit():
       try:
         user = await bot.fetch_user(int(discord_user_id))
-        await user.send(
-          f"Thank you for subscribing, **{discord_user_name}**!\n\n"
-          f"Here's your confirmation:\n"
-          f"> **Tier:** {tier}\n"
-          f"> **Your Discord ID:** `{discord_user_id}`\n"
-          f"> **Server ID:** `{discord_guild_id}`\n\n"
-          f"If you have any questions, please reach out to the server owner."
-        )
+        await user.send(confirmation)
         print(f'Thank-you DM sent to user {discord_user_id}')
       except Exception as e:
         print(f'Failed to send Stripe confirmation DM: {type(e).__name__}')

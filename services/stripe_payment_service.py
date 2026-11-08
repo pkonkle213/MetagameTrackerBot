@@ -38,6 +38,12 @@ async def create_subscription_session(
         raise RuntimeError("Stripe payments are not configured")
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
+    metadata = {
+        "discord_user_id": str(discord_user_id),
+        "discord_user_name": discord_user_name,
+        "discord_guild_id": str(discord_guild_id or ""),
+        "tier": tier,
+    }
     return await asyncio.to_thread(
         stripe.checkout.Session.create,
         line_items=[
@@ -54,10 +60,6 @@ async def create_subscription_session(
         mode="subscription",
         success_url="https://discord.com/channels/@me",
         cancel_url="https://discord.com/channels/@me",
-        metadata={
-            "discord_user_id": str(discord_user_id),
-            "discord_user_name": discord_user_name,
-            "discord_guild_id": str(discord_guild_id or ""),
-            "tier": tier,
-        },
+        metadata=metadata,
+        subscription_data={"metadata": metadata},
     )
