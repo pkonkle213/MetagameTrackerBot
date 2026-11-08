@@ -1,13 +1,18 @@
 import asyncio
+from datetime import UTC, datetime
+from decimal import Decimal
 
 import stripe
 import discord
 from aiohttp import web
 import settings
+from data.payments_data import RecordStripePayment
 from legal_pages import get_legal_page
 
 
-def _subscription_period(subscription: dict) -> tuple[str, str]:
+def _subscription_period(
+  subscription: dict,
+) -> tuple[str, str, datetime, datetime]:
   items = subscription.get('items', {}).get('data', [])
   first_item = items[0] if items else {}
   price = first_item.get('price', {})
@@ -30,14 +35,16 @@ def _subscription_period(subscription: dict) -> tuple[str, str]:
   if period_end is None:
     period_end = first_item.get('current_period_end')
 
-  if period_start is not None and period_end is not None:
-    period = (
-      f"<t:{int(period_start)}:d> – <t:{int(period_end)}:d>"
-    )
-  else:
-    period = 'Current billing dates unavailable'
+  if period_start is None or period_end is None:
+    raise ValueError('Stripe subscription is missing billing-period dates')
 
-  return billing_frequency, period
+  period_start_date = datetime.fromtimestamp(int(period_start), tz=UTC)
+  period_end_date = datetime.fromtimestamp(int(period_end), tz=UTC)
+  period = (
+    f"<t:{int(period_start)}:d> – <t:{int(period_end)}:d>"
+  )
+
+  return billing_frequency, period, period_start_date, period_end_date
 
 
 async def handle_stripe_webhook(request: web.Request, bot: discord.Client) -> web.Response:
@@ -85,10 +92,50 @@ async def handle_stripe_webhook(request: web.Request, bot: discord.Client) -> we
       )
       if hasattr(subscription, 'to_dict_recursive'):
         subscription = subscription.to_dict_recursive()
-      billing_frequency, billing_period = _subscription_period(subscription)
+      (
+        billing_frequency,
+        billing_period,
+        period_start,
+        period_end,
+      ) = _subscription_period(subscription)
     except (stripe.StripeError, TypeError, ValueError) as e:
       print(f'Unable to retrieve Stripe subscription details: {type(e).__name__}')
       return web.Response(status=503, text='Unable to retrieve subscription details')
+
+    try:
+      raw_amount = session.get('amount_total')
+      amount = Decimal(raw_amount) / Decimal(100) if raw_amount is not None else None
+      event_created = event.get('created')
+      paid_at = (
+        datetime.fromtimestamp(int(event_created), tz=UTC)
+        if event_created is not None
+        else datetime.now(UTC)
+      )
+      user_id = int(discord_user_id) if discord_user_id and discord_user_id.isdigit() else None
+      guild_id = (
+        int(discord_guild_id)
+        if discord_guild_id and discord_guild_id.isdigit()
+        else None
+      )
+      recorded = await RecordStripePayment(
+        stripe_event_id=event.get('id', ''),
+        stripe_checkout_session_id=session.get('id', ''),
+        stripe_subscription_id=subscription_id,
+        discord_id=guild_id,
+        user_id=user_id,
+        paid_at=paid_at,
+        amount=amount,
+        subscription_level=metadata.get('tier', 'Unknown'),
+        billing_interval=billing_frequency,
+        period_start=period_start,
+        period_end=period_end,
+      )
+    except Exception as e:
+      print(f'Failed to record Stripe payment: {type(e).__name__}')
+      return web.Response(status=503, text='Unable to record payment')
+
+    if not recorded:
+      return web.Response(status=200, text='OK')
 
     confirmation = (
       f"Thank you for subscribing, **{discord_user_name}**!\n\n"
@@ -100,23 +147,6 @@ async def handle_stripe_webhook(request: web.Request, bot: discord.Client) -> we
       f"> **Server ID:** `{discord_guild_id or 'Unknown'}`\n\n"
       f"If you have any questions, please reach out to the server owner."
     )
-    owner_message = (
-      "Stripe subscription purchase completed\n"
-      f"> **Discord user:** {discord_user_name} (`{discord_user_id or 'Unknown'}`)\n"
-      f"> **Server ID:** `{discord_guild_id or 'Unknown'}`\n"
-      f"> **Level:** {tier}\n"
-      f"> **Billing:** {billing_frequency}\n"
-      f"> **Current period:** {billing_period}\n"
-      f"> **Subscription ID:** `{subscription_id}`\n"
-      f"> **Checkout Session ID:** `{session.get('id', 'Unknown')}`"
-    )
-
-    try:
-      owner = await bot.fetch_user(settings.PHILID)
-      await owner.send(owner_message)
-    except Exception as e:
-      print(f'Failed to send Stripe purchase notification: {type(e).__name__}')
-      return web.Response(status=503, text='Unable to send purchase notification')
 
     if discord_user_id and discord_user_id.isdigit():
       try:

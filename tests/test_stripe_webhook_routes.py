@@ -87,7 +87,7 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status, 400)
         self.assertEqual(await response.text(), "Invalid signature")
 
-    async def test_completed_subscription_notifies_owner_with_discord_and_period(self):
+    async def test_completed_subscription_records_payment_and_deduplicates_retries(self):
         subscription_id = "sub_test"
         user_id = "12345"
         guild_id = "67890"
@@ -95,6 +95,7 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
             "id": "cs_test",
             "mode": "subscription",
             "payment_status": "paid",
+            "amount_total": 1000,
             "subscription": subscription_id,
             "metadata": {
                 "discord_user_id": user_id,
@@ -108,15 +109,14 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
                 "id": "evt_checkout",
                 "object": "event",
                 "type": "checkout.session.completed",
+                "created": 1_800_000_000,
                 "data": {"object": checkout_session},
             },
             separators=(",", ":"),
         )
-        owner = Mock()
-        owner.send = AsyncMock()
         subscriber = Mock()
         subscriber.send = AsyncMock()
-        self.bot.fetch_user = AsyncMock(side_effect=[owner, subscriber])
+        self.bot.fetch_user = AsyncMock(return_value=subscriber)
         subscription = {
             "id": subscription_id,
             "current_period_start": 1_800_000_000,
@@ -148,23 +148,39 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
                 "retrieve",
                 return_value=subscription,
             ),
+            patch.object(
+                stripe_webhook_service,
+                "RecordStripePayment",
+                new_callable=AsyncMock,
+                side_effect=[True, False],
+            ) as record_payment,
         ):
             response = await self.client.post(
                 "/stripe/webhook",
                 data=event_payload,
                 headers={"Stripe-Signature": self.make_signature(event_payload)},
             )
+            retry_response = await self.client.post(
+                "/stripe/webhook",
+                data=event_payload,
+                headers={"Stripe-Signature": self.make_signature(event_payload)},
+            )
 
         self.assertEqual(response.status, 200)
-        owner_message = owner.send.await_args.args[0]
-        self.assertIn(user_id, owner_message)
-        self.assertIn(guild_id, owner_message)
-        self.assertIn("Store", owner_message)
-        self.assertIn("Every 1 month", owner_message)
-        self.assertIn("<t:1800000000:d>", owner_message)
-        self.assertIn("<t:1802592000:d>", owner_message)
-        self.assertIn(subscription_id, owner_message)
-        self.assertIn("Checkout Session ID", owner_message)
+        self.assertEqual(retry_response.status, 200)
+        self.assertEqual(record_payment.await_count, 2)
+        payment_fields = record_payment.await_args.kwargs
+        self.assertEqual(payment_fields["stripe_event_id"], "evt_checkout")
+        self.assertEqual(payment_fields["stripe_checkout_session_id"], "cs_test")
+        self.assertEqual(payment_fields["stripe_subscription_id"], subscription_id)
+        self.assertEqual(payment_fields["user_id"], int(user_id))
+        self.assertEqual(payment_fields["discord_id"], int(guild_id))
+        self.assertEqual(payment_fields["subscription_level"], "store")
+        self.assertEqual(payment_fields["billing_interval"], "Every 1 month")
+        self.assertEqual(payment_fields["period_start"].timestamp(), 1_800_000_000)
+        self.assertEqual(payment_fields["period_end"].timestamp(), 1_802_592_000)
+        self.assertEqual(str(payment_fields["amount"]), "10")
+        self.bot.fetch_user.assert_awaited_once_with(int(user_id))
         subscriber.send.assert_awaited_once()
 
     async def test_serves_homepage_and_legal_get_routes(self):
