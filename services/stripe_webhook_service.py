@@ -67,7 +67,10 @@ async def handle_stripe_webhook(request: web.Request, bot: discord.Client) -> we
     print('Unable to validate Stripe webhook')
     return web.Response(status=400, text='Invalid webhook')
 
-  if event.get('type') == 'checkout.session.completed':
+  if event.get('type') in {
+    'checkout.session.completed',
+    'checkout.session.async_payment_succeeded',
+  }:
     session = event.get('data', {}).get('object', {})
     if session.get('mode') != 'subscription' or session.get('payment_status') != 'paid':
       return web.Response(status=200, text='OK')

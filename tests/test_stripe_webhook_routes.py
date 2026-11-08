@@ -183,6 +183,83 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
         self.bot.fetch_user.assert_awaited_once_with(int(user_id))
         subscriber.send.assert_awaited_once()
 
+    async def test_delayed_checkout_payment_success_is_recorded(self):
+        session = {
+            "id": "cs_async",
+            "mode": "subscription",
+            "payment_status": "paid",
+            "amount_total": 500,
+            "subscription": "sub_async",
+            "metadata": {
+                "discord_user_id": "12345",
+                "discord_guild_id": "67890",
+                "discord_user_name": "test-user",
+                "tier": "player",
+            },
+        }
+        event_payload = json.dumps(
+            {
+                "id": "evt_async",
+                "object": "event",
+                "type": "checkout.session.async_payment_succeeded",
+                "created": 1_800_000_000,
+                "data": {"object": session},
+            },
+            separators=(",", ":"),
+        )
+        subscription = {
+            "current_period_start": 1_800_000_000,
+            "current_period_end": 1_802_592_000,
+            "items": {
+                "data": [
+                    {
+                        "price": {
+                            "recurring": {"interval": "month", "interval_count": 1}
+                        }
+                    }
+                ]
+            },
+        }
+        subscriber = Mock()
+        subscriber.send = AsyncMock()
+        self.bot.fetch_user = AsyncMock(return_value=subscriber)
+
+        with (
+            patch.object(
+                stripe_webhook_service.settings,
+                "STRIPE_WEBHOOK_SECRET",
+                self.signing_secret,
+            ),
+            patch.object(
+                stripe_webhook_service.settings,
+                "STRIPE_SECRET_KEY",
+                "sk_test_placeholder",
+            ),
+            patch.object(
+                stripe_webhook_service.stripe.Subscription,
+                "retrieve",
+                return_value=subscription,
+            ),
+            patch.object(
+                stripe_webhook_service,
+                "RecordStripePayment",
+                new_callable=AsyncMock,
+                return_value=True,
+            ) as record_payment,
+        ):
+            response = await self.client.post(
+                "/stripe/webhook",
+                data=event_payload,
+                headers={"Stripe-Signature": self.make_signature(event_payload)},
+            )
+
+        self.assertEqual(response.status, 200)
+        self.assertEqual(
+            record_payment.await_args.kwargs["stripe_event_id"], "evt_async"
+        )
+        self.assertEqual(record_payment.await_args.kwargs["amount"], 5)
+        subscriber.send.assert_awaited_once()
+
     async def test_serves_homepage_and_legal_get_routes(self):
         health_response = await self.client.get("/")
         privacy_response = await self.client.get("/privacy")
