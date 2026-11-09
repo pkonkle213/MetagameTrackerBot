@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 
 from psycopg import AsyncConnection
@@ -6,57 +6,53 @@ from psycopg import AsyncConnection
 from settings import DATABASE_URL
 
 
-async def RecordStripePayment(
+async def RecordPayment(
     *,
-    stripe_event_id: str,
-    stripe_checkout_session_id: str,
-    stripe_subscription_id: str,
     discord_id: int | None,
     user_id: int | None,
-    paid_at: datetime,
+    payment_date: datetime | None,
     amount: Decimal | None,
-    subscription_level: str,
-    billing_interval: str,
-    period_start: datetime,
-    period_end: datetime,
+    checkout_session_id: str,
+    subscription_id: str | None,
+    subscription_level: str | None,
+    billing_interval: str | None,
+    stripe_event_id: str,
 ) -> bool:
-    """Record a completed Stripe subscription payment once per webhook event."""
-    payment_date = paid_at.astimezone(UTC).replace(tzinfo=None)
-    async with await AsyncConnection.connect(DATABASE_URL) as conn:
-        async with conn.cursor() as cur:
-            await cur.execute(
-                """
-                INSERT INTO payments (
-                    discord_id,
-                    date,
-                    amount,
-                    user_id,
-                    stripe_event_id,
-                    stripe_checkout_session_id,
-                    stripe_subscription_id,
-                    subscription_level,
-                    billing_interval,
-                    period_start,
-                    period_end
-                )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (stripe_event_id) DO NOTHING
-                RETURNING id
-                """,
-                (
-                    discord_id,
-                    payment_date,
-                    amount,
-                    user_id,
-                    stripe_event_id,
-                    stripe_checkout_session_id,
-                    stripe_subscription_id,
-                    subscription_level,
-                    billing_interval,
-                    period_start,
-                    period_end,
-                ),
+    """Record a paid checkout using the public.payments schema.
+
+    Return False when the Stripe event was already saved.
+    """
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor() as cur,
+    ):
+        await cur.execute(
+            """
+            INSERT INTO public.payments (
+                discord_id,
+                user_id,
+                "date",
+                amount,
+                stripe_checkout_session_id,
+                stripe_subscription_id,
+                stripe_event_id,
+                subscription_level,
+                billing_interval
             )
-            inserted = await cur.fetchone()
-        await conn.commit()
-    return inserted is not None
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (stripe_event_id) DO NOTHING
+            RETURNING stripe_event_id
+            """,
+            (
+                discord_id,
+                user_id,
+                payment_date,
+                amount,
+                checkout_session_id,
+                subscription_id,
+                stripe_event_id,
+                subscription_level,
+                billing_interval,
+            ),
+        )
+        return await cur.fetchone() is not None

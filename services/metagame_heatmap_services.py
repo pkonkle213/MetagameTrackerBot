@@ -341,5 +341,6 @@ async def SendMetagameHeatmap(
 ) -> None:
     image_bytes = BuildMetagameHeatmapImage(title, rows)
     await interaction.followup.send(
-        file=File(BytesIO(image_bytes), filename="metagame_heatmap.png")
+        file=File(BytesIO(image_bytes), filename="metagame_heatmap.png"),
+        ephemeral=False,
     )

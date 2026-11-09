@@ -24,7 +24,7 @@ async def SubmittedArchetypesReport(
         "Submitted By",
         "Submitted By ID",
     ]
-    if format is None:
+    if objects.format is None:
         headers.insert(1, "Format")
     title = "Archetypes Submitted"
     if date_used is not None:

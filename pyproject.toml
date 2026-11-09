@@ -25,4 +25,5 @@ dependencies = [
     "requests==2.34.2",
     "urllib3>=2.8.0",
     "stripe>=16.0.0",
+    "pytest>=9.2.0",
 ]

@@ -2,6 +2,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
+import aiohttp
 from api_calls import melee_tournaments
 from custom_errors import KnownError
 from tuple_conversions import Store
@@ -12,12 +13,20 @@ STORE = Store(1234, "Example Store", "Example Store", 1, "Owner", "", True, 1, T
 
 class MeleeTournamentApiTests(unittest.IsolatedAsyncioTestCase):
     async def test_event_details_uses_tournament_endpoint_and_store_credentials(self):
-        response = Mock(status_code=200)
-        response.json.return_value = {
+        response = Mock(status=200)
+        response.json = AsyncMock(return_value={
             "Name": "Weekly Event",
             "LastPairDateTime": "2026-10-19T02:30:00Z",
             "ID": 321,
-        }
+        })
+        request_context = Mock()
+        request_context.__aenter__ = AsyncMock(return_value=response)
+        request_context.__aexit__ = AsyncMock(return_value=None)
+        session = Mock()
+        session.get = Mock(return_value=request_context)
+        session_context = Mock()
+        session_context.__aenter__ = AsyncMock(return_value=session)
+        session_context.__aexit__ = AsyncMock(return_value=None)
 
         with (
             patch.object(
@@ -29,13 +38,17 @@ class MeleeTournamentApiTests(unittest.IsolatedAsyncioTestCase):
                     melee_client_secret="client-secret",
                 ),
             ),
-            patch.object(melee_tournaments.requests, "get", return_value=response) as get,
+            patch.object(
+                melee_tournaments.aiohttp,
+                "ClientSession",
+                return_value=session_context,
+            ),
         ):
             details = await melee_tournaments.GetMeleeTournamentDetails("321", STORE)
 
-        get.assert_called_once_with(
+        session.get.assert_called_once_with(
             "https://melee.gg/api/tournament/321",
-            auth=("client-id", "client-secret"),
+            auth=aiohttp.BasicAuth("client-id", "client-secret"),
         )
         self.assertEqual(details["Name"], "Weekly Event")
 

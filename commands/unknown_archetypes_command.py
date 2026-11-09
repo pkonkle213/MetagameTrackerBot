@@ -32,7 +32,7 @@ class UnknownArchetypes(commands.Cog):
             End of Date Range (MM/DD/YYYY)
         """
 
-        await interaction.response.defer(thinking=False)
+        await interaction.response.defer(ephemeral=True, thinking=False)
         objects = interaction.extras.get("db_object")
         guild = interaction.guild
         user = interaction.user

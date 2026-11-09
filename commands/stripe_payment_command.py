@@ -10,12 +10,23 @@ from services.stripe_payment_service import (
 )
 
 
+PLAYER_BILLING_INTERVAL_CHOICES = [
+    app_commands.Choice(name="Monthly ($5/month)", value="monthly"),
+    app_commands.Choice(name="Yearly ($50/year)", value="yearly"),
+]
+
+STORE_BILLING_INTERVAL_CHOICES = [
+    app_commands.Choice(name="Monthly ($10/month)", value="monthly"),
+    app_commands.Choice(name="Yearly ($100/year)", value="yearly"),
+]
+
+
 async def send_subscription_link(
-    interaction: Interaction, tier: str, billing_period: str
+    interaction: Interaction, tier: str, billing_interval: str
 ) -> None:
-    config = PAYMENT_TIERS.get(tier, {}).get(billing_period)
+    config = PAYMENT_TIERS.get(tier, {}).get(billing_interval)
     if config is None:
-        raise ValueError("Unknown subscription tier or billing period")
+        raise ValueError("Unknown subscription tier or billing interval")
 
     if not settings.STRIPE_SECRET_KEY:
         await interaction.response.send_message(
@@ -27,7 +38,7 @@ async def send_subscription_link(
     await interaction.response.defer(ephemeral=True)
     session = await create_subscription_session(
         tier=tier,
-        billing_period=billing_period,
+        billing_interval=billing_interval,
         discord_user_id=interaction.user.id,
         discord_user_name=interaction.user.name,
         discord_guild_id=interaction.guild_id,
@@ -58,42 +69,36 @@ class StripePaymentCommands(commands.GroupCog, name="pay"):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="player", description="Subscribe as a Player")
-    @app_commands.guild_only()
-    @app_commands.choices(
-        billing_period=[
-            app_commands.Choice(name="Monthly — $5", value="monthly"),
-            app_commands.Choice(name="Yearly — $50", value="yearly"),
-        ]
+    @app_commands.command(
+        name="player",
+        description="Subscribe as a Player with monthly or yearly billing",
     )
+    @app_commands.choices(billing_interval=PLAYER_BILLING_INTERVAL_CHOICES)
+    @app_commands.guild_only()
     async def PlayerPayCommand(
         self,
         interaction: Interaction,
-        billing_period: app_commands.Choice[str],
+        billing_interval: app_commands.Choice[str],
     ):
-        await send_subscription_link(interaction, "player", billing_period.value)
+        await send_subscription_link(interaction, "player", billing_interval.value)
 
-    @app_commands.command(name="store", description="Subscribe as a Store")
-    @app_commands.guild_only()
-    @app_commands.choices(
-        billing_period=[
-            app_commands.Choice(name="Monthly — $10", value="monthly"),
-            app_commands.Choice(name="Yearly — $100", value="yearly"),
-        ]
+    @app_commands.command(
+        name="store",
+        description="Subscribe as a Store with monthly or yearly billing",
     )
+    @app_commands.choices(billing_interval=STORE_BILLING_INTERVAL_CHOICES)
+    @app_commands.guild_only()
     async def StorePayCommand(
         self,
         interaction: Interaction,
-        billing_period: app_commands.Choice[str],
+        billing_interval: app_commands.Choice[str],
     ):
-        await send_subscription_link(interaction, "store", billing_period.value)
+        await send_subscription_link(interaction, "store", billing_interval.value)
 
     @PlayerPayCommand.error
     @StorePayCommand.error
     async def Errors(
-        self,
-        interaction: discord.Interaction,
-        error: app_commands.AppCommandError,
+        self, interaction: discord.Interaction, error: app_commands.AppCommandError
     ):
         await Error(self.bot, interaction, error)
 

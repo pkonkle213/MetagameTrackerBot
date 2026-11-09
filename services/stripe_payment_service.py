@@ -40,25 +40,18 @@ PAYMENT_TIERS = {
 async def create_subscription_session(
     *,
     tier: str,
-    billing_period: str,
+    billing_interval: str,
     discord_user_id: int,
     discord_user_name: str,
     discord_guild_id: int | None,
 ):
-    config = PAYMENT_TIERS.get(tier, {}).get(billing_period)
+    config = PAYMENT_TIERS.get(tier, {}).get(billing_interval)
     if config is None:
-        raise ValueError("Unknown subscription tier or billing period")
+        raise ValueError("Unknown subscription tier or billing interval")
     if not settings.STRIPE_SECRET_KEY:
         raise RuntimeError("Stripe payments are not configured")
 
     stripe.api_key = settings.STRIPE_SECRET_KEY
-    metadata = {
-        "discord_user_id": str(discord_user_id),
-        "discord_user_name": discord_user_name,
-        "discord_guild_id": str(discord_guild_id or ""),
-        "tier": tier,
-        "billing_period": billing_period,
-    }
     return await asyncio.to_thread(
         stripe.checkout.Session.create,
         line_items=[
@@ -75,6 +68,11 @@ async def create_subscription_session(
         mode="subscription",
         success_url="https://discord.com/channels/@me",
         cancel_url="https://discord.com/channels/@me",
-        metadata=metadata,
-        subscription_data={"metadata": metadata},
+        metadata={
+            "discord_user_id": str(discord_user_id),
+            "discord_user_name": discord_user_name,
+            "discord_guild_id": str(discord_guild_id or ""),
+            "tier": tier,
+            "billing_interval": config["interval"],
+        },
     )

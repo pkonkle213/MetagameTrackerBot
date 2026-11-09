@@ -6,6 +6,21 @@ from data.commands_data import GetHereCommands, GetUserCommands
 import timedposts.automated_paid_users as apu
 
 
+def _BuildCommandDescriptionMessages(
+    commands: list[tuple], descriptions: dict[str, str]
+) -> list[str]:
+    """Format command descriptions into Discord-sized messages without dropping text."""
+    title = "Commands for you in this channel"
+    max_body_length = 2000 - len(title) - 2
+    body = "\n\n".join(
+        f"{command[0]}\n{descriptions.get(command[0], '')}" for command in commands
+    )
+    return [
+        f"{title}\n\n{body[index:index + max_body_length]}"
+        for index in range(0, len(body), max_body_length)
+    ] or [title]
+
+
 async def GetCommandsHere(
     objects: InteractionObjects, guild: Guild, user: Member
 ) -> list[str]:
@@ -62,7 +77,5 @@ async def GetCommandsUser(
         store_is_paid,
         hub_is_paid,
     )
-    output = BuildTableOutput(
-        "Commands for you in this channel", ["Name", "Description"], commands
-    )
-    return output
+    descriptions = {command[0]: command[1] for command in commands}
+    return _BuildCommandDescriptionMessages(commands, descriptions)

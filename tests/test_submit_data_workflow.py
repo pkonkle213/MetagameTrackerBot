@@ -3,7 +3,7 @@ from datetime import date
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
-from commands.submit_commands import SubmitDataChecker
+from commands.submit_commands import SubmitDataAndArchetypes as SubmitDataChecker
 from custom_errors import KnownError
 from services import convert_and_save_input as convert_input
 from services import submit_data_workflow as workflow
