@@ -143,7 +143,9 @@ class SubmissionModalErrorTests(unittest.IsolatedAsyncioTestCase):
         modal = submit_melee_modal.SubmitMeleeDataModal(
             STORE, make_event(), "/upload/input.json"
         )
-        modal.melee_data = SimpleNamespace(value="tournament")
+        modal.melee_data = SimpleNamespace(
+            component=SimpleNamespace(value="tournament")
+        )
         interaction = make_interaction()
 
         with patch.object(

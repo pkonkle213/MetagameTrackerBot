@@ -8,9 +8,6 @@ from settings import DATABASE_URL
 
 async def RecordPayment(
     *,
-    stripe_event_id: str,
-    stripe_checkout_session_id: str,
-    stripe_subscription_id: str,
     discord_id: int | None,
     user_id: int | None,
     payment_date: datetime | None,
@@ -29,39 +26,33 @@ async def RecordPayment(
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor() as cur,
     ):
-            await cur.execute(
-                """
+        await cur.execute(
+            """
             INSERT INTO public.payments (
-                    discord_id,
+                discord_id,
                 user_id,
                 "date",
-                    amount,
-                    user_id,
-                    stripe_event_id,
-                    stripe_checkout_session_id,
-                    stripe_subscription_id,
+                amount,
+                stripe_checkout_session_id,
+                stripe_subscription_id,
                 stripe_event_id,
-                    subscription_level,
+                subscription_level,
                 billing_interval
-                )
+            )
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (stripe_event_id) DO NOTHING
+            ON CONFLICT (stripe_event_id) DO NOTHING
             RETURNING stripe_event_id
-                """,
-                (
-                    discord_id,
+            """,
+            (
+                discord_id,
                 user_id,
-                    payment_date,
-                    amount,
+                payment_date,
+                amount,
                 checkout_session_id,
                 subscription_id,
-                    stripe_event_id,
-                    stripe_checkout_session_id,
-                    stripe_subscription_id,
-                    subscription_level,
-                    billing_interval,
-                    period_start,
-                    period_end,
-                ),
-            )
+                stripe_event_id,
+                subscription_level,
+                billing_interval,
+            ),
+        )
         return await cur.fetchone() is not None

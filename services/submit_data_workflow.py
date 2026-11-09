@@ -223,7 +223,9 @@ async def SubmitEventDataWorkflow(
             )
             break
 
-        event = await SaveDataSubmission(event, data, submitter_id)
+        saved_event = await SaveDataSubmission(event, data, submitter_id)
+        if isinstance(saved_event, Event):
+            event = saved_event
 
         if confirm_response in (
             ViewButtonEnum.DoneComplete.value,

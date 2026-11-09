@@ -165,35 +165,14 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
             "data": {
                 "object": {
                     "id": "cs_test_duplicate",
-            "mode": "subscription",
-            "payment_status": "paid",
+                    "mode": "subscription",
+                    "payment_status": "paid",
                     "amount_total": 500,
                     "subscription": "sub_duplicate",
                     "metadata": {"discord_user_id": "123456"},
-        }
-        event_payload = json.dumps(
-            {
-                "id": "evt_checkout",
-                "object": "event",
-                "type": "checkout.session.completed",
-                "created": 1_800_000_000,
-                "data": {"object": checkout_session},
+                }
             },
-            separators=(",", ":"),
-        )
-        subscriber = Mock()
-        subscriber.send = AsyncMock()
-        self.bot.fetch_user = AsyncMock(return_value=subscriber)
-        subscription = {
-            "id": subscription_id,
-            "current_period_start": 1_800_000_000,
-            "current_period_end": 1_802_592_000,
-            "items": {
-                "data": [
-                    {
-                        "price": {
-                            "recurring": {"interval": "month", "interval_count": 1}
-                        }
+        }
         self.bot.fetch_user = AsyncMock()
 
         with (
@@ -231,15 +210,11 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
             "data": {
                 "object": {
                     "id": "cs_test_unpaid",
-            "mode": "subscription",
+                    "mode": "subscription",
                     "payment_status": "unpaid",
-                    }
-                ]
+                }
             },
         }
-        subscriber = Mock()
-        subscriber.send = AsyncMock()
-        self.bot.fetch_user = AsyncMock(return_value=subscriber)
 
         with (
             patch.object(
@@ -278,7 +253,7 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
                 "/stripe/webhook",
                 data=self.event_payload,
                 headers={"Stripe-Signature": "t=1,v1=invalid"},
-        )
+            )
 
         self.assertEqual(response.status, 400)
         self.assertEqual(await response.text(), "Invalid signature")
