@@ -6,6 +6,7 @@ import time
 import unittest
 from datetime import datetime, timezone
 from decimal import Decimal
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import TestClient, TestServer
@@ -98,6 +99,12 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
         }
         self.bot.fetch_user = AsyncMock()
         self.bot.fetch_user.return_value.send = AsyncMock()
+        confirmation_channel = Mock()
+        confirmation_channel.guild = SimpleNamespace(
+            id=stripe_webhook_service.settings.PAYMENT_CONFIRMATION_GUILD_ID
+        )
+        confirmation_channel.send = AsyncMock()
+        self.bot.get_channel.return_value = confirmation_channel
 
         with (
             patch.object(
@@ -137,6 +144,19 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
         )
         self.bot.fetch_user.assert_awaited_once_with(123456)
         self.bot.fetch_user.return_value.send.assert_awaited_once()
+        user_confirmation = self.bot.fetch_user.return_value.send.await_args.args[0]
+        self.assertIn(
+            "please reach out to metagametrackerbot@gmail.com",
+            user_confirmation,
+        )
+        self.bot.get_channel.assert_called_once_with(
+            stripe_webhook_service.settings.PAYMENT_CONFIRMATION_CHANNEL_ID
+        )
+        confirmation_channel.send.assert_awaited_once()
+        channel_confirmation = confirmation_channel.send.await_args.args[0]
+        self.assertIn("$10.00 USD", channel_confirmation)
+        self.assertIn("Store", channel_confirmation)
+        self.assertIn("cs_test_checkout", channel_confirmation)
 
     async def test_duplicate_checkout_event_is_not_notified_again(self):
         event = {

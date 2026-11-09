@@ -9,6 +9,17 @@ from services.stripe_payment_service import (
 import settings
 
 
+PLAYER_BILLING_INTERVAL_CHOICES = [
+  app_commands.Choice(name='Monthly ($5/month)', value='monthly'),
+  app_commands.Choice(name='Yearly ($50/year)', value='yearly'),
+]
+
+STORE_BILLING_INTERVAL_CHOICES = [
+  app_commands.Choice(name='Monthly ($10/month)', value='monthly'),
+  app_commands.Choice(name='Yearly ($100/year)', value='yearly'),
+]
+
+
 async def send_subscription_link(
   interaction: Interaction, tier: str, billing_interval: str
 ) -> None:
@@ -54,14 +65,9 @@ class StripePaymentCommands(commands.GroupCog, name='pay'):
   def __init__(self, bot):
     self.bot = bot
 
-  BILLING_INTERVAL_CHOICES = [
-    app_commands.Choice(name='Monthly', value='monthly'),
-    app_commands.Choice(name='Yearly', value='yearly'),
-  ]
-
   @app_commands.command(name='player',
                         description='Subscribe as a Player with monthly or yearly billing')
-  @app_commands.choices(billing_interval=BILLING_INTERVAL_CHOICES)
+  @app_commands.choices(billing_interval=PLAYER_BILLING_INTERVAL_CHOICES)
   @app_commands.guild_only()
   async def PlayerPayCommand(
     self,
@@ -72,7 +78,7 @@ class StripePaymentCommands(commands.GroupCog, name='pay'):
 
   @app_commands.command(name='store',
                         description='Subscribe as a Store with monthly or yearly billing')
-  @app_commands.choices(billing_interval=BILLING_INTERVAL_CHOICES)
+  @app_commands.choices(billing_interval=STORE_BILLING_INTERVAL_CHOICES)
   @app_commands.guild_only()
   async def StorePayCommand(
     self,
