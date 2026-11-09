@@ -131,7 +131,7 @@ class MetagameHeatmapImageTests(unittest.TestCase):
 
 
 class MetagameHeatmapDeliveryTests(unittest.IsolatedAsyncioTestCase):
-    async def test_sends_the_chart_attachment_ephemerally(self):
+    async def test_sends_the_chart_attachment_publicly(self):
         interaction = Mock()
         interaction.followup.send = AsyncMock()
 
@@ -144,7 +144,7 @@ class MetagameHeatmapDeliveryTests(unittest.IsolatedAsyncioTestCase):
 
         interaction.followup.send.assert_awaited_once()
         call = interaction.followup.send.await_args
-        self.assertTrue(call.kwargs["ephemeral"])
+        self.assertFalse(call.kwargs["ephemeral"])
         self.assertEqual(call.kwargs["file"].filename, "metagame_heatmap.png")
 
 
