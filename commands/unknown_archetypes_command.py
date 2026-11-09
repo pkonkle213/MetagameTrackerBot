@@ -1,7 +1,8 @@
+from tuple_conversions import MTBRoles
 from discord import Interaction, app_commands
 from discord.ext import commands
 
-from checks import IsStore
+from checks import IsStore, HasRequiredRoles
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from services.unknown_archetypes_services import GetAllUnknown
@@ -17,6 +18,7 @@ class UnknownArchetypes(commands.Cog):
     )
     @app_commands.guild_only()
     @IsStore()
+    @HasRequiredRoles([MTBRoles.MTSubmitter.name])
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def IntoTheUnknown(
         self, interaction: Interaction, start_date: str = "", end_date: str = ""
@@ -30,7 +32,7 @@ class UnknownArchetypes(commands.Cog):
             End of Date Range (MM/DD/YYYY)
         """
 
-        await interaction.response.defer(thinking=False)
+        await interaction.response.defer(ephemeral=True, thinking=False)
         objects = interaction.extras.get("db_object")
         guild = interaction.guild
         user = interaction.user
