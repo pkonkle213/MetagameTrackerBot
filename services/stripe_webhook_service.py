@@ -2,7 +2,25 @@ import stripe
 import discord
 from aiohttp import web
 import settings
+from data import payments_data
 from legal_pages import get_legal_page
+
+
+def _optional_discord_id(value: object) -> int | None:
+  if isinstance(value, int):
+    return value
+  if isinstance(value, str) and value.isdigit():
+    return int(value)
+  return None
+
+
+def _stripe_object_id(value: object) -> str | None:
+  if isinstance(value, str):
+    return value
+  if isinstance(value, dict):
+    object_id = value.get('id')
+    return object_id if isinstance(object_id, str) else None
+  return None
 
 
 async def handle_stripe_webhook(request: web.Request, bot: discord.Client) -> web.Response:
@@ -36,7 +54,21 @@ async def handle_stripe_webhook(request: web.Request, bot: discord.Client) -> we
     discord_user_name = metadata.get('discord_user_name', 'Unknown')
     tier = metadata.get('tier', 'Unknown').title()
 
-    if discord_user_id and discord_user_id.isdigit():
+    event_id = event.get('id')
+    session_id = session.get('id')
+    if not isinstance(event_id, str) or not isinstance(session_id, str):
+      return web.Response(status=400, text='Invalid checkout event')
+
+    inserted = await payments_data.RecordPayment(
+      discord_id=_optional_discord_id(discord_guild_id),
+      user_id=_optional_discord_id(discord_user_id),
+      amount=session.get('amount_total'),
+      checkout_session_id=session_id,
+      subscription_id=_stripe_object_id(session.get('subscription')),
+      stripe_event_id=event_id,
+    )
+
+    if inserted and isinstance(discord_user_id, str) and discord_user_id.isdigit():
       try:
         user = await bot.fetch_user(int(discord_user_id))
         await user.send(
