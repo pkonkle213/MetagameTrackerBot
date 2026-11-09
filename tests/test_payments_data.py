@@ -1,4 +1,6 @@
 import unittest
+from datetime import datetime
+from decimal import Decimal
 from unittest.mock import AsyncMock, patch
 
 from data import payments_data
@@ -52,17 +54,32 @@ class PaymentsDataTests(unittest.IsolatedAsyncioTestCase):
             inserted = await payments_data.RecordPayment(
                 discord_id=456,
                 user_id=123,
-                amount=1000,
+                payment_date=datetime(2026, 11, 9, 22, 1),
+                amount=Decimal("10.00"),
                 checkout_session_id="cs_123",
                 subscription_id="sub_123",
+                subscription_level="store",
+                billing_interval="month",
                 stripe_event_id="evt_123",
             )
 
         self.assertTrue(inserted)
         self.assertIn("ON CONFLICT (stripe_event_id) DO NOTHING", cursor.command)
+        self.assertIn("stripe_checkout_session_id", cursor.command)
+        self.assertIn("stripe_subscription_id", cursor.command)
         self.assertEqual(
             cursor.parameters,
-            (456, 123, 1000, "cs_123", "sub_123", "evt_123"),
+            (
+                456,
+                123,
+                datetime(2026, 11, 9, 22, 1),
+                Decimal("10.00"),
+                "cs_123",
+                "sub_123",
+                "evt_123",
+                "store",
+                "month",
+            ),
         )
 
     async def test_duplicate_event_returns_false(self):
@@ -78,9 +95,12 @@ class PaymentsDataTests(unittest.IsolatedAsyncioTestCase):
             inserted = await payments_data.RecordPayment(
                 discord_id=456,
                 user_id=123,
-                amount=1000,
+                payment_date=None,
+                amount=Decimal("10.00"),
                 checkout_session_id="cs_123",
                 subscription_id="sub_123",
+                subscription_level="store",
+                billing_interval="month",
                 stripe_event_id="evt_123",
             )
 

@@ -1,3 +1,6 @@
+from datetime import datetime, timezone
+from decimal import Decimal
+
 import stripe
 import discord
 from aiohttp import web
@@ -20,6 +23,18 @@ def _stripe_object_id(value: object) -> str | None:
   if isinstance(value, dict):
     object_id = value.get('id')
     return object_id if isinstance(object_id, str) else None
+  return None
+
+
+def _usd_amount_from_minor_units(value: object) -> Decimal | None:
+  if isinstance(value, int) and not isinstance(value, bool):
+    return Decimal(value) / Decimal(100)
+  return None
+
+
+def _stripe_event_datetime(value: object) -> datetime | None:
+  if isinstance(value, (int, float)) and not isinstance(value, bool):
+    return datetime.fromtimestamp(value, tz=timezone.utc).replace(tzinfo=None)
   return None
 
 
@@ -62,9 +77,12 @@ async def handle_stripe_webhook(request: web.Request, bot: discord.Client) -> we
     inserted = await payments_data.RecordPayment(
       discord_id=_optional_discord_id(discord_guild_id),
       user_id=_optional_discord_id(discord_user_id),
-      amount=session.get('amount_total'),
+      payment_date=_stripe_event_datetime(event.get('created')),
+      amount=_usd_amount_from_minor_units(session.get('amount_total')),
       checkout_session_id=session_id,
       subscription_id=_stripe_object_id(session.get('subscription')),
+      subscription_level=metadata.get('tier'),
+      billing_interval=metadata.get('billing_interval'),
       stripe_event_id=event_id,
     )
 

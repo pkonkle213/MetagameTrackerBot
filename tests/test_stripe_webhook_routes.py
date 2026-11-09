@@ -4,6 +4,8 @@ import json
 import os
 import time
 import unittest
+from datetime import datetime, timezone
+from decimal import Decimal
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import TestClient, TestServer
@@ -75,6 +77,7 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
     async def test_persists_paid_subscription_checkout_details(self):
         event = {
             "id": "evt_checkout",
+            "created": int(datetime(2026, 11, 9, 22, 1, tzinfo=timezone.utc).timestamp()),
             "type": "checkout.session.completed",
             "data": {
                 "object": {
@@ -88,6 +91,7 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
                         "discord_guild_id": "654321",
                         "discord_user_name": "Test User",
                         "tier": "store",
+                        "billing_interval": "month",
                     },
                 }
             },
@@ -123,9 +127,12 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
         record_payment.assert_awaited_once_with(
             discord_id=654321,
             user_id=123456,
-            amount=1000,
+            payment_date=datetime(2026, 11, 9, 22, 1),
+            amount=Decimal("10.00"),
             checkout_session_id="cs_test_checkout",
             subscription_id="sub_test",
+            subscription_level="store",
+            billing_interval="month",
             stripe_event_id="evt_checkout",
         )
         self.bot.fetch_user.assert_awaited_once_with(123456)
