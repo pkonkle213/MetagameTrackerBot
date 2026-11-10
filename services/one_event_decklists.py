@@ -40,6 +40,11 @@ async def OneEventDecklists(interaction: Interaction, event: Event) -> None:
             f"Mainboard\n---------\n{mainboard}\n\nSideboard\n---------\n{sideboard}"
         )
         embed = Embed(title=title, description=description)
+        embed.add_field(
+            name="Deck link",
+            value=deck.link.strip() if deck.link and deck.link.strip() else "No link",
+            inline=False,
+        )
 
         # 6) Assign to a list of embeds, initialize view, and send
         decklist_output.append(embed)
