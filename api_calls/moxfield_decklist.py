@@ -1,8 +1,25 @@
 from custom_errors import KnownError
 import re
 import requests
+from urllib.parse import urlparse
 from data.add_decklist_data import AddDeck, AddCards, SelectArchetype
 from tuple_conversions import Format, Card, Event
+
+
+def GetMoxfieldDeckId(url: str) -> str:
+  parsed_url = urlparse(url.strip())
+  if parsed_url.hostname not in {"moxfield.com", "www.moxfield.com"}:
+    raise KnownError("Invalid Moxfield URL")
+
+  path_parts = [part for part in parsed_url.path.split("/") if part]
+  if len(path_parts) != 2 or path_parts[0] != "decks":
+    raise KnownError("Invalid Moxfield URL")
+
+  deck_id = path_parts[1]
+  if not re.fullmatch(r"[a-zA-Z0-9_-]+", deck_id):
+    raise KnownError("Invalid Moxfield URL")
+  return deck_id
+
 
 async def GetMoxfieldArchetype(
   url:str,
@@ -10,16 +27,9 @@ async def GetMoxfieldArchetype(
   format:Format,
   player_name:str
 ) -> str:
-  # Transform into a moxfield deck id
-  slash = url.rfind('/')  
-  mox_id = url[slash+1:]
-  
-  match = re.search(r"([a-zA-Z0-9_-]+)", mox_id)
-  if not match:
-    raise ValueError("Invalid Moxfield URL")
-
-  deck_id = match.group(1)
+  deck_id = GetMoxfieldDeckId(url)
   api_url = f"https://api2.moxfield.com/v2/decks/all/{deck_id}"
+  canonical_url = f"https://moxfield.com/decks/{deck_id}"
   
   headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -37,7 +47,7 @@ async def GetMoxfieldArchetype(
   
   # Save the decklist in the db
   # 1) Make a new deck
-  deck_id = await AddDeck(player_name, event.id)
+  deck_id = await AddDeck(player_name, event.id, canonical_url)
   
   # Loop through cards and make decklist of card qty, name, and check if legal
   for board_name in ["mainboard", "sideboard"]:
