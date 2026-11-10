@@ -6,8 +6,12 @@ from data.add_decklist_data import AddDeck, AddCards, SelectArchetype
 from tuple_conversions import Format, Card, Event
 
 
-def GetMoxfieldDeckId(url: str) -> str:
-  parsed_url = urlparse(url.strip())
+def GetMoxfieldDeckId(url_or_id: str) -> str:
+  value = url_or_id.strip()
+  if re.fullmatch(r"[a-zA-Z0-9_-]+", value):
+    return value
+
+  parsed_url = urlparse(value)
   if parsed_url.hostname not in {"moxfield.com", "www.moxfield.com"}:
     raise KnownError("Invalid Moxfield URL")
 
