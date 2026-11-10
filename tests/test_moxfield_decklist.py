@@ -22,7 +22,7 @@ class MoxfieldDeckIdTests(unittest.TestCase):
 
 
 class GetMoxfieldArchetypeTests(unittest.IsolatedAsyncioTestCase):
-    async def test_saves_canonical_deck_url_with_imported_deck(self):
+    async def test_saves_canonical_deck_link_with_imported_deck(self):
         response = SimpleNamespace(
             raise_for_status=lambda: None,
             json=lambda: {"mainboard": {}, "sideboard": {}},

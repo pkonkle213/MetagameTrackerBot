@@ -7,19 +7,19 @@ from tuple_conversions import Card, Format
 
 
 async def AddDeck(
-    player_name: str, event_id: int, moxfield_url: str | None = None
+    player_name: str, event_id: int, link: str | None = None
 ) -> int:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor(row_factory=scalar_row) as cur,
     ):
         command = """
-            INSERT INTO decks (event_id, player_name, moxfield_url)
+            INSERT INTO decks (event_id, player_name, link)
             VALUES (%s, %s, %s)
             RETURNING id
             """
 
-        await cur.execute(command, [event_id, player_name, moxfield_url])
+        await cur.execute(command, [event_id, player_name, link])
         deck = await cur.fetchone()
         if deck is None:
             raise KnownError("Unable to add new deck")

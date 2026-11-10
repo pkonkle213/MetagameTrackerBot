@@ -29,7 +29,7 @@ async def GetMoxfieldArchetype(
 ) -> str:
   deck_id = GetMoxfieldDeckId(url)
   api_url = f"https://api2.moxfield.com/v2/decks/all/{deck_id}"
-  canonical_url = f"https://moxfield.com/decks/{deck_id}"
+  canonical_link = f"https://moxfield.com/decks/{deck_id}"
   
   headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -47,7 +47,7 @@ async def GetMoxfieldArchetype(
   
   # Save the decklist in the db
   # 1) Make a new deck
-  deck_id = await AddDeck(player_name, event.id, canonical_url)
+  deck_id = await AddDeck(player_name, event.id, canonical_link)
   
   # Loop through cards and make decklist of card qty, name, and check if legal
   for board_name in ["mainboard", "sideboard"]:
