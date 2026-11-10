@@ -8,6 +8,7 @@ from aiohttp import web
 import settings
 from data import payments_data
 from legal_pages import get_legal_page
+import timedposts.automated_paid_users as apu
 
 
 def _optional_discord_id(value: object) -> int | None:
@@ -119,6 +120,11 @@ async def handle_stripe_webhook(
         )
 
         if inserted:
+            if metadata.get("tier") == "store":
+                await apu.UpdatePaidStores()
+            elif metadata.get("tier") == "player":
+                await apu.UpdatePaidUsers()
+
             if isinstance(discord_user_id, str) and discord_user_id.isdigit():
                 try:
                     user = await bot.fetch_user(int(discord_user_id))

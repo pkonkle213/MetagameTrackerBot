@@ -18,6 +18,25 @@ async def GetFive6Users() -> list[int]:
         results = await cur.fetchall()
         return results
 
+async def GetUsers(paid:bool = False) -> list[int]:
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=scalar_row) as cur,
+    ):
+        command = f"""
+        SELECT DISTINCT
+            user_id
+        FROM
+            payments_view
+        WHERE
+            subscription_level = 'player'
+            AND range_end >= NOW()
+        """
+
+        await cur.execute(command)
+        results = await cur.fetchall()
+        return results
+
 
 async def GetStores(paid: bool = False) -> list[int]:
     async with (

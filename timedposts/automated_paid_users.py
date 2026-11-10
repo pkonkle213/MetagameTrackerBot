@@ -1,4 +1,4 @@
-from data.sync_check_data import GetFive6Users, GetStores, GetHubs
+from data.sync_check_data import GetFive6Users, GetStores, GetHubs, GetUsers
 from settings import PHILID
 
 PAID_USERS: list[int] = []
@@ -32,7 +32,7 @@ async def UpdateHubs() -> None:
 
 async def UpdatePaidUsers() -> None:
     global PAID_USERS
-    PAID_USERS = [PHILID] + await GetFive6Users()  # + GetUsers(paid=True)
+    PAID_USERS = [PHILID] + await GetFive6Users() + await GetUsers(paid=True)
 
 
 async def UpdatePaidStores() -> None:
@@ -44,11 +44,14 @@ async def UpdatePaidHubs() -> None:
     global PAID_HUBS
     PAID_HUBS = await GetHubs(paid=True)
 
+
 def IsPaidUser(user_id: int) -> bool:
     return user_id in PAID_USERS
 
+
 def IsPaidStore(discord_id: int) -> bool:
     return discord_id in PAID_STORES
+
 
 def IsPaidHub(discord_id: int) -> bool:
     return discord_id in PAID_HUBS
