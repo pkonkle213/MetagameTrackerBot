@@ -266,6 +266,7 @@ class Deck(NamedTuple):
     wins: int
     losses: int
     draws: int
+    link: str | None
 
 
 class PlayerArchetype(NamedTuple):
