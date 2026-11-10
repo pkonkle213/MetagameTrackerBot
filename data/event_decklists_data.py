@@ -13,7 +13,7 @@ async def GetDecks(event: Event) -> list[Deck]:
         command = """
         SELECT
             d.deck_id as id,
-            d.archetype_played,
+            COALESCE(ua.archetype_played, 'Unknown') AS archetype_played,
             fs.wins,
             fs.losses,
             fs.draws,
@@ -22,6 +22,8 @@ async def GetDecks(event: Event) -> list[Deck]:
             decks_view d
             INNER JOIN full_standings fs ON fs.event_id = d.event_id
             AND upper(fs.player_name) = upper(d.player_name)
+            LEFT JOIN unique_archetypes ua ON ua.event_id = d.event_id
+            AND upper(ua.player_name) = upper(d.player_name)
         WHERE
             d.event_id = %s
         ORDER BY
