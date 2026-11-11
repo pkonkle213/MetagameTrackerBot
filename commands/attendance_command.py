@@ -3,7 +3,7 @@ from io import BytesIO
 from discord import File, Interaction, app_commands
 from discord.ext import commands
 
-from checks import HasRequiredRoles
+from checks import HasRequiredRoles, IsPaidStore
 from output_builder import BuildTableOutput
 from services.command_error_service import Error
 from services.store_attendance_graph_services import GetAttendanceGraph
@@ -41,6 +41,7 @@ class EventAttendance(commands.GroupCog, name="attendance"):
     )
     @app_commands.guild_only()
     @HasRequiredRoles([MTBRoles.MTStore.name])
+    @IsPaidStore()
     @app_commands.describe(
         start_date="Beginning of date range (MM/DD/YYYY); defaults to one year before end date",
         end_date="End of date range (MM/DD/YYYY); defaults to today",
