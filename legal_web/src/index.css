@@ -1,0 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; background: #f3f0e7; }
+a:focus-visible, button:focus-visible { outline: 3px solid #c35d39; outline-offset: 4px; }
+::selection { color: #f8f6ee; background: #315b48; }
+.legal-copy p, .legal-copy li { line-height: 1.78; }
+.legal-copy h2 { scroll-margin-top: 32px; }
+.home-grain { position: relative; isolation: isolate; }
+.home-grain::after { content: ""; position: fixed; inset: 0; z-index: 10; pointer-events: none; opacity: .13; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.92' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E"); }
+@keyframes rise-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.enter { animation: rise-in .55s cubic-bezier(.2,.7,.2,1) both; }
+.enter-delay-1 { animation-delay: .08s; }
+.enter-delay-2 { animation-delay: .16s; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }

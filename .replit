@@ -1,5 +1,5 @@
 entrypoint = "main.py"
-modules = ["python3", "python-3.12", "postgresql-16"]
+modules = ["python3", "python-3.12", "postgresql-16", "nodejs-24"]
 
 [nix]
 channel = "stable-24_05"
@@ -12,7 +12,7 @@ language = "python3"
 requiredFiles = [".replit", "replit.nix"]
 
 [deployment]
-run = ["python3", "main.py"]
+run = ["bash", "scripts/run.sh"]
 deploymentTarget = "vm"
 ignorePorts = false
 
@@ -37,7 +37,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python main.py"
+args = "bash scripts/run.sh"
 
 [workflows.workflow.metadata]
 outputType = "console"

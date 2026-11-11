@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+node_modules/
+legal_web/dist/
 
 # C extensions
 *.so

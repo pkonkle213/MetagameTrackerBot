@@ -350,12 +350,21 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(health_response.status, 200)
         homepage = await health_response.text()
         self.assertIn("Metagame Tracker Bot", homepage)
-        self.assertIn('href="/privacy"', homepage)
-        self.assertIn('href="/terms"', homepage)
+        self.assertIn(
+            "<title>Metagame Tracker Bot — Game community information, in Discord</title>",
+            homepage,
+        )
+        self.assertIn('<div id="root"></div>', homepage)
         self.assertEqual(privacy_response.status, 200)
         self.assertIn("text/html", privacy_response.headers["Content-Type"])
+        privacy = await privacy_response.text()
+        self.assertIn("<title>Privacy Policy — MetaGameTracker Bot</title>", privacy)
+        self.assertIn('<div id="root"></div>', privacy)
         self.assertEqual(terms_response.status, 200)
         self.assertIn("text/html", terms_response.headers["Content-Type"])
+        terms = await terms_response.text()
+        self.assertIn("<title>Terms of Service — MetaGameTracker Bot</title>", terms)
+        self.assertIn('<div id="root"></div>', terms)
 
 
 if __name__ == "__main__":
