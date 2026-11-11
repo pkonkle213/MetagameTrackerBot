@@ -54,29 +54,42 @@ async def SubmitArchetype(
     ValidateArchetypeContext(interaction)
     await ValidateArchetypeSubmission(interaction, event, player_name, archetype)
 
+    submitted_archetype = archetype
+    archetypes_to_save: list[str] = []
     moxfield_error = ""
     if moxfield_link:
         imported_archetype, moxfield_error, moxfield_success = await Moxfield(
             moxfield_link, event, format, player_name
         )
         if moxfield_success:
-            archetype = imported_archetype
+            if not imported_archetype:
+                raise KnownError("No archetype submitted. Please try again.")
             await ValidateArchetypeSubmission(
-                interaction, event, player_name, archetype
+                interaction, event, player_name, imported_archetype
             )
+            archetypes_to_save.append(imported_archetype)
+            if submitted_archetype:
+                archetypes_to_save.append(submitted_archetype)
 
-    if not archetype:
+    if not archetypes_to_save and submitted_archetype:
+        archetypes_to_save.append(submitted_archetype)
+
+    if not archetypes_to_save:
         raise KnownError("No archetype submitted. Please try again." + moxfield_error)
 
-    await SaveArchetypeSubmission(
-        interaction, event, player_name, archetype, is_submitter
-    )
+    for archetype_to_save in archetypes_to_save:
+        await SaveArchetypeSubmission(
+            interaction, event, player_name, archetype_to_save, is_submitter
+        )
 
     await NotifyArchetypeSubmission(
         bot,
         interaction,
         event,
-        [PlayerArchetype(player_name, archetype)],
+        [
+            PlayerArchetype(player_name, archetype_to_save)
+            for archetype_to_save in archetypes_to_save
+        ],
         store,
         moxfield_error,
     )
