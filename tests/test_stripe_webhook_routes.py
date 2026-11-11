@@ -368,25 +368,16 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("<title>Terms of Service — MetaGameTracker Bot</title>", terms)
         self.assertIn('<div id="root"></div>', terms)
 
-    async def test_serves_guide_tab_export_from_app_storage(self):
-        filename = "04-initial-setup.html"
-        legal_pages._download_guide_page.cache_clear()
-        try:
-            with patch(
-                "services.object_storage_service.download_as_bytes",
-                return_value=b"<html><body>Initial Setup</body></html>",
-            ) as download:
-                response = await self.client.get(f"/guides/{filename}")
-
-            self.assertEqual(response.status, 200)
-            self.assertIn("text/html", response.headers["Content-Type"])
-            self.assertIn("Initial Setup", await response.text())
-            download.assert_called_once_with(f"guide-tabs/{filename}")
-        finally:
-            legal_pages._download_guide_page.cache_clear()
-
-    async def test_serves_guide_reader_for_direct_section_routes(self):
+    async def test_serves_standalone_guide_page_for_each_section_route(self):
         response = await self.client.get("/guide/04-initial-setup")
+
+        self.assertEqual(response.status, 200)
+        body = await response.text()
+        self.assertIn("Initial Setup", body)
+        self.assertNotIn('<div id="root"></div>', body)
+
+    async def test_serves_guide_index(self):
+        response = await self.client.get("/guide")
 
         self.assertEqual(response.status, 200)
         body = await response.text()
@@ -394,7 +385,7 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("assets/index-", body)
 
     async def test_rejects_unknown_guide_tab(self):
-        response = await self.client.get("/guides/not-a-document-tab.html")
+        response = await self.client.get("/guide/not-a-document-tab")
 
         self.assertEqual(response.status, 404)
 

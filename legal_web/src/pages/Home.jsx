@@ -1,6 +1,5 @@
 import React from "react";
 import { Box, Button, Container, Divider, Link, Paper, Stack, Typography } from "@mui/material";
-import documentTabs from "../data/documentTabs.json";
 
 const capabilities = [
   ["01 / EVENTS", "Event information", "Submit and view event information, player names, and the details your community uses to follow its tournaments."],
@@ -35,7 +34,7 @@ function Footer() {
       <Container maxWidth="lg" sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
         <Typography variant="body2" color="text.secondary">Metagame Tracker Bot · Game community information for Discord</Typography>
         <Stack component="nav" aria-label="Legal and support" direction="row" spacing={{ xs: 1.8, sm: 3 }} flexWrap="wrap">
-          <Link href={`/guide/${documentTabs[0].slug}`} color="text.secondary" variant="body2">SOP Guide</Link>
+          <Link href="/guide" color="text.secondary" variant="body2">SOP Guide</Link>
           <Link href="/privacy" color="text.secondary" variant="body2">Privacy Policy</Link>
           <Link href="/terms" color="text.secondary" variant="body2">Terms of Service</Link>
           <Link href={mail} color="text.secondary" variant="body2">Support</Link>
@@ -53,7 +52,7 @@ export default function Home() {
           <Brand />
           <Stack component="nav" aria-label="Main navigation" direction="row" spacing={{ xs: 1.5, sm: 3.5 }} alignItems="center">
             <Link href="#features" underline="none" color="text.primary" sx={{ fontSize: ".88rem", fontWeight: 700, display: { xs: "none", sm: "inline" } }}>What it does</Link>
-            <Link href={`/guide/${documentTabs[0].slug}`} underline="none" color="text.primary" sx={{ fontSize: ".88rem", fontWeight: 700 }}>Guide</Link>
+            <Link href="/guide" underline="none" color="text.primary" sx={{ fontSize: ".88rem", fontWeight: 700 }}>Guide</Link>
             <Link href="#plans" underline="none" color="text.primary" sx={{ fontSize: ".88rem", fontWeight: 700 }}>Plans</Link>
             <Link href={mail} underline="none" color="primary.dark" sx={{ fontSize: ".88rem", fontWeight: 700 }}>Contact</Link>
           </Stack>
