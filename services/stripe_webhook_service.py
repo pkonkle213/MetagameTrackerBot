@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timezone
 from decimal import Decimal
 
@@ -170,7 +171,7 @@ async def handle_stripe_webhook(
 
 
 async def handle_health_and_legal(request: web.Request) -> web.Response:
-    legal_page = get_legal_page(request.path)
+    legal_page = await asyncio.to_thread(get_legal_page, request.path)
     if legal_page is None:
         raise web.HTTPNotFound()
 

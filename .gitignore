@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 node_modules/
 legal_web/dist/
+legal_web/public/guides/
 
 # C extensions
 *.so

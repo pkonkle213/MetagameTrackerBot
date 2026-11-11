@@ -1,0 +1,282 @@
+[
+  {
+    "tabId": "t.hdy5ja1637hl",
+    "title": "General Description",
+    "slug": "01-general-description",
+    "htmlPath": "/guides/01-general-description.html",
+    "bytes": 7001,
+    "images": 0
+  },
+  {
+    "tabId": "t.ct4u3dumx6kj",
+    "title": "Current Commands and Their Descriptions",
+    "slug": "02-current-commands-and-their-descriptions",
+    "htmlPath": "/guides/02-current-commands-and-their-descriptions.html",
+    "bytes": 33221,
+    "images": 0
+  },
+  {
+    "tabId": "t.jvy7jd34yioj",
+    "title": "I currently have the following games and formats recognized by the bot:",
+    "slug": "03-i-currently-have-the-following-games-and-formats-recognized-by-t",
+    "htmlPath": "/guides/03-i-currently-have-the-following-games-and-formats-recognized-by-t.html",
+    "bytes": 6704,
+    "images": 0
+  },
+  {
+    "tabId": "t.yzzqwiwxyxyw",
+    "title": "Initial Setup",
+    "slug": "04-initial-setup",
+    "htmlPath": "/guides/04-initial-setup.html",
+    "bytes": 11749,
+    "images": 0
+  },
+  {
+    "tabId": "t.yqgq10slgqgd",
+    "title": "Assigning the role of ‘MTSubmitter’ or ‘MTStore’",
+    "slug": "05-assigning-the-role-of-mtsubmitter-or-mtstore",
+    "htmlPath": "/guides/05-assigning-the-role-of-mtsubmitter-or-mtstore.html",
+    "bytes": 474814,
+    "images": 8
+  },
+  {
+    "tabId": "t.licj88scj3ta",
+    "title": "Mapping Games",
+    "slug": "06-mapping-games",
+    "htmlPath": "/guides/06-mapping-games.html",
+    "bytes": 160738,
+    "images": 6
+  },
+  {
+    "tabId": "t.mwt8agi32lyn",
+    "title": "Mapping Formats",
+    "slug": "07-mapping-formats",
+    "htmlPath": "/guides/07-mapping-formats.html",
+    "bytes": 112563,
+    "images": 4
+  },
+  {
+    "tabId": "t.b068qdwj4kzo",
+    "title": "Mapping the Archetype Feed",
+    "slug": "08-mapping-the-archetype-feed",
+    "htmlPath": "/guides/08-mapping-the-archetype-feed.html",
+    "bytes": 259113,
+    "images": 7
+  },
+  {
+    "tabId": "t.foi9h6k869js",
+    "title": "Submitting Data",
+    "slug": "09-submitting-data",
+    "htmlPath": "/guides/09-submitting-data.html",
+    "bytes": 10246,
+    "images": 0
+  },
+  {
+    "tabId": "t.te27ykf0l4ts",
+    "title": "Magic - Companion - Round Pairings",
+    "slug": "10-magic-companion-round-pairings",
+    "htmlPath": "/guides/10-magic-companion-round-pairings.html",
+    "bytes": 371277,
+    "images": 9
+  },
+  {
+    "tabId": "t.r66pltyc3dav",
+    "title": "Magic - Companion - Event Standings",
+    "slug": "11-magic-companion-event-standings",
+    "htmlPath": "/guides/11-magic-companion-event-standings.html",
+    "bytes": 487727,
+    "images": 7
+  },
+  {
+    "tabId": "t.hnmjvb18f8cd",
+    "title": "CARDE.IO - Round Pairings",
+    "slug": "12-carde-io-round-pairings",
+    "htmlPath": "/guides/12-carde-io-round-pairings.html",
+    "bytes": 356143,
+    "images": 8
+  },
+  {
+    "tabId": "t.8lapnaciwour",
+    "title": "CARDE.IO - Event Standings",
+    "slug": "13-carde-io-event-standings",
+    "htmlPath": "/guides/13-carde-io-event-standings.html",
+    "bytes": 287120,
+    "images": 7
+  },
+  {
+    "tabId": "t.k002mxxj4nt9",
+    "title": "All games - Melee.gg - Round Pairings",
+    "slug": "14-all-games-melee-gg-round-pairings",
+    "htmlPath": "/guides/14-all-games-melee-gg-round-pairings.html",
+    "bytes": 76706,
+    "images": 4
+  },
+  {
+    "tabId": "t.3cyfuyc3tg7c",
+    "title": "All League commands are reserved for paid stores only",
+    "slug": "15-all-league-commands-are-reserved-for-paid-stores-only",
+    "htmlPath": "/guides/15-all-league-commands-are-reserved-for-paid-stores-only.html",
+    "bytes": 5874,
+    "images": 0
+  },
+  {
+    "tabId": "t.h4eooakjx43u",
+    "title": "Dealing With Offensive Words",
+    "slug": "16-dealing-with-offensive-words",
+    "htmlPath": "/guides/16-dealing-with-offensive-words.html",
+    "bytes": 40405,
+    "images": 2
+  },
+  {
+    "tabId": "t.dqmelrak3d7h",
+    "title": "Seeing Who Inputs Offensive Words",
+    "slug": "17-seeing-who-inputs-offensive-words",
+    "htmlPath": "/guides/17-seeing-who-inputs-offensive-words.html",
+    "bytes": 46056,
+    "images": 1
+  },
+  {
+    "tabId": "t.g7bgiwyzvyem",
+    "title": "View Submissions",
+    "slug": "18-view-submissions",
+    "htmlPath": "/guides/18-view-submissions.html",
+    "bytes": 268805,
+    "images": 5
+  },
+  {
+    "tabId": "t.deadjforuj2x",
+    "title": "Downloading Store Data",
+    "slug": "19-downloading-store-data",
+    "htmlPath": "/guides/19-downloading-store-data.html",
+    "bytes": 215652,
+    "images": 3
+  },
+  {
+    "tabId": "t.1a45c8qlkq99",
+    "title": "Players Submitting Archetypes",
+    "slug": "20-players-submitting-archetypes",
+    "htmlPath": "/guides/20-players-submitting-archetypes.html",
+    "bytes": 325526,
+    "images": 11
+  },
+  {
+    "tabId": "t.myqhgpnf5tmk",
+    "title": "Viewing Metagame Data",
+    "slug": "21-viewing-metagame-data",
+    "htmlPath": "/guides/21-viewing-metagame-data.html",
+    "bytes": 162441,
+    "images": 3
+  },
+  {
+    "tabId": "t.qhajqw5w1la7",
+    "title": "Get User Info - Context Command",
+    "slug": "22-get-user-info-context-command",
+    "htmlPath": "/guides/22-get-user-info-context-command.html",
+    "bytes": 703378,
+    "images": 6
+  },
+  {
+    "tabId": "t.5uwzrndnlqn1",
+    "title": "Unknown Archetypes",
+    "slug": "23-unknown-archetypes",
+    "htmlPath": "/guides/23-unknown-archetypes.html",
+    "bytes": 98320,
+    "images": 3
+  },
+  {
+    "tabId": "t.p4hnmc2kwqrc",
+    "title": "Attendance",
+    "slug": "24-attendance",
+    "htmlPath": "/guides/24-attendance.html",
+    "bytes": 152762,
+    "images": 4
+  },
+  {
+    "tabId": "t.nitm5b1o5imn",
+    "title": "Leaderboard",
+    "slug": "25-leaderboard",
+    "htmlPath": "/guides/25-leaderboard.html",
+    "bytes": 82928,
+    "images": 3
+  },
+  {
+    "tabId": "t.fn3om911yg2j",
+    "title": "Person Specific Commands",
+    "slug": "26-person-specific-commands",
+    "htmlPath": "/guides/26-person-specific-commands.html",
+    "bytes": 3704,
+    "images": 0
+  },
+  {
+    "tabId": "t.2878lzhhfh",
+    "title": "Players’ Various Matchups",
+    "slug": "27-players-various-matchups",
+    "htmlPath": "/guides/27-players-various-matchups.html",
+    "bytes": 61059,
+    "images": 2
+  },
+  {
+    "tabId": "t.rthsqfhd4yix",
+    "title": "Players’ Win Percentages",
+    "slug": "28-players-win-percentages",
+    "htmlPath": "/guides/28-players-win-percentages.html",
+    "bytes": 107163,
+    "images": 3
+  },
+  {
+    "tabId": "t.hyr4s0ne5lg0",
+    "title": "Personal History - Pairings",
+    "slug": "29-personal-history-pairings",
+    "htmlPath": "/guides/29-personal-history-pairings.html",
+    "bytes": 125378,
+    "images": 3
+  },
+  {
+    "tabId": "t.upmwm0ad4nl3",
+    "title": "Personal History - Standings",
+    "slug": "30-personal-history-standings",
+    "htmlPath": "/guides/30-personal-history-standings.html",
+    "bytes": 84884,
+    "images": 3
+  },
+  {
+    "tabId": "t.imq8jbg2t6jx",
+    "title": "Downloading Player Data",
+    "slug": "31-downloading-player-data",
+    "htmlPath": "/guides/31-downloading-player-data.html",
+    "bytes": 216010,
+    "images": 3
+  },
+  {
+    "tabId": "t.fr3h4991r0f6",
+    "title": "Archetype Submission Reminder",
+    "slug": "32-archetype-submission-reminder",
+    "htmlPath": "/guides/32-archetype-submission-reminder.html",
+    "bytes": 27176,
+    "images": 1
+  },
+  {
+    "tabId": "t.l7syap1x9g4w",
+    "title": "When you submit archetypes, the bot tracks your discord user id and the name you’re submitting for. It will assume that your name is the person you submit the most archetypes for.",
+    "slug": "33-when-you-submit-archetypes-the-bot-tracks-your-discord-user-id-a",
+    "htmlPath": "/guides/33-when-you-submit-archetypes-the-bot-tracks-your-discord-user-id-a.html",
+    "bytes": 8110,
+    "images": 0
+  },
+  {
+    "tabId": "t.twb1rmnd4jga",
+    "title": "FAQ:",
+    "slug": "34-faq",
+    "htmlPath": "/guides/34-faq.html",
+    "bytes": 114755,
+    "images": 2
+  },
+  {
+    "tabId": "t.wnirinrttp72",
+    "title": "About me",
+    "slug": "35-about-me",
+    "htmlPath": "/guides/35-about-me.html",
+    "bytes": 326056,
+    "images": 2
+  }
+]
