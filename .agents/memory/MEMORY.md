@@ -3,3 +3,4 @@
 - [App Storage listing metadata](app-storage-listing.md) — The public list API returns names only; latest-upload selection needs update metadata.
 - [Dependency security floors](dependency-security-floors.md) — Keep explicit safe minimums for vulnerable transitive packages when refreshing the lockfile.
 - [Post-merge validation](post-merge-validation.md) — A clean merge status does not prove conflict resolutions are valid; run compilation and the full test suite after merges.
+- [Homepage pricing scope](homepage-pricing-scope.md) — Advertise player and store subscriptions; do not show hub subscriptions until the user says they are ready.

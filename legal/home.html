@@ -330,7 +330,7 @@
       .pricing-section .section-heading > p { color: #d1ddd1; }
       .plans {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         border-top: 1px solid rgb(243 240 231 / 28%);
         border-bottom: 1px solid rgb(243 240 231 / 28%);
       }
@@ -349,8 +349,10 @@
         letter-spacing: .12em;
         text-transform: uppercase;
       }
-      .plan-price { margin-bottom: 15px; font-size: 2.8rem; font-weight: 760; letter-spacing: -.07em; line-height: 1; }
-      .plan-price span { margin-left: 4px; color: #d1ddd1; font-size: .82rem; font-weight: 560; letter-spacing: 0; }
+      .plan p.plan-price { margin-bottom: 15px; font-size: 2.8rem; font-weight: 760; letter-spacing: -.07em; line-height: 1; }
+      .plan p.plan-price span { margin-left: 4px; color: #d1ddd1; font-size: .82rem; font-weight: 560; letter-spacing: 0; }
+      .plan p.plan-yearly { margin: 0 0 15px; color: #f1d99c; font-size: 1rem; font-weight: 700; }
+      .plan p.plan-yearly span { color: #d1ddd1; font-size: .82rem; font-weight: 560; }
       .plan p { max-width: 260px; margin-bottom: 0; color: #d1ddd1; font-size: .87rem; }
       .pricing-note {
         margin: 21px 0 0;
@@ -458,7 +460,7 @@
         .plan, .plan:first-child { min-height: auto; padding: 23px 0; border-right: 0; border-bottom: 1px solid rgb(243 240 231 / 28%); }
         .plan:last-child { border-bottom: 0; }
         .plan-label { margin-bottom: 15px; }
-        .plan-price { font-size: 2.35rem; }
+        .plan p.plan-price { font-size: 2.35rem; }
         .contact-panel { align-items: flex-start; flex-direction: column; padding: 24px 22px; }
         .footer-inner { align-items: flex-start; flex-direction: column; }
         .footer-links { gap: 16px; }
@@ -562,29 +564,26 @@
         <div class="page-shell section">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">Monthly plans</p>
+              <p class="eyebrow">Monthly and yearly plans</p>
               <h2 id="plans-title">Straightforward pricing for your community.</h2>
             </div>
-            <p>Three current monthly plans, sized for individual players, stores, and hubs.</p>
+            <p>Choose a player or store plan, with monthly or yearly billing.</p>
           </div>
           <div class="plans">
             <article class="plan">
               <p class="plan-label">Player</p>
               <p class="plan-price">$5<span>/ month</span></p>
-              <p>A monthly plan for players using the bot’s game-community information tools.</p>
+              <p class="plan-yearly">Yearly: $50 <span>/ year</span></p>
+              <p>A plan for players using the bot’s game-community information tools.</p>
             </article>
             <article class="plan">
               <p class="plan-label">Store</p>
               <p class="plan-price">$10<span>/ month</span></p>
-              <p>A monthly plan for game stores with supported store profiles and settings.</p>
-            </article>
-            <article class="plan">
-              <p class="plan-label">Hub</p>
-              <p class="plan-price">$20<span>/ month</span></p>
-              <p>A monthly plan for hubs with supported hub profiles and settings.</p>
+              <p class="plan-yearly">Yearly: $100 <span>/ year</span></p>
+              <p>A plan for game stores with supported store profiles and settings.</p>
             </article>
           </div>
-          <p class="pricing-note"><strong>Plan note:</strong> These are the current monthly plan prices. Contact support with questions about plans or using the bot.</p>
+          <p class="pricing-note"><strong>Plan note:</strong> Prices are in USD. Contact support with questions about plans or using the bot.</p>
         </div>
       </section>
 
