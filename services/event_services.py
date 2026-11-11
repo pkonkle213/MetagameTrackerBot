@@ -15,7 +15,7 @@ async def EventForData(
     game: Game,
     format: Format,
 ) -> tuple[Event | None, int | None, Interaction | None, bool]:
-    event_types = await GetEventTypes (store.discord_id, game, format)
+    event_types = await GetEventTypes(store.discord_id, game, format)
     previous_events = await GetPreviousEvents(store, game, format)
     modal = SubmitEventModal(store, game, format, event_types, previous_events)
     await interaction.response.send_modal(modal)

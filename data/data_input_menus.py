@@ -71,38 +71,39 @@ async def GetEventTypes(discord_id: int, game: Game, format: Format) -> list[Eve
         command = """
         (
             SELECT
-            - l.id AS id,
-            name,
-            COUNT(e.id) AS num_events
+                - l.id AS id,
+                name,
+                COALESCE(COUNT(e.id),0) AS num_events
             FROM
-            leagues l
-            INNER JOIN events e ON e.league_id = l.id
+                leagues l
+                LEFT JOIN events e ON e.league_id = l.id
             WHERE
-            end_date >= NOW()
-            AND start_date <= NOW()
-            AND l.discord_id = %s
-            AND l.game_id = %s
-            AND l.format_id = %s
+                end_date >= NOW()
+                AND start_date <= NOW()
+                AND l.discord_id = %s
+                AND l.game_id = %s
+                AND l.format_id = %s
             GROUP BY
-            l.id
+                l.id
             ORDER BY
-            end_date DESC,
-            start_date DESC
+                end_date DESC,
+                start_date DESC
             LIMIT 23
         )
         UNION ALL
         (
             SELECT
-            id,
-            event_type,
-            0 AS num_events
+                id,
+                event_type,
+                0 AS num_events
             FROM
-            event_types
+                event_types
             WHERE
-            id NOT IN (3)
+                id NOT IN (3)
             ORDER BY
-            id
+                id
         )
+        LIMIT 25
         """
 
         await cur.execute(command, [discord_id, game.id, format.id])
