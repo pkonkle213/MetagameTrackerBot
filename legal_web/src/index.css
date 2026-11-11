@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { margin: 0; min-width: 320px; background: #f3f0e7; }
+body { margin: 0; min-width: 320px; min-height: 100dvh; background: #f3f0e7; }
 a:focus-visible, button:focus-visible { outline: 3px solid #c35d39; outline-offset: 4px; }
 ::selection { color: #f8f6ee; background: #315b48; }
 .legal-copy p, .legal-copy li { line-height: 1.78; }

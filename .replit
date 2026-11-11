@@ -31,6 +31,10 @@ author = "agent"
 task = "workflow.run"
 args = "Discord Bot"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Metagame Guide Website"
+
 [[workflows.workflow]]
 name = "Discord Bot"
 author = "agent"
@@ -42,12 +46,28 @@ args = "bash scripts/run.sh"
 [workflows.workflow.metadata]
 outputType = "console"
 
+[[workflows.workflow]]
+name = "Metagame Guide Website"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev --prefix legal_web -- --port 5000 --host 0.0.0.0"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
 [objectStorage]
 defaultBucketID = "replit-objstore-7f38bbe0-52e1-4e3b-aba8-51bfb65b8dde"
 
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 60000
+
+[[ports]]
+localPort = 5000
+externalPort = 5000
 
 [[ports]]
 localPort = 8080

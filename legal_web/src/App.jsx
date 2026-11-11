@@ -10,8 +10,8 @@ const metadata = {
     description: "Metagame Tracker Bot helps game stores, event organizers, hubs, and players manage community event information in Discord."
   },
   "/guide": {
-    title: "SOP Guide — Metagame Tracker Bot",
-    description: "Browse the Metagame Tracker Bot standard operating procedures."
+    title: "Metagame Tracker — Guide",
+    description: "Browse the Metagame Tracker guide pages."
   },
   "/privacy": {
     title: "Privacy Policy — MetaGameTracker Bot",
