@@ -13,7 +13,8 @@
 -- The transaction locks all three tables and aborts if the inspected row counts
 -- or destination preconditions have changed. Do not run this script twice.
 
-BEGIN ISOLATION LEVEL SERIALIZABLE;
+-- The SQL Console wraps selected statements in a transaction batch.
+SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 SET LOCAL lock_timeout = '10s';
 SET LOCAL statement_timeout = '5min';
 
@@ -158,9 +159,7 @@ BEGIN
 END
 $$;
 
-COMMIT;
-
--- Post-commit check for the destination rows in the copied date window.
+-- Final in-batch check for destination rows in the copied date window.
 SELECT
     (SELECT count(*) FROM public.events
      WHERE discord_id = 1515166332667301968
