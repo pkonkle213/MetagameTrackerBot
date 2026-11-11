@@ -28,7 +28,7 @@
     <main>
       <p class="notice"><strong>Legal notice:</strong> This document is general information, not legal advice. Have a qualified attorney review it for your circumstances.</p>
       <h1>Privacy Policy</h1>
-      <p class="updated">Effective date: October 25, 2026</p>
+      <p class="updated">Effective date: November 11, 2026</p>
 
       <p>This policy explains how Phillip Konkle (“the operator,” “we,” or “us”) handles information when you use MetaGameTracker Bot (“the Bot”) in Discord servers. The operator is based in Ohio, United States.</p>
 
@@ -37,18 +37,20 @@
         <li><strong>Discord and command information:</strong> Discord user, server, category, and channel IDs; command names and timestamps; and whether the user had certain Bot roles when a command was used. Discord may also provide usernames or display names needed to operate a command.</li>
         <li><strong>Game and event information:</strong> player names, archetypes, event dates and names, tournament results, pairings, standings, and information submitted through Bot commands and forms.</li>
         <li><strong>Store and hub information:</strong> server names and IDs, owner names and Discord IDs, store addresses, profile settings, and role assignments.</li>
+        <li><strong>Payment and subscription records:</strong> for paid Player and Store subscriptions, the Bot receives and stores Discord user and server IDs when provided, payment amount and date, plan and billing interval, and Stripe checkout-session, subscription, and event IDs. The Bot does not store payment-card numbers.</li>
         <li><strong>Integration credentials and links:</strong> Melee.gg client credentials that a store operator chooses to provide, tournament identifiers, and Moxfield decklist links submitted to the Bot. Melee.gg credentials are used to request tournament data for the store.</li>
         <li><strong>Files and submission data:</strong> CSV, text, and Melee tournament data may be processed through Replit Object Storage as part of a submission. Temporary processing files may be removed after processing; the resulting event records may remain in the database.</li>
       </ul>
 
       <h2>2. How information is used</h2>
-      <p>Information is used to provide Bot features, accept and organize game-event submissions, generate reports, manage store and hub settings and roles, connect to Melee.gg or Moxfield when requested, maintain command and error logs, protect the service, and respond to support or deletion requests.</p>
+      <p>Information is used to provide Bot features, accept and organize game-event submissions, generate reports, manage store and hub settings and roles, process paid Player and Store subscriptions through Stripe and record payment and plan-eligibility information, connect to Melee.gg or Moxfield when requested, maintain command and error logs, protect the service, and respond to support or deletion requests.</p>
 
       <h2>3. Service providers and sharing</h2>
       <ul>
         <li><strong>Discord:</strong> provides the platform through which the Bot receives interactions and sends replies.</li>
         <li><strong>Replit:</strong> hosts the Bot and provides Object Storage used for some file-processing workflows.</li>
         <li><strong>Replit PostgreSQL:</strong> the Bot stores operational data in a PostgreSQL database hosted by Replit.</li>
+        <li><strong>Stripe:</strong> processes paid Player and Store subscription checkouts and recurring billing. Stripe handles payment details entered in its checkout; the Bot receives payment confirmations and the subscription metadata described above. Stripe’s own privacy practices apply to information it processes.</li>
         <li><strong>Melee.gg and Moxfield:</strong> the Bot may contact these services when a user requests tournament-data or decklist processing. Those services handle information under their own terms and privacy practices.</li>
       </ul>
       <p>We do not sell personal information. Information may be visible to people in a Discord server when a command posts a response there. The Bot operator can access stored data for administration and can use the restricted database-download command to export it.</p>
