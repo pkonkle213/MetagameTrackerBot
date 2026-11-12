@@ -40,16 +40,20 @@ def BuildTableOutput(title: str, headers: list[str], items: list[Any]) -> list[s
         for i in range(len(column_widths)):
             element = str(item[i])
             column_format = "{:" + align + str(column_widths[i]) + "s}"
-            if element[0] == "-":
+            if element.startswith("-"):
                 line = line[:-1]
 
             line += column_format.format(element)
 
-        if len(pre_elements) + len(post_elements) + len(line) > 1997:
+        line_with_newline = line + "\n"
+        if len(pre_elements) + len(post_elements) + len(line_with_newline) + 3 > 2000:
             list_output.append(pre_elements + post_elements + "```")
             post_elements = ""
 
-        post_elements += line + "\n"
+        if len(pre_elements) + len(line_with_newline) + 3 > 2000:
+            raise KnownError("A table row exceeds Discord's message length limit")
+
+        post_elements += line_with_newline
 
     list_output.append(pre_elements + post_elements + "```")
     return list_output
