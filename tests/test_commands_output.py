@@ -1,38 +1,41 @@
 import unittest
 
-from services.commands_services import _BuildCommandDescriptionMessages
+from output_builder import BuildTableOutput
 
 
-class CommandDescriptionOutputTests(unittest.TestCase):
-    def test_keeps_all_descriptions_across_discord_sized_messages(self):
+class CommandOutputTests(unittest.TestCase):
+    def test_table_output_splits_long_command_lists_within_discord_limit(self):
         commands = [
-            ("/one",),
-            ("/two",),
-            ("/three",),
+            (f"/command-{index}", f"Description for command {index}.")
+            for index in range(100)
         ]
-        descriptions = {
-            "/one": "First command description.",
-            "/two": "Second command description. " * 100,
-            "/three": "Third command description.",
-        }
 
-        messages = _BuildCommandDescriptionMessages(commands, descriptions)
+        messages = BuildTableOutput(
+            "Commands available to you",
+            ["Name", "Description"],
+            commands,
+        )
 
         self.assertGreater(len(messages), 1)
         self.assertTrue(all(len(message) <= 2000 for message in messages))
-        combined = "".join(message.partition("\n\n")[2] for message in messages)
-        for description in descriptions.values():
-            self.assertIn(description, combined)
+        combined = "\n".join(messages)
+        for name, description in commands:
+            with self.subTest(command=name):
+                self.assertIn(name, combined)
+                self.assertIn(description, combined)
 
-    def test_includes_an_entry_for_each_command(self):
-        commands = [("/one",), ("/two",)]
-        descriptions = {"/one": "First description.", "/two": "Second description."}
+    def test_table_output_includes_title_and_column_headers(self):
+        messages = BuildTableOutput(
+            "Commands available to you",
+            ["Name", "Description"],
+            [("/submit data", "Submit an event's data")],
+        )
 
-        messages = _BuildCommandDescriptionMessages(commands, descriptions)
-        output = "\n".join(messages)
-
-        self.assertIn("/one\nFirst description.", output)
-        self.assertIn("/two\nSecond description.", output)
+        self.assertIn("Commands available to you", messages[0])
+        self.assertIn("Name", messages[0])
+        self.assertIn("Description", messages[0])
+        self.assertIn("/submit data", messages[0])
+        self.assertIn("Submit an event's data", messages[0])
 
 
 if __name__ == "__main__":

@@ -148,14 +148,19 @@ class AttendanceGraphRoleTests(unittest.IsolatedAsyncioTestCase):
             for command in EventAttendance.__cog_app_commands__
             if command.name == "graph"
         )
+        role_check = next(
+            check for check in graph.checks
+            if check.__qualname__.startswith("HasRequiredRoles.")
+        )
         interaction = SimpleNamespace(
+            guild_id=1234,
             user=SimpleNamespace(roles=[SimpleNamespace(name="MTStore")])
         )
-        await graph.checks[0](interaction)
+        await role_check(interaction)
 
         interaction.user.roles = [SimpleNamespace(name="Other")]
         with self.assertRaises(app_commands.MissingAnyRole):
-            await graph.checks[0](interaction)
+            await role_check(interaction)
 
 
 if __name__ == "__main__":

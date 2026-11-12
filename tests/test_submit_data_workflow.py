@@ -48,7 +48,7 @@ def make_event(
 
 STORE = Store(1234, "Example Store", "Example Store", 1, "Owner", "", True, 1, True)
 GAME = Game(1, "Magic")
-FORMAT = Format(2, "Standard", None, False)
+FORMAT = Format(2, "Standard", None, False, "")
 STANDINGS = [Standing("Player One", 3, 1, 0)]
 PAIRINGS = [Pairing(1, "Player One", 2, 1, "Player Two")]
 
