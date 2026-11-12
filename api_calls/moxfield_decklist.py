@@ -60,8 +60,8 @@ async def GetMoxfieldArchetype(
       card_name = details.get("card", {}).get("name")
       card_qty = details.get("quantity")
       in_main = board_name == "mainboard"
-      legal = details.get("card").get("legalities").get(format.format_name.lower())
-      if legal != 'legal':
+      legal = details.get("card").get("legalities").get(format.moxfield_check.lower())
+      if legal == 'not_legal':
         raise KnownError(f"{card_name} is not legal in {format.format_name} format")
         
       cards.append(Card(deck_id, card_qty, card_name, in_main))

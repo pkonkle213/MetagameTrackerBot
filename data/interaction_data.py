@@ -37,6 +37,7 @@ def interaction_row(
     format_name: str,
     last_ban_update: date,
     is_limited: bool,
+    moxfield_check: str,
     region_id: int,
     region_name: str,
 ) -> InteractionObjects:
@@ -73,7 +74,7 @@ def interaction_row(
     )
     game = Game(game_id, game_name) if game_id else None
     format = (
-        Format(format_id, format_name, last_ban_update, is_limited)
+        Format(format_id, format_name, last_ban_update, is_limited, moxfield_check)
         if format_id
         else None
     )
@@ -178,6 +179,7 @@ async def GetObjectsFromInteraction(
             f.format_name,
             f.last_ban_update,
             f.is_limited,
+            f.moxfield_check,
             r.id AS region_id,
             r.region_name
         FROM

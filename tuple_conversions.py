@@ -118,6 +118,7 @@ class Format(NamedTuple):
     format_name: str
     last_ban_update: date | None
     is_limited: bool
+    moxfield_check: str
 
 
 class Game(NamedTuple):

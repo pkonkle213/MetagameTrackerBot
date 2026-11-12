@@ -40,7 +40,8 @@ async def GetFormatsByGameId(game: Game) -> list[Format]:
             id,
             format_name,
             last_ban_update,
-            is_limited
+            is_limited,
+            moxfield_check
         FROM
             formats
         WHERE
