@@ -22,8 +22,7 @@ from custom_errors import KnownError
 from discord.ext import commands
 from discord import Interaction, File
 from input_modals.league_input_modal import LeagueInputModal
-import services.bar_chart_race_compat
-import bar_chart_race as bcr
+from services.league_chart_race import create_league_chart_race
 
 
 async def SelectLeague(
@@ -111,11 +110,9 @@ async def LeagueTimeLapse(league: League) -> File:
     pivot_df.index = pd.to_datetime(pivot_df.index)
     pivot_df = pivot_df.cumsum()
     output_filename = "racing_bar_chart.mp4"
-    bcr.bar_chart_race(
-        df=pivot_df,
-        filename=output_filename,
-        orientation="h",
-        sort="desc",
+    create_league_chart_race(
+        pivot_df,
+        output_filename,
         n_bars=8,
         title="League Points Leaders",
         figsize=(6, 4),
