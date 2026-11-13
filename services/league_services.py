@@ -22,6 +22,7 @@ from custom_errors import KnownError
 from discord.ext import commands
 from discord import Interaction, File
 from input_modals.league_input_modal import LeagueInputModal
+import services.bar_chart_race_compat
 import bar_chart_race as bcr
 
 
