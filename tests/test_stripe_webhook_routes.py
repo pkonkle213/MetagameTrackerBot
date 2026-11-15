@@ -6,7 +6,6 @@ import time
 import unittest
 from datetime import datetime, timezone
 from decimal import Decimal
-from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.test_utils import TestClient, TestServer
@@ -100,9 +99,6 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
         self.bot.fetch_user = AsyncMock()
         self.bot.fetch_user.return_value.send = AsyncMock()
         confirmation_channel = Mock()
-        confirmation_channel.guild = SimpleNamespace(
-            id=stripe_webhook_service.settings.PAYMENT_CONFIRMATION_GUILD_ID
-        )
         confirmation_channel.send = AsyncMock()
         self.bot.get_channel.return_value = confirmation_channel
 
@@ -162,12 +158,17 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
             user_confirmation,
         )
         self.bot.get_channel.assert_called_once_with(
-            stripe_webhook_service.settings.PAYMENT_CONFIRMATION_CHANNEL_ID
+            stripe_webhook_service.settings.BOTLOGCHANNEL
         )
         confirmation_channel.send.assert_awaited_once()
         channel_confirmation = confirmation_channel.send.await_args.args[0]
+        self.assertIn("Stripe subscription payment received", channel_confirmation)
         self.assertIn("$10.00 USD", channel_confirmation)
         self.assertIn("Store", channel_confirmation)
+        self.assertIn(
+            "Paid store access was refreshed successfully",
+            channel_confirmation,
+        )
         self.assertIn("cs_test_checkout", channel_confirmation)
 
     async def test_player_checkout_updates_paid_users_after_recording(self):
@@ -190,6 +191,9 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
         }
         self.bot.fetch_user = AsyncMock()
         self.bot.fetch_user.return_value.send = AsyncMock()
+        confirmation_channel = Mock()
+        confirmation_channel.send = AsyncMock()
+        self.bot.get_channel.return_value = confirmation_channel
 
         with (
             patch.object(
@@ -229,6 +233,16 @@ class StripeWebhookRouteTests(unittest.IsolatedAsyncioTestCase):
         record_payment.assert_awaited_once()
         update_paid_users.assert_awaited_once()
         update_paid_stores.assert_not_awaited()
+        self.bot.get_channel.assert_called_once_with(
+            stripe_webhook_service.settings.BOTLOGCHANNEL
+        )
+        confirmation_channel.send.assert_awaited_once()
+        channel_confirmation = confirmation_channel.send.await_args.args[0]
+        self.assertIn("Stripe subscription payment received", channel_confirmation)
+        self.assertIn(
+            "Paid player access was refreshed successfully",
+            channel_confirmation,
+        )
 
     async def test_duplicate_checkout_event_is_not_notified_again(self):
         event = {
