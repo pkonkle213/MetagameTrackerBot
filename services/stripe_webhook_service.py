@@ -44,19 +44,12 @@ async def _send_payment_confirmation_to_channel(
     bot: discord.Client, message: str
 ) -> None:
     try:
-        channel = bot.get_channel(settings.PAYMENT_CONFIRMATION_CHANNEL_ID)
+        channel = bot.get_channel(settings.BOTLOGCHANNEL)
         if channel is None:
-            channel = await bot.fetch_channel(
-                settings.PAYMENT_CONFIRMATION_CHANNEL_ID
-            )
-
-        channel_guild_id = getattr(getattr(channel, "guild", None), "id", None)
-        if channel_guild_id != settings.PAYMENT_CONFIRMATION_GUILD_ID:
-            print("Stripe confirmation channel is not in the configured guild")
-            return
+            channel = await bot.fetch_channel(settings.BOTLOGCHANNEL)
 
         await channel.send(message)
-        print("Stripe payment confirmation sent to configured channel")
+        print("Stripe payment confirmation sent to the bot log channel")
     except Exception as error:
         print(
             "Failed to send Stripe payment confirmation to configured channel: "
@@ -120,10 +113,13 @@ async def handle_stripe_webhook(
         )
 
         if inserted:
+            access_update_status = "No player/store access update ran (unknown tier)."
             if metadata.get("tier") == "store":
                 await apu.UpdatePaidStores()
+                access_update_status = "Paid store access was refreshed successfully."
             elif metadata.get("tier") == "player":
                 await apu.UpdatePaidUsers()
+                access_update_status = "Paid player access was refreshed successfully."
 
             if isinstance(discord_user_id, str) and discord_user_id.isdigit():
                 try:
@@ -156,10 +152,11 @@ async def handle_stripe_webhook(
             )
             await _send_payment_confirmation_to_channel(
                 bot,
-                "Stripe subscription payment completed\n"
+                "Stripe subscription payment received\n"
                 f"> **Customer:** {user_label}\n"
                 f"> **Tier:** {tier}\n"
                 f"> **Billing:** {interval_label} ({amount_label} USD)\n"
+                f"> **Access update:** {access_update_status}\n"
                 f"> **Discord server ID:** `{discord_guild_id}`\n"
                 f"> **Checkout session:** `{session_id}`\n"
                 f"> **Subscription:** "
