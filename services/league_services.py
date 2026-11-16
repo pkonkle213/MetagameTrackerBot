@@ -14,7 +14,6 @@ from data.league_data import (
     GetLeagues,
     GetHubFullLeagueLeaderboard,
     GetFullLeagueLeaderboard,
-    GetStorePlayerStanding,
     GetHubPlayerStanding,
     GetLeaderboardTimeLapse,
 )
