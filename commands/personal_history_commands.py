@@ -18,11 +18,16 @@ class PersonalHistoryCommands(commands.GroupCog, name="history"):
     @app_commands.command(
         name="standings", description="Your history according to standings"
     )
+    @app_commands.describe(archetype="Filter history by archetype (partial match)")
     @app_commands.guild_only()
     @IsPaidUser()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def GetPersonalStandingsHistory(
-        self, interaction: Interaction, start_date: str = "", end_date: str = ""
+        self,
+        interaction: Interaction,
+        start_date: str = "",
+        end_date: str = "",
+        archetype: str = "",
     ):
         """
         Parameters
@@ -31,13 +36,15 @@ class PersonalHistoryCommands(commands.GroupCog, name="history"):
             Beginning of Date Range (MM/DD/YYYY)
         end_date: string
             End of Date Range (MM/DD/YYYY)
+        archetype: string
+            Optional case-insensitive archetype text filter
         """
 
         await interaction.response.defer(ephemeral=True, thinking=False)
         objects = interaction.extras.get("db_object")
         user_id = interaction.user.id
         output = await GetPersonalStandingsHistory(
-            user_id, start_date, end_date, objects
+            user_id, start_date, end_date, objects, archetype
         )
        
         for message in output:
@@ -46,11 +53,16 @@ class PersonalHistoryCommands(commands.GroupCog, name="history"):
     @app_commands.command(
         name="pairings", description="Your history according to pairings"
     )
+    @app_commands.describe(archetype="Filter history by archetype (partial match)")
     @app_commands.guild_only()
     @IsPaidUser()
     @app_commands.checks.cooldown(1, 60.0, key=lambda i: (i.guild_id, i.user.id))
     async def GetPersonalPairingsHistory(
-        self, interaction: Interaction, start_date: str = "", end_date: str = ""
+        self,
+        interaction: Interaction,
+        start_date: str = "",
+        end_date: str = "",
+        archetype: str = "",
     ):
         """
         Parameters
@@ -59,13 +71,15 @@ class PersonalHistoryCommands(commands.GroupCog, name="history"):
             Beginning of Date Range (MM/DD/YYYY)
         end_date: string
             End of Date Range (MM/DD/YYYY)
+        archetype: string
+            Optional case-insensitive archetype text filter
         """
 
         await interaction.response.defer(ephemeral=True, thinking=False)
         objects = interaction.extras.get("db_object")
         user_id = interaction.user.id
         output = await GetPersonalPairingsHistory(
-            user_id, start_date, end_date, objects
+            user_id, start_date, end_date, objects, archetype
         )
       
         for message in output:

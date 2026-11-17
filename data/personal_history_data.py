@@ -7,6 +7,17 @@ from settings import DATABASE_URL, DATAGUILDID
 from tuple_conversions import Format, Game, Hub, Region, Store
 
 
+def _archetype_search_filter(
+    column_expression: str, archetype: str | None
+) -> tuple[str, list[str]]:
+    value = (archetype or "").strip()
+    if not value:
+        return "", []
+
+    escaped = value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    return f"AND {column_expression} ILIKE %s", [f"%{escaped}%"]
+
+
 async def GetStorePairingsHistory(
     user_id: int,
     store: Store,
@@ -14,11 +25,15 @@ async def GetStorePairingsHistory(
     format: Format | None,
     start_date: date,
     end_date: date,
+    archetype: str | None = None,
 ) -> list[TupleRow]:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor() as cur,
     ):
+        archetype_filter, parameters = _archetype_search_filter(
+            "COALESCE(uap.archetype_played, 'Unknown')", archetype
+        )
         command = f"""
         SELECT
             TO_CHAR(e.event_date, 'MM/DD') as event_date,
@@ -46,12 +61,13 @@ async def GetStorePairingsHistory(
             AND e.event_date BETWEEN '{start_date}' AND '{end_date}'
             {f"AND e.game_id = {game.id}" if game else ""}
             {f"AND e.format_id = {format.id}" if format else ""}
+            {archetype_filter}
         ORDER BY
             e.event_date DESC,
             fp.round_number
         """
 
-        await cur.execute(command)  # type: ignore[arg-type]
+        await cur.execute(command, parameters)  # type: ignore[arg-type]
         rows = await cur.fetchall()
         return rows
 
@@ -64,11 +80,15 @@ async def GetHubPairingsHistory(
     format: Format | None,
     start_date: date,
     end_date: date,
+    archetype: str | None = None,
 ) -> list[TupleRow]:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor() as cur,
     ):
+        archetype_filter, parameters = _archetype_search_filter(
+            "COALESCE(uap.archetype_played, 'Unknown')", archetype
+        )
         command = f"""
         SELECT
             TO_CHAR(e.event_date, 'MM/DD/YYYY') AS event_date,
@@ -107,12 +127,13 @@ async def GetHubPairingsHistory(
             {f"AND e.game_id = {game.id}" if game else ""}
             {f"AND e.format_id = {format.id}" if format else ""}
             {f"AND s.region_id = {region.id}" if region else ""}
+            {archetype_filter}
         ORDER BY
             e.event_date DESC,
             fp.round_number
         """
 
-        await cur.execute(command)  # type: ignore[arg-type]
+        await cur.execute(command, parameters)  # type: ignore[arg-type]
         rows = await cur.fetchall()
         return rows
 
@@ -125,11 +146,15 @@ async def GetHubStandingsHistory(
     format: Format | None,
     start_date: date,
     end_date: date,
+    archetype: str | None = None,
 ) -> list[TupleRow]:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor() as cur,
     ):
+        archetype_filter, parameters = _archetype_search_filter(
+            "COALESCE(ua.archetype_played, 'Unknown')", archetype
+        )
         command = f"""
         SELECT
             TO_CHAR(ev.event_date, 'MM/DD/YYYY') AS event_date,
@@ -163,11 +188,12 @@ async def GetHubStandingsHistory(
             {f"AND ev.game_id = {game.id}" if game else ""}
             {f"AND ev.format_id = {format.id}" if format else ""}
             {f"AND sv.region_id = {region.id}" if region else ""}
+            {archetype_filter}
         ORDER BY
             ev.event_date DESC
         """
 
-        await cur.execute(command)  # type: ignore[arg-type]
+        await cur.execute(command, parameters)  # type: ignore[arg-type]
         rows = await cur.fetchall()
         return rows
 
@@ -179,11 +205,15 @@ async def GetStoreStandingsHistory(
     format: Format | None,
     start_date: date,
     end_date: date,
+    archetype: str | None = None,
 ) -> list[TupleRow]:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor() as cur,
     ):
+        archetype_filter, parameters = _archetype_search_filter(
+            "COALESCE(uar.archetype_played, 'Unknown')", archetype
+        )
         command = f"""
         SELECT
             TO_CHAR(event_date, 'MM/DD/YYYY') as event_date,
@@ -207,10 +237,11 @@ async def GetStoreStandingsHistory(
             AND s.discord_id = {store.discord_id}
             {f"AND e.game_id = {game.id}" if game else ""}
             {f"AND e.format_id = {format.id}" if format else ""}
+            {archetype_filter}
         ORDER BY
             e.event_date DESC
         """
 
-        await cur.execute(command)  # type: ignore[arg-type]
+        await cur.execute(command, parameters)  # type: ignore[arg-type]
         rows = await cur.fetchall()
         return rows

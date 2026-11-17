@@ -15,6 +15,7 @@ async def GetPersonalStandingsHistory(
     start_date: str,
     end_date: str,
     objects: InteractionObjects | None,
+    archetype: str = "",
 ) -> list[str]:
     """Gets the personal standings history for the user"""
     if not objects or not objects.store and not objects.hub:
@@ -39,6 +40,7 @@ async def GetPersonalStandingsHistory(
             objects.format,
             date_start,
             date_end,
+            archetype,
         )
     elif objects.hub:
         data = await GetHubStandingsHistory(
@@ -49,6 +51,7 @@ async def GetPersonalStandingsHistory(
             objects.format,
             date_start,
             date_end,
+            archetype,
         )
         headers.insert(2, "Store Name")
 
@@ -72,6 +75,7 @@ async def GetPersonalPairingsHistory(
     start_date: str,
     end_date: str,
     objects: InteractionObjects | None,
+    archetype: str = "",
 ) -> list[str]:
     """Gets the personal pairings history for the user"""
     if not objects or (not objects.store and not objects.hub):
@@ -96,6 +100,7 @@ async def GetPersonalPairingsHistory(
             objects.format,
             date_start,
             date_end,
+            archetype,
         )
     elif objects.hub:
         data = await GetHubPairingsHistory(
@@ -106,6 +111,7 @@ async def GetPersonalPairingsHistory(
             objects.format,
             date_start,
             date_end,
+            archetype,
         )
         headers.insert(2, "Store Name")
 
