@@ -48,48 +48,122 @@ async def GetActiveLeagues(
 
 
 async def GetHubPlayerStanding(league: League, user_id: int) -> PlayerStanding:
-    results = f"""
-    SELECT
-      INITCAP(fs.player_name) AS player_name,
-      e.discord_id,
-      wins,
-      losses,
-      draws
-    FROM
-      full_standings fs
-      INNER JOIN events e ON fs.event_id = e.id
-      INNER JOIN hub_league_stores hls ON e.discord_id = hls.store_discord_id
-      INNER JOIN leagues l ON l.id = hls.league_id
-      AND e.event_date >= l.start_date
-      AND e.event_date <= l.end_date
-    WHERE
-      hls.league_id = {league.id}
-    """
+    async with (
+        await AsyncConnection.connect(DATABASE_URL) as conn,
+        conn.cursor(row_factory=class_row(PlayerStanding)) as cur,
+    ):
+        command = f"""
+        WITH
+          all_events AS (
+            SELECT
+              date_trunc('week', event_date) AS week_start,
+              INITCAP(fs.player_name) AS player_name,
+              3 * wins + draws AS event_points,
+              wins,
+              losses,
+              draws
+            FROM
+              leagues l
+              INNER JOIN hub_league_stores hls ON hls.league_id = l.id
+              INNER JOIN events e ON e.discord_id = hls.store_discord_id
+              AND e.event_date >= l.start_date
+              AND e.event_date <= l.end_date
+              AND e.format_id = l.format_id
+              INNER JOIN full_standings fs ON fs.event_id = e.id
+            WHERE
+              l.id = {league.id}
+            ORDER BY
+              week_start,
+              player_name
+          ),
+          weekly_scores AS (
+            SELECT
+              week_start,
+              player_name,
+              LEAST(9, max(event_points)) AS week_points,
+              sum(wins) AS wins,
+              sum(losses) AS losses,
+              sum(draws) AS draws
+            FROM
+              all_events
+            GROUP BY
+              week_start,
+              player_name
+          ),
+          top_ten AS (
+            SELECT
+              player_name,
+              week_points,
+              wins,
+              losses,
+              draws,
+              ROW_NUMBER() OVER (
+                PARTITION BY
+                  player_name
+                ORDER BY
+                  week_points DESC
+              ) AS rank
+            FROM
+              weekly_scores
+          ),
+          grouped AS (
+            SELECT
+              player_name,
+              sum(week_points) AS total_points,
+              100.0 * sum(wins) / (sum(wins) + sum(losses) + sum(draws)) AS win_percent
+            FROM
+              top_ten
+            WHERE
+              rank <= 12
+            GROUP BY
+              player_name
+          ),
+          full_leaderboard AS (
+            SELECT
+              ROW_NUMBER() OVER (
+                ORDER BY
+                  total_points DESC,
+                  win_percent DESC,
+                  player_name
+              ) AS rank,
+              player_name,
+              total_points AS points,
+              ROUND(win_percent, 2) AS win_percent
+            FROM
+              grouped
+          ),
+          player_name AS (
+            SELECT
+              player_name
+            FROM
+              player_names
+            WHERE
+              submitter_id = {user_id}
+            GROUP BY
+              player_name
+            ORDER BY
+              COUNT(*) DESC
+            LIMIT
+              1
+          )
+        SELECT
+          fl.rank,
+          fl.player_name,
+          fl.points,
+          fl.win_percent
+        FROM
+          full_leaderboard fl
+          INNER JOIN player_name pn ON UPPER(fl.player_name) = UPPER(pn.player_name)
+        """
 
-    standing = await GetPlayerStanding(results, user_id)
-    return standing
+        await cur.execute(command)  # type: ignore[arg-type]
+        row = await cur.fetchone()
+        if not row:
+            raise KnownError("Unable to find player standing")
+        return row
 
 
-async def GetStorePlayerStanding(league: League, user_id: int) -> PlayerStanding:
-    results = f"""
-    SELECT
-      INITCAP(fs.player_name) AS player_name,
-      e.discord_id,
-      wins,
-      losses,
-      draws
-    FROM
-      full_standings fs
-      INNER JOIN events e ON fs.event_id = e.id
-    WHERE
-      e.league_id = {league.id}
-    """
-
-    standing = await GetPlayerStanding(results, user_id)
-    return standing
-
-
-async def GetPlayerStanding(results: str, user_id: int) -> PlayerStanding:
+async def GetPlayerStanding(league: League, user_id: int) -> PlayerStanding:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor(row_factory=class_row(PlayerStanding)) as cur,
@@ -97,7 +171,17 @@ async def GetPlayerStanding(results: str, user_id: int) -> PlayerStanding:
         command = f"""
         WITH
           league_results AS (
-            {results}
+            SELECT
+              INITCAP(fs.player_name) AS player_name,
+              e.discord_id,
+              wins,
+              losses,
+              draws
+            FROM
+              full_standings fs
+              INNER JOIN events e ON fs.event_id = e.id
+            WHERE
+              e.league_id = {league.id}
           ),
           name_translate AS (
               SELECT
