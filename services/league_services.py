@@ -15,6 +15,7 @@ from data.league_data import (
     GetHubFullLeagueLeaderboard,
     GetFullLeagueLeaderboard,
     GetHubPlayerStanding,
+    GetStorePlayerStanding,
     GetLeaderboardTimeLapse,
 )
 from custom_errors import KnownError

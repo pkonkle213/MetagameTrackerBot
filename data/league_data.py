@@ -163,7 +163,7 @@ async def GetHubPlayerStanding(league: League, user_id: int) -> PlayerStanding:
         return row
 
 
-async def GetPlayerStanding(league: League, user_id: int) -> PlayerStanding:
+async def GetStorePlayerStanding(league: League, user_id: int) -> PlayerStanding:
     async with (
         await AsyncConnection.connect(DATABASE_URL) as conn,
         conn.cursor(row_factory=class_row(PlayerStanding)) as cur,
