@@ -78,8 +78,8 @@ async def GetEventTypes(discord_id: int, game: Game, format: Format) -> list[Eve
                 leagues l
                 LEFT JOIN events e ON e.league_id = l.id
             WHERE
-                end_date >= NOW()
-                AND start_date <= NOW()
+                end_date >= CURRENT_DATE
+                AND start_date <= CURRENT_DATE
                 AND l.discord_id = %s
                 AND l.game_id = %s
                 AND l.format_id = %s

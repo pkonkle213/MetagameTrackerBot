@@ -5,7 +5,14 @@ from tuple_conversions import Event, EventType, Format, Game, Store, DataInputEn
 
 
 class SubmitEventModal(discord.ui.Modal, title="Select Event"):
-    def __init__(self, store: Store, game: Game, format: Format, event_types, previous_events):
+    def __init__(
+        self,
+        store: Store,
+        game: Game,
+        format: Format,
+        event_types: list[EventType],
+        previous_events: list[Event],
+    ):
         super().__init__()
         self.is_submitted: bool = False
         self.submitted_event: Event | None = None
@@ -15,7 +22,6 @@ class SubmitEventModal(discord.ui.Modal, title="Select Event"):
         self.game = game
         self.format = format
 
-        
         if event_types[0].id < 0:
             default_type = "League"
             num_events = f" - Week {event_types[0].num_events + 1}"
