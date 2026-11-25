@@ -18,6 +18,19 @@ async def _is_bot_owner_in_bot_guild(interaction: Interaction) -> bool:
     return True
 
 
+def parse_discord_id(value: str) -> int:
+    normalized = value.strip()
+    if not normalized or any(
+        character < "0" or character > "9" for character in normalized
+    ):
+        raise ValueError("Enter a Discord ID using digits only.")
+
+    target_user_id = int(normalized)
+    if target_user_id <= 0:
+        raise ValueError("Enter a valid positive Discord ID.")
+    return target_user_id
+
+
 async def assign_mt_roles(
     guild: discord.Guild, target_user_id: int, requester_id: int
 ) -> discord.Member:
@@ -56,12 +69,13 @@ class AssignRolesCommand(commands.Cog):
     @app_commands.guilds(settings.BOTGUILDID)
     @app_commands.guild_only()
     @app_commands.check(_is_bot_owner_in_bot_guild)
-    @app_commands.describe(discord_id="Discord ID of the member to assign roles to")
-    async def AssignRoles(self, interaction: Interaction, discord_id: int):
+    @app_commands.describe(discord_id="Discord ID of the member, entered as text")
+    async def AssignRoles(self, interaction: Interaction, discord_id: str):
         await interaction.response.defer(ephemeral=True, thinking=True)
         try:
+            target_user_id = parse_discord_id(discord_id)
             member = await assign_mt_roles(
-                interaction.guild, discord_id, interaction.user.id
+                interaction.guild, target_user_id, interaction.user.id
             )
         except (LookupError, ValueError) as error:
             await interaction.followup.send(str(error), ephemeral=True)

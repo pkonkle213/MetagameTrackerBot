@@ -26,6 +26,18 @@ from tuple_conversions import MTBRoles
 
 
 class AssignRolesCommandTests(unittest.IsolatedAsyncioTestCase):
+    def test_parses_large_discord_id_from_text(self):
+        self.assertEqual(
+            assign_roles_command.parse_discord_id("  1234567890123456789  "),
+            1234567890123456789,
+        )
+
+    def test_rejects_non_numeric_discord_id_text(self):
+        for value in ("", "abc123", "-123", "12.3"):
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(ValueError, "digits only"):
+                    assign_roles_command.parse_discord_id(value)
+
     async def test_access_check_requires_owner_and_bot_guild(self):
         interaction = SimpleNamespace(user=SimpleNamespace(id=7), guild_id=1)
 
