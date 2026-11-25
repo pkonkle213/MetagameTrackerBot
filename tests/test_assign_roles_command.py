@@ -58,17 +58,19 @@ class AssignRolesCommandTests(unittest.IsolatedAsyncioTestCase):
                         )
 
     async def test_assigns_both_roles_to_the_selected_guild_member(self):
-        submitter_role = SimpleNamespace(name=MTBRoles.MTSubmitter.name)
-        store_role = SimpleNamespace(name=MTBRoles.MTStore.name)
+        submitter_role = SimpleNamespace(name=" mtSubmitter ")
+        store_role = SimpleNamespace(name="mtstore")
         member = SimpleNamespace(mention="<@42>", add_roles=AsyncMock())
         guild = SimpleNamespace(
-            roles=[submitter_role, store_role],
+            roles=[],
+            fetch_roles=AsyncMock(return_value=[submitter_role, store_role]),
             fetch_member=AsyncMock(return_value=member),
         )
 
         assigned_member = await assign_roles_command.assign_mt_roles(guild, 42, 7)
 
         self.assertIs(assigned_member, member)
+        guild.fetch_roles.assert_awaited_once()
         guild.fetch_member.assert_awaited_once_with(42)
         member.add_roles.assert_awaited_once_with(
             submitter_role,
@@ -77,7 +79,11 @@ class AssignRolesCommandTests(unittest.IsolatedAsyncioTestCase):
         )
 
     async def test_reports_missing_roles_without_assigning_anything(self):
-        guild = SimpleNamespace(roles=[], fetch_member=AsyncMock())
+        guild = SimpleNamespace(
+            roles=[],
+            fetch_roles=AsyncMock(return_value=[]),
+            fetch_member=AsyncMock(),
+        )
 
         with self.assertRaisesRegex(
             ValueError, "MTSubmitter, MTStore"

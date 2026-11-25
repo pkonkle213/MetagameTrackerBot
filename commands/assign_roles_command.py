@@ -35,7 +35,18 @@ async def assign_mt_roles(
     guild: discord.Guild, target_user_id: int, requester_id: int
 ) -> discord.Member:
     role_names = [MTBRoles.MTSubmitter.name, MTBRoles.MTStore.name]
-    roles = [discord.utils.get(guild.roles, name=name) for name in role_names]
+    available_roles = await guild.fetch_roles()
+    roles = [
+        next(
+            (
+                role
+                for role in available_roles
+                if role.name.strip().casefold() == name.casefold()
+            ),
+            None,
+        )
+        for name in role_names
+    ]
     missing_roles = [
         name for name, role in zip(role_names, roles) if role is None
     ]
