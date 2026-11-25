@@ -1,7 +1,7 @@
 import os
 import unittest
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import discord
 
@@ -57,17 +57,19 @@ class AssignRolesCommandTests(unittest.IsolatedAsyncioTestCase):
                             interaction
                         )
 
-    async def test_assigns_both_roles_to_the_selected_guild_member(self):
+    async def test_assigns_both_roles_to_configured_owner_in_target_guild(self):
         submitter_role = SimpleNamespace(name=" mtSubmitter ")
         store_role = SimpleNamespace(name="mtstore")
         member = SimpleNamespace(mention="<@42>", add_roles=AsyncMock())
         guild = SimpleNamespace(
             roles=[],
+            id=456,
             fetch_roles=AsyncMock(return_value=[submitter_role, store_role]),
             fetch_member=AsyncMock(return_value=member),
         )
 
-        assigned_member = await assign_roles_command.assign_mt_roles(guild, 42, 7)
+        with patch.object(assign_roles_command.settings, "PHILID", 42):
+            assigned_member = await assign_roles_command.assign_mt_roles(guild, 7)
 
         self.assertIs(assigned_member, member)
         guild.fetch_roles.assert_awaited_once()
@@ -78,8 +80,32 @@ class AssignRolesCommandTests(unittest.IsolatedAsyncioTestCase):
             reason="Role assignment requested by Discord user 7",
         )
 
+    async def test_resolves_target_guild_from_cache_or_api(self):
+        guild = Mock()
+        bot = Mock()
+        bot.get_guild.return_value = None
+        bot.fetch_guild = AsyncMock(return_value=guild)
+
+        resolved_guild = await assign_roles_command.get_assignment_guild(bot, 456)
+
+        self.assertIs(resolved_guild, guild)
+        bot.get_guild.assert_called_once_with(456)
+        bot.fetch_guild.assert_awaited_once_with(456)
+
+    async def test_returns_cached_target_guild_without_fetching(self):
+        guild = Mock()
+        bot = Mock()
+        bot.get_guild.return_value = guild
+        bot.fetch_guild = AsyncMock()
+
+        resolved_guild = await assign_roles_command.get_assignment_guild(bot, 456)
+
+        self.assertIs(resolved_guild, guild)
+        bot.fetch_guild.assert_not_awaited()
+
     async def test_reports_missing_roles_without_assigning_anything(self):
         guild = SimpleNamespace(
+            id=456,
             roles=[],
             fetch_roles=AsyncMock(return_value=[]),
             fetch_member=AsyncMock(),
@@ -88,7 +114,7 @@ class AssignRolesCommandTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(
             ValueError, "MTSubmitter, MTStore"
         ):
-            await assign_roles_command.assign_mt_roles(guild, 42, 7)
+            await assign_roles_command.assign_mt_roles(guild, 7)
 
         guild.fetch_member.assert_not_awaited()
 

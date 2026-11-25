@@ -31,8 +31,23 @@ def parse_discord_id(value: str) -> int:
     return target_user_id
 
 
+async def get_assignment_guild(
+    bot: commands.Bot, guild_id: int
+) -> discord.Guild:
+    guild = bot.get_guild(guild_id)
+    if guild is not None:
+        return guild
+
+    try:
+        return await bot.fetch_guild(guild_id)
+    except (discord.NotFound, discord.Forbidden) as error:
+        raise LookupError(
+            f"The bot cannot access Discord guild {guild_id}."
+        ) from error
+
+
 async def assign_mt_roles(
-    guild: discord.Guild, target_user_id: int, requester_id: int
+    guild: discord.Guild, requester_id: int
 ) -> discord.Member:
     role_names = [MTBRoles.MTSubmitter.name, MTBRoles.MTStore.name]
     available_roles = await guild.fetch_roles()
@@ -52,14 +67,14 @@ async def assign_mt_roles(
     ]
     if missing_roles:
         raise ValueError(
-            f"Required roles not found in the bot guild: {', '.join(missing_roles)}"
+            f"Required roles not found in the target guild: {', '.join(missing_roles)}"
         )
 
     try:
-        member = await guild.fetch_member(target_user_id)
+        member = await guild.fetch_member(settings.PHILID)
     except discord.NotFound as error:
         raise LookupError(
-            f"Discord user {target_user_id} is not a member of the bot guild."
+            f"You are not a member of Discord guild {guild.id}."
         ) from error
 
     await member.add_roles(
@@ -80,14 +95,13 @@ class AssignRolesCommand(commands.Cog):
     @app_commands.guilds(settings.BOTGUILDID)
     @app_commands.guild_only()
     @app_commands.check(_is_bot_owner_in_bot_guild)
-    @app_commands.describe(discord_id="Discord ID of the member, entered as text")
-    async def AssignRoles(self, interaction: Interaction, discord_id: str):
+    @app_commands.describe(guild_id="Discord guild ID, entered as text")
+    async def AssignRoles(self, interaction: Interaction, guild_id: str):
         await interaction.response.defer(ephemeral=True, thinking=True)
         try:
-            target_user_id = parse_discord_id(discord_id)
-            member = await assign_mt_roles(
-                interaction.guild, target_user_id, interaction.user.id
-            )
+            target_guild_id = parse_discord_id(guild_id)
+            guild = await get_assignment_guild(self.bot, target_guild_id)
+            member = await assign_mt_roles(guild, interaction.user.id)
         except (LookupError, ValueError) as error:
             await interaction.followup.send(str(error), ephemeral=True)
             return
